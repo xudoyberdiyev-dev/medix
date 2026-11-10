@@ -1535,7 +1535,7 @@
     "/api/branches/{id}" : {
       "put" : {
         "description" : "Kod o'zgarmaydi.",
-        "operationId" : "update_16",
+        "operationId" : "update_17",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -2126,7 +2126,7 @@
     "/api/company" : {
       "get" : {
         "description" : "Faol filiallar, omborlar va xodimlar soni; ishga tushirilgan vaqt va kim.",
-        "operationId" : "get_11",
+        "operationId" : "get_12",
         "responses" : {
           "200" : {
             "content" : {
@@ -2511,7 +2511,7 @@
     },
     "/api/counterparties/{id}" : {
       "get" : {
-        "operationId" : "get_10",
+        "operationId" : "get_11",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -2537,7 +2537,7 @@
         "tags" : [ "counterparties" ]
       },
       "put" : {
-        "operationId" : "update_15",
+        "operationId" : "update_16",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -3889,7 +3889,7 @@
     },
     "/api/dictionaries/{kind}/{id}" : {
       "put" : {
-        "operationId" : "update_14",
+        "operationId" : "update_15",
         "parameters" : [ {
           "in" : "path",
           "name" : "kind",
@@ -4148,7 +4148,7 @@
     "/api/employees/{id}" : {
       "put" : {
         "description" : "Login, rol yoki filial oʻzgarsa ochiq sessiyalari tugatiladi.",
-        "operationId" : "update_13",
+        "operationId" : "update_14",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -4884,10 +4884,39 @@
         "tags" : [ "inventory-count" ]
       }
     },
+    "/api/inventory-counts/scope-options" : {
+      "get" : {
+        "description" : "Zonada partiyalar soni va band boʻlsa — faol inventarizatsiya raqami; mahsulotlar zonalar boʻyicha.",
+        "operationId" : "scopeOptions",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "warehouseId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/InventoryScopeOptions"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Qoralama formasi: zonalar, mahsulotlar, komissiya xodimlari",
+        "tags" : [ "inventory-count" ]
+      }
+    },
     "/api/inventory-counts/{id}" : {
       "get" : {
         "description" : "Ko'r sanoqda sanoq davomida hisob qoldig'i — faqat inventory.openCount.",
-        "operationId" : "get_20",
+        "operationId" : "get_10",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -4910,6 +4939,43 @@
           }
         },
         "summary" : "Inventarizatsiya hujjati",
+        "tags" : [ "inventory-count" ]
+      },
+      "put" : {
+        "description" : "Ombor (shu filialda), sana, qamrov, komissiya, ko'r sanoq — faqat qoralamada.",
+        "operationId" : "update_13",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/InventoryCountRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/InventoryCountDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Qoralamani saqlash",
         "tags" : [ "inventory-count" ]
       }
     },
@@ -5059,6 +5125,53 @@
         "tags" : [ "inventory-count" ]
       }
     },
+    "/api/inventory-counts/{id}/lines/{lineId}/note" : {
+      "put" : {
+        "description" : "Sanoq yoki tekshirish holatida.",
+        "operationId" : "note",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "path",
+          "name" : "lineId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/InventoryLineNote"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/InventoryCountDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Qator izohi",
+        "tags" : [ "inventory-count" ]
+      }
+    },
     "/api/inventory-counts/{id}/pdf" : {
       "get" : {
         "description" : "Sanoqda — sanoq varag'i («Sanaldi» bo'sh), keyin — farqlar bilan qaydnoma. Tannarx — faqat prices.cost.",
@@ -5091,6 +5204,7 @@
     },
     "/api/inventory-counts/{id}/recount" : {
       "post" : {
+        "description" : "lineIds — tanlangan qatorlar sanoqqa qaytadi («qayta sanash»); boʻsh — hujjat.",
         "operationId" : "recount",
         "parameters" : [ {
           "in" : "path",
@@ -5101,6 +5215,15 @@
             "format" : "int64"
           }
         } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/InventoryRecountRequest"
+              }
+            }
+          }
+        },
         "responses" : {
           "200" : {
             "content" : {
@@ -5311,7 +5434,7 @@
     "/api/marking/orders/{id}" : {
       "get" : {
         "description" : "Qatorlar, partiyalar, hisoblagichlar va faol kodlar.",
-        "operationId" : "get_19",
+        "operationId" : "get_20",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -5838,7 +5961,7 @@
     "/api/nav/badges" : {
       "get" : {
         "description" : "Tasdiq kutayotgan buyurtmalar, jo'natishga tayyorlar, muddati 90 kun ichida tugaydigan partiyalar (o'tgan bo'lsa — danger). Ruxsat yo'q bo'lsa — null.",
-        "operationId" : "get_18",
+        "operationId" : "get_19",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -11018,7 +11141,7 @@
     },
     "/api/reconciliations/{id}" : {
       "get" : {
-        "operationId" : "get_17",
+        "operationId" : "get_18",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -13320,7 +13443,7 @@
     },
     "/api/supplier-returns/{id}" : {
       "get" : {
-        "operationId" : "get_16",
+        "operationId" : "get_17",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -14717,7 +14840,7 @@
     },
     "/api/warehouse-transfers/{id}" : {
       "get" : {
-        "operationId" : "get_14",
+        "operationId" : "get_15",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -14843,7 +14966,7 @@
     "/api/warehouse-transfers/{id}/shortage" : {
       "get" : {
         "description" : "Ochiqmi va hal qilish tarixi.",
-        "operationId" : "get_15",
+        "operationId" : "get_16",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -15488,7 +15611,7 @@
     },
     "/api/write-offs/{id}" : {
       "get" : {
-        "operationId" : "get_13",
+        "operationId" : "get_14",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -15736,7 +15859,7 @@
     },
     "/api/zone-transfers/{id}" : {
       "get" : {
-        "operationId" : "get_12",
+        "operationId" : "get_13",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -21139,8 +21262,16 @@
           "cancelledBy" : {
             "type" : "string"
           },
+          "chairId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
           "commission" : {
             "type" : "string"
+          },
+          "countDate" : {
+            "type" : "string",
+            "format" : "date"
           },
           "counted" : {
             "type" : "integer",
@@ -21153,6 +21284,12 @@
           "createdBy" : {
             "type" : "string"
           },
+          "events" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/InventoryEvent"
+            }
+          },
           "id" : {
             "type" : "integer",
             "format" : "int64"
@@ -21161,6 +21298,12 @@
             "type" : "array",
             "items" : {
               "$ref" : "#/components/schemas/InventoryCountLine"
+            }
+          },
+          "members" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/MemberRef"
             }
           },
           "needsDirector" : {
@@ -21178,6 +21321,16 @@
           },
           "postedBy" : {
             "type" : "string"
+          },
+          "products" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ProductRef"
+            }
+          },
+          "scopeMode" : {
+            "type" : "string",
+            "enum" : [ "WAREHOUSE", "ZONES", "PRODUCTS" ]
           },
           "shortageCost" : {
             "type" : "string"
@@ -21220,9 +21373,15 @@
           },
           "zone" : {
             "$ref" : "#/components/schemas/ZoneRef"
+          },
+          "zones" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ZoneRef"
+            }
           }
         },
-        "required" : [ "blind", "bookHidden", "branchId", "counted", "createdAt", "createdBy", "id", "lines", "needsDirector", "number", "shortageQty", "status", "surplusQty", "warehouse", "warehouseId" ]
+        "required" : [ "blind", "bookHidden", "branchId", "counted", "createdAt", "createdBy", "events", "id", "lines", "members", "needsDirector", "number", "products", "scopeMode", "shortageQty", "status", "surplusQty", "warehouse", "warehouseId", "zones" ]
       },
       "InventoryCountEntries" : {
         "type" : "object",
@@ -21313,6 +21472,9 @@
             "type" : "integer",
             "format" : "int64"
           },
+          "note" : {
+            "type" : "string"
+          },
           "productCode" : {
             "type" : "string"
           },
@@ -21323,11 +21485,14 @@
           "productName" : {
             "type" : "string"
           },
+          "recount" : {
+            "type" : "boolean"
+          },
           "zone" : {
             "$ref" : "#/components/schemas/ZoneRef"
           }
         },
-        "required" : [ "added", "batchId", "batchNumber", "controlled", "expiryDate", "id", "productCode", "productId", "productName", "zone" ]
+        "required" : [ "added", "batchId", "batchNumber", "controlled", "expiryDate", "id", "productCode", "productId", "productName", "recount", "zone" ]
       },
       "InventoryCountPage" : {
         "type" : "object",
@@ -21359,15 +21524,48 @@
           "blind" : {
             "type" : "boolean"
           },
+          "chairId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Komissiya raisi — aʼzolardan biri"
+          },
           "commission" : {
             "type" : "string",
             "maxLength" : 500,
             "minLength" : 0
           },
+          "countDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "memberIds" : {
+            "type" : "array",
+            "description" : "Komissiya aʼzolari (xodimlar)",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            },
+            "maxItems" : 30,
+            "minItems" : 0
+          },
           "note" : {
             "type" : "string",
             "maxLength" : 500,
             "minLength" : 0
+          },
+          "productIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            },
+            "maxItems" : 500,
+            "minItems" : 0
+          },
+          "scopeMode" : {
+            "type" : "string",
+            "description" : "Boʻsh — zonalar tanlangan boʻlsa ZONES, aks holda WAREHOUSE",
+            "enum" : [ "WAREHOUSE", "ZONES", "PRODUCTS" ]
           },
           "warehouseId" : {
             "type" : "integer",
@@ -21376,7 +21574,16 @@
           "zoneId" : {
             "type" : "integer",
             "format" : "int64",
-            "description" : "Bo'sh — butun ombor"
+            "description" : "Eski shakl: bitta zona (zoneIds boʻlmasa)"
+          },
+          "zoneIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            },
+            "maxItems" : 50,
+            "minItems" : 0
           }
         },
         "required" : [ "blind", "commission", "note", "warehouseId" ]
@@ -21394,6 +21601,10 @@
           "commission" : {
             "type" : "string",
             "description" : "Komissiya (vergul bilan)"
+          },
+          "countDate" : {
+            "type" : "string",
+            "format" : "date"
           },
           "counted" : {
             "type" : "integer",
@@ -21424,6 +21635,14 @@
             "type" : "string",
             "format" : "date-time"
           },
+          "productCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "scopeMode" : {
+            "type" : "string",
+            "enum" : [ "WAREHOUSE", "ZONES", "PRODUCTS" ]
+          },
           "shortageCost" : {
             "type" : "string",
             "description" : "Faqat prices.cost"
@@ -21453,9 +21672,34 @@
           },
           "zone" : {
             "$ref" : "#/components/schemas/ZoneRef"
+          },
+          "zoneNames" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
           }
         },
-        "required" : [ "blind", "branchId", "counted", "createdAt", "createdBy", "id", "lines", "needsDirector", "number", "shortageQty", "status", "surplusQty", "warehouse", "warehouseId" ]
+        "required" : [ "blind", "branchId", "counted", "createdAt", "createdBy", "id", "lines", "needsDirector", "number", "productCount", "scopeMode", "shortageQty", "status", "surplusQty", "warehouse", "warehouseId", "zoneNames" ]
+      },
+      "InventoryEvent" : {
+        "type" : "object",
+        "properties" : {
+          "at" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "kind" : {
+            "type" : "string"
+          },
+          "text" : {
+            "type" : "string"
+          },
+          "who" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "at", "kind", "who" ]
       },
       "InventoryLastFull" : {
         "type" : "object",
@@ -21482,6 +21726,16 @@
         },
         "required" : [ "branch", "warehouse", "warehouseId" ]
       },
+      "InventoryLineNote" : {
+        "type" : "object",
+        "properties" : {
+          "note" : {
+            "type" : "string",
+            "maxLength" : 300,
+            "minLength" : 0
+          }
+        }
+      },
       "InventoryOverview" : {
         "type" : "object",
         "properties" : {
@@ -21504,6 +21758,44 @@
           }
         },
         "required" : [ "lastFull", "remindDays", "statuses" ]
+      },
+      "InventoryRecountRequest" : {
+        "type" : "object",
+        "properties" : {
+          "lineIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            },
+            "maxItems" : 500,
+            "minItems" : 0
+          }
+        }
+      },
+      "InventoryScopeOptions" : {
+        "type" : "object",
+        "properties" : {
+          "products" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ScopeProduct"
+            }
+          },
+          "staff" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/MemberRef"
+            }
+          },
+          "zones" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ScopeZone"
+            }
+          }
+        },
+        "required" : [ "products", "staff", "zones" ]
       },
       "InventoryStatusCount" : {
         "type" : "object",
@@ -22403,6 +22695,19 @@
           }
         },
         "required" : [ "allBranches", "fullName", "id", "login", "mustChangePassword", "permissions", "role" ]
+      },
+      "MemberRef" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "name" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "id", "name" ]
       },
       "MonitorBoard" : {
         "type" : "object",
@@ -26345,6 +26650,22 @@
         },
         "required" : [ "items", "page", "size", "total" ]
       },
+      "ProductRef" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "name" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "code", "id", "name" ]
+      },
       "ProductRequest" : {
         "type" : "object",
         "properties" : {
@@ -28801,6 +29122,69 @@
           }
         },
         "required" : [ "accepted", "work" ]
+      },
+      "ScopeProduct" : {
+        "type" : "object",
+        "properties" : {
+          "category" : {
+            "type" : "string"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "zones" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ScopeProductZone"
+            }
+          }
+        },
+        "required" : [ "code", "id", "name", "zones" ]
+      },
+      "ScopeProductZone" : {
+        "type" : "object",
+        "properties" : {
+          "batches" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "zoneId" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "batches", "zoneId" ]
+      },
+      "ScopeZone" : {
+        "type" : "object",
+        "properties" : {
+          "batches" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "lockedBy" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "type" : {
+            "type" : "string",
+            "enum" : [ "RECEIVING", "MAIN", "QUARANTINE", "SHIPPING", "COLD", "SAFE" ]
+          }
+        },
+        "required" : [ "batches", "id", "name", "type" ]
       },
       "SearchMatch" : {
         "type" : "object",

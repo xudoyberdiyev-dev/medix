@@ -12,9 +12,9 @@ import {
   XCircle,
   type LucideIcon,
 } from "lucide-react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs } from "@/components/ui/tabs";
@@ -35,7 +35,6 @@ import {
   type InventoryCountStatus,
   type InventoryCountSummary,
 } from "./api";
-import { InventoryCountDrawer } from "./inventory-count-drawer";
 
 export function InventoryCountStatusBadge({ status }: { status: InventoryCountStatus }) {
   const t = useTranslations("inventoryCounts.status");
@@ -61,10 +60,12 @@ export function InventoryCountsPage() {
   const params = useSearchParams();
   const [status, setStatus] = useState<string | null>(params.get("status"));
   const [page, setPage] = useState(1);
-  const [open, setOpen] = useState<{ id: number | null } | null>(() => {
-    const id = Number(params.get("open"));
-    return Number.isInteger(id) && id > 0 ? { id } : null;
-  });
+  const router = useRouter();
+  const openId = Number(params.get("open"));
+  // Eski havolalar (bildirishnoma `?open=`) — hujjat sahifasiga
+  useEffect(() => {
+    if (Number.isInteger(openId) && openId > 0) router.replace(`/inventory-counts/${openId}`);
+  }, [openId, router]);
   const allowed = canAny(me.data, IN_VIEW_KEYS);
   const canCreate = can(me.data, IN_CREATE);
   const branchId = me.data?.allBranches ? (selectedBranch ?? null) : null;
@@ -79,7 +80,11 @@ export function InventoryCountsPage() {
   const columns: TableColumn<InventoryCountSummary>[] = [
     { key: "number", title: t("list.number"), mono: true },
     { key: "createdAt", title: t("list.date"), render: (d) => formatDateTime(new Date(d.createdAt)) },
-    { key: "warehouse", title: t("ov.scope"), render: (d) => `${d.warehouse} · ${d.zone ? d.zone.name : t("list.wholeWarehouse")}` },
+    {
+      key: "warehouse",
+      title: t("ov.scope"),
+      render: (d) => `${d.warehouse} · ${scopeText(d, t("list.wholeWarehouse"), (n) => t("doc.nProd", { n }))}`,
+    },
     {
       key: "commission",
       title: t("ov.commission"),
@@ -150,7 +155,7 @@ export function InventoryCountsPage() {
           {ov.data ? <span className="tabular text-body text-text-secondary">{formatQuantity(totalCount)}</span> : null}
         </h1>
         {canCreate ? (
-          <Button icon={Plus} onClick={() => setOpen({ id: null })}>
+          <Button icon={Plus} onClick={() => router.push("/inventory-counts/new")}>
             {t("start")}
           </Button>
         ) : null}
@@ -219,7 +224,7 @@ export function InventoryCountsPage() {
           rows={docs.data?.items ?? []}
           rowKey={(d) => String(d.id)}
           loading={docs.isPending}
-          onRowClick={(d) => setOpen({ id: d.id })}
+          onRowClick={(d) => router.push(`/inventory-counts/${d.id}`)}
           emptyState={
             status !== null ? (
               <NoResultsState onClearFilters={() => setStatus(null)} />
@@ -230,7 +235,7 @@ export function InventoryCountsPage() {
                 description={t("list.emptyDescription")}
                 action={
                   canCreate ? (
-                    <Button variant="secondary" icon={Plus} onClick={() => setOpen({ id: null })}>
+                    <Button variant="secondary" icon={Plus} onClick={() => router.push("/inventory-counts/new")}>
                       {t("start")}
                     </Button>
                   ) : undefined
@@ -252,7 +257,6 @@ export function InventoryCountsPage() {
           }
         />
       )}
-      {open ? <InventoryCountDrawer id={open.id} onClose={() => setOpen(null)} onCreated={(id) => setOpen({ id })} /> : null}
     </>
   );
 }
@@ -287,4 +291,14 @@ function Kpi(props: {
       <span className="text-caption text-text-secondary">{props.note}</span>
     </button>
   );
+}
+
+/** Qamrov matni: zonalar (vergul bilan) yoki «butun ombor» + mahsulotlar soni. */
+export function scopeText(
+  d: Pick<InventoryCountSummary, "zoneNames" | "productCount" | "scopeMode">,
+  whole: string,
+  nProd: (n: number) => string,
+): string {
+  const zones = d.zoneNames.length ? d.zoneNames.join(", ") : whole;
+  return d.productCount > 0 ? `${zones} · ${nProd(d.productCount)}` : zones;
 }

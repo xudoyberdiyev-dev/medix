@@ -674,7 +674,7 @@ export interface paths {
          * Filialni tahrirlash
          * @description Kod o'zgarmaydi.
          */
-        put: operations["update_16"];
+        put: operations["update_17"];
         post?: never;
         delete?: never;
         options?: never;
@@ -931,7 +931,7 @@ export interface paths {
          * Kompaniya va tizim holati
          * @description Faol filiallar, omborlar va xodimlar soni; ishga tushirilgan vaqt va kim.
          */
-        get: operations["get_11"];
+        get: operations["get_12"];
         /**
          * Guruh nomini tahrirlash
          * @description Audit jurnaliga eski → yangi qiymat yoziladi.
@@ -1054,9 +1054,9 @@ export interface paths {
             cookie?: never;
         };
         /** Kontragent kartasi */
-        get: operations["get_10"];
+        get: operations["get_11"];
         /** Kartani tahrirlash */
-        put: operations["update_15"];
+        put: operations["update_16"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1661,7 +1661,7 @@ export interface paths {
         };
         get?: never;
         /** Yozuvni tahrirlash */
-        put: operations["update_14"];
+        put: operations["update_15"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1787,7 +1787,7 @@ export interface paths {
          * Xodimni tahrirlash
          * @description Login, rol yoki filial oʻzgarsa ochiq sessiyalari tugatiladi.
          */
-        put: operations["update_13"];
+        put: operations["update_14"];
         post?: never;
         delete?: never;
         options?: never;
@@ -2132,6 +2132,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/inventory-counts/scope-options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Qoralama formasi: zonalar, mahsulotlar, komissiya xodimlari
+         * @description Zonada partiyalar soni va band boʻlsa — faol inventarizatsiya raqami; mahsulotlar zonalar boʻyicha.
+         */
+        get: operations["scopeOptions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/inventory-counts/{id}": {
         parameters: {
             query?: never;
@@ -2143,8 +2163,12 @@ export interface paths {
          * Inventarizatsiya hujjati
          * @description Ko'r sanoqda sanoq davomida hisob qoldig'i — faqat inventory.openCount.
          */
-        get: operations["get_20"];
-        put?: never;
+        get: operations["get_10"];
+        /**
+         * Qoralamani saqlash
+         * @description Ombor (shu filialda), sana, qamrov, komissiya, ko'r sanoq — faqat qoralamada.
+         */
+        put: operations["update_13"];
         post?: never;
         delete?: never;
         options?: never;
@@ -2232,6 +2256,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/inventory-counts/{id}/lines/{lineId}/note": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Qator izohi
+         * @description Sanoq yoki tekshirish holatida.
+         */
+        put: operations["note"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/inventory-counts/{id}/pdf": {
         parameters: {
             query?: never;
@@ -2261,7 +2305,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Qayta sanashga qaytarish */
+        /**
+         * Qayta sanashga qaytarish
+         * @description lineIds — tanlangan qatorlar sanoqqa qaytadi («qayta sanash»); boʻsh — hujjat.
+         */
         post: operations["recount"];
         delete?: never;
         options?: never;
@@ -2374,7 +2421,7 @@ export interface paths {
          * Buyurtma markirovkasi
          * @description Qatorlar, partiyalar, hisoblagichlar va faol kodlar.
          */
-        get: operations["get_19"];
+        get: operations["get_20"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2644,7 +2691,7 @@ export interface paths {
          * Sidebar nishonlari
          * @description Tasdiq kutayotgan buyurtmalar, jo'natishga tayyorlar, muddati 90 kun ichida tugaydigan partiyalar (o'tgan bo'lsa — danger). Ruxsat yo'q bo'lsa — null.
          */
-        get: operations["get_18"];
+        get: operations["get_19"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4768,7 +4815,7 @@ export interface paths {
             cookie?: never;
         };
         /** Akt sverka varagʻi (sarlavha + qarz jurnalidan qatorlar) */
-        get: operations["get_17"];
+        get: operations["get_18"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5683,7 +5730,7 @@ export interface paths {
             cookie?: never;
         };
         /** QY hujjati */
-        get: operations["get_16"];
+        get: operations["get_17"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6389,7 +6436,7 @@ export interface paths {
             cookie?: never;
         };
         /** OK hujjati */
-        get: operations["get_14"];
+        get: operations["get_15"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6469,7 +6516,7 @@ export interface paths {
          * OK kamomadi
          * @description Ochiqmi va hal qilish tarixi.
          */
-        get: operations["get_15"];
+        get: operations["get_16"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6764,7 +6811,7 @@ export interface paths {
             cookie?: never;
         };
         /** HC hujjati */
-        get: operations["get_13"];
+        get: operations["get_14"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6882,7 +6929,7 @@ export interface paths {
             cookie?: never;
         };
         /** ZK hujjati */
-        get: operations["get_12"];
+        get: operations["get_13"];
         put?: never;
         post?: never;
         delete?: never;
@@ -8914,21 +8961,30 @@ export interface components {
             /** Format: date-time */
             cancelledAt?: string;
             cancelledBy?: string;
+            /** Format: int64 */
+            chairId?: number;
             commission?: string;
+            /** Format: date */
+            countDate?: string;
             /** Format: int32 */
             counted: number;
             /** Format: date-time */
             createdAt: string;
             createdBy: string;
+            events: components["schemas"]["InventoryEvent"][];
             /** Format: int64 */
             id: number;
             lines: components["schemas"]["InventoryCountLine"][];
+            members: components["schemas"]["MemberRef"][];
             needsDirector: boolean;
             note?: string;
             number: string;
             /** Format: date-time */
             postedAt?: string;
             postedBy?: string;
+            products: components["schemas"]["ProductRef"][];
+            /** @enum {string} */
+            scopeMode: "WAREHOUSE" | "ZONES" | "PRODUCTS";
             shortageCost?: string;
             /** Format: int32 */
             shortageQty: number;
@@ -8947,6 +9003,7 @@ export interface components {
             /** Format: int64 */
             warehouseId: number;
             zone?: components["schemas"]["ZoneRef"];
+            zones: components["schemas"]["ZoneRef"][];
         };
         InventoryCountEntries: {
             entries: components["schemas"]["InventoryCountEntry"][];
@@ -8988,10 +9045,12 @@ export interface components {
             expiryDate: string;
             /** Format: int64 */
             id: number;
+            note?: string;
             productCode: string;
             /** Format: int64 */
             productId: number;
             productName: string;
+            recount: boolean;
             zone: components["schemas"]["ZoneRef"];
         };
         InventoryCountPage: {
@@ -9005,15 +9064,31 @@ export interface components {
         };
         InventoryCountRequest: {
             blind: boolean;
+            /**
+             * Format: int64
+             * @description Komissiya raisi — aʼzolardan biri
+             */
+            chairId?: number;
             commission: string;
+            /** Format: date */
+            countDate?: string;
+            /** @description Komissiya aʼzolari (xodimlar) */
+            memberIds?: number[];
             note: string;
+            productIds?: number[];
+            /**
+             * @description Boʻsh — zonalar tanlangan boʻlsa ZONES, aks holda WAREHOUSE
+             * @enum {string}
+             */
+            scopeMode?: "WAREHOUSE" | "ZONES" | "PRODUCTS";
             /** Format: int64 */
             warehouseId: number;
             /**
              * Format: int64
-             * @description Bo'sh — butun ombor
+             * @description Eski shakl: bitta zona (zoneIds boʻlmasa)
              */
             zoneId?: number;
+            zoneIds?: number[];
         };
         InventoryCountSummary: {
             blind: boolean;
@@ -9021,6 +9096,8 @@ export interface components {
             branchId: number;
             /** @description Komissiya (vergul bilan) */
             commission?: string;
+            /** Format: date */
+            countDate?: string;
             /** Format: int32 */
             counted: number;
             /** Format: date-time */
@@ -9034,6 +9111,10 @@ export interface components {
             number: string;
             /** Format: date-time */
             postedAt?: string;
+            /** Format: int32 */
+            productCount: number;
+            /** @enum {string} */
+            scopeMode: "WAREHOUSE" | "ZONES" | "PRODUCTS";
             /** @description Faqat prices.cost */
             shortageCost?: string;
             /** Format: int32 */
@@ -9048,6 +9129,14 @@ export interface components {
             /** Format: int64 */
             warehouseId: number;
             zone?: components["schemas"]["ZoneRef"];
+            zoneNames: string[];
+        };
+        InventoryEvent: {
+            /** Format: date-time */
+            at: string;
+            kind: string;
+            text?: string;
+            who: string;
         };
         InventoryLastFull: {
             branch: string;
@@ -9062,6 +9151,9 @@ export interface components {
             /** Format: int64 */
             warehouseId: number;
         };
+        InventoryLineNote: {
+            note?: string;
+        };
         InventoryOverview: {
             lastFull: components["schemas"]["InventoryLastFull"][];
             /**
@@ -9070,6 +9162,14 @@ export interface components {
              */
             remindDays: number;
             statuses: components["schemas"]["InventoryStatusCount"][];
+        };
+        InventoryRecountRequest: {
+            lineIds?: number[];
+        };
+        InventoryScopeOptions: {
+            products: components["schemas"]["ScopeProduct"][];
+            staff: components["schemas"]["MemberRef"][];
+            zones: components["schemas"]["ScopeZone"][];
         };
         InventoryStatusCount: {
             /** Format: int64 */
@@ -9447,6 +9547,11 @@ export interface components {
             mustChangePassword: boolean;
             permissions: string[];
             role: components["schemas"]["RoleRef"];
+        };
+        MemberRef: {
+            /** Format: int64 */
+            id: number;
+            name: string;
         };
         MonitorBoard: {
             cards: components["schemas"]["MonitorCard"][];
@@ -11074,6 +11179,12 @@ export interface components {
             total: number;
             views?: components["schemas"]["ViewCounts"];
         };
+        ProductRef: {
+            code: string;
+            /** Format: int64 */
+            id: number;
+            name: string;
+        };
         ProductRequest: {
             barcodes?: string[];
             /** Format: int64 */
@@ -12074,6 +12185,30 @@ export interface components {
         ScanResult: {
             accepted: components["schemas"]["MarkCode"];
             work: components["schemas"]["MarkWork"];
+        };
+        ScopeProduct: {
+            category?: string;
+            code: string;
+            /** Format: int64 */
+            id: number;
+            name: string;
+            zones: components["schemas"]["ScopeProductZone"][];
+        };
+        ScopeProductZone: {
+            /** Format: int32 */
+            batches: number;
+            /** Format: int64 */
+            zoneId: number;
+        };
+        ScopeZone: {
+            /** Format: int32 */
+            batches: number;
+            /** Format: int64 */
+            id: number;
+            lockedBy?: string;
+            name: string;
+            /** @enum {string} */
+            type: "RECEIVING" | "MAIN" | "QUARANTINE" | "SHIPPING" | "COLD" | "SAFE";
         };
         SearchMatch: {
             /** @description Maydon kodi: BARCODE, CONTRACT_NAME, CLASSIFIER_NAME, TIN, PHONE, ADDRESS … */
@@ -14646,7 +14781,7 @@ export interface operations {
             };
         };
     };
-    update_16: {
+    update_17: {
         parameters: {
             query?: never;
             header?: never;
@@ -15030,7 +15165,7 @@ export interface operations {
             };
         };
     };
-    get_11: {
+    get_12: {
         parameters: {
             query?: never;
             header?: never;
@@ -15248,7 +15383,7 @@ export interface operations {
             };
         };
     };
-    get_10: {
+    get_11: {
         parameters: {
             query?: never;
             header?: never;
@@ -15270,7 +15405,7 @@ export interface operations {
             };
         };
     };
-    update_15: {
+    update_16: {
         parameters: {
             query?: never;
             header?: never;
@@ -16123,7 +16258,7 @@ export interface operations {
             };
         };
     };
-    update_14: {
+    update_15: {
         parameters: {
             query?: never;
             header?: never;
@@ -16305,7 +16440,7 @@ export interface operations {
             };
         };
     };
-    update_13: {
+    update_14: {
         parameters: {
             query?: never;
             header?: never;
@@ -16820,7 +16955,29 @@ export interface operations {
             };
         };
     };
-    get_20: {
+    scopeOptions: {
+        parameters: {
+            query: {
+                warehouseId: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InventoryScopeOptions"];
+                };
+            };
+        };
+    };
+    get_10: {
         parameters: {
             query?: never;
             header?: never;
@@ -16830,6 +16987,32 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InventoryCountDetail"];
+                };
+            };
+        };
+    };
+    update_13: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InventoryCountRequest"];
+            };
+        };
         responses: {
             /** @description OK */
             200: {
@@ -16940,6 +17123,33 @@ export interface operations {
             };
         };
     };
+    note: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+                lineId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InventoryLineNote"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InventoryCountDetail"];
+                };
+            };
+        };
+    };
     pdf_3: {
         parameters: {
             query?: never;
@@ -16971,7 +17181,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["InventoryRecountRequest"];
+            };
+        };
         responses: {
             /** @description OK */
             200: {
@@ -17098,7 +17312,7 @@ export interface operations {
             };
         };
     };
-    get_19: {
+    get_20: {
         parameters: {
             query?: never;
             header?: never;
@@ -17474,7 +17688,7 @@ export interface operations {
             };
         };
     };
-    get_18: {
+    get_19: {
         parameters: {
             query?: {
                 branchId?: number;
@@ -20623,7 +20837,7 @@ export interface operations {
             };
         };
     };
-    get_17: {
+    get_18: {
         parameters: {
             query?: never;
             header?: never;
@@ -21949,7 +22163,7 @@ export interface operations {
             };
         };
     };
-    get_16: {
+    get_17: {
         parameters: {
             query?: never;
             header?: never;
@@ -22904,7 +23118,7 @@ export interface operations {
             };
         };
     };
-    get_14: {
+    get_15: {
         parameters: {
             query?: never;
             header?: never;
@@ -22996,7 +23210,7 @@ export interface operations {
             };
         };
     };
-    get_15: {
+    get_16: {
         parameters: {
             query?: never;
             header?: never;
@@ -23431,7 +23645,7 @@ export interface operations {
             };
         };
     };
-    get_13: {
+    get_14: {
         parameters: {
             query?: never;
             header?: never;
@@ -23595,7 +23809,7 @@ export interface operations {
             };
         };
     };
-    get_12: {
+    get_13: {
         parameters: {
             query?: never;
             header?: never;
