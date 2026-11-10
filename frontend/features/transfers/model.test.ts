@@ -58,7 +58,7 @@ describe("transfers model", () => {
   });
 
   it("hujjat havolasi tur sahifasiga", () => {
-    expect(docHref({ kind: "FS", id: 7 })).toBe("/branch-sales?open=7");
+    expect(docHref({ kind: "FS", id: 7 })).toBe("/branch-sales/7");
     expect(docHref({ kind: "ZK", id: 3 })).toBe("/zone-transfers/3");
     expect(docHref({ kind: "OK", id: 5 })).toBe("/warehouse-transfers/5");
   });

@@ -92,5 +92,11 @@
     "cancel": "Bekor qilish",
     "cancelTitle": "Toʻlovni bekor qilish: {number}",
     "cancelled": "Toʻlov bekor qilindi"
+  },
+  "doc": {
+    "title": "Filiallararo savdo",
+    "printInv": "Hisob-fakturani chop etish",
+    "invAuto": "Joʻnatishda beriladi",
+    "cfInv": "Partiya tannarxida hisob-faktura yoziladi va «{buyer}» filiali qarzi oshadi"
   }
 }

@@ -18,7 +18,22 @@ export interface OkEvent {
 }
 
 /** Tarix: hujjat maydonlaridan (yaratildi, joʻnatildi, qabul qilindi / farq bilan, bekor qilindi) — eng yangisi yuqorida. */
-export function okHistory(doc: WarehouseTransferDetail): OkEvent[] {
+export type HistoryDoc = Pick<
+  WarehouseTransferDetail,
+  | "createdAt"
+  | "createdBy"
+  | "note"
+  | "sentAt"
+  | "sentBy"
+  | "receivedAt"
+  | "receivedBy"
+  | "shortageQty"
+  | "receiveNote"
+  | "cancelledAt"
+  | "cancelledBy"
+>;
+
+export function okHistory(doc: HistoryDoc): OkEvent[] {
   const out: OkEvent[] = [{ at: doc.createdAt, employee: doc.createdBy, action: "create", reason: doc.note || undefined }];
   if (doc.sentAt) out.push({ at: doc.sentAt, employee: doc.sentBy ?? undefined, action: "transit" });
   if (doc.receivedAt)

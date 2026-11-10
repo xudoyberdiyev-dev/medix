@@ -844,8 +844,12 @@ test("CEO: filiallararo savdo (FS) — ikkinchi filial, joʻnatish (HF, tannarx)
   await page.getByRole("button", { name: "Qoralamani saqlash" }).click();
   await expect(page.getByText("Qoralama saqlandi")).toBeVisible();
 
+  // Hujjat — toʻliq sahifa (prototip TransferDoc, kind = fs): Joʻnatish → tasdiqlash oynasi
+  await expect(page).toHaveURL(/\/branch-sales\/\d+$/);
+  await expect(page.getByRole("heading", { name: "Filiallararo savdo" })).toBeVisible();
   await page.getByRole("button", { name: "Joʻnatish", exact: true }).click();
-  await expect(page.getByText("Joʻnatildi — tovar yoʻlda")).toBeVisible();
+  await page.getByRole("dialog").last().getByRole("button", { name: "Joʻnatish", exact: true }).click();
+  await expect(page.getByText(/FS-.* joʻnatildi — yoʻlda/)).toBeVisible();
   await expect(page.getByText(/HF-[A-Z]{3}-\d{6}/).first()).toBeVisible();
 
   await page.getByRole("button", { name: "Qabul qilish", exact: true }).click();
@@ -871,8 +875,10 @@ test("CEO: FS kamomadi — topildi, sotuvchiga qaytariladi (qarz kamayadi)", asy
   await page.getByLabel(/E2E-01 — joʻnatish soni/).fill("2");
   await page.getByRole("button", { name: "Qoralamani saqlash" }).click();
   await expect(page.getByText("Qoralama saqlandi")).toBeVisible();
+  await expect(page).toHaveURL(/\/branch-sales\/\d+$/);
   await page.getByRole("button", { name: "Joʻnatish", exact: true }).click();
-  await expect(page.getByText("Joʻnatildi — tovar yoʻlda")).toBeVisible();
+  await page.getByRole("dialog").last().getByRole("button", { name: "Joʻnatish", exact: true }).click();
+  await expect(page.getByText(/FS-.* joʻnatildi — yoʻlda/)).toBeVisible();
 
   await page.getByRole("button", { name: "Qabul qilish", exact: true }).click();
   await page.getByLabel(/E2E-01 — kelgan soni/).fill("1");

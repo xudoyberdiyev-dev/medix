@@ -239,12 +239,12 @@ function View({ doc, onClose }: { doc: BranchSaleDetail; onClose: () => void }) 
       >
         <p className="text-body">{tw("view.cancelBody")}</p>
       </Modal>
-      {receiving ? <ReceiveModal doc={doc} onClose={() => setReceiving(false)} /> : null}
+      {receiving ? <BranchSaleReceiveModal doc={doc} onClose={() => setReceiving(false)} /> : null}
     </Drawer>
   );
 }
 
-function ReceiveModal({ doc, onClose }: { doc: BranchSaleDetail; onClose: () => void }) {
+export function BranchSaleReceiveModal({ doc, onClose }: { doc: BranchSaleDetail; onClose: () => void }) {
   const t = useTranslations("warehouseTransfers");
   const receiveError = useReceiveErrorText();
   const warehouses = useWarehouses();
