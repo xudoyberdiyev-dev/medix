@@ -65,6 +65,14 @@ const pages: [string, string][] = [
   ["/marking", "53-marking"],
   ["/driver", "54-driver"],
   ["/profile", "55-profile"],
+  ["/orders/1", "60-buyurtma-karta"],
+  ["/receipts/1", "61-kirim-hujjat"],
+  ["/customer-returns/1", "62-qm-hujjat"],
+  ["/write-offs/1", "63-hc-hujjat"],
+  ["/supplier-returns/1", "64-qy-hujjat"],
+  ["/inventory-counts/1", "65-in-hujjat"],
+  ["/customers/1", "66-mijoz-karta"],
+  ["/products/1", "67-mahsulot-karta"],
 ];
 
 async function shot(page: Page, name: string) {
