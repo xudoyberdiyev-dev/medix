@@ -110,7 +110,9 @@
     "dRejD": "Partiya Karantinda qoladi. Yaratuvchiga sabab koʻrsatiladi.",
     "rejReason": "Rad etish sababi",
     "rejReq": "Sababni kiriting",
-    "tRejected": "{n} rad etildi"
+    "tRejected": "{n} rad etildi",
+    "h_draft": "qoralama yaratdi",
+    "h_moved": "koʻchirdi"
   },
   "newDoc": {
     "bNew": "Bitta ombor ichida zonadan zonaga. Tasdiq kerak boʻlmasa — koʻchirish darhol oʻtkaziladi; partiya va tannarx oʻzgarmaydi.",

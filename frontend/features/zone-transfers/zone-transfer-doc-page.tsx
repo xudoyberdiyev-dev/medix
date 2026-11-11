@@ -200,7 +200,11 @@ function View({ doc }: { doc: ZoneTransferDetail }) {
         <HistoryTimeline
           query={{ data: events, error: null, refetch: () => 0 }}
           label={(a) =>
-            a === "cancelled" ? td("h_cancelled") : ["create", "pending", "posted", "rejected"].includes(a) ? t(`h_${a}` as "h_create") : a
+            a === "cancelled"
+              ? td("h_cancelled")
+              : ["create", "draft", "moved", "pending", "posted", "rejected"].includes(a)
+                ? t(`h_${a}` as "h_create")
+                : a
           }
         />
       )}

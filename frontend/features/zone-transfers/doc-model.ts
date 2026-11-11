@@ -24,15 +24,17 @@ export function zkSteps(status: ZoneTransferStatus, needsApproval: boolean): { k
 export interface ZkEvent {
   at: string;
   employee?: string;
-  action: "create" | "pending" | "posted" | "rejected" | "cancelled";
+  action: "create" | "draft" | "moved" | "pending" | "posted" | "rejected" | "cancelled";
   reason?: string;
 }
 
 /** Tarix (eng yangisi yuqorida): yaratildi (tasdiq kerak boʻlsa — tasdiqqa yubordi), tasdiqladi / rad etdi. */
 export function zkHistory(doc: ZoneTransferDetail): ZkEvent[] {
-  const out: ZkEvent[] = [
-    { at: doc.createdAt, employee: doc.createdBy, action: doc.needsApproval ? "pending" : "create", reason: doc.note || undefined },
-  ];
+  // Qoralamadan oʻtkazilgan (yaratilgandan keyin) — ikki voqea: qoralama yaratdi, koʻchirdi
+  const fromDraft = !doc.needsApproval && !!doc.postedAt && new Date(doc.postedAt).getTime() - new Date(doc.createdAt).getTime() > 5000;
+  const first = doc.status === "DRAFT" || doc.status === "CANCELLED" || fromDraft ? "draft" : doc.needsApproval ? "pending" : "create";
+  const out: ZkEvent[] = [{ at: doc.createdAt, employee: doc.createdBy, action: first, reason: doc.note || undefined }];
+  if (fromDraft && doc.postedAt) out.push({ at: doc.postedAt, employee: doc.postedBy ?? undefined, action: "moved" });
   if (doc.postedAt && doc.needsApproval) out.push({ at: doc.postedAt, employee: doc.postedBy ?? undefined, action: "posted" });
   if (doc.rejectedAt)
     out.push({ at: doc.rejectedAt, employee: doc.rejectedBy ?? undefined, action: "rejected", reason: doc.rejectReason ?? undefined });

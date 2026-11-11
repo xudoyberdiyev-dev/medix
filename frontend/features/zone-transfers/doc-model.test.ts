@@ -55,6 +55,13 @@ describe("ZK qoralamasi", () => {
     expect(zkSteps("CANCELLED", false).map((s) => s.state)).toEqual(["fail", "next"]);
   });
 
+  it("qoralamadan koʻchirilgan — ikki voqea", () => {
+    const ev = zkHistory(doc({ status: "POSTED", needsApproval: false, postedAt: "2026-10-04T05:10:00Z", postedBy: "Ali" }));
+    expect(ev.map((e) => e.action)).toEqual(["moved", "draft"]);
+    const now = zkHistory(doc({ status: "POSTED", needsApproval: false, postedAt: "2026-10-04T05:00:01Z" }));
+    expect(now.map((e) => e.action)).toEqual(["create"]);
+  });
+
   it("bekor qilish tarixda", () => {
     const ev = zkHistory(doc({ status: "CANCELLED", needsApproval: false, cancelledAt: "2026-10-04T06:00:00Z", cancelledBy: "Ali" }));
     expect(ev[0]).toMatchObject({ action: "cancelled", employee: "Ali" });
