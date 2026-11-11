@@ -14,7 +14,8 @@
     "set": "Narx oʻrnatish",
     "tabCurrent": "Amaldagi narxlar",
     "tabDocuments": "Narx oʻzgarishlari",
-    "tabTypes": "Narx turlari"
+    "tabTypes": "Narx turlari",
+    "newType": "Narx turi yaratish"
   },
   "current": {
     "code": "Kod",
@@ -162,14 +163,14 @@
     "cAlt": "Muqobil nomi",
     "cCur": "Valyuta",
     "cKind": "Turi",
-    "cBatch": "Partiyaga bogʻliq",
+    "cBatch": "Partiya boʻyicha",
     "cBase": "Bazaviy",
     "cProds": "Mahsulotlar",
     "cCusts": "Biriktirilgan mijozlar",
     "cLast": "Oxirgi oʻzgarish",
     "cStatus": "Holat",
     "som": "soʻm",
-    "kindSale": "Sotuv",
+    "kindSale": "Sotuv narxi",
     "yes": "Ha",
     "no": "Yoʻq",
     "active": "Faol",
@@ -200,7 +201,7 @@
     "created": "«{n}» yaratildi",
     "hCreate": "Yaratildi",
     "fBatchHint": "Narx har partiya uchun alohida oʻrnatiladi",
-    "fBatchLock": "Bu turda narxlar bor — «Partiyaga bogʻliq» oʻzgarmaydi",
+    "fBatchLock": "Bu turda narxlar bor — «Partiya boʻyicha» oʻzgarmaydi",
     "fBaseHint": "Faqat bitta tur bazaviy boʻladi. Mijoz turida narx boʻlmasa bazaviy narx olinadi; yangisi tanlansa oldingisi oddiy turga oʻtadi."
   },
   "set": {

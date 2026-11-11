@@ -19,9 +19,9 @@
     "transfersZone": "Внутри зоны",
     "transfersBranch": "Межфилиальные",
     "returns": "Виды возвратов",
-    "returnsCustomer": "Возврат от клиента",
-    "returnsWriteOffs": "Списание",
-    "returnsSupplier": "Возврат поставщику",
+    "returnsCustomer": "Возврат от клиента (QM)",
+    "returnsWriteOffs": "Списание (HC)",
+    "returnsSupplier": "Возврат поставщику (QY)",
     "supplierDebts": "Разделы долгов поставщикам",
     "supplierDebtsDebts": "Долги",
     "supplierDebtsBonus": "Бонусный баланс"

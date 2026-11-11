@@ -62,7 +62,7 @@
   "branches": {
     "forbidden": "Filiallarni Direktor va Bosh administrator boshqaradi.",
     "title": "Filiallar",
-    "add": "Filial qoʻshish",
+    "add": "Yangi filial",
     "searchPlaceholder": "Nom, kod yoki STIR",
     "activated": "Filial faollashtirildi",
     "activateFailed": "Filial faollashtirilmadi",

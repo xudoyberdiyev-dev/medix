@@ -86,7 +86,7 @@ class WriteOffController {
         }
         return new WriteOffPage(p.items().stream().map(s -> new WriteOffModels.WriteOffSummary(s.id(), s.number(), s.branchId(),
                 s.warehouseId(), s.warehouse(), s.zone(), s.reason(), s.status(), s.needsDirector(), s.lines(), s.qty(), null, s.createdBy(),
-                s.createdAt(), s.postedAt())).toList(), p.total(), p.page(), p.size());
+                s.createdAt(), s.postedAt(), s.postedBy())).toList(), p.total(), p.page(), p.size());
     }
 
     @GetMapping("/{id}")

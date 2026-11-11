@@ -2,7 +2,7 @@
   "kind": "Hisobdan chiqarish",
   "title": "Hisobdan chiqarish",
   "forbidden": "Bu sahifa sizning rolingiz uchun yopiq.",
-  "create": "Hisobdan chiqarish",
+  "create": "Yangi hujjat",
   "caption": "Hisobdan chiqarish hujjatlari",
   "status": {
     "PENDING": "Tasdiqda",
@@ -19,7 +19,8 @@
     "status": "Holat",
     "allStatuses": "Barcha holatlar",
     "reason": "Sabab",
-    "allReasons": "Barcha sabablar"
+    "allReasons": "Barcha sabablar",
+    "all": "Hammasi"
   },
   "col": {
     "number": "Raqam",
@@ -39,7 +40,11 @@
     "amount": "Summa",
     "stock": "Qoldiq",
     "reserved": "Zahirada",
-    "writeOff": "Chiqarish"
+    "writeOff": "Chiqarish",
+    "warehouse": "Ombor",
+    "lines": "Qatorlar",
+    "sumCost": "Summa (tannarx)",
+    "postedBy": "Kim tasdiqladi"
   },
   "director": "Direktor",
   "empty": {
@@ -123,5 +128,11 @@
     "dApprove": "«{zone}» zonasidan {n} qator, {q} dona qoldiqdan chiqariladi.",
     "dApproveCost": "Tannarxda {amount} xarajatga yoziladi.",
     "crumbNew": "Yangi"
+  },
+  "search": "Raqam, ombor yoki sabab…",
+  "tab": {
+    "PENDING": "Tasdiqlashda",
+    "POSTED": "Tasdiqlangan",
+    "REJECTED": "Rad etilgan"
   }
 }

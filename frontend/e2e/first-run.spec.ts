@@ -304,7 +304,7 @@ test("CEO: mahsulot qoʻshish va narx oʻrnatish (NO)", async ({ page }) => {
   await page.getByRole("button", { name: "Narx turi yaratish" }).click();
   const nd = page.getByRole("dialog", { name: "Yangi narx turi" });
   await nd.getByRole("textbox", { name: /^Nomi/ }).fill("Klinika narxi");
-  await nd.getByText("Partiyaga bogʻliq").click();
+  await nd.getByText("Partiya boʻyicha").click();
   await nd.getByRole("button", { name: "Saqlash" }).click();
   await expect(page.getByText("«Klinika narxi» yaratildi")).toBeVisible();
   await expect(page.getByRole("cell", { name: "Klinika narxi", exact: true })).toBeVisible();
@@ -404,7 +404,7 @@ test("CEO: kirim — qoralama → qabul (kam keldi) → oʻtkazish → Qoldiqlar
   await page.getByRole("combobox", { name: "Yetkazib beruvchi", exact: true }).click();
   await page.getByPlaceholder("Qidirish").fill("Pharm");
   await page.getByRole("option", { name: /Pharm Supply E2E/ }).click();
-  await field(page, "Yuk xati raqami").fill("YX-501");
+  await field(page, "Yetkazib beruvchi nakladnoyi raqami").fill("YX-501");
   await page.getByRole("combobox", { name: "Mahsulot", exact: true }).click();
   await page.getByPlaceholder("Qidirish").fill("E2E");
   await page.getByRole("option", { name: /Paracetamol E2E/ }).click();
@@ -425,7 +425,7 @@ test("CEO: kirim — qoralama → qabul (kam keldi) → oʻtkazish → Qoldiqlar
   await page.getByRole("button", { name: "Nusxa olish" }).click();
   await expect(page).toHaveURL(/\/receipts\/new\?copy=\d+$/);
   await expect(page.getByText(/hujjatidan nusxa olindi/)).toBeVisible();
-  await expect(field(page, "Yuk xati raqami").first()).toHaveValue("");
+  await expect(field(page, "Yetkazib beruvchi nakladnoyi raqami").first()).toHaveValue("");
   await page.goBack();
   await page.mouse.move(0, 0);
   await expect(page.getByText(/hujjatidan nusxa olindi/)).toBeHidden({ timeout: 15_000 });
@@ -468,7 +468,7 @@ test("CEO: buyurtma — mijoz, mahsulot, muammolar paneli, navbatga yuborish", a
   await page.keyboard.press("Escape");
 
   await page.goto("/orders");
-  await page.getByRole("button", { name: "Buyurtma kiritish" }).click();
+  await page.getByRole("button", { name: "Yangi buyurtma" }).click();
   await page.getByRole("combobox", { name: "Mijoz", exact: true }).click();
   await page.getByPlaceholder("Qidirish").fill("Shifo");
   await page.getByRole("option", { name: /Shifo Dorixona E2E/ }).click();
@@ -706,7 +706,7 @@ test("CEO: hisobdan chiqarish (HC) — shikastlangan tovar darhol oʻtkaziladi, 
   await expect(page).toHaveURL(/\/$/);
 
   await page.goto("/write-offs");
-  await page.getByRole("button", { name: "Hisobdan chiqarish" }).first().click();
+  await page.getByRole("button", { name: "Yangi hujjat" }).first().click();
   // Yangi hujjat — toʻliq sahifa (prototip StockDocs, kind = hc)
   await expect(page).toHaveURL(/\/write-offs\/new$/);
   const drawer = page.getByRole("main");
@@ -755,7 +755,7 @@ test("CEO: inventarizatsiya (IN) — hujjat sahifasi: qoralama (avtosaqlash) →
   await expect(page).toHaveURL(/\/$/);
 
   await page.goto("/inventory-counts");
-  await page.getByRole("button", { name: "Inventarizatsiya boshlash" }).first().click();
+  await page.getByRole("button", { name: "Yangi inventarizatsiya" }).first().click();
   await expect(page).toHaveURL(/\/inventory-counts\/new$/);
   await page.getByRole("combobox", { name: "Ombor", exact: true }).click();
   await page.getByRole("option", { name: /Markaziy ombor/ }).click();
@@ -805,7 +805,7 @@ test("CEO: YB ga qaytarish (QY) — kirim partiyasi darhol qaytariladi, qarz kam
   await expect(page).toHaveURL(/\/$/);
 
   await page.goto("/supplier-returns");
-  await page.getByRole("button", { name: "Qaytarish" }).first().click();
+  await page.getByRole("button", { name: "Yangi qaytarish" }).first().click();
   // Yangi hujjat — toʻliq sahifa (prototip StockDocs, kind = qy)
   await expect(page).toHaveURL(/\/supplier-returns\/new$/);
   const drawer = page.getByRole("main");
@@ -842,7 +842,7 @@ test("CEO: filiallararo savdo (FS) — ikkinchi filial, joʻnatish (HF, tannarx)
 
   // Ikkinchi filial va uning ombori
   await page.goto("/settings/branches");
-  await page.getByRole("button", { name: "Filial qoʻshish" }).first().click();
+  await page.getByRole("button", { name: "Yangi filial" }).first().click();
   await field(page, "Kod").fill("SMQ");
   await field(page, "STIR").fill("309876543");
   await field(page, "Nomi").fill("E2E Samarqand");

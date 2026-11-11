@@ -33,3 +33,16 @@ describe("kirim hujjati — yordamchilar", () => {
     expect(dueTone("POSTED", "2026-11-01", "2026-11-08", true)).toBe("muted");
   });
 });
+
+describe("receiptSteps", () => {
+  it("bosqichlar holati", async () => {
+    const { receiptSteps } = await import("./receipt-doc");
+    expect(receiptSteps("DRAFT").map((s) => s.state)).toEqual(["cur", "next", "next"]);
+    expect(receiptSteps("ACCEPTED").map((s) => s.state)).toEqual(["done", "cur", "next"]);
+    expect(receiptSteps("POSTED").map((s) => s.state)).toEqual(["done", "done", "done"]);
+    expect(receiptSteps("CANCELLED")).toEqual([
+      { key: "DRAFT", state: "done" },
+      { key: "CANCELLED", state: "fail" },
+    ]);
+  });
+});

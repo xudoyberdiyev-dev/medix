@@ -241,6 +241,9 @@ class WriteOffIT {
                 .andExpect(jsonPath("$.postedBy").value("Sinov"))
                 .andExpect(jsonPath("$.totalCost").value("5000.00"));
         assertThat(bal(p.quarantine(), b)).isZero();
+        mvc.perform(get("/api/write-offs").param("status", "POSTED").cookie(manager))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[?(@.postedBy == 'Sinov')]").isNotEmpty());
         send(post("/api/write-offs/" + id + "/reject"), manager, "{\"reason\":\"kech\"}")
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("hc.notPending"));

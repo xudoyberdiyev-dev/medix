@@ -27,3 +27,17 @@ export function expectedBonus(doc: BonusInput): string | null {
   const cents = toCentsBig(base) * toCentsBig(doc.discountValue);
   return centsToMoney((cents * 2n + 10000n) / 20000n);
 }
+
+/** Prototip `Receipts` → DocumentHeader.steps: Qoralama → Qabul qilindi → Oʻtkazildi (bekor — qizil). */
+export function receiptSteps(
+  status: "DRAFT" | "ACCEPTED" | "POSTED" | "CANCELLED",
+): { key: "DRAFT" | "ACCEPTED" | "POSTED" | "CANCELLED"; state: "done" | "cur" | "next" | "fail" }[] {
+  const order = ["DRAFT", "ACCEPTED", "POSTED"] as const;
+  if (status === "CANCELLED")
+    return [
+      { key: "DRAFT", state: "done" },
+      { key: "CANCELLED", state: "fail" },
+    ];
+  const at = order.indexOf(status);
+  return order.map((k, i) => ({ key: k, state: i < at || status === "POSTED" ? "done" : i === at ? "cur" : "next" }));
+}

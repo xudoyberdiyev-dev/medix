@@ -235,7 +235,29 @@
       "driver": "Haydovchidan pul qabul qilish · {n}",
       "close": "Kunni yopish",
       "mt": "Mijozdan toʻlov"
-    }
+    },
+    "fPeriod": "Davr",
+    "fBranch": "Filial",
+    "branchLock": "Kassir faqat oʻz filialida ishlaydi",
+    "perText": "Davr: {f} — {t}",
+    "pt": {
+      "all": "Hammasi",
+      "CASH": "Naqd",
+      "BANK": "Perechisleniye",
+      "TERMINAL": "Online"
+    },
+    "balNote": "{d} holatiga · joriy",
+    "rCash": "Naqd (kassalar)",
+    "docs": "{n} ta hujjat",
+    "rMt": "Mijoz toʻlovlari (MT)",
+    "rOther": "Boshqa kirimlar",
+    "rIoIn": "Hisoblar orasida kelgan",
+    "rYt": "YB ga toʻlovlar (YT)",
+    "rIoOut": "Hisoblar orasida ketgan / inkassatsiya",
+    "waitNote": "Haydovchida, mijozlar toʻlov kuni va qoralamalar",
+    "resp": "Masʼul",
+    "accFormula": "Davr boshi + kirim − chiqim = joriy qoldiq",
+    "total": "Jami"
   },
   "bank": {
     "noAccount": {

@@ -44,6 +44,7 @@ const vendor = {
     else if (kind === "exact") await p.getByText(arg, { exact: true }).first().click();
     else if (kind === "btn") await p.getByRole("button", { name: arg }).first().click();
     else if (kind === "key") await p.keyboard.press(arg);
+    else if (kind === "hash") await p.evaluate((h) => { location.hash = h; }, arg);
     else if (kind === "type") await p.keyboard.type(arg, { delay: 20 });
     else if (kind === "wait") await p.waitForTimeout(Number(arg));
     else if (kind === "fill") {

@@ -19,9 +19,9 @@
     "transfersZone": "Zona ichida",
     "transfersBranch": "Filiallararo",
     "returns": "Qaytarish turlari",
-    "returnsCustomer": "Mijozdan qaytarish",
-    "returnsWriteOffs": "Hisobdan chiqarish",
-    "returnsSupplier": "YB ga qaytarish",
+    "returnsCustomer": "Mijozdan qaytarish (QM)",
+    "returnsWriteOffs": "Hisobdan chiqarish (HC)",
+    "returnsSupplier": "Yetkazib beruvchiga qaytarish (QY)",
     "supplierDebts": "YB qarzi boʻlimlari",
     "supplierDebtsDebts": "Qarzlar",
     "supplierDebtsBonus": "Bonus balans"

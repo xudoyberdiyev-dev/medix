@@ -7,6 +7,8 @@ import { useRef, useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { DocumentHeader } from "@/components/ui/document-header";
+import { DocTabs, docEvents } from "@/components/ui/doc-tabs";
+import { HubTabs } from "@/components/shell/hub-tabs";
 import { Drawer } from "@/components/ui/drawer";
 import { Modal } from "@/components/ui/modal";
 import { Select } from "@/components/ui/select";
@@ -305,8 +307,9 @@ function View({ doc, onClose, page = false }: { doc: CustomerReturnDetail; onClo
   if (page)
     return (
       <div className="flex min-w-0 flex-col gap-4 pb-12">
+        <HubTabs hub="returns" className="-mb-1" />
         <DocumentHeader
-          parent={{ label: t("title"), href: "/customer-returns" }}
+          parent={{ label: t("listTitle"), href: "/customer-returns" }}
           crumb={doc.number}
           crumbMono
           title={t("kind")}
@@ -327,7 +330,9 @@ function View({ doc, onClose, page = false }: { doc: CustomerReturnDetail; onClo
           }
           actions={actions}
         />
-        <section className="rounded-card border border-border bg-surface p-5">{body}</section>
+        <DocTabs events={docEvents(doc)}>
+          <section className="rounded-card border border-border bg-surface p-5">{body}</section>
+        </DocTabs>
         {modals}
       </div>
     );
@@ -568,8 +573,9 @@ export function CreateForm({
   if (page)
     return (
       <div className="flex min-w-0 flex-col gap-4 pb-12">
+        <HubTabs hub="returns" className="-mb-1" />
         <DocumentHeader
-          parent={{ label: t("title"), href: "/customer-returns" }}
+          parent={{ label: t("listTitle"), href: "/customer-returns" }}
           crumb={t("crumbNew")}
           title={t("newTitle")}
           actions={action}

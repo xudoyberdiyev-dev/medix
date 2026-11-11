@@ -8972,6 +8972,18 @@ export interface components {
             /** @enum {string} */
             status: "PLANNED" | "IN_TRANSIT" | "RETURN_WAIT" | "DONE" | "CANCELLED";
         };
+        Flows: {
+            customerPayments: string;
+            /** Format: int32 */
+            expenseDocs: number;
+            /** Format: int32 */
+            incomeDocs: number;
+            otherExpense: string;
+            otherIncome: string;
+            supplierPayments: string;
+            transfersIn: string;
+            transfersOut: string;
+        };
         FsShortageInfo: {
             amount?: string;
             canResolveAsBuyer: boolean;
@@ -10741,6 +10753,8 @@ export interface components {
             expense: string;
             expenses: components["schemas"]["ItemTotal"][];
             expensesTotal: string;
+            /** @description Kirim/chiqim tarkibi (prototip CashierPanel kartalari) */
+            flows: components["schemas"]["Flows"];
             /** Format: date */
             from: string;
             income: string;
@@ -11836,6 +11850,8 @@ export interface components {
             /** Format: date */
             dueDate?: string;
             dueManual: boolean;
+            /** @description Hisob-faktura raqami */
+            facturaNumber?: string;
             fromBonus: boolean;
             /** @description Qabulda farq bor */
             hasDiff: boolean;
@@ -11988,6 +12004,8 @@ export interface components {
              * @description Bo'sh — kirim sanasi + YB sharti (filial)
              */
             dueDate?: string;
+            /** @description Hisob-faktura raqami (yuk xatidan alohida) */
+            facturaNumber?: string;
             /** @description YB bonus balansi hisobidan: qarz yo'q, tannarx 0 */
             fromBonus?: boolean;
             /** Format: date */
@@ -13956,6 +13974,8 @@ export interface components {
             number: string;
             /** Format: date-time */
             postedAt?: string;
+            /** @description Kim tasdiqladi (o'tkazgan) */
+            postedBy?: string;
             /** Format: int64 */
             qty: number;
             /** @enum {string} */

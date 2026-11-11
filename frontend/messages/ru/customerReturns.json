@@ -22,7 +22,8 @@
   },
   "filter": {
     "status": "Статус",
-    "allStatuses": "Все статусы"
+    "allStatuses": "Все статусы",
+    "all": "Все"
   },
   "col": {
     "number": "Номер",
@@ -128,5 +129,12 @@
     "stepCreated": "Создан",
     "stepApproval": "Подтверждение",
     "stepPosted": "Проведён"
+  },
+  "listTitle": "Возвраты",
+  "tab": {
+    "PENDING": "Ожидают приёмки",
+    "POSTED": "Утверждённые",
+    "REJECTED": "Отклонённые",
+    "CANCELLED": "Отменённые"
   }
 }

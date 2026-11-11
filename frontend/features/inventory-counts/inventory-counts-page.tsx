@@ -18,6 +18,7 @@ import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs } from "@/components/ui/tabs";
+import { TextField } from "@/components/ui/text-field";
 import { formatIsoDate } from "@/features/counterparties/api";
 import { cn } from "@/lib/cn";
 import { EmptyState, ErrorState, ForbiddenState, NoResultsState } from "@/components/ui/system-states";
@@ -60,6 +61,7 @@ export function InventoryCountsPage() {
   const params = useSearchParams();
   const [status, setStatus] = useState<string | null>(params.get("status"));
   const [page, setPage] = useState(1);
+  const [q, setQ] = useState("");
   const router = useRouter();
   const openId = Number(params.get("open"));
   // Eski havolalar (bildirishnoma `?open=`) — hujjat sahifasiga
@@ -76,14 +78,14 @@ export function InventoryCountsPage() {
 
   if (me.data && !allowed) return <ForbiddenState description={t("forbidden")} />;
 
-  const showCost = (docs.data?.items ?? []).some((d) => d.shortageCost != null);
   const columns: TableColumn<InventoryCountSummary>[] = [
     { key: "number", title: t("list.number"), mono: true },
     { key: "createdAt", title: t("list.date"), render: (d) => formatDateTime(new Date(d.createdAt)) },
+    { key: "warehouse", title: t("ov.warehouse") },
     {
-      key: "warehouse",
+      key: "scope",
       title: t("ov.scope"),
-      render: (d) => `${d.warehouse} · ${scopeText(d, t("list.wholeWarehouse"), (n) => t("doc.nProd", { n }))}`,
+      render: (d) => <span className="text-text-secondary">{scopeText(d, t("list.wholeWarehouse"), (n) => t("doc.nProd", { n }))}</span>,
     },
     {
       key: "commission",
@@ -103,34 +105,16 @@ export function InventoryCountsPage() {
       },
     },
     {
-      key: "counted",
-      title: t("list.counted"),
+      key: "lines",
+      title: t("ov.lines"),
       align: "right",
-      render: (d) => (d.lines > 0 ? `${formatQuantity(d.counted)} / ${formatQuantity(d.lines)}` : "—"),
+      render: (d) => (d.lines > 0 ? formatQuantity(d.lines) : "—"),
     },
     {
-      key: "shortageQty",
-      title: t("list.shortage"),
-      align: "right",
-      render: (d) => (d.shortageQty ? t("list.pcs", { qty: formatQuantity(d.shortageQty) }) : "—"),
+      key: "diff",
+      title: t("ov.diff"),
+      render: (d) => <DiffCell d={d} okLabel={t("ov.diffOk")} />,
     },
-    {
-      key: "surplusQty",
-      title: t("list.surplus"),
-      align: "right",
-      render: (d) => (d.surplusQty ? t("list.pcs", { qty: formatQuantity(d.surplusQty) }) : "—"),
-    },
-    ...(showCost
-      ? [
-          {
-            key: "shortageCost",
-            title: t("list.shortageCost"),
-            align: "right" as const,
-            render: (d: InventoryCountSummary) => (d.shortageCost != null && d.shortageQty ? formatMoney(d.shortageCost) : "—"),
-          },
-        ]
-      : []),
-    { key: "createdBy", title: t("list.createdBy") },
     {
       key: "status",
       title: t("list.status"),
@@ -156,7 +140,7 @@ export function InventoryCountsPage() {
         </h1>
         {canCreate ? (
           <Button icon={Plus} onClick={() => router.push("/inventory-counts/new")}>
-            {t("start")}
+            {t("new")}
           </Button>
         ) : null}
       </div>
@@ -209,10 +193,21 @@ export function InventoryCountsPage() {
             { key: "all", label: t("ov.all"), count: ov.data ? totalCount : undefined },
             ...(Object.keys(IN_STATUS_LABELS) as InventoryCountStatus[]).map((k) => ({
               key: k,
-              label: t(`status.${k}`),
+              label: t(`ov.v.${k}`),
               count: ov.data ? countOf(k) : undefined,
             })),
           ]}
+        />
+      </div>
+      <div className="mb-3 w-full max-w-sm">
+        <TextField
+          label={t("ov.search")}
+          variant="search"
+          size="sm"
+          value={q}
+          onChange={setQ}
+          placeholder={t("ov.search")}
+          className="[&>label]:sr-only"
         />
       </div>
       {docs.error ? (
@@ -221,13 +216,13 @@ export function InventoryCountsPage() {
         <Table
           caption={t("caption")}
           columns={columns}
-          rows={docs.data?.items ?? []}
+          rows={filterCounts(docs.data?.items ?? [], q)}
           rowKey={(d) => String(d.id)}
           loading={docs.isPending}
           onRowClick={(d) => router.push(`/inventory-counts/${d.id}`)}
           emptyState={
-            status !== null ? (
-              <NoResultsState onClearFilters={() => setStatus(null)} />
+            status !== null || q.trim() !== "" ? (
+              <NoResultsState onClearFilters={() => (setStatus(null), setQ(""))} />
             ) : (
               <EmptyState
                 icon={ListChecks}
@@ -236,7 +231,7 @@ export function InventoryCountsPage() {
                 action={
                   canCreate ? (
                     <Button variant="secondary" icon={Plus} onClick={() => router.push("/inventory-counts/new")}>
-                      {t("start")}
+                      {t("new")}
                     </Button>
                   ) : undefined
                 }
@@ -301,4 +296,37 @@ export function scopeText(
 ): string {
   const zones = d.zoneNames.length ? d.zoneNames.join(", ") : whole;
   return d.productCount > 0 ? `${zones} · ${nProd(d.productCount)}` : zones;
+}
+
+/** Roʻyxatda qidiruv (prototip: «Raqam, ombor yoki komissiya aʼzosi…») — joriy sahifa ichida. */
+export function filterCounts<T extends Pick<InventoryCountSummary, "number" | "warehouse" | "commission">>(rows: T[], q: string): T[] {
+  const s = q.trim().toLocaleLowerCase();
+  if (!s) return rows;
+  return rows.filter((d) => [d.number, d.warehouse, d.commission ?? ""].some((v) => v.toLocaleLowerCase().includes(s)));
+}
+
+/** «Farq (dona / summa)»: −kamomad / +ortiqcha, ostida summa (faqat tannarx ruxsati bilan keladi). */
+function DiffCell(props: { d: InventoryCountSummary; okLabel: string }) {
+  const d = props.d;
+  const has = d.status === "CHECK" || d.status === "POSTED";
+  if (!has) return <span className="text-text-secondary">—</span>;
+  if (!d.shortageQty && !d.surplusQty) return <span className="text-success">{props.okLabel}</span>;
+  const qty = [d.shortageQty ? `−${formatQuantity(d.shortageQty)}` : null, d.surplusQty ? `+${formatQuantity(d.surplusQty)}` : null]
+    .filter(Boolean)
+    .join(" / ");
+  const sum =
+    d.shortageCost != null || d.surplusCost != null
+      ? [
+          d.shortageQty && d.shortageCost != null ? `−${formatMoney(d.shortageCost)}` : null,
+          d.surplusQty && d.surplusCost != null ? `+${formatMoney(d.surplusCost)}` : null,
+        ]
+          .filter(Boolean)
+          .join(" / ")
+      : "";
+  return (
+    <div className="flex flex-col">
+      <span className={cn("font-semibold tabular-nums", d.shortageQty ? "text-danger" : "text-info")}>{qty}</span>
+      {sum ? <span className="text-caption tabular-nums text-text-secondary">{sum}</span> : null}
+    </div>
+  );
 }

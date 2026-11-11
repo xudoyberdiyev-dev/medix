@@ -41,3 +41,12 @@ describe("audit model", () => {
     ]);
   });
 });
+
+describe("auditDevice", () => {
+  it("kirish yozuvidan qurilma, boʻlmasa IP", async () => {
+    const { auditDevice } = await import("./audit-model");
+    expect(auditDevice({ newValue: '{"device":"Windows · Chrome"}', ip: "::1" })).toBe("Windows · Chrome");
+    expect(auditDevice({ newValue: '{"status":"POSTED"}', ip: "10.0.0.5" })).toBe("10.0.0.5");
+    expect(auditDevice({ newValue: undefined, ip: undefined })).toBe("—");
+  });
+});

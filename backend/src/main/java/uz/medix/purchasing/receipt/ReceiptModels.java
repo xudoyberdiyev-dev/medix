@@ -62,7 +62,8 @@ final class ReceiptModels {
             @Schema(nullable = true) @Pattern(regexp = MONEY, message = "{validation.money}") String discountValue,
             @Schema(nullable = true) LocalDate discountDate,
             @Schema(nullable = true) @Size(max = 500) String note,
-            @NotNull(message = "{validation.required}") @Size(max = MAX_LINES) List<@Valid ReceiptLineRequest> lines) {}
+            @NotNull(message = "{validation.required}") @Size(max = MAX_LINES) List<@Valid ReceiptLineRequest> lines,
+            @Schema(nullable = true, description = "Hisob-faktura raqami (yuk xatidan alohida)") @Size(max = 64) String facturaNumber) {}
 
     record AcceptLine(
             @NotNull(message = "{validation.required}") Long lineId,
@@ -230,5 +231,6 @@ final class ReceiptModels {
             @Schema(nullable = true) String cancelledBy,
             @Schema(nullable = true) Instant cancelledAt,
             @Schema(nullable = true) String cancelReason,
-            List<ReceiptLine> lines) {}
+            List<ReceiptLine> lines,
+            @Schema(nullable = true, description = "Hisob-faktura raqami") String facturaNumber) {}
 }

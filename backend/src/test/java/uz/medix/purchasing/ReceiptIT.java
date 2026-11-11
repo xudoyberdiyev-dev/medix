@@ -175,7 +175,7 @@ class ReceiptIT {
 
     private static String doc(Place p, long supplier, boolean prepaid, String... lines) {
         return "{\"warehouseId\":" + p.warehouseId() + ",\"supplierId\":" + supplier + ",\"receiptDate\":\"" + today()
-                + "\",\"invoiceNumber\":\"F-77\",\"paymentType\":\"TRANSFER\",\"prepaid\":" + prepaid
+                + "\",\"invoiceNumber\":\"F-77\",\"facturaNumber\":\"HF-501\",\"paymentType\":\"TRANSFER\",\"prepaid\":" + prepaid
                 + ",\"discountKind\":\"PERCENT\",\"discountValue\":\"3\",\"lines\":[" + String.join(",", lines) + "]}";
     }
 
@@ -209,6 +209,7 @@ class ReceiptIT {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.number").value(matchesPattern("^KR-[A-Z]{3}-\\d{6}$")))
                 .andExpect(jsonPath("$.status").value("DRAFT"))
+                .andExpect(jsonPath("$.facturaNumber").value("HF-501"))
                 .andExpect(jsonPath("$.dueDate").value(today().plusDays(30).toString()))
                 .andExpect(jsonPath("$.dueManual").value(false))
                 .andExpect(jsonPath("$.amount").value("950005.00"))

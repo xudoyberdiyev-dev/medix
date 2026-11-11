@@ -7,14 +7,16 @@ import { useEffect, useState } from "react";
 import { HubTabs } from "@/components/shell/hub-tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Select } from "@/components/ui/select";
 import { EmptyState, ErrorState, ForbiddenState, NoResultsState } from "@/components/ui/system-states";
 import { Table, type TableColumn } from "@/components/ui/table";
+import { Tabs } from "@/components/ui/tabs";
 import { TextField } from "@/components/ui/text-field";
 import { can, canAny } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
 import { formatDate, formatMoney, formatQuantity } from "@/lib/format";
 import { useBranchStore } from "@/lib/stores/branch";
+import { useStatusCounts } from "@/lib/use-status-counts";
+import { api, unwrap } from "@/lib/api/client";
 import { QM_CREATE, QM_STATUSES, QM_VIEW_KEYS, useCustomerReturns, type CustomerReturnStatus, type CustomerReturnSummary } from "./api";
 
 export function CustomerReturnStatusBadge({ status }: { status: CustomerReturnStatus }) {
@@ -59,6 +61,15 @@ export function CustomerReturnsPage() {
   const canCreate = can(me.data, QM_CREATE);
   const branchId = me.data?.allBranches ? (selectedBranch ?? null) : null;
   const docs = useCustomerReturns(branchId, (status as CustomerReturnStatus | null) ?? null, q.trim(), page);
+  const counts = useStatusCounts(
+    ["customer-returns", branchId],
+    QM_STATUSES,
+    (st) =>
+      unwrap(
+        api.GET("/api/customer-returns", { params: { query: { branchId: branchId ?? undefined, status: st ?? undefined, size: 1 } } }),
+      ).then((r) => r.total),
+    allowed,
+  );
 
   if (me.data && !allowed) return <ForbiddenState description={t("forbidden")} />;
 
@@ -77,7 +88,6 @@ export function CustomerReturnsPage() {
       ),
     },
     { key: "saleNumber", title: t("col.base"), mono: true },
-    { key: "warehouse", title: t("col.warehouse") },
     { key: "lines", title: t("col.lines"), align: "right", render: (d) => formatQuantity(d.lines) },
     { key: "total", title: t("col.sum"), align: "right", render: (d) => formatMoney(d.total) },
     { key: "status", title: t("col.status"), render: (d) => <CustomerReturnStatusBadge status={d.status} /> },
@@ -89,12 +99,26 @@ export function CustomerReturnsPage() {
     <>
       <HubTabs hub="returns" />
       <div className="mb-4 flex items-center justify-between gap-4">
-        <h1 className="text-page-title">{t("title")}</h1>
+        <h1 className="flex items-baseline gap-2 text-page-title">
+          {t("listTitle")}
+          {counts.all != null ? <span className="tabular text-body text-text-secondary">{formatQuantity(counts.all)}</span> : null}
+        </h1>
         {canCreate ? (
           <Button icon={Plus} onClick={() => router.push("/customer-returns/new")}>
             {t("create")}
           </Button>
         ) : null}
+      </div>
+      <div className="mb-3">
+        <Tabs
+          aria-label={t("filter.status")}
+          value={status ?? "all"}
+          onChange={(k) => (setStatus(k === "all" ? null : k), setPage(1))}
+          items={[
+            { key: "all", label: t("filter.all"), count: counts.all },
+            ...QM_STATUSES.map((k) => ({ key: k, label: t(`tab.${k}`), count: counts.of(k) })),
+          ]}
+        />
       </div>
       {docs.error ? (
         <ErrorState onRetry={() => docs.refetch()} />
@@ -117,17 +141,6 @@ export function CustomerReturnsPage() {
                   value={q}
                   onChange={(v) => (setQ(v), setPage(1))}
                   placeholder={t("search")}
-                />
-              </div>
-              <div className="w-56">
-                <Select
-                  label={t("filter.status")}
-                  size="sm"
-                  value={status}
-                  onChange={(v) => (setStatus(v), setPage(1))}
-                  placeholder={t("filter.allStatuses")}
-                  className="[&>span:first-child]:sr-only"
-                  options={QM_STATUSES.map((value) => ({ value, label: t(`status.${value}`) }))}
                 />
               </div>
             </div>

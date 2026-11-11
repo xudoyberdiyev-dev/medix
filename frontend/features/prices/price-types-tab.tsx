@@ -64,6 +64,8 @@ export function PriceTypesTab({
   canAttach = false,
   branchName = "",
   onSetPrices,
+  creating: creatingProp,
+  onCreatingChange,
 }: {
   branchId: number | null;
   canSet: boolean;
@@ -72,13 +74,19 @@ export function PriceTypesTab({
   canAttach?: boolean;
   branchName?: string;
   onSetPrices: (priceTypeId: number) => void;
+  /** Sarlavhadagi «Narx turi yaratish» (prototip Prices) — boshqariladigan holat; berilmasa, tugma jadval ustida. */
+  creating?: boolean;
+  onCreatingChange?: (v: boolean) => void;
 }) {
   const t = useTranslations("prices.types");
   const qc = useQueryClient();
   const [sort, setSort] = useState<SortState>({ key: "name", dir: "asc" });
   const [selId, setSelId] = useState<number | null>(null);
   const [edit, setEdit] = useState<PriceType | null>(null);
-  const [creating, setCreating] = useState(false);
+  const [creatingOwn, setCreatingOwn] = useState(false);
+  const controlled = onCreatingChange != null;
+  const creating = controlled ? Boolean(creatingProp) : creatingOwn;
+  const setCreating = (v: boolean) => (controlled ? onCreatingChange(v) : setCreatingOwn(v));
   const [hist, setHist] = useState<PriceType | null>(null);
   const [deact, setDeact] = useState<PriceType | null>(null);
   const [attach, setAttach] = useState<PriceType | null>(null);
@@ -194,7 +202,7 @@ export function PriceTypesTab({
 
   return (
     <div className="flex flex-col gap-3">
-      {canEdit && branchId != null ? (
+      {canEdit && branchId != null && !controlled ? (
         <div className="flex justify-end">
           <Button variant="secondary" icon={Plus} onClick={() => setCreating(true)}>
             {t("aNew")}

@@ -6,12 +6,15 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Select } from "@/components/ui/select";
 import { EmptyState, ErrorState, ForbiddenState, NoResultsState } from "@/components/ui/system-states";
 import { Table, type TableColumn } from "@/components/ui/table";
+import { Tabs } from "@/components/ui/tabs";
+import { TextField } from "@/components/ui/text-field";
 import { can, canAny } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
-import { formatDateTime, formatMoney, formatQuantity } from "@/lib/format";
+import { formatDate, formatMoney, formatQuantity } from "@/lib/format";
+import { api, unwrap } from "@/lib/api/client";
+import { matchesQuery, useStatusCounts } from "@/lib/use-status-counts";
 import { useBranchStore } from "@/lib/stores/branch";
 import { QY_CREATE, QY_STATUSES, QY_VIEW_KEYS, useSupplierReturns, type SupplierReturnStatus, type SupplierReturnSummary } from "./api";
 import { HubTabs } from "@/components/shell/hub-tabs";
@@ -38,6 +41,7 @@ export function SupplierReturnsPage() {
   const params = useSearchParams();
   const [status, setStatus] = useState<string | null>(params.get("status"));
   const [page, setPage] = useState(1);
+  const [q, setQ] = useState("");
   // Bildirishnomadan oʻtish: ?open=<id> — hujjat darhol ochiladi
   // Kirim hujjatidan oʻtish: ?receipt=<id>&supplier=<id>&supplierName=…&receiptNo=… — yangi qaytarish shu kirim bilan ochiladi
   const router = useRouter();
@@ -55,17 +59,25 @@ export function SupplierReturnsPage() {
   const branchId = me.data?.allBranches ? (selectedBranch ?? null) : null;
   const docs = useSupplierReturns(branchId, (status as SupplierReturnStatus | null) ?? null, page);
 
+  const counts = useStatusCounts(
+    ["supplier-returns", branchId],
+    QY_STATUSES,
+    (st) =>
+      unwrap(
+        api.GET("/api/supplier-returns", { params: { query: { branchId: branchId ?? undefined, status: st ?? undefined, size: 1 } } }),
+      ).then((r) => r.total),
+    allowed,
+  );
+
   if (me.data && !allowed) return <ForbiddenState description={t("forbidden")} />;
 
   const showAmount = (docs.data?.items ?? []).some((d) => d.totalAmount != null);
   const columns: TableColumn<SupplierReturnSummary>[] = [
     { key: "number", title: t("col.number"), mono: true },
-    { key: "createdAt", title: t("col.date"), render: (d) => formatDateTime(new Date(d.createdAt)) },
-    { key: "supplier", title: t("col.supplier"), wrap: true },
-    { key: "receiptNumber", title: t("col.receipt"), mono: true },
-    { key: "warehouse", title: t("col.warehouseZone"), render: (d) => `${d.warehouse} · ${d.zone.name}` },
-    { key: "reason", title: t("col.reason"), render: (d) => t(`reason.${d.reason}`) },
-    { key: "qty", title: t("col.qty"), align: "right", render: (d) => formatQuantity(d.qty) },
+    { key: "createdAt", title: t("col.date"), render: (d) => formatDate(new Date(d.createdAt)) },
+    { key: "supplier", title: t("col.supplier"), wrap: true, render: (d) => <span className="font-medium">{d.supplier}</span> },
+    { key: "receiptNumber", title: t("col.base"), mono: true },
+    { key: "lines", title: t("col.lines"), align: "right", render: (d) => formatQuantity(d.lines) },
     ...(showAmount
       ? [
           {
@@ -76,21 +88,36 @@ export function SupplierReturnsPage() {
           },
         ]
       : []),
-    { key: "createdBy", title: t("col.createdBy") },
     { key: "status", title: t("col.status"), render: (d) => <SupplierReturnStatusBadge status={d.status} /> },
+    { key: "createdBy", title: t("col.createdBy") },
   ];
-  const filtered = status !== null;
+  const filtered = status !== null || q.trim() !== "";
+  const rows = (docs.data?.items ?? []).filter((d) => matchesQuery(q, [d.number, d.supplier, d.receiptNumber]));
 
   return (
     <>
       <HubTabs hub="returns" />
       <div className="mb-4 flex items-center justify-between gap-4">
-        <h1 className="text-page-title">{t("title")}</h1>
+        <h1 className="flex items-baseline gap-2 text-page-title">
+          {t("listTitle")}
+          {counts.all != null ? <span className="tabular text-body text-text-secondary">{formatQuantity(counts.all)}</span> : null}
+        </h1>
         {canCreate ? (
           <Button icon={Plus} onClick={() => router.push("/supplier-returns/new")}>
             {t("create")}
           </Button>
         ) : null}
+      </div>
+      <div className="mb-3">
+        <Tabs
+          aria-label={t("filter.status")}
+          value={status ?? "all"}
+          onChange={(k) => (setStatus(k === "all" ? null : k), setPage(1))}
+          items={[
+            { key: "all", label: t("filter.all"), count: counts.all },
+            ...QY_STATUSES.map((k) => ({ key: k, label: t(`tab.${k}`), count: counts.of(k) })),
+          ]}
+        />
       </div>
       {docs.error ? (
         <ErrorState onRetry={() => docs.refetch()} />
@@ -98,26 +125,26 @@ export function SupplierReturnsPage() {
         <Table
           caption={t("caption")}
           columns={columns}
-          rows={docs.data?.items ?? []}
+          rows={rows}
           rowKey={(d) => String(d.id)}
           loading={docs.isPending}
           onRowClick={(d) => router.push(`/supplier-returns/${d.id}`)}
           toolbar={
-            <div className="w-56">
-              <Select
-                label={t("filter.status")}
+            <div className="w-72">
+              <TextField
+                label={t("search")}
+                variant="search"
                 size="sm"
-                value={status}
-                onChange={(v) => (setStatus(v), setPage(1))}
-                placeholder={t("filter.allStatuses")}
-                className="[&>span:first-child]:sr-only"
-                options={QY_STATUSES.map((value) => ({ value, label: t(`status.${value}`) }))}
+                className="[&>label]:sr-only"
+                value={q}
+                onChange={setQ}
+                placeholder={t("search")}
               />
             </div>
           }
           emptyState={
             filtered ? (
-              <NoResultsState onClearFilters={() => setStatus(null)} />
+              <NoResultsState onClearFilters={() => (setStatus(null), setQ(""))} />
             ) : (
               <EmptyState
                 icon={Undo2}

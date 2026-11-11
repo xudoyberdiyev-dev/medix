@@ -233,7 +233,7 @@ test("Operator: naqd toʻlovli buyurtma kiritadi va navbatga yuboradi", async ({
   await expect(page).toHaveURL(/\/$/);
 
   await page.goto("/orders");
-  await page.getByRole("button", { name: "Buyurtma kiritish" }).click();
+  await page.getByRole("button", { name: "Yangi buyurtma" }).click();
   await page.getByRole("combobox", { name: "Mijoz", exact: true }).click();
   await page.getByPlaceholder("Qidirish").fill("Baraka");
   await page.getByRole("option", { name: /Baraka Dorixona E2E/ }).click();
@@ -427,7 +427,7 @@ test("Operator: maksimaldan koʻp — buyurtma Filial rahbari tasdigʻiga ketadi
   await login(page, "operator.1", OPERATOR_PASSWORD);
   await expect(page).toHaveURL(/\/$/);
   await page.goto("/orders");
-  await page.getByRole("button", { name: "Buyurtma kiritish" }).click();
+  await page.getByRole("button", { name: "Yangi buyurtma" }).click();
   await page.getByRole("combobox", { name: "Mijoz", exact: true }).click();
   await page.getByPlaceholder("Qidirish").fill("Baraka");
   await page.getByRole("option", { name: /Baraka Dorixona E2E/ }).click();
@@ -499,7 +499,7 @@ test("Xarid: birinchi kirish, kirim qoralamasini kiritadi (qabul qila olmaydi)",
   await page.getByRole("combobox", { name: "Yetkazib beruvchi", exact: true }).click();
   await page.getByPlaceholder("Qidirish").fill("Pharm");
   await page.getByRole("option", { name: /Pharm Supply E2E/ }).click();
-  await field(page, "Yuk xati raqami").fill("YX-777");
+  await field(page, "Yetkazib beruvchi nakladnoyi raqami").fill("YX-777");
   await page.getByRole("combobox", { name: "Mahsulot", exact: true }).click();
   await page.getByPlaceholder("Qidirish").fill("Paracetamol");
   await page.getByRole("option", { name: /Paracetamol E2E/ }).click();
@@ -704,7 +704,7 @@ test("Operator: limitdan 20% dan koʻp oshgan buyurtma — Direktor tasdigʻiga"
   await login(page, "operator.1", OPERATOR_PASSWORD);
   await expect(page).toHaveURL(/\/$/);
   await page.goto("/orders");
-  await page.getByRole("button", { name: "Buyurtma kiritish" }).click();
+  await page.getByRole("button", { name: "Yangi buyurtma" }).click();
   await page.getByRole("combobox", { name: "Mijoz", exact: true }).click();
   await page.getByPlaceholder("Qidirish").fill("Baraka");
   await page.getByRole("option", { name: /Baraka Dorixona E2E/ }).click();
@@ -862,7 +862,7 @@ test("Operator: mijozdan qaytarish (QM) — sotuv asosida, Ombor mudiriga yubora
   await login(page, "operator.1", OPERATOR_PASSWORD);
   await expect(page).toHaveURL(/\/$/);
   await page.goto("/customer-returns");
-  await expect(page.getByRole("heading", { name: "Mijozdan qaytarish", level: 1 })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /^Qaytarishlar/, level: 1 })).toBeVisible();
   await page.getByRole("button", { name: "Yangi qaytarish" }).first().click();
   // Yangi hujjat — toʻliq sahifa (prototip StockDocs, kind = qm)
   await expect(page).toHaveURL(/\/customer-returns\/new$/);
@@ -907,5 +907,5 @@ test("Ombor mudiri: QM ni qabul qiladi — tovar Karantinga, mijoz qarzi kamayad
   await page.goto("/customer-returns");
   await expect(page.getByRole("row", { name: /QM-/ }).first()).toContainText("Tasdiqlangan");
   // Qaytarish turlari yorligʻi: QM birinchi
-  await expect(page.getByRole("link", { name: "Mijozdan qaytarish", exact: true })).toHaveAttribute("aria-current", "page");
+  await expect(page.getByRole("link", { name: "Mijozdan qaytarish (QM)", exact: true })).toHaveAttribute("aria-current", "page");
 });
