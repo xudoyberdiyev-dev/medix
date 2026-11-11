@@ -128,7 +128,7 @@ class Receipts {
         String nq = SearchText.normalize(f.q());
         if (!nq.isEmpty()) {
             // Raqam, yuk xati, kim nomiga yoki YB nomi — lotin/kirill farqsiz (counterparty.search_text)
-            where.append(" AND (r.number ILIKE :q ESCAPE '\\' OR r.invoice_number ILIKE :q ESCAPE '\\' OR ow.full_name ILIKE :q ESCAPE '\\' OR (true");
+            where.append(" AND (r.number ILIKE :q ESCAPE '\\' OR r.invoice_number ILIKE :q ESCAPE '\\' OR r.factura_number ILIKE :q ESCAPE '\\' OR ow.full_name ILIKE :q ESCAPE '\\' OR (true");
             String[] parts = nq.split(" ");
             for (int i = 0; i < parts.length && i < 8; i++) {
                 where.append(" AND c.search_text LIKE :w").append(i).append(" ESCAPE '\\'");
@@ -244,13 +244,13 @@ class Receipts {
                 Date receiptDate, String invoiceNumber, Date invoiceDate, String paymentType, Date dueDate, boolean dueManual, Long ownerId,
                 String owner, boolean prepaid, boolean fromBonus, String discountKind, BigDecimal discountValue, Date discountDate, String note, String status,
                 String resolution, BigDecimal debtAmount, String createdBy, Timestamp createdAt, String acceptedBy, Timestamp acceptedAt,
-                String postedBy, Timestamp postedAt, String cancelledBy, Timestamp cancelledAt, String cancelReason) {}
+                String postedBy, Timestamp postedAt, String cancelledBy, Timestamp cancelledAt, String cancelReason, String facturaNumber) {}
         Optional<HeadRow> head = jdbc.sql("""
                 SELECT r.id, r.number, r.branch_id, r.warehouse_id, w.name AS warehouse, r.supplier_id, c.name AS supplier, r.receipt_date,
                        r.invoice_number, r.invoice_date, r.payment_type, r.due_date, r.due_manual, r.owner_id, ow.full_name AS owner, r.prepaid, r.from_bonus,
                        r.discount_kind, r.discount_value, r.discount_date, r.note, r.status, r.resolution, r.debt_amount,
                        cb.full_name AS created_by, r.created_at, ab.full_name AS accepted_by, r.accepted_at, pb.full_name AS posted_by,
-                       r.posted_at, xb.full_name AS cancelled_by, r.cancelled_at, r.cancel_reason
+                       r.posted_at, xb.full_name AS cancelled_by, r.cancelled_at, r.cancel_reason, r.factura_number
                 FROM receipt r
                 JOIN warehouse w ON w.id = r.warehouse_id
                 JOIN counterparty c ON c.id = r.supplier_id
@@ -318,7 +318,7 @@ class Receipts {
                         .orElse(null),
                 qty, bonus, diff, h.createdBy(),
                 h.createdAt().toInstant(), h.acceptedBy(), instant(h.acceptedAt()), h.postedBy(), instant(h.postedAt()), h.cancelledBy(),
-                instant(h.cancelledAt()), h.cancelReason(), out));
+                instant(h.cancelledAt()), h.cancelReason(), out, h.facturaNumber()));
     }
 
     record LineRow(long id, int lineNo, long productId, String code, String name, boolean controlled, boolean marked, String manufacturer,
@@ -447,8 +447,9 @@ class Receipts {
         }
         jdbc.sql("""
                 UPDATE receipt SET invoice_number = :inv, invoice_date = :invd, due_date = :due, due_manual = :dm, owner_id = :o,
-                       discount_kind = :dk, discount_value = :dv, discount_date = :dd, note = :note WHERE id = :id""")
+                       discount_kind = :dk, discount_value = :dv, discount_date = :dd, note = :note, factura_number = :fn WHERE id = :id""")
                 .param("inv", blankToNull(r.invoiceNumber()))
+                .param("fn", blankToNull(r.facturaNumber()))
                 .param("invd", r.invoiceDate() == null ? null : Date.valueOf(r.invoiceDate()))
                 .param("due", due == null ? null : Date.valueOf(due))
                 .param("dm", manual)
