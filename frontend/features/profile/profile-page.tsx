@@ -4,7 +4,7 @@ import { ArrowUpRight, CircleAlert, CircleCheck, Grid3x3, Info, KeyRound, Monito
 import Link from "next/link";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
-import { LanguageSwitcher } from "@/components/shell/language-switcher";
+import { LanguageRadios } from "@/components/shell/language-switcher";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -95,7 +95,7 @@ function LanguageCard() {
   const tl = useTranslations("language");
   return (
     <Card title={tl("label")}>
-      <LanguageSwitcher className="max-w-xs" />
+      <LanguageRadios />
       <p className="mt-2 text-caption text-text-secondary">{t("languageNote")}</p>
     </Card>
   );
