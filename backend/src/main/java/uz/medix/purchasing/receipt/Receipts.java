@@ -313,7 +313,10 @@ class Receipts {
                 prices && h.debtAmount() != null && "POSTED".equals(h.status()) ? parties.docOpen(DOC_TYPE, id).toString() : null,
                 balance, bonusBalance,
                 bns.map(Bns::number).orElse(null), prices ? bns.map(b -> new Money(b.amount()).toString()).orElse(null) : null,
-                bns.map(b -> b.createdAt().toInstant()).orElse(null), qty, bonus, diff, h.createdBy(),
+                bns.map(b -> b.createdAt().toInstant()).orElse(null),
+                jdbc.sql("SELECT reason FROM supplier_bonus_decline WHERE receipt_id = :id").param("id", id).query(String.class).optional()
+                        .orElse(null),
+                qty, bonus, diff, h.createdBy(),
                 h.createdAt().toInstant(), h.acceptedBy(), instant(h.acceptedAt()), h.postedBy(), instant(h.postedAt()), h.cancelledBy(),
                 instant(h.cancelledAt()), h.cancelReason(), out));
     }

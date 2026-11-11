@@ -388,7 +388,7 @@ function Editor({
           {t("returnToSupplier")}
         </Button>
       ) : null}
-      {doc?.status === "POSTED" && doc.discountKind && !doc.bonusNumber && can(me.data, BONUS_CONFIRM) ? (
+      {doc?.status === "POSTED" && doc.discountKind && !doc.bonusNumber && !doc.bonusDeclineReason && can(me.data, BONUS_CONFIRM) ? (
         <Button
           icon={BadgePercent}
           loading={confirmBonus.isPending}
@@ -792,7 +792,13 @@ function ReceiptCards({ doc }: { doc: ReceiptDetail }) {
     {
       label: t("bonus"),
       value: bonus ? formatMoney(bonus) : "—",
-      sub: doc.bonusNumber ?? (doc.discountDate ? day(doc.discountDate) : undefined),
+      sub:
+        doc.bonusNumber ??
+        (doc.bonusDeclineReason
+          ? t("bonusDeclined", { reason: doc.bonusDeclineReason })
+          : doc.discountDate
+            ? day(doc.discountDate)
+            : undefined),
     },
     {
       label: t("bonusGoods"),

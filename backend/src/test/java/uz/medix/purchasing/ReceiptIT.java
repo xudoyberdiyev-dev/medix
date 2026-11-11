@@ -446,7 +446,10 @@ class ReceiptIT {
         send(post("/api/receipts/" + kr1 + "/bonus/decline"), keeper, "{\"reason\":\"YB rad etdi\"}").andExpect(status().isForbidden());
         send(post("/api/receipts/" + kr1 + "/bonus/decline"), admin, "{\"reason\":\"  \"}").andExpect(status().isBadRequest());
 
-        send(post("/api/receipts/" + kr1 + "/bonus/decline"), admin, "{\"reason\":\"YB rad etdi\"}").andExpect(status().isOk());
+        send(post("/api/receipts/" + kr1 + "/bonus/decline"), admin, "{\"reason\":\"YB rad etdi\"}")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.bonusDeclineReason").value("YB rad etdi"))
+                .andExpect(jsonPath("$.bonusNumber").doesNotExist());
         send(post("/api/receipts/" + kr1 + "/bonus/decline"), admin, "{\"reason\":\"yana\"}")
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("receipt.bonusDeclined"));
