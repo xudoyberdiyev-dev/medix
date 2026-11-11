@@ -6,7 +6,7 @@ import { useRef, useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DocumentHeader } from "@/components/ui/document-header";
+import { NewDocFrame } from "@/components/shell/new-doc-frame";
 import { Drawer } from "@/components/ui/drawer";
 import { Modal } from "@/components/ui/modal";
 import { Select } from "@/components/ui/select";
@@ -468,15 +468,15 @@ export function CreateForm({
   );
   if (page)
     return (
-      <div className="flex min-w-0 flex-col gap-4 pb-12">
-        <DocumentHeader
-          parent={{ label: t("doc.parent"), href: "/supplier-returns" }}
-          crumb={t("doc.crumbNew")}
-          title={t("form.title")}
-          actions={action}
-        />
+      <NewDocFrame
+        hub="returns"
+        parent={{ label: t("doc.parent"), href: "/supplier-returns" }}
+        crumb={t("doc.crumbNew")}
+        title={t("form.title")}
+        actions={action}
+      >
         <section className="rounded-card border border-border bg-surface p-5">{body}</section>
-      </div>
+      </NewDocFrame>
     );
   return (
     <Drawer open onClose={onClose} size="lg" kind={t("kind")} title={t("form.title")} actions={action}>

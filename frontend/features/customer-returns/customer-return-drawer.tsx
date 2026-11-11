@@ -7,6 +7,7 @@ import { useRef, useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { DocumentHeader } from "@/components/ui/document-header";
+import { NewDocFrame } from "@/components/shell/new-doc-frame";
 import { DocTabs, docEvents } from "@/components/ui/doc-tabs";
 import { HubTabs } from "@/components/shell/hub-tabs";
 import { Drawer } from "@/components/ui/drawer";
@@ -572,16 +573,15 @@ export function CreateForm({
   );
   if (page)
     return (
-      <div className="flex min-w-0 flex-col gap-4 pb-12">
-        <HubTabs hub="returns" className="-mb-1" />
-        <DocumentHeader
-          parent={{ label: t("listTitle"), href: "/customer-returns" }}
-          crumb={t("crumbNew")}
-          title={t("newTitle")}
-          actions={action}
-        />
+      <NewDocFrame
+        hub="returns"
+        parent={{ label: t("listTitle"), href: "/customer-returns" }}
+        crumb={t("crumbNew")}
+        title={t("newTitle")}
+        actions={action}
+      >
         <section className="rounded-card border border-border bg-surface p-5">{body}</section>
-      </div>
+      </NewDocFrame>
     );
   return (
     <Drawer open onClose={onClose} size="lg" kind={t("kind")} title={t("newTitle")} actions={action}>
