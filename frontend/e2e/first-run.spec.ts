@@ -685,8 +685,20 @@ test("CEO: ombor koʻchirishi (OK) — qoralama → joʻnatish → qabul (kamoma
   await choose(page, "Ombor", /Markaziy ombor/);
   await choose(page, "Qayerdan", /Asosiy saqlash/);
   await expect(page.getByLabel(/E2E-01 — koʻchirish soni/)).toBeVisible();
-  await page.getByRole("button", { name: "Koʻchirish", exact: true }).click();
-  await expect(page.getByText("Qayerdan va qayerga zonalarini tanlang.").first()).toBeVisible();
+  // Qoralama saqlanmaguncha «Koʻchirish» faol emas; saqlangach raqam oladi → hujjat sahifasi, tahrirlash davom etadi
+  await expect(page.getByRole("button", { name: "Koʻchirish", exact: true })).toBeDisabled();
+  await choose(page, "Qayerga", /^Karantin/);
+  await page.getByLabel(/E2E-01 — koʻchirish soni/).fill("1");
+  await expect(page).toHaveURL(/\/zone-transfers\/\d+$/);
+  await expect(page.getByRole("main").getByText(/^Saqlandi · /)).toBeVisible();
+  await expect(page.getByRole("main").getByLabel(/E2E-01 — koʻchirish soni/)).toHaveValue("1");
+  await expect(page.getByRole("button", { name: "Koʻchirish", exact: true })).toBeEnabled();
+  // Qoralamani bekor qilish — tovar joyida
+  await page.getByRole("button", { name: "Boshqa amallar" }).click();
+  await page.getByRole("menuitem", { name: "Bekor qilish" }).click();
+  await page.getByRole("dialog").last().getByRole("button", { name: "Bekor qilish", exact: true }).click();
+  await expect(page.getByText(/ZK-[A-Z]{3}-\d{6} bekor qilindi/)).toBeVisible();
+  await expect(page.getByRole("main").getByText(/^Bekor qilindi · \d/)).toBeVisible();
 });
 
 test("CEO: hisobdan chiqarish (HC) — shikastlangan tovar darhol oʻtkaziladi, tannarx bilan", async ({ page }) => {

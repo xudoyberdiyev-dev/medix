@@ -372,7 +372,7 @@
     },
     "/api/advance-offsets/{id}/cancel" : {
       "post" : {
-        "operationId" : "cancel_12",
+        "operationId" : "cancel_13",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -1032,7 +1032,7 @@
     "/api/branch-payments/{id}/cancel" : {
       "post" : {
         "description" : "Teskari: pul qaytadi, qarz tiklanadi.",
-        "operationId" : "cancel_11",
+        "operationId" : "cancel_12",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -1240,7 +1240,7 @@
     },
     "/api/branch-sales/{id}" : {
       "get" : {
-        "operationId" : "get_14",
+        "operationId" : "get_15",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -1267,7 +1267,7 @@
       },
       "put" : {
         "description" : "Sotuvchi zona, xaridor ombori, izoh va qatorlar almashtiriladi. Faqat qoralama.",
-        "operationId" : "update_19",
+        "operationId" : "update_20",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -1306,7 +1306,7 @@
     "/api/branch-sales/{id}/cancel" : {
       "post" : {
         "description" : "Faqat qoralama.",
-        "operationId" : "cancel_10",
+        "operationId" : "cancel_11",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -1572,7 +1572,7 @@
     "/api/branches/{id}" : {
       "put" : {
         "description" : "Kod o'zgarmaydi.",
-        "operationId" : "update_18",
+        "operationId" : "update_19",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -2163,7 +2163,7 @@
     "/api/company" : {
       "get" : {
         "description" : "Faol filiallar, omborlar va xodimlar soni; ishga tushirilgan vaqt va kim.",
-        "operationId" : "get_13",
+        "operationId" : "get_14",
         "responses" : {
           "200" : {
             "content" : {
@@ -2548,7 +2548,7 @@
     },
     "/api/counterparties/{id}" : {
       "get" : {
-        "operationId" : "get_12",
+        "operationId" : "get_13",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -2574,7 +2574,7 @@
         "tags" : [ "counterparties" ]
       },
       "put" : {
-        "operationId" : "update_17",
+        "operationId" : "update_18",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -3356,7 +3356,7 @@
     "/api/customer-returns/{id}/cancel" : {
       "post" : {
         "description" : "Karantindan tovar chiqadi, mijoz qarzi qaytadi, hisobotlardan chiqadi. Partiya keyingi hujjat bilan chiqarilgan bo'lsa — 409 qm.cancelBlocked.",
-        "operationId" : "cancel_9",
+        "operationId" : "cancel_10",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -3926,7 +3926,7 @@
     },
     "/api/dictionaries/{kind}/{id}" : {
       "put" : {
-        "operationId" : "update_16",
+        "operationId" : "update_17",
         "parameters" : [ {
           "in" : "path",
           "name" : "kind",
@@ -4185,7 +4185,7 @@
     "/api/employees/{id}" : {
       "put" : {
         "description" : "Login, rol yoki filial oʻzgarsa ochiq sessiyalari tugatiladi.",
-        "operationId" : "update_15",
+        "operationId" : "update_16",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -4953,7 +4953,7 @@
     "/api/inventory-counts/{id}" : {
       "get" : {
         "description" : "Ko'r sanoqda sanoq davomida hisob qoldig'i — faqat inventory.openCount.",
-        "operationId" : "get_11",
+        "operationId" : "get_12",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -4980,7 +4980,7 @@
       },
       "put" : {
         "description" : "Ombor (shu filialda), sana, qamrov, komissiya, ko'r sanoq — faqat qoralamada.",
-        "operationId" : "update_14",
+        "operationId" : "update_15",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -5087,7 +5087,7 @@
     "/api/inventory-counts/{id}/cancel" : {
       "post" : {
         "description" : "Qoldiq o'zgarmaydi, qulf yechiladi.",
-        "operationId" : "cancel_8",
+        "operationId" : "cancel_9",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -5309,7 +5309,7 @@
     "/api/inventory-counts/{id}/submit" : {
       "post" : {
         "description" : "Hamma qator sanalgan bo'lishi shart. Tasdiqlovchilarga bildirishnoma.",
-        "operationId" : "submit_2",
+        "operationId" : "submit_3",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -6191,7 +6191,7 @@
     },
     "/api/opening-balances/{id}" : {
       "get" : {
-        "operationId" : "get_10",
+        "operationId" : "get_11",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -6218,7 +6218,7 @@
       },
       "put" : {
         "description" : "Qatorlar to'liq almashtiriladi.",
-        "operationId" : "update_13",
+        "operationId" : "update_14",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -6257,7 +6257,7 @@
     "/api/opening-balances/{id}/cancel" : {
       "post" : {
         "description" : "Qoralama — yaratish ruxsati bilan. O'tkazilgan — faqat opening.cancel, partiyalar ishlatilmagan bo'lsa.",
-        "operationId" : "cancel_7",
+        "operationId" : "cancel_8",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -6436,7 +6436,7 @@
     },
     "/api/opening-finance/{id}" : {
       "get" : {
-        "operationId" : "get_9",
+        "operationId" : "get_10",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -6462,7 +6462,7 @@
         "tags" : [ "opening-finance" ]
       },
       "put" : {
-        "operationId" : "update_12",
+        "operationId" : "update_13",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -6500,7 +6500,7 @@
     },
     "/api/opening-finance/{id}/cancel" : {
       "post" : {
-        "operationId" : "cancel_6",
+        "operationId" : "cancel_7",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -7394,7 +7394,7 @@
     "/api/orders/{id}" : {
       "get" : {
         "description" : "Qoralamada — joriy narxlar, qoldiq va «N ta muammo» paneli.",
-        "operationId" : "get_8",
+        "operationId" : "get_9",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -7420,7 +7420,7 @@
         "tags" : [ "orders" ]
       },
       "put" : {
-        "operationId" : "update_11",
+        "operationId" : "update_12",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -7487,7 +7487,7 @@
     "/api/orders/{id}/cancel" : {
       "post" : {
         "description" : "Sabab majburiy. «Yo'lda» va undan keyin bekor qilinmaydi.",
-        "operationId" : "cancel_5",
+        "operationId" : "cancel_6",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -7909,7 +7909,7 @@
     "/api/orders/{id}/submit" : {
       "post" : {
         "description" : "Xato bo'lsa — yuborilmaydi; tasdiq sababi bo'lsa — tasdiqqa, aks holda — Navbatga.",
-        "operationId" : "submit_1",
+        "operationId" : "submit_2",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -8152,7 +8152,7 @@
     },
     "/api/payments/customer/{id}" : {
       "get" : {
-        "operationId" : "get_7",
+        "operationId" : "get_8",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -8178,7 +8178,7 @@
         "tags" : [ "payments" ]
       },
       "put" : {
-        "operationId" : "update_10",
+        "operationId" : "update_11",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -8217,7 +8217,7 @@
     "/api/payments/customer/{id}/cancel" : {
       "post" : {
         "description" : "O'tkazilgan bo'lsa: qarz va hisob qoldig'i teskari yoziladi.",
-        "operationId" : "cancel_4",
+        "operationId" : "cancel_5",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -8947,7 +8947,7 @@
     },
     "/api/price-changes/{id}" : {
       "get" : {
-        "operationId" : "get_6",
+        "operationId" : "get_7",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -8973,7 +8973,7 @@
         "tags" : [ "pricing" ]
       },
       "put" : {
-        "operationId" : "update_9",
+        "operationId" : "update_10",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -9050,7 +9050,7 @@
     "/api/price-changes/{id}/cancel" : {
       "post" : {
         "description" : "Qoralama, tasdiq kutayotgan yoki tasdiqlangan, lekin hali kuchga kirmagan hujjat.",
-        "operationId" : "cancel_3",
+        "operationId" : "cancel_4",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -9156,7 +9156,7 @@
     "/api/price-changes/{id}/submit" : {
       "post" : {
         "description" : "Tannarxdan past narx bo'lsa — Direktor tasdig'iga, aks holda darhol kuchga kiradi.",
-        "operationId" : "submit",
+        "operationId" : "submit_1",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -9275,7 +9275,7 @@
     "/api/price-types/{id}" : {
       "put" : {
         "description" : "Bazaviy turni yoki mijozlarga biriktirilgan turni nofaol qilib bo'lmaydi. Ro'yxat tarkibi (SPEC 6) o'zgarmaydi.",
-        "operationId" : "update_8",
+        "operationId" : "update_9",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -10252,7 +10252,7 @@
     },
     "/api/products/{id}" : {
       "get" : {
-        "operationId" : "get_5",
+        "operationId" : "get_6",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -10278,7 +10278,7 @@
         "tags" : [ "products" ]
       },
       "put" : {
-        "operationId" : "update_7",
+        "operationId" : "update_8",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -10453,7 +10453,7 @@
     },
     "/api/profile" : {
       "get" : {
-        "operationId" : "get_4",
+        "operationId" : "get_5",
         "responses" : {
           "200" : {
             "content" : {
@@ -10470,7 +10470,7 @@
         "tags" : [ "profile" ]
       },
       "put" : {
-        "operationId" : "update_6",
+        "operationId" : "update_7",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -10879,7 +10879,7 @@
     },
     "/api/receipts/{id}" : {
       "get" : {
-        "operationId" : "get_3",
+        "operationId" : "get_4",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -10906,7 +10906,7 @@
       },
       "put" : {
         "description" : "Qatorlar to'liq almashtiriladi.",
-        "operationId" : "update_5",
+        "operationId" : "update_6",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -11013,7 +11013,7 @@
     "/api/receipts/{id}/cancel" : {
       "post" : {
         "description" : "O'tkazilgan kirim — faqat receipt.cancelPosted va tovar ishlatilmagan bo'lsa.",
-        "operationId" : "cancel_2",
+        "operationId" : "cancel_3",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -12247,7 +12247,7 @@
     "/api/settings" : {
       "get" : {
         "description" : "Barcha bo'limlar qiymatlari, oxirgi o'zgarish (kim, qachon) va tahrirlash huquqlari.",
-        "operationId" : "get_2",
+        "operationId" : "get_3",
         "responses" : {
           "200" : {
             "content" : {
@@ -12265,7 +12265,7 @@
       },
       "put" : {
         "description" : "Bir nechta qiymat birdaniga; har biri oraliq bo'yicha tekshiriladi, audit — eski → yangi.",
-        "operationId" : "update_4",
+        "operationId" : "update_5",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -13969,7 +13969,7 @@
     },
     "/api/trips/{id}" : {
       "get" : {
-        "operationId" : "get_1",
+        "operationId" : "get_2",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -13996,7 +13996,7 @@
       },
       "put" : {
         "description" : "Sana, haydovchi, mashina, ekspeditor, izoh — «Rejalashtirilgan», yuklash boshlanmagan.",
-        "operationId" : "update_3",
+        "operationId" : "update_4",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -14035,7 +14035,7 @@
     "/api/trips/{id}/cancel" : {
       "post" : {
         "description" : "Faqat yuklash boshlanmagan «Rejalashtirilgan» reys.",
-        "operationId" : "cancel_1",
+        "operationId" : "cancel_2",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -14660,7 +14660,7 @@
     },
     "/api/vehicles/{id}" : {
       "put" : {
-        "operationId" : "update_2",
+        "operationId" : "update_3",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -14877,7 +14877,7 @@
     },
     "/api/warehouse-transfers/{id}" : {
       "get" : {
-        "operationId" : "get",
+        "operationId" : "get_1",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -14904,7 +14904,7 @@
       },
       "put" : {
         "description" : "Manba zona, qabul qiluvchi ombor, izoh va qatorlar almashtiriladi. Faqat qoralama.",
-        "operationId" : "update_1",
+        "operationId" : "update_2",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -14943,7 +14943,7 @@
     "/api/warehouse-transfers/{id}/cancel" : {
       "post" : {
         "description" : "Faqat qoralama.",
-        "operationId" : "cancel",
+        "operationId" : "cancel_1",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -15208,7 +15208,7 @@
     },
     "/api/warehouses/{id}" : {
       "put" : {
-        "operationId" : "update",
+        "operationId" : "update_1",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -15834,7 +15834,7 @@
           "required" : false,
           "schema" : {
             "type" : "string",
-            "enum" : [ "PENDING", "POSTED", "REJECTED" ]
+            "enum" : [ "DRAFT", "PENDING", "POSTED", "REJECTED", "CANCELLED" ]
           }
         }, {
           "in" : "query",
@@ -15899,6 +15899,36 @@
         "tags" : [ "zone-transfer" ]
       }
     },
+    "/api/zone-transfers/drafts" : {
+      "post" : {
+        "description" : "Tovar o'tkazilguncha joyida qoladi.",
+        "operationId" : "createDraft",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ZoneTransferRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ZoneTransferDetail"
+                }
+              }
+            },
+            "description" : "Created"
+          }
+        },
+        "summary" : "Zona ko'chirishi (qoralama)",
+        "tags" : [ "zone-transfer" ]
+      }
+    },
     "/api/zone-transfers/zone-stock" : {
       "get" : {
         "description" : "Ko'chirish uchun: qoldiq, faol zahira va bo'sh miqdor (tannarxsiz).",
@@ -15933,7 +15963,7 @@
     },
     "/api/zone-transfers/{id}" : {
       "get" : {
-        "operationId" : "get_15",
+        "operationId" : "get",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -15956,6 +15986,43 @@
           }
         },
         "summary" : "ZK hujjati",
+        "tags" : [ "zone-transfer" ]
+      },
+      "put" : {
+        "description" : "Ombor, zonalar, izoh va qatorlar almashtiriladi. Faqat qoralama.",
+        "operationId" : "update",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ZoneTransferRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ZoneTransferDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Qoralamani tahrirlash",
         "tags" : [ "zone-transfer" ]
       }
     },
@@ -15984,6 +16051,35 @@
           }
         },
         "summary" : "Tasdiqlash va o'tkazish",
+        "tags" : [ "zone-transfer" ]
+      }
+    },
+    "/api/zone-transfers/{id}/cancel" : {
+      "post" : {
+        "description" : "Faqat qoralama.",
+        "operationId" : "cancel",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ZoneTransferDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Bekor qilish",
         "tags" : [ "zone-transfer" ]
       }
     },
@@ -16023,6 +16119,35 @@
           }
         },
         "summary" : "Rad etish",
+        "tags" : [ "zone-transfer" ]
+      }
+    },
+    "/api/zone-transfers/{id}/submit" : {
+      "post" : {
+        "description" : "Darhol o'tkaziladi. Karantindan sotuvga ochiq zonaga — transfer.quar ruxsati bo'lmasa «Tasdiqda» holatiga o'tadi.",
+        "operationId" : "submit",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ZoneTransferDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Qoralamani o'tkazish",
         "tags" : [ "zone-transfer" ]
       }
     }
@@ -32993,6 +33118,13 @@
             "type" : "integer",
             "format" : "int64"
           },
+          "cancelledAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "cancelledBy" : {
+            "type" : "string"
+          },
           "createdAt" : {
             "type" : "string",
             "format" : "date-time"
@@ -33041,7 +33173,7 @@
           },
           "status" : {
             "type" : "string",
-            "enum" : [ "PENDING", "POSTED", "REJECTED" ]
+            "enum" : [ "DRAFT", "PENDING", "POSTED", "REJECTED", "CANCELLED" ]
           },
           "to" : {
             "$ref" : "#/components/schemas/ZoneRef"
@@ -33218,7 +33350,7 @@
           },
           "status" : {
             "type" : "string",
-            "enum" : [ "PENDING", "POSTED", "REJECTED" ]
+            "enum" : [ "DRAFT", "PENDING", "POSTED", "REJECTED", "CANCELLED" ]
           },
           "to" : {
             "$ref" : "#/components/schemas/ZoneRef"
