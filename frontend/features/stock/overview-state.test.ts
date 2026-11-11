@@ -81,4 +81,13 @@ describe("ombor daraxti", () => {
     expect(q).toMatchObject({ branchId: 3, zoneType: ["QUARANTINE"], sort: "SALE_SUM", desc: true, page: 0, size: 25 });
     expect(batchQuery(parseOverview(new URLSearchParams("bsort=BAD")), null).sort).toBeUndefined();
   });
+
+  it("ombor daraxtidan tanlangan zona: URL'da (zid, zl), soʻrovda zoneId, filtr hisoblanadi", () => {
+    const f = parseOverview(new URLSearchParams("zid=12&zl=Asosiy+ombor+·+Karantin"));
+    expect(f.zoneSel).toEqual({ id: 12, label: "Asosiy ombor · Karantin" });
+    expect(hasAnyFilter(f)).toBe(true);
+    expect(productQuery(f, null).zoneId).toEqual([12]);
+    expect(parseOverview(new URLSearchParams(serializeOverview(f))).zoneSel).toEqual(f.zoneSel);
+    expect(parseOverview(new URLSearchParams("zid=x")).zoneSel).toBeNull();
+  });
 });

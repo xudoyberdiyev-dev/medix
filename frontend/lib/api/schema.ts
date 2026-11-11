@@ -22193,6 +22193,8 @@ export interface operations {
             query?: {
                 branchId?: number;
                 warehouseId?: number[];
+                /** @description Aniq zona (ombor daraxtidan tanlangan) */
+                zoneId?: number[];
                 zoneType?: ("RECEIVING" | "MAIN" | "QUARANTINE" | "SHIPPING" | "COLD" | "SAFE")[];
                 expiry?: ("EXPIRED" | "D0_30" | "D31_60" | "D61_90" | "D90_PLUS")[];
                 stock?: ("HAS" | "ZERO" | "ALL_RESERVED")[];
@@ -22307,6 +22309,8 @@ export interface operations {
             query?: {
                 branchId?: number;
                 warehouseId?: number[];
+                /** @description Aniq zona (ombor daraxtidan tanlangan) */
+                zoneId?: number[];
                 zoneType?: ("RECEIVING" | "MAIN" | "QUARANTINE" | "SHIPPING" | "COLD" | "SAFE")[];
                 expiry?: ("EXPIRED" | "D0_30" | "D31_60" | "D61_90" | "D90_PLUS")[];
                 stock?: ("HAS" | "ZERO" | "ALL_RESERVED")[];

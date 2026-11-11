@@ -206,7 +206,9 @@
     "colsHint": "Koʻrinish va tartib — sudrab oʻzgartiring",
     "colsReset": "Standartga qaytarish",
     "fefo": "Partiyalar FEFO tartibida — eng yaqin yaroqlilik birinchi",
-    "emptyBatch": "Filtr boʻyicha partiya yoʻq"
+    "emptyBatch": "Filtr boʻyicha partiya yoʻq",
+    "zoneSel": "Zona: {label}",
+    "zoneSelRemove": "Zona filtrini olib tashlash"
   },
   "ex": {
     "threshold": "Ogohlantirish chegarasi: {days} kun",

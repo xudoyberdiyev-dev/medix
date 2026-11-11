@@ -10,7 +10,6 @@ import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
 import { cn } from "@/lib/cn";
 import { formatMoney, formatQuantity } from "@/lib/format";
-import type { ZoneTypeCode } from "./overview-state";
 import { ZONE_ICON } from "./zone-icon";
 
 type TreeNode = components["schemas"]["TreeNode"];
@@ -31,13 +30,7 @@ export function visibleNodes(nodes: TreeNode[], collapsed: string[]): TreeNode[]
  * Ombor daraxti (prototip `Stock` → «Ombor daraxti»): filial → ombor → zona, mahsulotlar soni, miqdor, tannarxda summa.
  * Zona bosilsa — «Mahsulot boʻyicha» koʻrinishi shu ombor va zona turi bilan ochiladi.
  */
-export function StockTree({
-  branchId,
-  onPickZone,
-}: {
-  branchId: number | null;
-  onPickZone: (warehouseId: number, zoneType: ZoneTypeCode) => void;
-}) {
+export function StockTree({ branchId, onPickZone }: { branchId: number | null; onPickZone: (zoneId: number, label: string) => void }) {
   const t = useTranslations("stock");
   const [collapsed, setCollapsed] = useState<string[]>([]);
   const tree = useQuery({
@@ -93,7 +86,7 @@ export function StockTree({
               key={k}
               type="button"
               role="row"
-              onClick={() => (zone && n.warehouseId != null && n.zoneType ? onPickZone(n.warehouseId, n.zoneType) : toggle(k))}
+              onClick={() => (zone && n.zoneId != null ? onPickZone(n.zoneId, `${n.warehouse ?? ""} · ${n.zone ?? ""}`) : toggle(k))}
               aria-expanded={zone ? undefined : open}
               className={cn(
                 "grid w-full items-center border-b border-border text-left hover:bg-table-header",

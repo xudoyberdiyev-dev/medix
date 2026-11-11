@@ -22,6 +22,8 @@ export interface OverviewFilters {
   view: StockView;
   q: string;
   warehouses: number[];
+  /** Ombor daraxtidan tanlangan aniq zona (prototip `zoneSel`): id va yorligʻi («Ombor · Zona»). */
+  zoneSel: { id: number; label: string } | null;
   zones: ZoneTypeCode[];
   expiry: ExpiryBucket[];
   stock: StockState[];
@@ -45,6 +47,7 @@ export const DEFAULT_OVERVIEW: OverviewFilters = {
   view: "product",
   q: "",
   warehouses: [],
+  zoneSel: null,
   zones: [],
   expiry: [],
   stock: [],
@@ -114,6 +117,7 @@ export function parseOverview(p: URLSearchParams): OverviewFilters {
     view: p.get("view") === "batch" ? "batch" : p.get("view") === "wh" ? "wh" : "product",
     q: (p.get("q") ?? "").trim(),
     warehouses: ids(p.get("wh")),
+    zoneSel: /^\d+$/.test(p.get("zid") ?? "") ? { id: Number(p.get("zid")), label: p.get("zl") ?? "" } : null,
     zones: codes(p.get("zone"), ZONE_TYPES),
     expiry: codes(p.get("exp"), EXPIRY_BUCKETS),
     stock: codes(p.get("stock"), STOCK_STATES),
@@ -139,6 +143,10 @@ export function serializeOverview(f: OverviewFilters): string {
   if (f.q) p.set("q", f.q);
   const list = (k: string, v: readonly (string | number)[]) => v.length && p.set(k, v.join(","));
   list("wh", f.warehouses);
+  if (f.zoneSel) {
+    p.set("zid", String(f.zoneSel.id));
+    if (f.zoneSel.label) p.set("zl", f.zoneSel.label);
+  }
   list("zone", f.zones);
   list("exp", f.expiry);
   list("stock", f.stock);
@@ -163,7 +171,7 @@ export function hasMoreFilters(f: OverviewFilters): boolean {
 }
 
 export function hasAnyFilter(f: OverviewFilters): boolean {
-  return hasMoreFilters(f) || [f.warehouses, f.zones, f.expiry, f.stock].some((x) => x.length > 0);
+  return hasMoreFilters(f) || f.zoneSel != null || [f.warehouses, f.zones, f.expiry, f.stock].some((x) => x.length > 0);
 }
 
 export const sameSet = <T>(a: readonly T[], b: readonly T[]) => a.length === b.length && a.every((x) => b.includes(x));
@@ -192,6 +200,7 @@ export function productQuery(f: OverviewFilters, branchId: number | null) {
     branchId: branchId ?? undefined,
     q: f.q || undefined,
     warehouseId: arr(f.warehouses),
+    zoneId: f.zoneSel ? [f.zoneSel.id] : undefined,
     zoneType: arr(f.zones),
     expiry: arr(f.expiry),
     stock: arr(f.stock),

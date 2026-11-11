@@ -12,6 +12,7 @@ import {
   SlidersHorizontal,
   TriangleAlert,
   Truck,
+  X,
   type LucideIcon,
 } from "lucide-react";
 import Link from "next/link";
@@ -540,11 +541,28 @@ export function StockOverview() {
       ) : f.view === "wh" ? (
         <StockTree
           branchId={branchId}
-          onPickZone={(wh, zone) => apply({ ...DEFAULT_OVERVIEW, view: "product", warehouses: [wh], zones: [zone] })}
+          onPickZone={(id, label) => apply({ ...DEFAULT_OVERVIEW, view: "product", zoneSel: { id, label } })}
         />
       ) : (
         <>
-          {f.view === "batch" ? <p className="mb-2 text-caption text-text-secondary">{t("ov.fefo")}</p> : null}
+          {f.view === "batch" || f.zoneSel ? (
+            <div className="mb-2 flex flex-wrap items-center gap-3">
+              {f.view === "batch" ? <p className="text-caption text-text-secondary">{t("ov.fefo")}</p> : null}
+              {f.zoneSel ? (
+                <span className="inline-flex h-control-sm items-center gap-1.5 rounded-md border border-primary bg-primary-soft pr-1 pl-2.5 text-[13px] font-medium text-primary">
+                  {t("ov.zoneSel", { label: f.zoneSel.label })}
+                  <button
+                    type="button"
+                    onClick={() => apply({ zoneSel: null })}
+                    aria-label={t("ov.zoneSelRemove")}
+                    className="inline-flex size-5 items-center justify-center rounded hover:bg-surface"
+                  >
+                    <X size={14} strokeWidth={1.5} aria-hidden />
+                  </button>
+                </span>
+              ) : null}
+            </div>
+          ) : null}
           <div className="mb-3 flex flex-wrap items-center gap-2">
             <div className="w-96 max-w-full">
               <TextField
