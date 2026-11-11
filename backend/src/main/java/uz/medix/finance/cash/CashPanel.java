@@ -41,7 +41,12 @@ class CashPanel {
 
     record Panel(LocalDate from, LocalDate to, KindTotals balances, String income, String expense, List<ItemTotal> expenses,
             String expensesTotal, int draftPayments, String draftPaymentsAmount, int pendingOps, String pendingOpsAmount,
-            List<AccountTurnover> accounts, List<DayPoint> days, List<RecentMove> recent, String customerDueToday, String customerDueSoon) {}
+            List<AccountTurnover> accounts, List<DayPoint> days, List<RecentMove> recent, String customerDueToday, String customerDueSoon,
+            @Schema(description = "Kirim/chiqim tarkibi (prototip CashierPanel kartalari)") Flows flows) {}
+
+    /** Kirim: MT, boshqa kirimlar, hisoblar orasida kelgan; chiqim: YT, xarajatlar (KO/BO va b.), hisoblar orasida ketgan. */
+    record Flows(String customerPayments, String otherIncome, String transfersIn, String supplierPayments, String otherExpense,
+            String transfersOut, int incomeDocs, int expenseDocs) {}
 
     private final JdbcClient jdbc;
     private final Accounts accounts;
@@ -95,7 +100,7 @@ class CashPanel {
         DebtSummaries.DueSoon due = debts.due(actor, PartyLedger.Side.CUSTOMER, branchId, ops.today());
         if (ids.isEmpty()) {
             return new Panel(f, t, balances, "0.00", "0.00", List.of(), "0.00", 0, "0.00", 0, "0.00", List.of(), List.of(), List.of(), due.today(),
-                    due.next3Days());
+                    due.next3Days(), new Flows("0.00", "0.00", "0.00", "0.00", "0.00", "0.00", 0, 0));
         }
 
         // Hisoblar jadvali: davr boshi + kirim − chiqim = davr oxiri (IO ham — hisob qoldig'i uchun)
@@ -143,13 +148,34 @@ class CashPanel {
 
         // Xarajatlar moddalar bo'yicha (o'tkazilgan KO/BO chiqimlari)
         List<ItemTotal> items = jdbc.sql("""
-                SELECT i.name AS item, sum(o.amount) AS amount FROM cash_op o JOIN expense_item i ON i.id = o.expense_item_id
-                WHERE o.account_id IN (:ids) AND o.status = 'POSTED' AND o.direction = 'OUT' AND o.op_date BETWEEN :f AND :t
-                GROUP BY i.name ORDER BY sum(o.amount) DESC, i.name""")
+                SELECT i.name AS item, coalesce(sum(o.amount), 0) AS amount
+                FROM expense_item i
+                LEFT JOIN cash_op o ON o.expense_item_id = i.id AND o.account_id IN (:ids) AND o.status = 'POSTED' AND o.direction = 'OUT'
+                     AND o.op_date BETWEEN :f AND :t
+                WHERE i.direction = 'EXPENSE' AND (i.active OR o.id IS NOT NULL)
+                GROUP BY i.id, i.name ORDER BY coalesce(sum(o.amount), 0) DESC, i.name""")
                 .param("ids", ids).param("f", Date.valueOf(f)).param("t", Date.valueOf(t))
                 .query((rs, n) -> new ItemTotal(rs.getString("item"), m(rs.getBigDecimal("amount")).toString()))
                 .list();
         Money itemsTotal = items.stream().map(i -> Money.of(i.amount())).reduce(Money.ZERO, Money::plus);
+
+        // Kirim/chiqim tarkibi (davr ichida, hujjat turlari bo'yicha)
+        record Fl(BigDecimal mt, BigDecimal otherIn, BigDecimal ioIn, BigDecimal yt, BigDecimal otherOut, BigDecimal ioOut, int inDocs,
+                int outDocs) {}
+        Fl fl = jdbc.sql("""
+                SELECT sum(amount) FILTER (WHERE amount > 0 AND doc_type = 'MT') AS mt,
+                       sum(amount) FILTER (WHERE amount > 0 AND doc_type NOT IN ('MT', 'IO')) AS other_in,
+                       sum(amount) FILTER (WHERE amount > 0 AND doc_type = 'IO') AS io_in,
+                       -sum(amount) FILTER (WHERE amount < 0 AND doc_type = 'YT') AS yt,
+                       -sum(amount) FILTER (WHERE amount < 0 AND doc_type NOT IN ('YT', 'IO')) AS other_out,
+                       -sum(amount) FILTER (WHERE amount < 0 AND doc_type = 'IO') AS io_out,
+                       count(DISTINCT (doc_type, doc_number)) FILTER (WHERE amount > 0 AND doc_type <> 'IO')::int AS in_docs,
+                       count(DISTINCT (doc_type, doc_number)) FILTER (WHERE amount < 0 AND doc_type <> 'IO')::int AS out_docs
+                FROM money_move WHERE account_id IN (:ids) AND move_date BETWEEN :f AND :t""")
+                .param("ids", ids).param("f", Date.valueOf(f)).param("t", Date.valueOf(t))
+                .query(Fl.class).single();
+        Flows flows = new Flows(m(fl.mt()).toString(), m(fl.otherIn()).toString(), m(fl.ioIn()).toString(), m(fl.yt()).toString(),
+                m(fl.otherOut()).toString(), m(fl.ioOut()).toString(), fl.inDocs(), fl.outDocs());
 
         // Kutilayotgan: tasdiqlanmagan (qoralama) MT va tasdiq kutayotgan kassa chiqimlari
         record Cnt(int cnt, BigDecimal amount) {}
@@ -169,6 +195,7 @@ class CashPanel {
                 .list();
 
         return new Panel(f, t, balances, income.toString(), expense.toString(), items, itemsTotal.toString(), drafts.cnt(),
-                m(drafts.amount()).toString(), pending.cnt(), m(pending.amount()).toString(), table, days, recent, due.today(), due.next3Days());
+                m(drafts.amount()).toString(), pending.cnt(), m(pending.amount()).toString(), table, days, recent, due.today(), due.next3Days(),
+                flows);
     }
 }
