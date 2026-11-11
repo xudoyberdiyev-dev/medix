@@ -143,23 +143,24 @@ export function NewZoneTransferPage({ doc = null }: { doc?: ZoneTransferDetail |
     setDlg("submit");
   };
 
+  // mutateAsync: muvaffaqiyatdan keyin hujjat holati oʻzgaradi va bu sahifa koʻrinish sahifasiga almashadi (unmount) —
+  // `mutate(..., { onSuccess })` chaqiruv qaytmasligi mumkin, vaʼda esa har doim bajariladi.
+  const fail = (e: unknown) => (setDlg(null), setError(describeError(e).message ?? t("saveFailed")));
+
   const submit = () =>
     doc
-      ? submitDraft.mutate(doc.id, {
-          onSuccess: (d) => (
-            setDlg(null),
-            toast({ tone: "success", title: d.status === "PENDING" ? t("form.sent") : t("form.moved"), description: d.number })
-          ),
-          onError: (e) => (setDlg(null), setError(describeError(e).message ?? t("saveFailed"))),
-        })
+      ? submitDraft
+          .mutateAsync(doc.id)
+          .then((d) => toast({ tone: "success", title: d.status === "PENDING" ? t("form.sent") : t("form.moved"), description: d.number }))
+          .catch(fail)
       : undefined;
 
   const cancel = () =>
     doc
-      ? cancelDraft.mutate(doc.id, {
-          onSuccess: () => (setDlg(null), toast({ tone: "success", title: td("tCancelled", { n: doc.number }) })),
-          onError: (e) => (setDlg(null), setError(describeError(e).message ?? t("saveFailed"))),
-        })
+      ? cancelDraft
+          .mutateAsync(doc.id)
+          .then(() => toast({ tone: "success", title: td("tCancelled", { n: doc.number }) }))
+          .catch(fail)
       : undefined;
 
   const columns: TableColumn<ZoneStockRow>[] = [
