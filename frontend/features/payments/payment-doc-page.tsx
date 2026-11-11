@@ -508,17 +508,21 @@ function Editor({ kind, doc }: { kind: PayKind; doc: Doc | null }) {
       ))}
       {err.message ? <Alert tone="danger" title={err.message} /> : null}
 
-      {doc ? (
-        <Tabs
-          items={[
-            { key: "doc", label: t("tabDoc") },
-            { key: "hist", label: t("tabHist") },
-          ]}
-          value={tab}
-          onChange={(k) => setTab(k as "doc" | "hist")}
-        />
+      <Tabs
+        items={[
+          { key: "doc", label: t("tabDoc") },
+          { key: "hist", label: t("tabHist") },
+        ]}
+        value={tab}
+        onChange={(k) => setTab(k as "doc" | "hist")}
+      />
+      {tab === "hist" ? (
+        doc ? (
+          <PaymentHistory kind={kind} id={doc.id} />
+        ) : (
+          <HistoryTimeline query={{ data: [], error: null, refetch: () => undefined }} label={(a) => a} />
+        )
       ) : null}
-      {doc && tab === "hist" ? <PaymentHistory kind={kind} id={doc.id} /> : null}
       <div className={cn("grid min-w-0 items-start gap-5 lg:grid-cols-[minmax(0,1fr)_320px]", tab === "hist" && "hidden")}>
         <div className="flex min-w-0 flex-col gap-4">
           {editable ? (
