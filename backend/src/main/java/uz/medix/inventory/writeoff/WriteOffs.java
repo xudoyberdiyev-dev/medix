@@ -120,11 +120,12 @@ class WriteOffs {
         List<WriteOffSummary> items = jdbc.sql("""
                 SELECT h.id, h.number, h.branch_id, h.warehouse_id, w.name AS warehouse, z.id AS zone_id, z.name AS zone_name,
                        z.type AS zone_type, h.reason, h.status, h.needs_director, coalesce(l.lines, 0) AS lines, coalesce(l.qty, 0) AS qty,
-                       h.total_cost, e.full_name AS created_by, h.created_at, h.posted_at
+                       h.total_cost, e.full_name AS created_by, h.created_at, h.posted_at, pb.full_name AS posted_by
                 FROM write_off h
                 JOIN warehouse w ON w.id = h.warehouse_id
                 JOIN zone z ON z.id = h.zone_id
                 JOIN employee e ON e.id = h.created_by
+                LEFT JOIN employee pb ON pb.id = h.posted_by
                 LEFT JOIN (SELECT write_off_id, count(*) AS lines, sum(qty) AS qty FROM write_off_line GROUP BY write_off_id) l
                        ON l.write_off_id = h.id""" + where + " ORDER BY h.created_at DESC, h.id DESC LIMIT :l OFFSET :o")
                 .params(params)
@@ -135,7 +136,7 @@ class WriteOffs {
                         new ZoneRef(rs.getLong("zone_id"), rs.getString("zone_name"), ZoneType.valueOf(rs.getString("zone_type"))),
                         Reason.valueOf(rs.getString("reason")), Status.valueOf(rs.getString("status")), rs.getBoolean("needs_director"),
                         rs.getInt("lines"), rs.getLong("qty"), money(rs.getBigDecimal("total_cost")), rs.getString("created_by"),
-                        rs.getTimestamp("created_at").toInstant(), instant(rs.getTimestamp("posted_at"))))
+                        rs.getTimestamp("created_at").toInstant(), instant(rs.getTimestamp("posted_at")), rs.getString("posted_by")))
                 .list();
         return new WriteOffPage(items, total, page, size);
     }

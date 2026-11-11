@@ -45,7 +45,8 @@ final class WriteOffModels {
     record WriteOffSummary(long id, String number, long branchId, long warehouseId, String warehouse, ZoneRef zone, Reason reason,
             Status status, boolean needsDirector, int lines, long qty,
             @Schema(nullable = true, description = "Tannarx summasi — faqat prices.cost") String totalCost, String createdBy,
-            Instant createdAt, @Schema(nullable = true) Instant postedAt) {}
+            Instant createdAt, @Schema(nullable = true) Instant postedAt,
+            @Schema(nullable = true, description = "Kim tasdiqladi (o'tkazgan)") String postedBy) {}
 
     record WriteOffPage(List<WriteOffSummary> items, long total, int page, int size) {}
 
