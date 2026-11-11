@@ -33597,6 +33597,10 @@
             "type" : "string",
             "format" : "date-time"
           },
+          "postedBy" : {
+            "type" : "string",
+            "description" : "Kim tasdiqladi (o'tkazgan)"
+          },
           "qty" : {
             "type" : "integer",
             "format" : "int64"

@@ -125,7 +125,7 @@ export function WriteOffsPage() {
         </span>
       ),
     },
-    { key: "createdBy", title: t("col.createdBy") },
+    { key: "postedBy", title: t("col.postedBy"), render: (d) => <span className="text-text-secondary">{d.postedBy ?? "—"}</span> },
   ];
   const filtered = status !== null || reason !== null || q.trim() !== "";
   const rows = (docs.data?.items ?? []).filter((d) => matchesQuery(q, [d.number, d.warehouse, d.zone.name, t(`reason.${d.reason}`)]));

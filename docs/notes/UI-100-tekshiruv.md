@@ -19,7 +19,7 @@ Har juftlik yonma-yon solishtirildi (matn, ustun, tugma, yorliq, KPI, tartib).
 | 11 | Inventarizatsiya roʻyxati | tuzatildi | KPI «Jarayonda / Tasdiqlashda», yorliqlar, qidiruv, Ombor / Qatorlar / Farq (dona / summa) ustunlari, «Yangi inventarizatsiya» |
 | 12 | Yangi inventarizatsiya | ✅ | |
 | 13 | Mijozdan qaytarish (QM) | tuzatildi | yorliqlar (QM)/(HC)/(QY), «Qaytarishlar N», holat yorliqlari soni bilan, ustunlar |
-| 14 | Hisobdan chiqarish (HC) | tuzatildi | sarlavha soni, holat yorliqlari, qidiruv, Ombor/Sabab/Qatorlar/Summa (tannarx), «Yangi hujjat» |
+| 14 | Hisobdan chiqarish (HC) | tuzatildi | sarlavha soni, holat yorliqlari, qidiruv, Ombor/Sabab/Qatorlar/Summa (tannarx), «Kim tasdiqladi» (backend postedBy), «Yangi hujjat» |
 | 15 | YB ga qaytarish (QY) | tuzatildi | «Yetkazib beruvchiga qaytarish N», yorliqlar, qidiruv, Asos/Qatorlar, «Yangi qaytarish» |
 | 16 | Boshlangʻich qoldiq | ✅ | |
 | 17 | Toʻlovlar / yangi toʻlov | ✅ | |
@@ -52,3 +52,9 @@ Har juftlik yonma-yon solishtirildi (matn, ustun, tugma, yorliq, KPI, tartib).
 | 44 | Operator bosh sahifasi | ✅ | |
 | 45 | Filial rahbari bosh sahifasi | ✅ | |
 | 46 | Buxgalter bosh sahifasi | ✅ | |
+| 47 | QM / HC / QY hujjat sahifalari | tuzatildi | qaytarish turlari yorliqlari, «Hujjat / Tarix» |
+| 48 | Buyurtma kartochkasi, Inventarizatsiya hujjati, Mijoz va Mahsulot kartochkalari | ✅ | |
+
+**Natija:** 48 ekran (rollar va hujjat sahifalari bilan) tekshirildi, 17 tasida farq topilib tuzatildi; backendda yetishmagan 3 qism qoʻshildi (V84 hisob-faktura raqami, kassir paneli kirim/chiqim tarkibi, HC «Kim tasdiqladi»).
+
+**Ochiq (100% hisobiga kirmaydi yoki kichik):** Mijozlar/YB «Excel'dan yuklash» — SmartUp namunasi kelgach; yangi (saqlanmagan) kirim/toʻlov hujjatida «Hujjat/Tarix» yorligʻi — tarix hujjat saqlangach paydo boʻladi; prototip demo vositalari (Demo soat, Rol menyusi) — koʻchirilmaydi (CLAUDE.md).

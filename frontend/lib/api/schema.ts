@@ -13974,6 +13974,8 @@ export interface components {
             number: string;
             /** Format: date-time */
             postedAt?: string;
+            /** @description Kim tasdiqladi (o'tkazgan) */
+            postedBy?: string;
             /** Format: int64 */
             qty: number;
             /** @enum {string} */

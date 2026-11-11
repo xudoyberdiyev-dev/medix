@@ -43,7 +43,8 @@
     "writeOff": "Chiqarish",
     "warehouse": "Ombor",
     "lines": "Qatorlar",
-    "sumCost": "Summa (tannarx)"
+    "sumCost": "Summa (tannarx)",
+    "postedBy": "Kim tasdiqladi"
   },
   "director": "Direktor",
   "empty": {
