@@ -22,7 +22,8 @@
   },
   "filter": {
     "status": "Ҳолат",
-    "allStatuses": "Барча ҳолатлар"
+    "allStatuses": "Барча ҳолатлар",
+    "all": "Ҳаммаси"
   },
   "col": {
     "number": "Рақам",
@@ -128,5 +129,12 @@
     "stepCreated": "Яратилди",
     "stepApproval": "Тасдиқлаш",
     "stepPosted": "Ўтказилди"
+  },
+  "listTitle": "Қайтаришлар",
+  "tab": {
+    "PENDING": "Қабул кутилмоқда",
+    "POSTED": "Тасдиқланган",
+    "REJECTED": "Рад этилган",
+    "CANCELLED": "Бекор қилинган"
   }
 }

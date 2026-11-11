@@ -706,7 +706,7 @@ test("CEO: hisobdan chiqarish (HC) — shikastlangan tovar darhol oʻtkaziladi, 
   await expect(page).toHaveURL(/\/$/);
 
   await page.goto("/write-offs");
-  await page.getByRole("button", { name: "Hisobdan chiqarish" }).first().click();
+  await page.getByRole("button", { name: "Yangi hujjat" }).first().click();
   // Yangi hujjat — toʻliq sahifa (prototip StockDocs, kind = hc)
   await expect(page).toHaveURL(/\/write-offs\/new$/);
   const drawer = page.getByRole("main");
@@ -805,7 +805,7 @@ test("CEO: YB ga qaytarish (QY) — kirim partiyasi darhol qaytariladi, qarz kam
   await expect(page).toHaveURL(/\/$/);
 
   await page.goto("/supplier-returns");
-  await page.getByRole("button", { name: "Qaytarish" }).first().click();
+  await page.getByRole("button", { name: "Yangi qaytarish" }).first().click();
   // Yangi hujjat — toʻliq sahifa (prototip StockDocs, kind = qy)
   await expect(page).toHaveURL(/\/supplier-returns\/new$/);
   const drawer = page.getByRole("main");

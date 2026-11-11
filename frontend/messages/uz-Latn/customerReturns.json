@@ -22,7 +22,8 @@
   },
   "filter": {
     "status": "Holat",
-    "allStatuses": "Barcha holatlar"
+    "allStatuses": "Barcha holatlar",
+    "all": "Hammasi"
   },
   "col": {
     "number": "Raqam",
@@ -128,5 +129,12 @@
     "stepCreated": "Yaratildi",
     "stepApproval": "Tasdiqlash",
     "stepPosted": "Oʻtkazildi"
+  },
+  "listTitle": "Qaytarishlar",
+  "tab": {
+    "PENDING": "Qabul kutilmoqda",
+    "POSTED": "Tasdiqlangan",
+    "REJECTED": "Rad etilgan",
+    "CANCELLED": "Bekor qilingan"
   }
 }

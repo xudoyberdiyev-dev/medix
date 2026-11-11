@@ -2,7 +2,7 @@
   "kind": "YB ga qaytarish",
   "title": "YB ga qaytarish",
   "forbidden": "Bu sahifa sizning rolingiz uchun yopiq.",
-  "create": "Qaytarish",
+  "create": "Yangi qaytarish",
   "caption": "YB ga qaytarish hujjatlari",
   "status": {
     "PENDING": "Tasdiqda",
@@ -18,7 +18,8 @@
   },
   "filter": {
     "status": "Holat",
-    "allStatuses": "Barcha holatlar"
+    "allStatuses": "Barcha holatlar",
+    "all": "Hammasi"
   },
   "col": {
     "number": "Raqam",
@@ -38,7 +39,9 @@
     "count": "Soni",
     "price": "Kirim narxi",
     "free": "Boʻsh",
-    "ret": "Qaytarish"
+    "ret": "Qaytarish",
+    "base": "Asos",
+    "lines": "Qatorlar"
   },
   "reservedQty": "zahirada {qty}",
   "bonus": "Bonus",
@@ -126,5 +129,12 @@
     "dApproveDebt": "«{s}» oldidagi qarz {amount} ga kamayadi.",
     "dApproveBonus": "{amount} bonus balansidan hisoblanadi.",
     "crumbNew": "Yangi"
+  },
+  "listTitle": "Yetkazib beruvchiga qaytarish",
+  "search": "Raqam, yetkazib beruvchi yoki kirim…",
+  "tab": {
+    "PENDING": "Tasdiqlashda",
+    "POSTED": "Tasdiqlangan",
+    "REJECTED": "Rad etilgan"
   }
 }

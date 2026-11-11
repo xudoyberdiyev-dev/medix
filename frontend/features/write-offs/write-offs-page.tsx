@@ -9,9 +9,13 @@ import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import { EmptyState, ErrorState, ForbiddenState, NoResultsState } from "@/components/ui/system-states";
 import { Table, type TableColumn } from "@/components/ui/table";
+import { Tabs } from "@/components/ui/tabs";
+import { TextField } from "@/components/ui/text-field";
 import { can, canAny } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
-import { formatDateTime, formatMoney, formatQuantity } from "@/lib/format";
+import { formatDate, formatMoney, formatQuantity } from "@/lib/format";
+import { api, unwrap } from "@/lib/api/client";
+import { matchesQuery, useStatusCounts } from "@/lib/use-status-counts";
 import { useBranchStore } from "@/lib/stores/branch";
 import {
   HC_CREATE,
@@ -48,6 +52,7 @@ export function WriteOffsPage() {
   const [status, setStatus] = useState<string | null>(params.get("status"));
   const [reason, setReason] = useState<string | null>(params.get("reason"));
   const [page, setPage] = useState(1);
+  const [q, setQ] = useState("");
   // Bildirishnomadan oʻtish: ?open=<id> — hujjat sahifasiga yoʻnaltiriladi (prototip StockDocs — toʻliq sahifa)
   const router = useRouter();
   const openId = Number(params.get("open"));
@@ -59,26 +64,53 @@ export function WriteOffsPage() {
   const branchId = me.data?.allBranches ? (selectedBranch ?? null) : null;
   const docs = useWriteOffs(branchId, (status as WriteOffStatus | null) ?? null, (reason as WriteOffReason | null) ?? null, page);
 
+  const counts = useStatusCounts(
+    ["write-offs", branchId, reason],
+    HC_STATUSES,
+    (st) =>
+      unwrap(
+        api.GET("/api/write-offs", {
+          params: {
+            query: {
+              branchId: branchId ?? undefined,
+              status: st ?? undefined,
+              reason: (reason as WriteOffReason | null) ?? undefined,
+              size: 1,
+            },
+          },
+        }),
+      ).then((r) => r.total),
+    allowed,
+  );
+
   if (me.data && !allowed) return <ForbiddenState description={t("forbidden")} />;
 
   const showCost = (docs.data?.items ?? []).some((d) => d.totalCost != null);
   const columns: TableColumn<WriteOffSummary>[] = [
     { key: "number", title: t("col.number"), mono: true },
-    { key: "createdAt", title: t("col.date"), render: (d) => formatDateTime(new Date(d.createdAt)) },
-    { key: "warehouse", title: t("col.warehouseZone"), render: (d) => `${d.warehouse} · ${d.zone.name}` },
+    { key: "createdAt", title: t("col.date"), render: (d) => formatDate(new Date(d.createdAt)) },
+    {
+      key: "warehouse",
+      title: t("col.warehouse"),
+      render: (d) => (
+        <span className="flex flex-col">
+          <span>{d.warehouse}</span>
+          <span className="text-caption text-text-secondary">{d.zone.name}</span>
+        </span>
+      ),
+    },
     { key: "reason", title: t("col.reason"), render: (d) => t(`reason.${d.reason}`) },
-    { key: "qty", title: t("col.qty"), align: "right", render: (d) => formatQuantity(d.qty) },
+    { key: "lines", title: t("col.lines"), align: "right", render: (d) => formatQuantity(d.lines) },
     ...(showCost
       ? [
           {
             key: "totalCost",
-            title: t("col.totalCost"),
+            title: t("col.sumCost"),
             align: "right" as const,
             render: (d: WriteOffSummary) => (d.totalCost != null ? formatMoney(d.totalCost) : "—"),
           },
         ]
       : []),
-    { key: "createdBy", title: t("col.createdBy") },
     {
       key: "status",
       title: t("col.status"),
@@ -93,19 +125,35 @@ export function WriteOffsPage() {
         </span>
       ),
     },
+    { key: "createdBy", title: t("col.createdBy") },
   ];
-  const filtered = status !== null || reason !== null;
+  const filtered = status !== null || reason !== null || q.trim() !== "";
+  const rows = (docs.data?.items ?? []).filter((d) => matchesQuery(q, [d.number, d.warehouse, d.zone.name, t(`reason.${d.reason}`)]));
 
   return (
     <>
       <HubTabs hub="returns" />
       <div className="mb-4 flex items-center justify-between gap-4">
-        <h1 className="text-page-title">{t("title")}</h1>
+        <h1 className="flex items-baseline gap-2 text-page-title">
+          {t("title")}
+          {counts.all != null ? <span className="tabular text-body text-text-secondary">{formatQuantity(counts.all)}</span> : null}
+        </h1>
         {canCreate ? (
           <Button icon={Plus} onClick={() => router.push("/write-offs/new")}>
             {t("create")}
           </Button>
         ) : null}
+      </div>
+      <div className="mb-3">
+        <Tabs
+          aria-label={t("filter.status")}
+          value={status ?? "all"}
+          onChange={(k) => (setStatus(k === "all" ? null : k), setPage(1))}
+          items={[
+            { key: "all", label: t("filter.all"), count: counts.all },
+            ...HC_STATUSES.map((k) => ({ key: k, label: t(`tab.${k}`), count: counts.of(k) })),
+          ]}
+        />
       </div>
       {docs.error ? (
         <ErrorState onRetry={() => docs.refetch()} />
@@ -113,21 +161,21 @@ export function WriteOffsPage() {
         <Table
           caption={t("caption")}
           columns={columns}
-          rows={docs.data?.items ?? []}
+          rows={rows}
           rowKey={(d) => String(d.id)}
           loading={docs.isPending}
           onRowClick={(d) => router.push(`/write-offs/${d.id}`)}
           toolbar={
-            <div className="flex gap-3">
-              <div className="w-56">
-                <Select
-                  label={t("filter.status")}
+            <div className="flex flex-wrap items-end gap-3">
+              <div className="w-72">
+                <TextField
+                  label={t("search")}
+                  variant="search"
                   size="sm"
-                  value={status}
-                  onChange={(v) => (setStatus(v), setPage(1))}
-                  placeholder={t("filter.allStatuses")}
-                  className="[&>span:first-child]:sr-only"
-                  options={HC_STATUSES.map((value) => ({ value, label: t(`status.${value}`) }))}
+                  className="[&>label]:sr-only"
+                  value={q}
+                  onChange={setQ}
+                  placeholder={t("search")}
                 />
               </div>
               <div className="w-56">
@@ -145,7 +193,7 @@ export function WriteOffsPage() {
           }
           emptyState={
             filtered ? (
-              <NoResultsState onClearFilters={() => (setStatus(null), setReason(null))} />
+              <NoResultsState onClearFilters={() => (setStatus(null), setReason(null), setQ(""))} />
             ) : (
               <EmptyState
                 icon={FileMinus}
