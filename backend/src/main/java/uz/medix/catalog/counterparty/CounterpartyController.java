@@ -10,6 +10,8 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,6 +21,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import uz.medix.catalog.counterparty.CounterpartyModels.ContractRequest;
@@ -35,6 +38,10 @@ import uz.medix.catalog.counterparty.CounterpartyModels.Role;
 import uz.medix.catalog.counterparty.CounterpartyModels.SortField;
 import uz.medix.catalog.counterparty.CounterpartyModels.Status;
 import uz.medix.catalog.counterparty.CounterpartyModels.TermsRequest;
+import org.springframework.web.multipart.MultipartFile;
+import uz.medix.catalog.counterparty.CounterpartyImport.CounterpartyImportRequest;
+import uz.medix.catalog.counterparty.CounterpartyImport.CounterpartyImportResult;
+import uz.medix.catalog.product.ProductImport;
 import uz.medix.shared.error.MedixException;
 import uz.medix.shared.pdf.PdfFormat;
 import uz.medix.shared.security.Actor;
@@ -56,14 +63,18 @@ class CounterpartyController {
     private final CounterpartyExcel excel;
     private final CounterpartyOverview overview;
     private final CounterpartyDocuments documents;
+    private final CounterpartyImport importer;
+    private final ProductImport files;
 
     CounterpartyController(Counterparties counterparties, CurrentActor currentActor, CounterpartyExcel excel, CounterpartyOverview overview,
-            CounterpartyDocuments documents) {
+            CounterpartyDocuments documents, CounterpartyImport importer, ProductImport files) {
         this.counterparties = counterparties;
         this.currentActor = currentActor;
         this.excel = excel;
         this.overview = overview;
         this.documents = documents;
+        this.importer = importer;
+        this.files = files;
     }
 
     private Actor actor() {
@@ -268,6 +279,55 @@ class CounterpartyController {
     @Operation(summary = "Kontragent kartasi")
     CounterpartyDetail get(@PathVariable long id) {
         return detail(id);
+    }
+
+    // ===== Import ustasi (prototip ImportWizard «cust» / «sup») =====
+
+    private static void requireImport(Authentication auth, Role role) {
+        if (role == Role.ALL) {
+            throw MedixException.badRequest("counterparty.roleRequired");
+        }
+        requireEdit(auth, role == Role.CUSTOMER, role == Role.SUPPLIER);
+    }
+
+    @PostMapping(path = "/import/read", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAnyAuthority('clients.create', 'suppliers.create')")
+    @Operation(summary = "Import ustasi: faylni o'qish",
+            description = ".xlsx yoki .csv — varaqlar va katakchalar (matn). Hech narsa yozilmaydi; sarlavha va ustunlar brauzerda tanlanadi.")
+    ProductImport.ImportFile importRead(@RequestPart("file") MultipartFile file) throws IOException {
+        try (var in = file.getInputStream()) {
+            return files.read(file.getOriginalFilename(), file.getSize(), in);
+        }
+    }
+
+    @PostMapping("/import/check")
+    @Operation(summary = "Import ustasi: qatorlarni tekshirish yoki yaratish",
+            description = "role — CUSTOMER (clients.create) yoki SUPPLIER (suppliers.create). apply=false — har qator uchun holat va izohlar; "
+                    + "apply=true — OK va ogohlantirishli qatorlar bitta tranzaksiyada yaratiladi, xato qatorlar o'tkazib yuboriladi. "
+                    + "Limit va muddatlar branchId filial shartlariga yoziladi (clients.terms / suppliers.terms bo'lsa).")
+    CounterpartyImportResult importCheck(@Valid @RequestBody CounterpartyImportRequest r, @RequestParam(defaultValue = "false") boolean apply,
+            Authentication auth) {
+        requireImport(auth, r.role());
+        if (r.branchId() != null && !actor().canAccessBranch(r.branchId())) {
+            throw MedixException.notFound("error.notFound");
+        }
+        boolean terms = has(auth, r.role() == Role.CUSTOMER ? "clients.terms" : "suppliers.terms");
+        return importer.check(r, apply, terms);
+    }
+
+    @GetMapping("/import/profile")
+    @Operation(summary = "Import ustasi: saqlangan moslashtirish profili", description = "Profil bo'lmasa — 204.")
+    ResponseEntity<ProductImport.ImportProfile> importProfile(@RequestParam Role role, Authentication auth) {
+        requireImport(auth, role);
+        return files.profile(CounterpartyImport.profileType(role)).map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.noContent().build());
+    }
+
+    @PutMapping("/import/profile")
+    @Operation(summary = "Import ustasi: moslashtirishni saqlash", description = "Keyingi safar avtomatik qo'llanadi.")
+    ProductImport.ImportProfile saveImportProfile(@RequestParam Role role, @Valid @RequestBody ProductImport.ImportProfileRequest r,
+            Authentication auth) {
+        requireImport(auth, role);
+        return files.saveProfile(CounterpartyImport.profileType(role), CounterpartyImport.fields(role), r);
     }
 
     @PostMapping

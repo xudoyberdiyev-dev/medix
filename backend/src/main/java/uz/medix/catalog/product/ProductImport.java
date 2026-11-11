@@ -36,7 +36,7 @@ import uz.medix.shared.security.CurrentActor;
  * 5) xatosiz (OK va ogohlantirishli) qatorlar bitta tranzaksiyada yaratiladi, xato qatorlar o'tkazib yuboriladi.
  */
 @Service
-class ProductImport {
+public class ProductImport {
 
     static final int MAX_ROWS = ProductExcel.MAX_IMPORT_ROWS;
     static final int MAX_COLS = 100;
@@ -52,20 +52,20 @@ class ProductImport {
 
     // ===== DTO =====
 
-    record ImportSheet(String name, List<List<String>> rows) {}
+    public record ImportSheet(String name, List<List<String>> rows) {}
 
-    record ImportFile(String fileName, long size, List<ImportSheet> sheets) {}
+    public record ImportFile(String fileName, long size, List<ImportSheet> sheets) {}
 
-    record ImportRowInput(int row, @NotNull Map<String, String> values) {}
+    public record ImportRowInput(int row, @NotNull Map<String, String> values) {}
 
     record ImportCheckRequest(@NotNull @Size(max = MAX_ROWS) List<@Valid ImportRowInput> rows) {}
 
-    enum RowStatus { OK, WARN, ERROR }
+    public enum RowStatus { OK, WARN, ERROR }
 
-    enum Tone { ERROR, WARN }
+    public enum Tone { ERROR, WARN }
 
     @Schema(description = "Izoh: `key` — frontend tarjima kaliti (bq_m_*), `params` — o'rniga qo'yiladigan qiymatlar")
-    record ImportMessage(Tone tone, String key, Map<String, String> params) {}
+    public record ImportMessage(Tone tone, String key, Map<String, String> params) {}
 
     record ImportRowCheck(int row, RowStatus status, @Schema(nullable = true) String code, boolean codeAuto,
             @Schema(nullable = true) String createdCode, List<ImportMessage> messages) {}
@@ -73,9 +73,9 @@ class ProductImport {
     record ImportCheckResult(boolean applied, int ok, int warn, int error, int created, List<String> newManufacturers,
             List<String> newCategories, List<ImportRowCheck> rows) {}
 
-    record ImportProfile(String name, Map<String, String> mapping) {}
+    public record ImportProfile(String name, Map<String, String> mapping) {}
 
-    record ImportProfileRequest(@NotNull @Size(min = 1, max = 120) String name, @NotNull Map<String, String> mapping) {}
+    public record ImportProfileRequest(@NotNull @Size(min = 1, max = 120) String name, @NotNull Map<String, String> mapping) {}
 
     private final Products products;
     private final ProductExcel excel;
@@ -93,7 +93,7 @@ class ProductImport {
 
     // ===== 1. Faylni o'qish =====
 
-    ImportFile read(String fileName, long size, InputStream in) {
+    public ImportFile read(String fileName, long size, InputStream in) {
         String name = fileName == null ? "fayl" : fileName;
         if (name.toLowerCase(Locale.ROOT).endsWith(".csv")) {
             return new ImportFile(name, size, List.of(new ImportSheet(name.replaceAll("(?i)\\.csv$", ""), readCsv(in))));
@@ -438,7 +438,7 @@ class ProductImport {
     // ===== Moslashtirish profili =====
 
     @Transactional(readOnly = true)
-    java.util.Optional<ImportProfile> profile(String type) {
+    public java.util.Optional<ImportProfile> profile(String type) {
         return jdbc.sql("SELECT name FROM import_profile WHERE type = :t").param("t", type).query(String.class).optional().map(name -> {
             Map<String, String> m = new LinkedHashMap<>();
             jdbc.sql("SELECT field, column_title FROM import_profile_field WHERE type = :t ORDER BY field").param("t", type)
@@ -449,9 +449,15 @@ class ProductImport {
 
     @Transactional
     ImportProfile saveProfile(String type, ImportProfileRequest r) {
+        return saveProfile(type, FIELDS, r);
+    }
+
+    /** Profil — ixtiyoriy turdagi import uchun (masalan, kontragentlar): faqat {@code fields} dagi maydonlar saqlanadi. */
+    @Transactional
+    public ImportProfile saveProfile(String type, List<String> fields, ImportProfileRequest r) {
         Map<String, String> mapping = new LinkedHashMap<>();
         r.mapping().forEach((f, title) -> {
-            if (FIELDS.contains(f) && title != null && !title.isBlank()) {
+            if (fields.contains(f) && title != null && !title.isBlank()) {
                 mapping.put(f, title.strip().length() > 200 ? title.strip().substring(0, 200) : title.strip());
             }
         });
