@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRightLeft, CircleCheck, Clock, Plus, XCircle } from "lucide-react";
+import { ArrowRightLeft, Ban, CircleCheck, Clock, FilePen, Plus, XCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -19,9 +19,11 @@ import { HubTabs } from "@/components/shell/hub-tabs";
 export function ZoneTransferStatusBadge({ status }: { status: ZoneTransferStatus }) {
   const t = useTranslations("zoneTransfers");
   const map = {
+    DRAFT: { tone: "neutral", icon: FilePen },
     PENDING: { tone: "warning", icon: Clock },
     POSTED: { tone: "success", icon: CircleCheck },
     REJECTED: { tone: "neutral", icon: XCircle },
+    CANCELLED: { tone: "neutral", icon: Ban },
   } as const;
   return (
     <Badge tone={map[status].tone} icon={map[status].icon}>

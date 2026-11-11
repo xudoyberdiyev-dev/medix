@@ -106,6 +106,8 @@ class TransferOverviewController {
             case PENDING -> State.PENDING;
             case POSTED -> State.POSTED;
             case REJECTED -> State.REJECTED;
+            case DRAFT -> State.DRAFT;
+            case CANCELLED -> State.CANCELLED;
         };
         return new TransferItem(Kind.ZK, z.id(), z.number(), z.createdAt(), new Place(null, z.warehouse(), z.from().name()),
                 new Place(null, z.warehouse(), z.to().name()), s, Direction.INTERNAL, z.lines(), z.qty(), 0, null, null, z.createdBy());

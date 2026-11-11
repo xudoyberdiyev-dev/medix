@@ -30,6 +30,7 @@ import {
   type ZoneTransferDetail,
 } from "./api";
 import { zkHistory, zkSteps } from "./doc-model";
+import { NewZoneTransferPage } from "./zk-new-page";
 import { ZoneTransferStatusBadge } from "./zone-transfers-page";
 
 type Line = ZoneTransferDetail["lines"][number];
@@ -49,6 +50,7 @@ export function ZoneTransferDocPage({ id }: { id: number }) {
         <Skeleton className="h-64 w-full" />
       </div>
     );
+  if (doc.data.status === "DRAFT") return <NewZoneTransferPage key={doc.data.id} doc={doc.data} />;
   return <View doc={doc.data} />;
 }
 
@@ -147,6 +149,7 @@ function View({ doc }: { doc: ZoneTransferDetail }) {
       {st === "POSTED" ? (
         <Alert tone="success" title={t("bPosted", { at: at(doc.postedAt ?? doc.createdAt), who: doc.postedBy ?? doc.createdBy })} />
       ) : null}
+      {st === "CANCELLED" ? <Alert tone="info" title={td("bCanc", { at: at(doc.cancelledAt), who: doc.cancelledBy ?? "" })} /> : null}
       {st === "REJECTED" ? (
         <Alert tone="info" title={t("bRej", { at: at(doc.rejectedAt), who: doc.rejectedBy ?? "" })}>
           {t("bRejD", { reason: doc.rejectReason ?? "" })}
@@ -196,7 +199,13 @@ function View({ doc }: { doc: ZoneTransferDetail }) {
       ) : (
         <HistoryTimeline
           query={{ data: events, error: null, refetch: () => 0 }}
-          label={(a) => (["create", "pending", "posted", "rejected"].includes(a) ? t(`h_${a}` as "h_create") : a)}
+          label={(a) =>
+            a === "cancelled"
+              ? td("h_cancelled")
+              : ["create", "draft", "moved", "pending", "posted", "rejected"].includes(a)
+                ? t(`h_${a}` as "h_create")
+                : a
+          }
         />
       )}
       <Modal

@@ -101,7 +101,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** AH ni bekor qilish (teskari yozuvlar) */
-        post: operations["cancel_12"];
+        post: operations["cancel_13"];
         delete?: never;
         options?: never;
         head?: never;
@@ -399,7 +399,7 @@ export interface paths {
          * Filiallararo to'lovni bekor qilish
          * @description Teskari: pul qaytadi, qarz tiklanadi.
          */
-        post: operations["cancel_11"];
+        post: operations["cancel_12"];
         delete?: never;
         options?: never;
         head?: never;
@@ -498,12 +498,12 @@ export interface paths {
             cookie?: never;
         };
         /** FS hujjati */
-        get: operations["get_14"];
+        get: operations["get_15"];
         /**
          * Qoralamani tahrirlash
          * @description Sotuvchi zona, xaridor ombori, izoh va qatorlar almashtiriladi. Faqat qoralama.
          */
-        put: operations["update_19"];
+        put: operations["update_20"];
         post?: never;
         delete?: never;
         options?: never;
@@ -524,7 +524,7 @@ export interface paths {
          * Bekor qilish
          * @description Faqat qoralama.
          */
-        post: operations["cancel_10"];
+        post: operations["cancel_11"];
         delete?: never;
         options?: never;
         head?: never;
@@ -678,7 +678,7 @@ export interface paths {
          * Filialni tahrirlash
          * @description Kod o'zgarmaydi.
          */
-        put: operations["update_18"];
+        put: operations["update_19"];
         post?: never;
         delete?: never;
         options?: never;
@@ -935,7 +935,7 @@ export interface paths {
          * Kompaniya va tizim holati
          * @description Faol filiallar, omborlar va xodimlar soni; ishga tushirilgan vaqt va kim.
          */
-        get: operations["get_13"];
+        get: operations["get_14"];
         /**
          * Guruh nomini tahrirlash
          * @description Audit jurnaliga eski → yangi qiymat yoziladi.
@@ -1058,9 +1058,9 @@ export interface paths {
             cookie?: never;
         };
         /** Kontragent kartasi */
-        get: operations["get_12"];
+        get: operations["get_13"];
         /** Kartani tahrirlash */
-        put: operations["update_17"];
+        put: operations["update_18"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1415,7 +1415,7 @@ export interface paths {
          * O'tkazilganini bekor qilish
          * @description Karantindan tovar chiqadi, mijoz qarzi qaytadi, hisobotlardan chiqadi. Partiya keyingi hujjat bilan chiqarilgan bo'lsa — 409 qm.cancelBlocked.
          */
-        post: operations["cancel_9"];
+        post: operations["cancel_10"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1665,7 +1665,7 @@ export interface paths {
         };
         get?: never;
         /** Yozuvni tahrirlash */
-        put: operations["update_16"];
+        put: operations["update_17"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1791,7 +1791,7 @@ export interface paths {
          * Xodimni tahrirlash
          * @description Login, rol yoki filial oʻzgarsa ochiq sessiyalari tugatiladi.
          */
-        put: operations["update_15"];
+        put: operations["update_16"];
         post?: never;
         delete?: never;
         options?: never;
@@ -2167,12 +2167,12 @@ export interface paths {
          * Inventarizatsiya hujjati
          * @description Ko'r sanoqda sanoq davomida hisob qoldig'i — faqat inventory.openCount.
          */
-        get: operations["get_11"];
+        get: operations["get_12"];
         /**
          * Qoralamani saqlash
          * @description Ombor (shu filialda), sana, qamrov, komissiya, ko'r sanoq — faqat qoralamada.
          */
-        put: operations["update_14"];
+        put: operations["update_15"];
         post?: never;
         delete?: never;
         options?: never;
@@ -2233,7 +2233,7 @@ export interface paths {
          * Bekor qilish
          * @description Qoldiq o'zgarmaydi, qulf yechiladi.
          */
-        post: operations["cancel_8"];
+        post: operations["cancel_9"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2353,7 +2353,7 @@ export interface paths {
          * Tekshiruvga yuborish
          * @description Hamma qator sanalgan bo'lishi shart. Tasdiqlovchilarga bildirishnoma.
          */
-        post: operations["submit_2"];
+        post: operations["submit_3"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2818,12 +2818,12 @@ export interface paths {
             cookie?: never;
         };
         /** BQ hujjati */
-        get: operations["get_10"];
+        get: operations["get_11"];
         /**
          * Qoralamani tahrirlash
          * @description Qatorlar to'liq almashtiriladi.
          */
-        put: operations["update_13"];
+        put: operations["update_14"];
         post?: never;
         delete?: never;
         options?: never;
@@ -2844,7 +2844,7 @@ export interface paths {
          * Bekor qilish
          * @description Qoralama — yaratish ruxsati bilan. O'tkazilgan — faqat opening.cancel, partiyalar ishlatilmagan bo'lsa.
          */
-        post: operations["cancel_7"];
+        post: operations["cancel_8"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2920,9 +2920,9 @@ export interface paths {
             cookie?: never;
         };
         /** BQ (pul turlari) hujjati */
-        get: operations["get_9"];
+        get: operations["get_10"];
         /** Qoralamani saqlash */
-        put: operations["update_12"];
+        put: operations["update_13"];
         post?: never;
         delete?: never;
         options?: never;
@@ -2940,7 +2940,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Qoralamani bekor qilish */
-        post: operations["cancel_6"];
+        post: operations["cancel_7"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3256,9 +3256,9 @@ export interface paths {
          * Buyurtma
          * @description Qoralamada — joriy narxlar, qoldiq va «N ta muammo» paneli.
          */
-        get: operations["get_8"];
+        get: operations["get_9"];
         /** Qoralamani tahrirlash */
-        put: operations["update_11"];
+        put: operations["update_12"];
         post?: never;
         delete?: never;
         options?: never;
@@ -3296,7 +3296,7 @@ export interface paths {
          * Bekor qilish
          * @description Sabab majburiy. «Yo'lda» va undan keyin bekor qilinmaydi.
          */
-        post: operations["cancel_5"];
+        post: operations["cancel_6"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3533,7 +3533,7 @@ export interface paths {
          * Yuborish
          * @description Xato bo'lsa — yuborilmaydi; tasdiq sababi bo'lsa — tasdiqqa, aks holda — Navbatga.
          */
-        post: operations["submit_1"];
+        post: operations["submit_2"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3643,9 +3643,9 @@ export interface paths {
             cookie?: never;
         };
         /** MT kartochkasi (taqsimot bilan) */
-        get: operations["get_7"];
+        get: operations["get_8"];
         /** Qoralamani o'zgartirish */
-        put: operations["update_10"];
+        put: operations["update_11"];
         post?: never;
         delete?: never;
         options?: never;
@@ -3666,7 +3666,7 @@ export interface paths {
          * Bekor qilish
          * @description O'tkazilgan bo'lsa: qarz va hisob qoldig'i teskari yoziladi.
          */
-        post: operations["cancel_4"];
+        post: operations["cancel_5"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3963,9 +3963,9 @@ export interface paths {
             cookie?: never;
         };
         /** NO hujjati */
-        get: operations["get_6"];
+        get: operations["get_7"];
         /** Qoralamani tahrirlash */
-        put: operations["update_9"];
+        put: operations["update_10"];
         post?: never;
         delete?: never;
         options?: never;
@@ -4003,7 +4003,7 @@ export interface paths {
          * Bekor qilish
          * @description Qoralama, tasdiq kutayotgan yoki tasdiqlangan, lekin hali kuchga kirmagan hujjat.
          */
-        post: operations["cancel_3"];
+        post: operations["cancel_4"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4057,7 +4057,7 @@ export interface paths {
          * O'tkazish
          * @description Tannarxdan past narx bo'lsa — Direktor tasdig'iga, aks holda darhol kuchga kiradi.
          */
-        post: operations["submit"];
+        post: operations["submit_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4114,7 +4114,7 @@ export interface paths {
          * Narx turini tahrirlash (nom, muqobil nom, faollik)
          * @description Bazaviy turni yoki mijozlarga biriktirilgan turni nofaol qilib bo'lmaydi. Ro'yxat tarkibi (SPEC 6) o'zgarmaydi.
          */
-        put: operations["update_8"];
+        put: operations["update_9"];
         post?: never;
         delete?: never;
         options?: never;
@@ -4449,9 +4449,9 @@ export interface paths {
             cookie?: never;
         };
         /** Mahsulot kartasi */
-        get: operations["get_5"];
+        get: operations["get_6"];
         /** Mahsulotni tahrirlash */
-        put: operations["update_7"];
+        put: operations["update_8"];
         post?: never;
         delete?: never;
         options?: never;
@@ -4541,9 +4541,9 @@ export interface paths {
             cookie?: never;
         };
         /** O'z profilim */
-        get: operations["get_4"];
+        get: operations["get_5"];
         /** Telefon raqamini yangilash */
-        put: operations["update_6"];
+        put: operations["update_7"];
         post?: never;
         delete?: never;
         options?: never;
@@ -4677,12 +4677,12 @@ export interface paths {
             cookie?: never;
         };
         /** Kirim hujjati */
-        get: operations["get_3"];
+        get: operations["get_4"];
         /**
          * Qoralamani tahrirlash
          * @description Qatorlar to'liq almashtiriladi.
          */
-        put: operations["update_5"];
+        put: operations["update_6"];
         post?: never;
         delete?: never;
         options?: never;
@@ -4743,7 +4743,7 @@ export interface paths {
          * Bekor qilish
          * @description O'tkazilgan kirim — faqat receipt.cancelPosted va tovar ishlatilmagan bo'lsa.
          */
-        post: operations["cancel_2"];
+        post: operations["cancel_3"];
         delete?: never;
         options?: never;
         head?: never;
@@ -5223,12 +5223,12 @@ export interface paths {
          * Sozlamalar
          * @description Barcha bo'limlar qiymatlari, oxirgi o'zgarish (kim, qachon) va tahrirlash huquqlari.
          */
-        get: operations["get_2"];
+        get: operations["get_3"];
         /**
          * Sozlamalarni saqlash
          * @description Bir nechta qiymat birdaniga; har biri oraliq bo'yicha tekshiriladi, audit — eski → yangi.
          */
-        put: operations["update_4"];
+        put: operations["update_5"];
         post?: never;
         delete?: never;
         options?: never;
@@ -6035,12 +6035,12 @@ export interface paths {
             cookie?: never;
         };
         /** Reys */
-        get: operations["get_1"];
+        get: operations["get_2"];
         /**
          * Reys sarlavhasini tahrirlash
          * @description Sana, haydovchi, mashina, ekspeditor, izoh — «Rejalashtirilgan», yuklash boshlanmagan.
          */
-        put: operations["update_3"];
+        put: operations["update_4"];
         post?: never;
         delete?: never;
         options?: never;
@@ -6061,7 +6061,7 @@ export interface paths {
          * Reysni bekor qilish
          * @description Faqat yuklash boshlanmagan «Rejalashtirilgan» reys.
          */
-        post: operations["cancel_1"];
+        post: operations["cancel_2"];
         delete?: never;
         options?: never;
         head?: never;
@@ -6346,7 +6346,7 @@ export interface paths {
         };
         get?: never;
         /** Mashinani tahrirlash */
-        put: operations["update_2"];
+        put: operations["update_3"];
         post?: never;
         delete?: never;
         options?: never;
@@ -6440,12 +6440,12 @@ export interface paths {
             cookie?: never;
         };
         /** OK hujjati */
-        get: operations["get"];
+        get: operations["get_1"];
         /**
          * Qoralamani tahrirlash
          * @description Manba zona, qabul qiluvchi ombor, izoh va qatorlar almashtiriladi. Faqat qoralama.
          */
-        put: operations["update_1"];
+        put: operations["update_2"];
         post?: never;
         delete?: never;
         options?: never;
@@ -6466,7 +6466,7 @@ export interface paths {
          * Bekor qilish
          * @description Faqat qoralama.
          */
-        post: operations["cancel"];
+        post: operations["cancel_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -6617,7 +6617,7 @@ export interface paths {
         };
         get?: never;
         /** Omborni tahrirlash */
-        put: operations["update"];
+        put: operations["update_1"];
         post?: never;
         delete?: never;
         options?: never;
@@ -6909,6 +6909,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/zone-transfers/drafts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Zona ko'chirishi (qoralama)
+         * @description Tovar o'tkazilguncha joyida qoladi.
+         */
+        post: operations["createDraft"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/zone-transfers/zone-stock": {
         parameters: {
             query?: never;
@@ -6937,8 +6957,12 @@ export interface paths {
             cookie?: never;
         };
         /** ZK hujjati */
-        get: operations["get_15"];
-        put?: never;
+        get: operations["get"];
+        /**
+         * Qoralamani tahrirlash
+         * @description Ombor, zonalar, izoh va qatorlar almashtiriladi. Faqat qoralama.
+         */
+        put: operations["update"];
         post?: never;
         delete?: never;
         options?: never;
@@ -6963,6 +6987,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/zone-transfers/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Bekor qilish
+         * @description Faqat qoralama.
+         */
+        post: operations["cancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/zone-transfers/{id}/reject": {
         parameters: {
             query?: never;
@@ -6977,6 +7021,26 @@ export interface paths {
          * @description Tovar joyida qoladi.
          */
         post: operations["reject"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/zone-transfers/{id}/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Qoralamani o'tkazish
+         * @description Darhol o'tkaziladi. Karantindan sotuvga ochiq zonaga — transfer.quar ruxsati bo'lmasa «Tasdiqda» holatiga o'tadi.
+         */
+        post: operations["submit"];
         delete?: never;
         options?: never;
         head?: never;
@@ -13756,6 +13820,9 @@ export interface components {
             /** Format: int64 */
             branchId: number;
             /** Format: date-time */
+            cancelledAt?: string;
+            cancelledBy?: string;
+            /** Format: date-time */
             createdAt: string;
             createdBy: string;
             from: components["schemas"]["ZoneRef"];
@@ -13773,7 +13840,7 @@ export interface components {
             rejectedAt?: string;
             rejectedBy?: string;
             /** @enum {string} */
-            status: "PENDING" | "POSTED" | "REJECTED";
+            status: "DRAFT" | "PENDING" | "POSTED" | "REJECTED" | "CANCELLED";
             to: components["schemas"]["ZoneRef"];
             /** Format: int64 */
             totalQty: number;
@@ -13842,7 +13909,7 @@ export interface components {
             /** Format: int64 */
             qty: number;
             /** @enum {string} */
-            status: "PENDING" | "POSTED" | "REJECTED";
+            status: "DRAFT" | "PENDING" | "POSTED" | "REJECTED" | "CANCELLED";
             to: components["schemas"]["ZoneRef"];
             warehouse: string;
             /** Format: int64 */
@@ -14017,7 +14084,7 @@ export interface operations {
             };
         };
     };
-    cancel_12: {
+    cancel_13: {
         parameters: {
             query?: never;
             header?: never;
@@ -14433,7 +14500,7 @@ export interface operations {
             };
         };
     };
-    cancel_11: {
+    cancel_12: {
         parameters: {
             query?: never;
             header?: never;
@@ -14572,7 +14639,7 @@ export interface operations {
             };
         };
     };
-    get_14: {
+    get_15: {
         parameters: {
             query?: never;
             header?: never;
@@ -14594,7 +14661,7 @@ export interface operations {
             };
         };
     };
-    update_19: {
+    update_20: {
         parameters: {
             query?: never;
             header?: never;
@@ -14620,7 +14687,7 @@ export interface operations {
             };
         };
     };
-    cancel_10: {
+    cancel_11: {
         parameters: {
             query?: never;
             header?: never;
@@ -14824,7 +14891,7 @@ export interface operations {
             };
         };
     };
-    update_18: {
+    update_19: {
         parameters: {
             query?: never;
             header?: never;
@@ -15208,7 +15275,7 @@ export interface operations {
             };
         };
     };
-    get_13: {
+    get_14: {
         parameters: {
             query?: never;
             header?: never;
@@ -15426,7 +15493,7 @@ export interface operations {
             };
         };
     };
-    get_12: {
+    get_13: {
         parameters: {
             query?: never;
             header?: never;
@@ -15448,7 +15515,7 @@ export interface operations {
             };
         };
     };
-    update_17: {
+    update_18: {
         parameters: {
             query?: never;
             header?: never;
@@ -15941,7 +16008,7 @@ export interface operations {
             };
         };
     };
-    cancel_9: {
+    cancel_10: {
         parameters: {
             query?: never;
             header?: never;
@@ -16301,7 +16368,7 @@ export interface operations {
             };
         };
     };
-    update_16: {
+    update_17: {
         parameters: {
             query?: never;
             header?: never;
@@ -16483,7 +16550,7 @@ export interface operations {
             };
         };
     };
-    update_15: {
+    update_16: {
         parameters: {
             query?: never;
             header?: never;
@@ -17020,7 +17087,7 @@ export interface operations {
             };
         };
     };
-    get_11: {
+    get_12: {
         parameters: {
             query?: never;
             header?: never;
@@ -17042,7 +17109,7 @@ export interface operations {
             };
         };
     };
-    update_14: {
+    update_15: {
         parameters: {
             query?: never;
             header?: never;
@@ -17114,7 +17181,7 @@ export interface operations {
             };
         };
     };
-    cancel_8: {
+    cancel_9: {
         parameters: {
             query?: never;
             header?: never;
@@ -17263,7 +17330,7 @@ export interface operations {
             };
         };
     };
-    submit_2: {
+    submit_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -17898,7 +17965,7 @@ export interface operations {
             };
         };
     };
-    get_10: {
+    get_11: {
         parameters: {
             query?: never;
             header?: never;
@@ -17920,7 +17987,7 @@ export interface operations {
             };
         };
     };
-    update_13: {
+    update_14: {
         parameters: {
             query?: never;
             header?: never;
@@ -17946,7 +18013,7 @@ export interface operations {
             };
         };
     };
-    cancel_7: {
+    cancel_8: {
         parameters: {
             query?: never;
             header?: never;
@@ -18071,7 +18138,7 @@ export interface operations {
             };
         };
     };
-    get_9: {
+    get_10: {
         parameters: {
             query?: never;
             header?: never;
@@ -18093,7 +18160,7 @@ export interface operations {
             };
         };
     };
-    update_12: {
+    update_13: {
         parameters: {
             query?: never;
             header?: never;
@@ -18119,7 +18186,7 @@ export interface operations {
             };
         };
     };
-    cancel_6: {
+    cancel_7: {
         parameters: {
             query?: never;
             header?: never;
@@ -18540,7 +18607,7 @@ export interface operations {
             };
         };
     };
-    get_8: {
+    get_9: {
         parameters: {
             query?: never;
             header?: never;
@@ -18562,7 +18629,7 @@ export interface operations {
             };
         };
     };
-    update_11: {
+    update_12: {
         parameters: {
             query?: never;
             header?: never;
@@ -18610,7 +18677,7 @@ export interface operations {
             };
         };
     };
-    cancel_5: {
+    cancel_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -18899,7 +18966,7 @@ export interface operations {
             };
         };
     };
-    submit_1: {
+    submit_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -19063,7 +19130,7 @@ export interface operations {
             };
         };
     };
-    get_7: {
+    get_8: {
         parameters: {
             query?: never;
             header?: never;
@@ -19085,7 +19152,7 @@ export interface operations {
             };
         };
     };
-    update_10: {
+    update_11: {
         parameters: {
             query?: never;
             header?: never;
@@ -19111,7 +19178,7 @@ export interface operations {
             };
         };
     };
-    cancel_4: {
+    cancel_5: {
         parameters: {
             query?: never;
             header?: never;
@@ -19576,7 +19643,7 @@ export interface operations {
             };
         };
     };
-    get_6: {
+    get_7: {
         parameters: {
             query?: never;
             header?: never;
@@ -19598,7 +19665,7 @@ export interface operations {
             };
         };
     };
-    update_9: {
+    update_10: {
         parameters: {
             query?: never;
             header?: never;
@@ -19650,7 +19717,7 @@ export interface operations {
             };
         };
     };
-    cancel_3: {
+    cancel_4: {
         parameters: {
             query?: never;
             header?: never;
@@ -19724,7 +19791,7 @@ export interface operations {
             };
         };
     };
-    submit: {
+    submit_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -19814,7 +19881,7 @@ export interface operations {
             };
         };
     };
-    update_8: {
+    update_9: {
         parameters: {
             query: {
                 branchId: number;
@@ -20302,7 +20369,7 @@ export interface operations {
             };
         };
     };
-    get_5: {
+    get_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -20324,7 +20391,7 @@ export interface operations {
             };
         };
     };
-    update_7: {
+    update_8: {
         parameters: {
             query?: never;
             header?: never;
@@ -20446,7 +20513,7 @@ export interface operations {
             };
         };
     };
-    get_4: {
+    get_5: {
         parameters: {
             query?: never;
             header?: never;
@@ -20466,7 +20533,7 @@ export interface operations {
             };
         };
     };
-    update_6: {
+    update_7: {
         parameters: {
             query?: never;
             header?: never;
@@ -20664,7 +20731,7 @@ export interface operations {
             };
         };
     };
-    get_3: {
+    get_4: {
         parameters: {
             query?: never;
             header?: never;
@@ -20686,7 +20753,7 @@ export interface operations {
             };
         };
     };
-    update_5: {
+    update_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -20760,7 +20827,7 @@ export interface operations {
             };
         };
     };
-    cancel_2: {
+    cancel_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -21456,7 +21523,7 @@ export interface operations {
             };
         };
     };
-    get_2: {
+    get_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -21476,7 +21543,7 @@ export interface operations {
             };
         };
     };
-    update_4: {
+    update_5: {
         parameters: {
             query?: never;
             header?: never;
@@ -22567,7 +22634,7 @@ export interface operations {
             };
         };
     };
-    get_1: {
+    get_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -22589,7 +22656,7 @@ export interface operations {
             };
         };
     };
-    update_3: {
+    update_4: {
         parameters: {
             query?: never;
             header?: never;
@@ -22615,7 +22682,7 @@ export interface operations {
             };
         };
     };
-    cancel_1: {
+    cancel_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -23019,7 +23086,7 @@ export interface operations {
             };
         };
     };
-    update_2: {
+    update_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -23161,7 +23228,7 @@ export interface operations {
             };
         };
     };
-    get: {
+    get_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -23183,7 +23250,7 @@ export interface operations {
             };
         };
     };
-    update_1: {
+    update_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -23209,7 +23276,7 @@ export interface operations {
             };
         };
     };
-    cancel: {
+    cancel_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -23415,7 +23482,7 @@ export interface operations {
             };
         };
     };
-    update: {
+    update_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -23811,7 +23878,7 @@ export interface operations {
             query?: {
                 branchId?: number;
                 warehouseId?: number;
-                status?: "PENDING" | "POSTED" | "REJECTED";
+                status?: "DRAFT" | "PENDING" | "POSTED" | "REJECTED" | "CANCELLED";
                 page?: number;
                 size?: number;
             };
@@ -23833,6 +23900,30 @@ export interface operations {
         };
     };
     create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ZoneTransferRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ZoneTransferDetail"];
+                };
+            };
+        };
+    };
+    createDraft: {
         parameters: {
             query?: never;
             header?: never;
@@ -23878,7 +23969,7 @@ export interface operations {
             };
         };
     };
-    get_15: {
+    get: {
         parameters: {
             query?: never;
             header?: never;
@@ -23900,7 +23991,55 @@ export interface operations {
             };
         };
     };
+    update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ZoneTransferRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ZoneTransferDetail"];
+                };
+            };
+        };
+    };
     approve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ZoneTransferDetail"];
+                };
+            };
+        };
+    };
+    cancel: {
         parameters: {
             query?: never;
             header?: never;
@@ -23936,6 +24075,28 @@ export interface operations {
                 "application/json": components["schemas"]["ZoneTransferRejectRequest"];
             };
         };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ZoneTransferDetail"];
+                };
+            };
+        };
+    };
+    submit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             /** @description OK */
             200: {

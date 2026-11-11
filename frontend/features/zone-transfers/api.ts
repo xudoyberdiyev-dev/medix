@@ -17,7 +17,7 @@ export const TRANSFER_QUAR = "transfer.quar";
 export const TRANSFER_VIEW_KEYS = ["transfer.view", TRANSFER_ZK, TRANSFER_QUAR];
 
 /** Holatlar tartibi (filtr uchun); nomlari — lugʻatda `zoneTransfers.status.*`. */
-export const ZK_STATUSES = ["PENDING", "POSTED", "REJECTED"] as const satisfies readonly ZoneTransferStatus[];
+export const ZK_STATUSES = ["DRAFT", "PENDING", "POSTED", "REJECTED", "CANCELLED"] as const satisfies readonly ZoneTransferStatus[];
 
 /** Qator xatosi — matni lugʻatda `zoneTransfers.lineError.*` (komponentda `useLineErrorText`). */
 export type LineError =
@@ -110,4 +110,23 @@ export function useRejectZoneTransfer() {
   return useZkMutation((v: { id: number; reason: string }) =>
     unwrap(api.POST("/api/zone-transfers/{id}/reject", { params: { path: { id: v.id } }, body: { reason: v.reason } })),
   );
+}
+
+/** Qoralama: yaratish (raqam oladi, tovar joyida), tahrirlash, oʻtkazish (yoki tasdiqqa yuborish), bekor qilish. */
+export function useCreateZoneTransferDraft() {
+  return useZkMutation((body: ZoneTransferRequest) => unwrap(api.POST("/api/zone-transfers/drafts", { body })));
+}
+
+export function useUpdateZoneTransferDraft() {
+  return useZkMutation((v: { id: number; body: ZoneTransferRequest }) =>
+    unwrap(api.PUT("/api/zone-transfers/{id}", { params: { path: { id: v.id } }, body: v.body })),
+  );
+}
+
+export function useSubmitZoneTransfer() {
+  return useZkMutation((id: number) => unwrap(api.POST("/api/zone-transfers/{id}/submit", { params: { path: { id } } })));
+}
+
+export function useCancelZoneTransfer() {
+  return useZkMutation((id: number) => unwrap(api.POST("/api/zone-transfers/{id}/cancel", { params: { path: { id } } })));
 }

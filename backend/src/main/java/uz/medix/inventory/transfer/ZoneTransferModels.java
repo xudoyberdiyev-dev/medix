@@ -21,7 +21,7 @@ final class ZoneTransferModels {
     static final int MAX_LINES = 500;
     static final int MAX_QTY = 10_000_000;
 
-    enum Status { PENDING, POSTED, REJECTED }
+    enum Status { DRAFT, PENDING, POSTED, REJECTED, CANCELLED }
 
     record ZoneTransferLineRequest(
             @NotNull(message = "{validation.required}") Long batchId,
@@ -50,7 +50,8 @@ final class ZoneTransferModels {
             Status status, boolean needsApproval, @Schema(nullable = true) String note, String createdBy, Instant createdAt,
             @Schema(nullable = true) String postedBy, @Schema(nullable = true) Instant postedAt,
             @Schema(nullable = true) String rejectedBy, @Schema(nullable = true) Instant rejectedAt,
-            @Schema(nullable = true) String rejectReason, long totalQty, List<ZoneTransferLine> lines) {}
+            @Schema(nullable = true) String rejectReason, @Schema(nullable = true) String cancelledBy,
+            @Schema(nullable = true) Instant cancelledAt, long totalQty, List<ZoneTransferLine> lines) {}
 
     /** Zonadagi partiya: qoldiq, faol zahira va ko'chirish mumkin bo'lgan bo'sh miqdor. */
     record ZoneStockRow(long batchId, String batchNumber, LocalDate expiryDate, long productId, String productCode, String productName,

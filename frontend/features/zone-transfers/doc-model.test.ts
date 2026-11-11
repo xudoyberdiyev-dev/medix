@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ZoneTransferDetail } from "./api";
-import { zkHistory, zkSteps } from "./doc-model";
+import { zkDraftKey, zkHistory, zkSteps } from "./doc-model";
 
 const doc = (over: Partial<ZoneTransferDetail>): ZoneTransferDetail => ({
   id: 1,
@@ -45,5 +45,49 @@ describe("ZK hujjati — tarix", () => {
   it("tasdiqsiz darhol oʻtkazilgan — bitta «yaratdi» hodisasi", () => {
     const h = zkHistory(doc({ status: "POSTED", needsApproval: false, postedAt: "2026-10-04T05:00:00Z", postedBy: "Sardor Aliyev" }));
     expect(h.map((e) => e.action)).toEqual(["create"]);
+  });
+});
+
+describe("ZK qoralamasi", () => {
+  it("qoralama — birinchi bosqich joriy, bekor qilingan — «fail»", () => {
+    expect(zkSteps("DRAFT", true).map((s) => s.state)).toEqual(["cur", "next", "next"]);
+    expect(zkSteps("DRAFT", false).map((s) => s.state)).toEqual(["cur", "next"]);
+    expect(zkSteps("CANCELLED", false).map((s) => s.state)).toEqual(["fail", "next"]);
+  });
+
+  it("qoralamadan koʻchirilgan — ikki voqea", () => {
+    const ev = zkHistory(doc({ status: "POSTED", needsApproval: false, postedAt: "2026-10-04T05:10:00Z", postedBy: "Ali" }));
+    expect(ev.map((e) => e.action)).toEqual(["moved", "draft"]);
+    const now = zkHistory(doc({ status: "POSTED", needsApproval: false, postedAt: "2026-10-04T05:00:01Z" }));
+    expect(now.map((e) => e.action)).toEqual(["create"]);
+  });
+
+  it("bekor qilish tarixda", () => {
+    const ev = zkHistory(doc({ status: "CANCELLED", needsApproval: false, cancelledAt: "2026-10-04T06:00:00Z", cancelledBy: "Ali" }));
+    expect(ev[0]).toMatchObject({ action: "cancelled", employee: "Ali" });
+  });
+
+  it("kalit qatorlar tartibiga bogʻliq emas, miqdor oʻzgarsa — boshqa", () => {
+    const a = zkDraftKey({
+      fromZoneId: 1,
+      toZoneId: 2,
+      note: " x ",
+      lines: [
+        { batchId: 5, qty: 1 },
+        { batchId: 3, qty: 2 },
+      ],
+    });
+    const b = zkDraftKey({
+      fromZoneId: 1,
+      toZoneId: 2,
+      note: "x",
+      lines: [
+        { batchId: 3, qty: 2 },
+        { batchId: 5, qty: 1 },
+      ],
+    });
+    expect(a).toBe(b);
+    expect(zkDraftKey({ fromZoneId: 1, toZoneId: 2, note: "x", lines: [{ batchId: 3, qty: 3 }] })).not.toBe(a);
+    expect(zkDraftKey(null)).toBeNull();
   });
 });

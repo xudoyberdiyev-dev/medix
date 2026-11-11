@@ -3,11 +3,12 @@
 import { CalendarClock, Check, Layers, Send, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { DocumentHeader } from "@/components/ui/document-header";
 import { Modal } from "@/components/ui/modal";
+import { RowMenu } from "@/components/ui/row-menu";
 import { Select } from "@/components/ui/select";
 import { EmptyState, ErrorState, ForbiddenState } from "@/components/ui/system-states";
 import { Table, type TableColumn } from "@/components/ui/table";
@@ -20,19 +21,37 @@ import { Steps } from "@/features/payments/payment-doc-page";
 import { describeError } from "@/features/setup/form-error";
 import { KIND_PAGE } from "@/features/transfers/model";
 import { fefo } from "@/features/warehouse-transfers/doc-model";
+import { AutosaveNote } from "@/features/warehouse-transfers/ok-draft-form";
 import { InfoRow, SideCard, ZoneCell } from "@/features/warehouse-transfers/transfer-doc-page";
 import { formatDate, formatQuantity } from "@/lib/format";
-import { linesFrom, needsApproval, TRANSFER_QUAR, TRANSFER_ZK, useCreateZoneTransfer, useZoneStock, type ZoneStockRow } from "./api";
-import { zkSteps } from "./doc-model";
+import {
+  linesFrom,
+  needsApproval,
+  TRANSFER_QUAR,
+  TRANSFER_ZK,
+  useCancelZoneTransfer,
+  useCreateZoneTransferDraft,
+  useSubmitZoneTransfer,
+  useUpdateZoneTransferDraft,
+  useZoneStock,
+  type ZoneStockRow,
+  type ZoneTransferDetail,
+} from "./api";
+import { zkDraftKey, zkSteps, type ZkDraft } from "./doc-model";
 import { useLineErrorText } from "./line-error";
+import { ZoneTransferStatusBadge } from "./zone-transfers-page";
 
 const day = (iso: string) => formatDate(new Date(`${iso}T00:00:00+05:00`));
 
+const now = () => new Date().toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" });
+
 /**
- * ZK — yangi zona koʻchirishi toʻliq sahifa (prototip `TransferDoc`, kind = zk, raqamsiz): Turi, Ombor, Qayerdan/Qayerga zona, izoh,
- * partiyalar FEFO tartibida; «Koʻchirish» (yoki karantindan sotuvga — «Tasdiqqa yuborish») tasdiqlash oynasi bilan → hujjat sahifasi.
+ * ZK — yangi zona koʻchirishi / qoralamasi toʻliq sahifa (prototip `TransferDoc`, kind = zk, editable): Turi, Ombor, Qayerdan/Qayerga
+ * zona, izoh, partiyalar FEFO tartibida. Oʻzgarish 0,8 s dan keyin avtomatik saqlanadi (yangi — qoralama yaratiladi, raqam oladi va
+ * hujjat sahifasiga oʻtiladi; tovar joyida qoladi). «Koʻchirish» (karantindan sotuvga — «Tasdiqqa yuborish») tasdiqlash oynasi bilan;
+ * qoralamani bekor qilish — «Yana» menyusida.
  */
-export function NewZoneTransferPage() {
+export function NewZoneTransferPage({ doc = null }: { doc?: ZoneTransferDetail | null }) {
   const t = useTranslations("zoneTransfers");
   const td = useTranslations("warehouseTransfers.doc");
   const te = useTranslations("warehouseTransfers.edit");
@@ -44,14 +63,32 @@ export function NewZoneTransferPage() {
   const me = useMe();
   const warehouses = useWarehouses();
   const branches = useBranchList();
-  const create = useCreateZoneTransfer();
-  const [warehouseId, setWarehouseId] = useState<string | null>(null);
-  const [fromId, setFromId] = useState<string | null>(null);
-  const [toId, setToId] = useState<string | null>(null);
-  const [note, setNote] = useState("");
-  const [qty, setQty] = useState<Record<number, string>>({});
+  const createDraft = useCreateZoneTransferDraft();
+  const updateDraft = useUpdateZoneTransferDraft();
+  const submitDraft = useSubmitZoneTransfer();
+  const cancelDraft = useCancelZoneTransfer();
+  const busy = createDraft.isPending || updateDraft.isPending;
+  const [warehouseId, setWarehouseId] = useState<string | null>(doc ? String(doc.warehouseId) : null);
+  const [fromId, setFromId] = useState<string | null>(doc ? String(doc.from.id) : null);
+  const [toId, setToId] = useState<string | null>(doc ? String(doc.to.id) : null);
+  const [note, setNote] = useState(doc?.note ?? "");
+  const [qty, setQty] = useState<Record<number, string>>(() =>
+    Object.fromEntries((doc?.lines ?? []).map((l) => [l.batchId, String(l.qty)])),
+  );
   const [error, setError] = useState<string | null>(null);
-  const [confirm, setConfirm] = useState(false);
+  const [dlg, setDlg] = useState<"submit" | "cancel" | null>(null);
+  const [savedKey, setSavedKey] = useState<string | null>(() =>
+    doc
+      ? zkDraftKey({
+          fromZoneId: doc.from.id,
+          toZoneId: doc.to.id,
+          note: doc.note ?? "",
+          lines: doc.lines.map((l) => ({ batchId: l.batchId, qty: l.qty })),
+        })
+      : null,
+  );
+  const [save, setSave] = useState<"idle" | "saving" | "saved" | "error">(doc ? "saved" : "idle");
+  const [savedAt, setSavedAt] = useState(doc ? now() : "");
   const stock = useZoneStock(fromId ? Number(fromId) : null);
 
   const active = (warehouses.data ?? []).filter((w) => w.active);
@@ -70,33 +107,60 @@ export function NewZoneTransferPage() {
   const zoneName = (z: (typeof zones)[number]) => (z.name === ZONE_LABELS[z.type] ? z.name : `${z.name} · ${zoneLabel(z.type)}`);
   const zoneOption = (z: (typeof zones)[number]) => ({ value: String(z.id), label: zoneName(z) });
 
+  const draft: ZkDraft | null =
+    from && to && stock.data && !picked.error && picked.lines.length
+      ? { fromZoneId: from.id, toZoneId: to.id, note: note.trim(), lines: picked.lines }
+      : null;
+  const key = zkDraftKey(draft);
+  const dirty = key !== null && key !== savedKey;
+
+  useEffect(() => {
+    if (!dirty || busy) return;
+    const d = draft;
+    const k = key;
+    const h = setTimeout(() => {
+      if (!d || !k) return;
+      setSave("saving");
+      const ok = () => (setSavedKey(k), setSave("saved"), setSavedAt(now()), setError(null));
+      const fail = (e: unknown) => (setSave("error"), setError(describeError(e).message ?? t("saveFailed")));
+      if (doc) updateDraft.mutate({ id: doc.id, body: d }, { onSuccess: ok, onError: fail });
+      else createDraft.mutate(d, { onSuccess: (r) => (ok(), router.replace(`/zone-transfers/${r.id}`)), onError: fail });
+    }, 800);
+    return () => clearTimeout(h);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- faqat kalit oʻzgarganda
+  }, [key, dirty, busy]);
+
   if (me.data && !can(me.data, TRANSFER_ZK)) return <ForbiddenState />;
 
-  const steps = zkSteps("PENDING", approval).map((s, i) => ({
-    label: td(`step.${s.key}`),
-    state: i === 0 ? ("cur" as const) : ("next" as const),
-  }));
+  const steps = zkSteps("DRAFT", approval).map((s) => ({ label: td(`step.${s.key}`), state: s.state }));
+  const saving = dirty || busy || save === "saving";
 
   const check = () => {
     if (!from || !to) return setError(t("form.pickZones"));
     if (picked.error) return setError(lineError(picked.error));
     if (picked.lines.length === 0) return setError(t("form.noLines"));
     setError(null);
-    setConfirm(true);
+    setDlg("submit");
   };
 
+  // mutateAsync: muvaffaqiyatdan keyin hujjat holati oʻzgaradi va bu sahifa koʻrinish sahifasiga almashadi (unmount) —
+  // `mutate(..., { onSuccess })` chaqiruv qaytmasligi mumkin, vaʼda esa har doim bajariladi.
+  const fail = (e: unknown) => (setDlg(null), setError(describeError(e).message ?? t("saveFailed")));
+
   const submit = () =>
-    from && to
-      ? create.mutate(
-          { fromZoneId: from.id, toZoneId: to.id, note: note.trim(), lines: picked.lines },
-          {
-            onSuccess: (d) => {
-              toast({ tone: "success", title: d.status === "PENDING" ? t("form.sent") : t("form.moved"), description: d.number });
-              router.push(`/zone-transfers/${d.id}`);
-            },
-            onError: (e) => (setConfirm(false), setError(describeError(e).message ?? t("saveFailed"))),
-          },
-        )
+    doc
+      ? submitDraft
+          .mutateAsync(doc.id)
+          .then((d) => toast({ tone: "success", title: d.status === "PENDING" ? t("form.sent") : t("form.moved"), description: d.number }))
+          .catch(fail)
+      : undefined;
+
+  const cancel = () =>
+    doc
+      ? cancelDraft
+          .mutateAsync(doc.id)
+          .then(() => toast({ tone: "success", title: td("tCancelled", { n: doc.number }) }))
+          .catch(fail)
       : undefined;
 
   const columns: TableColumn<ZoneStockRow>[] = [
@@ -152,13 +216,36 @@ export function NewZoneTransferPage() {
     <div className="flex min-w-0 flex-col gap-4 pb-12">
       <DocumentHeader
         parent={{ label: td("parent"), href: "/transfers" }}
-        crumb={te("crumbNew")}
-        title={t("form.title")}
-        meta={<Steps steps={steps} />}
+        crumb={doc ? doc.number : te("crumbNew")}
+        crumbMono={!!doc}
+        title={doc ? tz("title") : t("form.title")}
+        number={doc?.number}
+        status={doc ? <ZoneTransferStatusBadge status={doc.status} /> : undefined}
+        meta={
+          <>
+            <Steps steps={steps} />
+            <AutosaveNote state={{ save, savedAt, dirty: dirty || busy }} />
+          </>
+        }
         actions={
-          <Button icon={toApproval ? Send : Check} loading={create.isPending} onClick={check}>
-            {toApproval ? t("form.sendForApproval") : t("form.move")}
-          </Button>
+          <>
+            {doc ? (
+              <RowMenu
+                label={td("more")}
+                items={[
+                  {
+                    key: "cancel",
+                    label: td("cancel"),
+                    icon: <X size={16} strokeWidth={1.5} aria-hidden />,
+                    onSelect: () => setDlg("cancel"),
+                  },
+                ]}
+              />
+            ) : null}
+            <Button icon={toApproval ? Send : Check} loading={submitDraft.isPending} disabled={!doc || saving} onClick={check}>
+              {toApproval ? t("form.sendForApproval") : t("form.move")}
+            </Button>
+          </>
         }
       />
       {approval ? (
@@ -167,7 +254,7 @@ export function NewZoneTransferPage() {
         </Alert>
       ) : (
         <Alert tone="info" title={td("bDraftT")}>
-          {tn("bNew")}
+          {tn("bDraft")}
         </Alert>
       )}
       {error ? (
@@ -187,6 +274,8 @@ export function NewZoneTransferPage() {
                   v === "OK" ? router.push("/warehouse-transfers/new") : v === "FS" ? router.push(`${KIND_PAGE.FS}?new=1`) : undefined
                 }
                 options={(["ZK", "OK", "FS"] as const).map((k) => ({ value: k, label: tk(k) }))}
+                disabled={!!doc}
+                hint={doc ? te("kindLocked") : undefined}
                 required
               />
               <Select
@@ -217,7 +306,7 @@ export function NewZoneTransferPage() {
               <TextField label={t("form.note")} value={note} onChange={setNote} placeholder={t("form.notePlaceholder")} />
             </div>
             <dl className="flex flex-col border-t border-border px-5 py-2">
-              <InfoRow k={td("hDate")} v={formatDate(new Date())} />
+              <InfoRow k={td("hDate")} v={formatDate(doc ? new Date(doc.createdAt) : new Date())} />
             </dl>
           </section>
           <section className="rounded-card border border-border bg-surface">
@@ -251,17 +340,30 @@ export function NewZoneTransferPage() {
         <aside className="flex min-w-0 flex-col gap-3">
           <SideCard label={td("sLines")} value={formatQuantity(picked.lines.length)} />
           <SideCard label={td("sQty")} value={formatQuantity(total)} />
-          <SideCard label={tz("sBy")} value={me.data?.fullName ?? "—"} note={from ? `${whPlace} · ${from.name}` : whPlace || undefined} />
+          <SideCard
+            label={tz("sBy")}
+            value={doc?.createdBy ?? me.data?.fullName ?? "—"}
+            note={from ? `${whPlace} · ${from.name}` : whPlace || undefined}
+          />
           {approval ? (
             <SideCard label={tz("sAppr")} value={selfApprove ? (me.data?.fullName ?? "—") : tz("sApprWho")} muted={!selfApprove} />
           ) : null}
         </aside>
       </div>
       <Modal
-        open={confirm}
-        onClose={() => setConfirm(false)}
+        open={dlg === "cancel"}
+        onClose={() => setDlg(null)}
+        title={td("dCancT", { n: doc?.number ?? "" })}
+        tone="danger"
+        primaryAction={{ label: td("cancel"), loading: cancelDraft.isPending, onClick: cancel }}
+      >
+        <p className="text-body">{tn("dCanc")}</p>
+      </Modal>
+      <Modal
+        open={dlg === "submit"}
+        onClose={() => setDlg(null)}
         title={toApproval ? tn("dSendT") : tn("dMoveT")}
-        primaryAction={{ label: toApproval ? t("form.sendForApproval") : t("form.move"), loading: create.isPending, onClick: submit }}
+        primaryAction={{ label: toApproval ? t("form.sendForApproval") : t("form.move"), loading: submitDraft.isPending, onClick: submit }}
       >
         <ul className="flex flex-col gap-2 text-body">
           <li className="flex items-start gap-2">

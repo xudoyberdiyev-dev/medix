@@ -6,7 +6,9 @@
   "status": {
     "PENDING": "Tasdiqda",
     "POSTED": "Oʻtkazildi",
-    "REJECTED": "Rad etildi"
+    "REJECTED": "Rad etildi",
+    "DRAFT": "Qoralama",
+    "CANCELLED": "Bekor qilingan"
   },
   "filter": {
     "status": "Holat",
@@ -108,13 +110,17 @@
     "dRejD": "Partiya Karantinda qoladi. Yaratuvchiga sabab koʻrsatiladi.",
     "rejReason": "Rad etish sababi",
     "rejReq": "Sababni kiriting",
-    "tRejected": "{n} rad etildi"
+    "tRejected": "{n} rad etildi",
+    "h_draft": "qoralama yaratdi",
+    "h_moved": "koʻchirdi"
   },
   "newDoc": {
     "bNew": "Bitta ombor ichida zonadan zonaga. Tasdiq kerak boʻlmasa — koʻchirish darhol oʻtkaziladi; partiya va tannarx oʻzgarmaydi.",
     "sameWh": "Shu ombor zonalari",
     "pickFromHint": "Ombor va qaysi zonadan koʻchirilishini tanlang — zonadagi partiyalar shu yerda chiqadi.",
     "dSendT": "Tasdiqqa yuborasizmi?",
-    "dMoveT": "Koʻchirasizmi?"
+    "dMoveT": "Koʻchirasizmi?",
+    "bDraft": "Bitta ombor ichida zonadan zonaga. Ombor, zonalar va miqdorni kiriting — qoralama avtomatik saqlanadi va raqam oladi, tovar oʻtkazilguncha joyida qoladi. Partiya va tannarx oʻzgarmaydi.",
+    "dCanc": "Qoralama bekor qilinadi, tovar joyida qoladi. Bekor qilingan hujjat oʻzgartirilmaydi."
   }
 }

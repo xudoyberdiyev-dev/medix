@@ -6,6 +6,7 @@ import static org.hamcrest.Matchers.matchesPattern;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -283,6 +284,90 @@ class ZoneTransferIT {
                 .andExpect(jsonPath("$.total").value(1))
                 .andExpect(jsonPath("$.items[0].from.type").value("MAIN"))
                 .andExpect(jsonPath("$.items[0].to.type").value("SAFE"));
+    }
+
+    @Test
+    void draftIsEditableUntilSubmitted() throws Exception {
+        Place p = place();
+        long b = stocked(p.main(), "ZK qoralama", 10);
+        long q = stocked(p.quarantine(), "ZK qoralama karantin", 4);
+        Cookie keeper = loginAs("WAREHOUSE_MANAGER", p.branchId());
+        Cookie manager = loginAs("BRANCH_MANAGER", p.branchId());
+
+        // Qoralama — tovar joyida, raqam beriladi
+        long id = id(send(post("/api/zone-transfers/drafts"), keeper, doc(p.main(), p.safe(), b, 3))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.status").value("DRAFT"))
+                .andExpect(jsonPath("$.number").value(matchesPattern("ZK-[A-Z]{3}-\\d{6}")))
+                .andReturn());
+        assertThat(bal(p.main(), b)).isEqualTo(10);
+        send(post("/api/zone-transfers/drafts"), keeper, doc(p.main(), p.safe(), b, 11))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("transfer.zk.notEnough"));
+
+        // Tahrirlash: miqdor va qabul zonasi almashadi
+        send(put("/api/zone-transfers/" + id), keeper, doc(p.main(), p.quarantine(), b, 6))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("DRAFT"))
+                .andExpect(jsonPath("$.to.type").value("QUARANTINE"))
+                .andExpect(jsonPath("$.totalQty").value(6))
+                .andExpect(jsonPath("$.lines.length()").value(1));
+        send(put("/api/zone-transfers/" + id), keeper, doc(p.main(), p.otherWarehouseMain(), b, 1))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("transfer.zk.otherWarehouse"));
+        send(post("/api/zone-transfers/" + id + "/approve"), manager, "{}")
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("transfer.zk.notPending"));
+
+        // O'tkazish — darhol
+        send(post("/api/zone-transfers/" + id + "/submit"), keeper, "{}")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("POSTED"));
+        assertThat(bal(p.main(), b)).isEqualTo(4);
+        assertThat(bal(p.quarantine(), b)).isEqualTo(6);
+        send(put("/api/zone-transfers/" + id), keeper, doc(p.main(), p.safe(), b, 1))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("transfer.zk.notDraft"));
+        send(post("/api/zone-transfers/" + id + "/cancel"), keeper, "{}").andExpect(status().isConflict());
+
+        // Karantindan sotuvga — qoralama «Tasdiqda»ga o'tadi, so'ng tasdiqlanadi
+        long id2 = id(send(post("/api/zone-transfers/drafts"), keeper, doc(p.quarantine(), p.main(), q, 4)).andReturn());
+        send(post("/api/zone-transfers/" + id2 + "/submit"), keeper, "{}")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("PENDING"))
+                .andExpect(jsonPath("$.needsApproval").value(true));
+        assertThat(bal(p.quarantine(), q)).isEqualTo(4);
+        send(post("/api/zone-transfers/" + id2 + "/approve"), manager, "{}").andExpect(jsonPath("$.status").value("POSTED"));
+        assertThat(bal(p.main(), q)).isEqualTo(4);
+
+        // Bekor qilish — tovar joyida, hujjat o'zgarmaydi
+        long id3 = id(send(post("/api/zone-transfers/drafts"), keeper, doc(p.main(), p.safe(), b, 2)).andReturn());
+        send(post("/api/zone-transfers/" + id3 + "/cancel"), keeper, "{}")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("CANCELLED"))
+                .andExpect(jsonPath("$.cancelledBy").value("Sinov"));
+        send(post("/api/zone-transfers/" + id3 + "/submit"), keeper, "{}")
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("transfer.zk.notDraft"));
+        assertThat(bal(p.main(), b)).isEqualTo(4);
+        assertThatThrownBy(() -> jdbc.sql("UPDATE zone_transfer SET note = 'x' WHERE id = :id").param("id", id3).update())
+                .hasMessageContaining("yakunlangan");
+
+        // Bazada: qoralama qatorlari o'chiriladi, rad etilmaydi; yakunlanganniki — yo'q
+        long id4 = id(send(post("/api/zone-transfers/drafts"), keeper, doc(p.main(), p.safe(), b, 1)).andReturn());
+        assertThatThrownBy(() -> jdbc.sql("UPDATE zone_transfer SET status = 'REJECTED', rejected_by = created_by, rejected_at = now(), "
+                + "reject_reason = 'x' WHERE id = :id").param("id", id4).update()).hasMessageContaining("rad etilmaydi");
+        assertThatThrownBy(() -> jdbc.sql("UPDATE zone_transfer SET number = 'X' WHERE id = :id").param("id", id4).update())
+                .hasMessageContaining("o'zgarmaydi");
+        jdbc.sql("DELETE FROM zone_transfer_line WHERE transfer_id = :id").param("id", id4).update();
+        send(post("/api/zone-transfers/" + id4 + "/submit"), keeper, "{}")
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("transfer.zk.noLines"));
+        assertThatThrownBy(() -> jdbc.sql("DELETE FROM zone_transfer_line WHERE transfer_id = :id").param("id", id).update())
+                .hasMessageContaining("o'chirilmaydi");
+
+        Cookie operator = loginAs("OPERATOR", p.branchId());
+        send(post("/api/zone-transfers/drafts"), operator, doc(p.main(), p.safe(), b, 1)).andExpect(status().isForbidden());
     }
 
     @Test

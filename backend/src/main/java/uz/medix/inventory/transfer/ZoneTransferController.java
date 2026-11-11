@@ -10,6 +10,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -84,8 +85,44 @@ class ZoneTransferController {
     @Operation(summary = "Zona ko'chirishi",
             description = "Darhol o'tkaziladi. Karantindan sotuvga ochiq zonaga — transfer.quar ruxsati bo'lmasa «Tasdiqda» holatida qoladi.")
     ZoneTransferDetail create(@Valid @RequestBody ZoneTransferRequest r, Authentication auth) {
-        boolean canApprove = auth.getAuthorities().stream().anyMatch(a -> "transfer.quar".equals(a.getAuthority()));
-        return detail(transfers.create(actor(), r, canApprove));
+        return detail(transfers.create(actor(), r, canApprove(auth)));
+    }
+
+    @PostMapping("/drafts")
+    @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAuthority('transfer.zk')")
+    @Operation(summary = "Zona ko'chirishi (qoralama)", description = "Tovar o'tkazilguncha joyida qoladi.")
+    ZoneTransferDetail createDraft(@Valid @RequestBody ZoneTransferRequest r) {
+        return detail(transfers.createDraft(actor(), r));
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('transfer.zk')")
+    @Operation(summary = "Qoralamani tahrirlash", description = "Ombor, zonalar, izoh va qatorlar almashtiriladi. Faqat qoralama.")
+    ZoneTransferDetail update(@PathVariable long id, @Valid @RequestBody ZoneTransferRequest r) {
+        transfers.update(actor(), id, r);
+        return detail(id);
+    }
+
+    @PostMapping("/{id}/submit")
+    @PreAuthorize("hasAuthority('transfer.zk')")
+    @Operation(summary = "Qoralamani o'tkazish",
+            description = "Darhol o'tkaziladi. Karantindan sotuvga ochiq zonaga — transfer.quar ruxsati bo'lmasa «Tasdiqda» holatiga o'tadi.")
+    ZoneTransferDetail submit(@PathVariable long id, Authentication auth) {
+        transfers.submit(actor(), id, canApprove(auth));
+        return detail(id);
+    }
+
+    @PostMapping("/{id}/cancel")
+    @PreAuthorize("hasAuthority('transfer.zk')")
+    @Operation(summary = "Bekor qilish", description = "Faqat qoralama.")
+    ZoneTransferDetail cancel(@PathVariable long id) {
+        transfers.cancel(actor(), id);
+        return detail(id);
+    }
+
+    private static boolean canApprove(Authentication auth) {
+        return auth.getAuthorities().stream().anyMatch(a -> "transfer.quar".equals(a.getAuthority()));
     }
 
     @PostMapping("/{id}/approve")
