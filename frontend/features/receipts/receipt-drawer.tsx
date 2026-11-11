@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowUpRight, BadgePercent, Check, CircleCheck, ClipboardCheck, Copy, PackagePlus, Undo2, Wallet, X } from "lucide-react";
+import { ArrowUpRight, BadgePercent, Check, CircleCheck, ClipboardCheck, Copy, Lock, PackagePlus, Undo2, Wallet, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
@@ -21,7 +21,9 @@ import { can } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
 import { PAYMENT_TYPE_VALUES, formatIsoDate, parseMoneyInput, parseUzDate, todayTashkent } from "@/features/counterparties/api";
 import { DeactivateDialog } from "@/features/organization/deactivate-dialog";
-import { useWarehouses, zoneLabel, type Zone } from "@/features/organization/api";
+import { useBranchList, useWarehouses, zoneLabel, type Zone } from "@/features/organization/api";
+import { useBranchStore } from "@/lib/stores/branch";
+import { Steps } from "@/features/payments/payment-doc-page";
 import { searchProducts } from "@/features/prices/api";
 import { useEmployeeOptions } from "@/features/products/api";
 import { describeError } from "@/features/setup/form-error";
@@ -50,7 +52,7 @@ import {
 } from "./api";
 import { ReceiptCatalogDialog } from "./receipt-catalog-dialog";
 import { ReceiptLinesGrid } from "./receipt-lines-grid";
-import { centsToMoney, expectedBonus, toCentsBig } from "./receipt-doc";
+import { centsToMoney, expectedBonus, receiptSteps, toCentsBig } from "./receipt-doc";
 import { ReceiptStatusBadge, day } from "./receipts-page";
 
 /** Kirim qatori manzili boʻla oladigan zonalar (Qabul va Joʻnatish — yoʻq). */
@@ -214,6 +216,7 @@ function Editor({
   const [discountValue, setDiscountValue] = useState(doc?.discountValue ?? "");
   const [discountDate, setDiscountDate] = useState(formatIsoDate(doc?.discountDate));
   const [note, setNote] = useState(init?.note ?? "");
+  const [factura, setFactura] = useState(doc?.facturaNumber ?? "");
   const [lines, setLines] = useState<DraftLine[]>(init ? toDraft(init) : []);
   const [adding, setAdding] = useState(emptyAdd);
   const [local, setLocal] = useState<string | null>(null);
@@ -232,6 +235,10 @@ function Editor({
 
   const activeWarehouses = (warehouses.data ?? []).filter((w) => w.active || String(w.id) === warehouseId);
   const warehouse = activeWarehouses.find((w) => String(w.id) === warehouseId) ?? null;
+  const branches = useBranchList();
+  const selectedBranch = useBranchStore((st) => st.branchId);
+  const branchIdShown = warehouse?.branchId ?? doc?.branchId ?? selectedBranch ?? me.data?.branchId ?? null;
+  const branchName = branches.data?.find((b) => b.id === branchIdShown)?.name ?? "";
   const zones: Zone[] = (warehouse?.zones ?? []).filter((z) => TARGET_ZONES.has(z.type));
   const zoneName = (id: number) => warehouse?.zones.find((z) => z.id === id)?.name ?? doc?.lines.find((l) => l.zoneId === id)?.zone ?? "";
   const canCancel =
@@ -281,6 +288,7 @@ function Editor({
       receiptDate: iso,
       invoiceNumber: invoice.trim() || undefined,
       invoiceDate: invIso,
+      facturaNumber: factura.trim() || undefined,
       paymentType: (paymentType ?? "TRANSFER") as ReceiptRequest["paymentType"],
       dueDate: prepaid || fromBonus ? undefined : dueIso,
       ownerId: owner ? Number(owner) : undefined,
@@ -430,7 +438,23 @@ function Editor({
     <div className="flex flex-col gap-4">
       <StatusNotes doc={doc} />
       {frame === "page" && !editable && doc ? <HeaderInfo doc={doc} /> : null}
-      <div className={cn("grid grid-cols-3 gap-4", frame === "page" && !editable && doc && "hidden")}>
+      <section
+        className={cn(
+          "grid grid-cols-3 gap-4",
+          frame === "page" && "rounded-card border border-border bg-surface p-5",
+          frame === "page" && !editable && doc && "hidden",
+        )}
+      >
+        <div className="flex min-w-0 flex-col gap-1.5">
+          <span className="text-table font-medium">{t("field.branch")}</span>
+          <span
+            title={t("field.branchLocked")}
+            className="flex h-10 items-center justify-between gap-2 rounded-card border border-border bg-background px-3 text-text-secondary"
+          >
+            <span className="truncate">{branchName || "—"}</span>
+            <Lock size={14} strokeWidth={1.5} aria-hidden />
+          </span>
+        </div>
         <Select
           label={t("field.warehouse")}
           value={warehouseId}
@@ -440,6 +464,7 @@ function Editor({
           hint={editable && lines.length > 0 ? t("field.warehouseHint") : undefined}
           required
         />
+        <TextField label={t("field.date")} value={date} onChange={setDate} placeholder={dp} disabled={!editable} required />
         <Select
           label={t("field.supplier")}
           value={supplier}
@@ -453,19 +478,17 @@ function Editor({
           options={supplier && supplierLabel ? [{ value: supplier, label: supplierLabel }] : []}
           disabled={!editable}
           required
-          className="col-span-2"
         />
-        <TextField label={t("field.date")} value={date} onChange={setDate} placeholder={dp} disabled={!editable} required />
-        <TextField label={t("field.invoiceNumber")} value={invoice} onChange={setInvoice} disabled={!editable} />
+        <TextField label={t("field.invoiceNumber")} value={invoice} onChange={setInvoice} placeholder="NB-24871" disabled={!editable} />
         <TextField label={t("field.invoiceDate")} value={invoiceDate} onChange={setInvoiceDate} placeholder={dp} disabled={!editable} />
-        <Select label={t("field.paymentType")} value={paymentType} onChange={setPaymentType} options={paymentTypes} disabled={!editable} />
-        <TextField
-          label={t("field.due")}
-          value={prepaid || fromBonus ? "" : due}
-          onChange={setDue}
-          placeholder={doc?.dueDate && !doc.dueManual ? formatIsoDate(doc.dueDate) : dp}
-          hint={t("field.dueHint")}
-          disabled={!editable || prepaid || fromBonus}
+        <TextField label={t("field.factura")} value={factura} onChange={setFactura} disabled={!editable} />
+        <Select
+          label={t("field.paymentType")}
+          value={paymentType}
+          onChange={setPaymentType}
+          options={paymentTypes}
+          disabled={!editable}
+          required
         />
         <Select
           label={t("field.owner")}
@@ -475,49 +498,73 @@ function Editor({
           options={(employees.data ?? []).map((e) => ({ value: String(e.id), label: e.fullName, sub: e.roleName }))}
           disabled={!editable}
         />
-        <Checkbox
-          label={t("field.prepaid")}
-          description={t("field.prepaidHint")}
-          checked={prepaid}
-          onChange={(v) => (setPrepaid(v), v && setFromBonus(false))}
-          disabled={!editable}
-        />
-        <Checkbox
-          label={t("field.fromBonus")}
-          description={t("field.fromBonusHint")}
-          checked={fromBonus}
-          onChange={(v) => (setFromBonus(v), v && (setPrepaid(false), setDiscountKind(null)))}
-          disabled={!editable}
-        />
-        <Select
-          label={t("field.discount")}
-          value={discountKind}
-          onChange={setDiscountKind}
-          placeholder={t("field.discountNone")}
-          hint={fromBonus ? t("field.discountBonusHint") : undefined}
-          options={[
-            { value: "SUM", label: t("field.discountSum") },
-            { value: "PERCENT", label: t("field.discountPercent") },
-          ]}
-          disabled={!editable || fromBonus}
-        />
-        <TextField
-          label={t("field.discountValue")}
-          value={discountValue}
-          onChange={setDiscountValue}
-          suffix={discountKind === "PERCENT" ? "%" : tr("sum")}
-          inputMode="decimal"
-          disabled={!editable || !discountKind}
-        />
-        <TextField
-          label={t("field.discountDate")}
-          value={discountDate}
-          onChange={setDiscountDate}
-          placeholder={dp}
-          disabled={!editable || !discountKind}
-        />
+        {prepaid || fromBonus ? null : (
+          <TextField
+            label={t("field.due")}
+            value={due}
+            onChange={setDue}
+            placeholder={doc?.dueDate && !doc.dueManual ? formatIsoDate(doc.dueDate) : dp}
+            hint={t("field.dueHint")}
+            disabled={!editable}
+          />
+        )}
+        <div className="col-span-3 flex flex-col gap-3 border-t border-border pt-4">
+          <div className="flex flex-wrap items-start gap-x-8 gap-y-3">
+            <Checkbox
+              label={t("field.prepaid")}
+              description={t("field.prepaidHint")}
+              checked={prepaid}
+              onChange={(v) => (setPrepaid(v), v && setFromBonus(false))}
+              disabled={!editable}
+            />
+            <Checkbox
+              label={t("field.bonusOn")}
+              checked={discountKind != null}
+              onChange={(v) => setDiscountKind(v ? "PERCENT" : null)}
+              disabled={!editable || fromBonus}
+            />
+            <Checkbox
+              label={t("field.fromBonus")}
+              description={t("field.fromBonusHint")}
+              checked={fromBonus}
+              onChange={(v) => (setFromBonus(v), v && (setPrepaid(false), setDiscountKind(null)))}
+              disabled={!editable}
+            />
+          </div>
+          {discountKind ? (
+            <div className="grid grid-cols-3 gap-4">
+              <Select
+                label={t("field.discount")}
+                value={discountKind}
+                onChange={(v) => setDiscountKind(v ?? "PERCENT")}
+                options={[
+                  { value: "PERCENT", label: t("field.discountPercent") },
+                  { value: "SUM", label: t("field.discountSum") },
+                ]}
+                disabled={!editable}
+              />
+              <TextField
+                label={t("field.discountValue")}
+                value={discountValue}
+                onChange={setDiscountValue}
+                suffix={discountKind === "PERCENT" ? "%" : tr("sum")}
+                inputMode="decimal"
+                disabled={!editable}
+                required
+              />
+              <TextField
+                label={t("field.discountDate")}
+                value={discountDate}
+                onChange={setDiscountDate}
+                placeholder={dp}
+                disabled={!editable}
+                required
+              />
+            </div>
+          ) : null}
+        </div>
         <TextField label={t("field.note")} value={note} onChange={setNote} disabled={!editable} className="col-span-3" />
-      </div>
+      </section>
 
       {editable && warehouse ? (
         <div className="grid grid-cols-4 items-end gap-3 rounded-card border border-border p-3">
@@ -597,7 +644,7 @@ function Editor({
           ) : null}
         </h3>
         {editable && warehouse ? (
-          <Button variant="secondary" size="sm" icon={PackagePlus} onClick={() => setCatalogOpen(true)}>
+          <Button variant={frame === "page" ? "primary" : "secondary"} size="sm" icon={PackagePlus} onClick={() => setCatalogOpen(true)}>
             {t("addProduct")}
           </Button>
         ) : null}
@@ -672,6 +719,7 @@ function Editor({
           title={doc ? t("pageTitle") : t("newTitle")}
           number={doc?.number}
           status={<ReceiptStatusBadge status={doc?.status ?? "DRAFT"} />}
+          meta={<Steps steps={receiptSteps(doc?.status ?? "DRAFT").map((x) => ({ label: tr(`status.${x.key}`), state: x.state }))} />}
           sub={
             doc ? (
               <>

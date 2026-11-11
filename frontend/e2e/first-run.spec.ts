@@ -404,7 +404,7 @@ test("CEO: kirim — qoralama → qabul (kam keldi) → oʻtkazish → Qoldiqlar
   await page.getByRole("combobox", { name: "Yetkazib beruvchi", exact: true }).click();
   await page.getByPlaceholder("Qidirish").fill("Pharm");
   await page.getByRole("option", { name: /Pharm Supply E2E/ }).click();
-  await field(page, "Yuk xati raqami").fill("YX-501");
+  await field(page, "Yetkazib beruvchi nakladnoyi raqami").fill("YX-501");
   await page.getByRole("combobox", { name: "Mahsulot", exact: true }).click();
   await page.getByPlaceholder("Qidirish").fill("E2E");
   await page.getByRole("option", { name: /Paracetamol E2E/ }).click();
@@ -425,7 +425,7 @@ test("CEO: kirim — qoralama → qabul (kam keldi) → oʻtkazish → Qoldiqlar
   await page.getByRole("button", { name: "Nusxa olish" }).click();
   await expect(page).toHaveURL(/\/receipts\/new\?copy=\d+$/);
   await expect(page.getByText(/hujjatidan nusxa olindi/)).toBeVisible();
-  await expect(field(page, "Yuk xati raqami").first()).toHaveValue("");
+  await expect(field(page, "Yetkazib beruvchi nakladnoyi raqami").first()).toHaveValue("");
   await page.goBack();
   await page.mouse.move(0, 0);
   await expect(page.getByText(/hujjatidan nusxa olindi/)).toBeHidden({ timeout: 15_000 });

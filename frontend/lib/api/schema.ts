@@ -11836,6 +11836,8 @@ export interface components {
             /** Format: date */
             dueDate?: string;
             dueManual: boolean;
+            /** @description Hisob-faktura raqami */
+            facturaNumber?: string;
             fromBonus: boolean;
             /** @description Qabulda farq bor */
             hasDiff: boolean;
@@ -11988,6 +11990,8 @@ export interface components {
              * @description Bo'sh — kirim sanasi + YB sharti (filial)
              */
             dueDate?: string;
+            /** @description Hisob-faktura raqami (yuk xatidan alohida) */
+            facturaNumber?: string;
             /** @description YB bonus balansi hisobidan: qarz yo'q, tannarx 0 */
             fromBonus?: boolean;
             /** Format: date */

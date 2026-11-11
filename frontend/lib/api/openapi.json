@@ -28345,6 +28345,10 @@
           "dueManual" : {
             "type" : "boolean"
           },
+          "facturaNumber" : {
+            "type" : "string",
+            "description" : "Hisob-faktura raqami"
+          },
           "fromBonus" : {
             "type" : "boolean"
           },
@@ -28711,6 +28715,12 @@
             "type" : "string",
             "format" : "date",
             "description" : "Bo'sh — kirim sanasi + YB sharti (filial)"
+          },
+          "facturaNumber" : {
+            "type" : "string",
+            "description" : "Hisob-faktura raqami (yuk xatidan alohida)",
+            "maxLength" : 64,
+            "minLength" : 0
           },
           "fromBonus" : {
             "type" : "boolean",
