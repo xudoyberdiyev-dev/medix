@@ -354,6 +354,11 @@ class StockOverviewController {
         if (stock != null && !stock.isEmpty() && !stock.contains(StockState.HAS)) {
             sw.append(stock.contains(StockState.ALL_RESERVED) ? " AND " + avail + " = 0 AND bal.res > 0" : " AND false");
         }
+        if (!SearchText.normalize(q).isEmpty()) {
+            // Partiya yoki kirim raqami bilan topilgan bo'lsa — mahsulotning faqat shu qatorlari (prototip hitB)
+            sw.append(" AND (bal.batch_number = :exact OR bal.receipt_number = :exact OR NOT EXISTS (SELECT 1 FROM bal x"
+                    + " WHERE x.product_id = bal.product_id AND (x.batch_number = :exact OR x.receipt_number = :exact)))");
+        }
         String from = " FROM bal JOIN product p ON p.id = bal.product_id JOIN zone z ON z.id = bal.zone_id"
                 + " JOIN warehouse w ON w.id = bal.warehouse_id JOIN branch br ON br.id = bal.branch_id"
                 + " LEFT JOIN manufacturer m ON m.id = p.manufacturer_id LEFT JOIN counterparty cp ON cp.id = bal.supplier_id"
