@@ -1,6 +1,7 @@
 "use client";
 
-import { Ban, CircleCheck, CircleX, Clock, FileDown, FilePen, Plus, Tags } from "lucide-react";
+import { Ban, CircleCheck, CircleX, Clock, FileDown, FilePen, Plus, Tag, Tags } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
@@ -18,7 +19,8 @@ import { useMe } from "@/features/auth/session";
 import { usePriceTypes } from "@/features/counterparties/api";
 import { useDictionary } from "@/features/dictionaries/api";
 import { useBranchList } from "@/features/organization/api";
-import { formatMoney } from "@/lib/format";
+import { api, unwrap } from "@/lib/api/client";
+import { formatMoney, formatQuantity } from "@/lib/format";
 import { useBranchStore } from "@/lib/stores/branch";
 import { PRICE_CREATE, usePrices, type DraftLine, type PriceChangeStatus, type PriceRow } from "./api";
 import { PriceChangesTab } from "./price-changes-tab";
@@ -57,6 +59,13 @@ export function PricesPage() {
   const [branchOverride, setBranchOverride] = useState<number | null>(null);
   const branchId = branchOverride ?? (me.data && !me.data.allBranches ? (me.data.branchId ?? null) : (selected ?? active[0]?.id ?? null));
   const canSet = can(me.data, PRICE_CREATE);
+  const canCreateType = can(me.data, "lookups.ptypes") && branchId != null;
+  const [creatingType, setCreatingType] = useState(false);
+  const types = useQuery({
+    queryKey: ["price-types", "overview", branchId],
+    queryFn: () => unwrap(api.GET("/api/price-types/overview", { params: { query: { branchId: branchId ?? 0 } } })),
+    enabled: branchId != null,
+  });
   // «Narx oʻrnatish» sahifasidan «Kirim boʻyicha»: ?new=receipt — yangi NO kirim rejimida ochiladi
   const [editor, setEditor] = useState<{ id: number | null; preset?: DraftLine[]; mode?: "RECEIPT" } | null>(() =>
     params.get("new") === "receipt" ? { id: null, mode: "RECEIPT" } : null,
@@ -75,38 +84,48 @@ export function PricesPage() {
   return (
     <>
       <div className="mb-4 flex items-center justify-between gap-4">
-        <h1 className="text-page-title">{t("title")}</h1>
-        <div className="flex items-center gap-3">
-          {me.data?.allBranches ? (
-            <div className="w-56">
-              <Select
-                label={t("branch")}
-                size="sm"
-                value={branchId ? String(branchId) : null}
-                onChange={(v) => setBranchOverride(v ? Number(v) : null)}
-                className="[&>span:first-child]:sr-only"
-                options={active.map((b) => ({ value: String(b.id), label: b.name, sub: b.code }))}
-              />
-            </div>
-          ) : null}
+        <h1 className="flex items-baseline gap-2 text-page-title">
+          {t("title")}
+          {types.data ? <span className="tabular text-body text-text-secondary">{formatQuantity(types.data.length)}</span> : null}
+        </h1>
+        <div className="flex items-center gap-2">
           {canSet ? (
-            <Button icon={Plus} onClick={() => openSet()}>
+            <Button variant={canCreateType ? "secondary" : "primary"} icon={Tag} onClick={() => openSet()}>
               {t("set")}
+            </Button>
+          ) : null}
+          {canCreateType ? (
+            <Button icon={Plus} onClick={() => (tab !== "types" && router.replace(pathname, { scroll: false }), setCreatingType(true))}>
+              {t("newType")}
             </Button>
           ) : null}
         </div>
       </div>
-      <div className="mb-4">
-        <Tabs
-          aria-label={t("title")}
-          items={[
-            { key: "types", label: t("tabTypes") },
-            { key: "documents", label: t("tabDocuments") },
-            { key: "prices", label: t("tabCurrent") },
-          ]}
-          value={tab}
-          onChange={(k) => router.replace(k === "types" ? pathname : `${pathname}?tab=${k}`, { scroll: false })}
-        />
+      <div className="mb-4 flex flex-wrap items-end justify-between gap-3 border-b border-border">
+        <div className="-mb-px min-w-0">
+          <Tabs
+            aria-label={t("title")}
+            items={[
+              { key: "types", label: t("tabTypes") },
+              { key: "documents", label: t("tabDocuments") },
+              { key: "prices", label: t("tabCurrent") },
+            ]}
+            value={tab}
+            onChange={(k) => router.replace(k === "types" ? pathname : `${pathname}?tab=${k}`, { scroll: false })}
+          />
+        </div>
+        {me.data?.allBranches ? (
+          <div className="mb-1.5 w-56">
+            <Select
+              label={t("branch")}
+              size="sm"
+              value={branchId ? String(branchId) : null}
+              onChange={(v) => setBranchOverride(v ? Number(v) : null)}
+              className="[&>span:first-child]:sr-only"
+              options={active.map((b) => ({ value: String(b.id), label: b.name, sub: b.code }))}
+            />
+          </div>
+        ) : null}
       </div>
       {tab === "types" ? (
         <PriceTypesTab
@@ -116,6 +135,8 @@ export function PricesPage() {
           canAttach={can(me.data, CLIENT_TERMS)}
           branchName={active.find((b) => b.id === branchId)?.name ?? ""}
           onSetPrices={(id) => openSet(id)}
+          creating={creatingType}
+          onCreatingChange={setCreatingType}
         />
       ) : tab === "prices" ? (
         <PricesTab branchId={branchId} canSet={canSet} onSetPrices={(lines) => setEditor({ id: null, preset: lines })} />

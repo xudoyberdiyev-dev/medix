@@ -304,7 +304,7 @@ test("CEO: mahsulot qoʻshish va narx oʻrnatish (NO)", async ({ page }) => {
   await page.getByRole("button", { name: "Narx turi yaratish" }).click();
   const nd = page.getByRole("dialog", { name: "Yangi narx turi" });
   await nd.getByRole("textbox", { name: /^Nomi/ }).fill("Klinika narxi");
-  await nd.getByText("Partiyaga bogʻliq").click();
+  await nd.getByText("Partiya boʻyicha").click();
   await nd.getByRole("button", { name: "Saqlash" }).click();
   await expect(page.getByText("«Klinika narxi» yaratildi")).toBeVisible();
   await expect(page.getByRole("cell", { name: "Klinika narxi", exact: true })).toBeVisible();
