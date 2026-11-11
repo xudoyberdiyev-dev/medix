@@ -19897,12 +19897,17 @@
               "$ref" : "#/components/schemas/CounterpartyImportRow"
             }
           },
+          "updated" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Mavjud kartalarga filial sharti qo'shilgan qatorlar"
+          },
           "warn" : {
             "type" : "integer",
             "format" : "int32"
           }
         },
-        "required" : [ "applied", "created", "error", "ok", "rows", "warn" ]
+        "required" : [ "applied", "created", "error", "ok", "rows", "updated", "warn" ]
       },
       "CounterpartyImportRow" : {
         "type" : "object",
@@ -19911,6 +19916,11 @@
             "type" : "integer",
             "format" : "int64",
             "description" : "apply=true da yaratilgan kontragent"
+          },
+          "existingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "STIR bo'yicha mavjud karta — unga faqat tanlangan filial sharti qo'shiladi"
           },
           "messages" : {
             "type" : "array",

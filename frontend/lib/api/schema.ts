@@ -8477,6 +8477,11 @@ export interface components {
             /** Format: int32 */
             ok: number;
             rows: components["schemas"]["CounterpartyImportRow"][];
+            /**
+             * Format: int32
+             * @description Mavjud kartalarga filial sharti qo'shilgan qatorlar
+             */
+            updated: number;
             /** Format: int32 */
             warn: number;
         };
@@ -8486,6 +8491,11 @@ export interface components {
              * @description apply=true da yaratilgan kontragent
              */
             createdId?: number;
+            /**
+             * Format: int64
+             * @description STIR bo'yicha mavjud karta — unga faqat tanlangan filial sharti qo'shiladi
+             */
+            existingId?: number;
             messages: components["schemas"]["ImportMessage"][];
             /** Format: int32 */
             row: number;

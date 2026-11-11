@@ -205,7 +205,7 @@ export function CounterpartyImportWizard({ role }: { role: CpImportRole }) {
   const apply = useMutation({
     mutationFn: () => check(role, branchId, recs, true),
     onSuccess: async (r) => {
-      toast({ tone: "success", title: tc(`done${kindKey}`, { a: formatQuantity(r.created), b: r.error }) });
+      toast({ tone: "success", title: tc(`done${kindKey}`, { a: formatQuantity(r.created), u: r.updated, b: r.error }) });
       await qc.invalidateQueries({ queryKey: ["counterparties"] });
       router.push(home);
     },
@@ -779,7 +779,13 @@ export function CounterpartyImportWizard({ role }: { role: CpImportRole }) {
                                     key={k}
                                     className={cn("px-2.5 font-medium", v.status === "ERROR" ? "text-text-secondary" : "text-success")}
                                   >
-                                    {v.status === "ERROR" ? "—" : v.createdId != null ? tc("created") : tc(`new${kindKey}`)}
+                                    {v.status === "ERROR"
+                                      ? "—"
+                                      : v.createdId != null
+                                        ? tc("created")
+                                        : v.existingId != null
+                                          ? tc("termsAdd")
+                                          : tc(`new${kindKey}`)}
                                   </td>
                                 );
                               }

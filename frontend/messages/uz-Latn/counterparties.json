@@ -491,8 +491,8 @@
   "wizard": {
     "crumbC": "Mijozlar · Excelʼdan yuklash",
     "crumbS": "Yetkazib beruvchilar · Excelʼdan yuklash",
-    "w1DC": "SMARTUP yoki boshqa tizimdan eksport qilingan .xlsx yoki .csv faylni yuklang. Har qator yangi mijoz boʻladi — mavjud mijozlar (STIR boʻyicha) oʻzgartirilmaydi.",
-    "w1DS": "SMARTUP yoki boshqa tizimdan eksport qilingan .xlsx yoki .csv faylni yuklang. Har qator yangi yetkazib beruvchi boʻladi — mavjudlari (STIR boʻyicha) oʻzgartirilmaydi.",
+    "w1DC": "SMARTUP dan eksport qilingan mijozlar roʻyxatini yuklang (.xlsx yoki .csv). STIR boʻyicha mavjud kartaga faqat joriy filial sharti qoʻshiladi, yangi STIR — yangi karta.",
+    "w1DS": "SMARTUP dan eksport qilingan yetkazib beruvchilar roʻyxatini yuklang (.xlsx yoki .csv). STIR boʻyicha mavjud kartaga faqat joriy filial sharti qoʻshiladi, yangi STIR — yangi karta.",
     "w4DC": "Har qator tekshirildi. Xato qatorlar yaratilmaydi — katakni shu yerda tuzating yoki keyin tuzatib qayta yuklang.",
     "w4DS": "Har qator tekshirildi. Xato qatorlar yaratilmaydi — katakni shu yerda tuzating yoki keyin tuzatib qayta yuklang.",
     "w5DC": "Xatosiz va ogohlantirishli qatorlar yangi mijoz sifatida qoʻshiladi. Limit va toʻlov muddati tanlangan filial shartlariga yoziladi.",
@@ -518,8 +518,8 @@
     "errRowsT": "{b} ta xato qator oʻtkazib yuboriladi",
     "createC": "{n} ta mijozni yaratish",
     "createS": "{n} ta yetkazib beruvchini yaratish",
-    "doneC": "{a} ta mijoz yaratildi{b, plural, =0 {} other {, # ta qator oʻtkazib yuborildi}}",
-    "doneS": "{a} ta yetkazib beruvchi yaratildi{b, plural, =0 {} other {, # ta qator oʻtkazib yuborildi}}",
+    "doneC": "{a} ta mijoz yaratildi{u, plural, =0 {} other {, # ta kartaga filial sharti qoʻshildi}}{b, plural, =0 {} other {, # ta qator oʻtkazib yuborildi}}",
+    "doneS": "{a} ta yetkazib beruvchi yaratildi{u, plural, =0 {} other {, # ta kartaga filial sharti qoʻshildi}}{b, plural, =0 {} other {, # ta qator oʻtkazib yuborildi}}",
     "f": {
       "stir": "STIR",
       "cname": "Nomi",
@@ -542,7 +542,10 @@
       "cMoneyBad": "«{f}» notoʻgʻri: «{t}» — masalan 15 000 000",
       "cDaysBad": "«{f}» notoʻgʻri: «{t}» — 0–365 kun",
       "cBranchReq": "Filial tanlanmagan — shartlarni yozib boʻlmaydi",
-      "cTermsSkipped": "Shartlarni oʻzgartirish ruxsati yoʻq — limit va muddatlar yozilmaydi"
-    }
+      "cTermsSkipped": "Shartlarni oʻzgartirish ruxsati yoʻq — limit va muddatlar yozilmaydi",
+      "cTinExisting": "Mavjud karta: {n} — faqat filial sharti qoʻshiladi",
+      "cTinOtherRole": "Bu STIR boshqa roldagi kartada: {n} — kartani oching va rolni qoʻshing"
+    },
+    "termsAdd": "Filial sharti qoʻshiladi"
   }
 }
