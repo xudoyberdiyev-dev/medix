@@ -303,7 +303,7 @@ function QueueCard({ o, blocked, pending, onStart }: { o: QueueItem; blocked: bo
 function QueueLines({ id }: { id: number }) {
   const t = useTranslations("orders");
   const order = useOrder(id);
-  if (order.error) return <ErrorState onRetry={() => order.refetch()} />;
+  if (order.error) return <ErrorState error={order.error} onRetry={() => order.refetch()} />;
   if (!order.data) return <Skeleton className="mt-3 h-16 w-full" />;
   return (
     <ul className="mt-3 flex flex-col border-t border-border">
@@ -359,7 +359,7 @@ function ActivePick({ item, now }: { item: QueueItem; now: Date }) {
   const [error, setError] = useState<unknown>(null);
   const [other, setOther] = useState<Record<number, PickBatch>>({});
   const [choosing, setChoosing] = useState<{ id: number; name: string; qty: number } | null>(null);
-  if (order.error) return <ErrorState onRetry={() => order.refetch()} />;
+  if (order.error) return <ErrorState error={order.error} onRetry={() => order.refetch()} />;
   if (!order.data) return <Skeleton className="h-40 w-full" />;
   const d = order.data;
   const deadline = item.deadline ? new Date(item.deadline) : null;
@@ -518,7 +518,7 @@ export function clockLeft(deadline: Date, now: Date): { text: string; over: bool
 /** «Bugun yakunlanganlar» (prototip): har buyurtma — raqam, mijoz, berilgan va sarflangan vaqt, natija, boshlandi–yakunlandi, muammolar. */
 function DoneToday({ query }: { query: UseQueryResult<components["schemas"]["PickDoneItem"][]> }) {
   const t = useTranslations("orders");
-  if (query.error) return <ErrorState onRetry={() => query.refetch()} />;
+  if (query.error) return <ErrorState error={query.error} onRetry={() => query.refetch()} />;
   if (query.isPending) return <Skeleton className="h-16 w-full" />;
   if (query.data.length === 0) {
     return (

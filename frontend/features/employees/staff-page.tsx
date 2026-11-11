@@ -16,7 +16,7 @@ export function StaffPage() {
   const branches = useBranches();
   const warehouses = useWarehouses();
   if (list.error instanceof ApiError && list.error.isForbidden) return <ForbiddenState description={t("forbidden")} />;
-  if (branches.error) return <ErrorState onRetry={() => branches.refetch()} />;
+  if (branches.error) return <ErrorState error={branches.error} onRetry={() => branches.refetch()} />;
   return (
     <StaffManager
       page

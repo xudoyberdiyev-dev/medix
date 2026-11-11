@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { CircleAlert, Lock, SearchX } from "lucide-react";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/cn";
+import { ApiError } from "@/lib/api/errors";
 import { Alert } from "./alert";
 import { Button } from "./button";
 import { Icon, type LucideIcon } from "./icon";
@@ -61,10 +62,14 @@ export interface ErrorStateProps {
   title?: string;
   description?: string;
   onRetry?: () => void;
+  /** Soʻrov xatosi: 404 boʻlsa — «Topilmadi» holati (qayta urinish foydasiz). */
+  error?: unknown;
 }
 
-export function ErrorState({ title, description, onRetry }: ErrorStateProps) {
+export function ErrorState({ title, description, onRetry, error }: ErrorStateProps) {
   const t = useTranslations("ui");
+  if (error instanceof ApiError && error.status === 404)
+    return <EmptyState icon={SearchX} title={t("notFound")} description={t("notFoundHint")} />;
   return (
     <div className="p-4">
       <Alert

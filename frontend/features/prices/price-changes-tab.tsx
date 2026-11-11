@@ -118,7 +118,7 @@ export function PriceChangesTab({ branchId, onOpen }: { branchId: number | null;
     },
   ];
 
-  if (docs.error) return <ErrorState onRetry={() => docs.refetch()} />;
+  if (docs.error) return <ErrorState error={docs.error} onRetry={() => docs.refetch()} />;
   return (
     <>
       <div className="mb-3">

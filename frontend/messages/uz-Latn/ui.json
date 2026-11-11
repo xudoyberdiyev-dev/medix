@@ -75,5 +75,7 @@
       "reject": "Rad etildi",
       "cancel": "Bekor qilindi"
     }
-  }
+  },
+  "notFound": "Hujjat topilmadi",
+  "notFoundHint": "U oʻchirilgan yoki havola notoʻgʻri. Roʻyxatga qaytib, qaytadan oching."
 }

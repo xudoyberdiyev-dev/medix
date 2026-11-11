@@ -265,7 +265,7 @@ export function TripPage({ id }: { id: number }) {
     }
   }
 
-  if (trip.error) return <ErrorState onRetry={() => trip.refetch()} />;
+  if (trip.error) return <ErrorState error={trip.error} onRetry={() => trip.refetch()} />;
   if (!data || !h || !me.data) return <Skeleton className="h-96" />;
 
   const st = data.status;

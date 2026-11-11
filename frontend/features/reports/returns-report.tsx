@@ -26,6 +26,11 @@ import { formatMargin } from "./product-sales-report";
 type Row = components["schemas"]["ReturnsRow"];
 export type ReturnsGroupBy = components["schemas"]["ReturnsView"]["groupBy"];
 const NO_ROWS: Row[] = [];
+/** QM qator sabablari (kod) — hisobotda tarjima qilinadi; erkin matn oʻzicha. */
+const QM_REASON_CODES = ["EXPIRING", "DAMAGED", "WRONG_ITEM", "REFUSED", "OTHER"] as const;
+type QmReasonCode = (typeof QM_REASON_CODES)[number];
+const isQmReason = (v: string): v is QmReasonCode => (QM_REASON_CODES as readonly string[]).includes(v);
+
 export const RETURNS_GROUPS: ReturnsGroupBy[] = ["REASON", "CUSTOMER", "PRODUCT", "DAY"];
 
 /** .xlsx eksport havolasi — jadvaldagi filtrlar bilan. */
@@ -69,6 +74,7 @@ const qty = (v: number) => <span className="font-mono tabular-nums">{formatQuant
  */
 export function ReturnsReportPage() {
   const t = useTranslations("reports");
+  const tr = useTranslations("customerReturns");
   const me = useMe();
   const allowed = can(me.data, "reports.all") || can(me.data, "reports.view") || can(me.data, "reports.own");
   const selectedBranch = useBranchStore((s) => s.branchId);
@@ -113,7 +119,7 @@ export function ReturnsReportPage() {
           <span className="text-text-secondary">{t("products.unspecified")}</span>
         ) : (
           <span>
-            {x.name}
+            {groupBy === "REASON" && isQmReason(x.name) ? tr(`reason.${x.name}`) : x.name}
             {x.code ? <span className="ml-2 font-mono text-caption text-text-secondary">{x.code}</span> : null}
           </span>
         ),

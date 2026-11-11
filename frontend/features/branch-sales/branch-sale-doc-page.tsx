@@ -43,7 +43,7 @@ export function BranchSaleDocPage({ id }: { id: number }) {
   const me = useMe();
   const doc = useBranchSale(id);
   if (me.data && !canAny(me.data, FS_VIEW_KEYS)) return <ForbiddenState />;
-  if (doc.error) return <ErrorState onRetry={() => doc.refetch()} />;
+  if (doc.error) return <ErrorState error={doc.error} onRetry={() => doc.refetch()} />;
   if (!doc.data)
     return (
       <div className="flex flex-col gap-4" aria-label={t("loading")}>

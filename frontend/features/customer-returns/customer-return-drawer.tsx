@@ -62,7 +62,7 @@ export function CustomerReturnDocPage({ id }: { id: number }) {
   const router = useRouter();
   const doc = useCustomerReturn(id);
   if (me.data && !canAny(me.data, QM_VIEW_KEYS)) return <ForbiddenState description={t("forbidden")} />;
-  if (doc.error) return <ErrorState onRetry={() => doc.refetch()} />;
+  if (doc.error) return <ErrorState error={doc.error} onRetry={() => doc.refetch()} />;
   if (!doc.data)
     return (
       <div className="flex flex-col gap-4" aria-label={t("doc.loading")}>

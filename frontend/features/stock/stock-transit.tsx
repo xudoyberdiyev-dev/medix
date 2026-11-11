@@ -41,7 +41,7 @@ export function StockTransit({ branchId }: { branchId: number | null }) {
         <Spinner />
       </div>
     );
-  if (list.error) return <ErrorState onRetry={() => list.refetch()} />;
+  if (list.error) return <ErrorState error={list.error} onRetry={() => list.refetch()} />;
   const rows = list.data ?? [];
   const showCost = rows.some((r) => r.value != null);
   const grid = showCost

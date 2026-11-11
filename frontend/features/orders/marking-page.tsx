@@ -203,7 +203,7 @@ function Queue({ busy, onStarted }: { busy: boolean; onStarted: () => void }) {
   }
 
   const err = describeError(error);
-  if (queue.error) return <ErrorState onRetry={() => queue.refetch()} />;
+  if (queue.error) return <ErrorState error={queue.error} onRetry={() => queue.refetch()} />;
   if (queue.isPending) return <Skeleton className="h-40 w-full" />;
   const items = queue.data;
   return (
@@ -339,7 +339,7 @@ function MarkQueueCard({ o, blocked, pending, onStart }: { o: MarkQueueItem; blo
 function MarkQueueLines({ id }: { id: number }) {
   const t = useTranslations("orders");
   const order = useOrder(id);
-  if (order.error) return <ErrorState onRetry={() => order.refetch()} />;
+  if (order.error) return <ErrorState error={order.error} onRetry={() => order.refetch()} />;
   if (!order.data) return <Skeleton className="mt-3 h-16 w-full" />;
   return (
     <ul className="mt-3 flex flex-col border-t border-border">

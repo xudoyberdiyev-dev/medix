@@ -208,7 +208,7 @@ function PricesTab({
     })),
   ];
 
-  if (prices.error) return <ErrorState onRetry={() => prices.refetch()} />;
+  if (prices.error) return <ErrorState error={prices.error} onRetry={() => prices.refetch()} />;
   return (
     <Table
       caption={t("caption")}

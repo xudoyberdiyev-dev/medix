@@ -102,7 +102,7 @@ const fmtAccount = (a: string) => a.replace(/(\d{4})(?=\d)/g, "$1 ");
  */
 export function CounterpartyCardPage({ id, role }: { id: number; role: CounterpartyRole }) {
   const cp = useCounterparty(id);
-  if (cp.error) return <ErrorState onRetry={() => cp.refetch()} />;
+  if (cp.error) return <ErrorState error={cp.error} onRetry={() => cp.refetch()} />;
   if (!cp.data)
     return (
       <div className="flex flex-col gap-4">

@@ -89,7 +89,7 @@ interface Panel {
  */
 export function RolesMatrix({ mode, onSaved }: { mode: "wizard" | "page"; onSaved?: () => void }) {
   const matrix = useRoleMatrix();
-  if (matrix.error) return <ErrorState onRetry={() => matrix.refetch()} />;
+  if (matrix.error) return <ErrorState error={matrix.error} onRetry={() => matrix.refetch()} />;
   if (!matrix.data)
     return (
       <div className="flex flex-col gap-4 p-6">

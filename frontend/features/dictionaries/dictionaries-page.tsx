@@ -169,7 +169,7 @@ function DictionaryTab({ meta, canEdit, creating, onCreated }: TabProps & { meta
     { key: "active", title: t("entry.status"), render: (e: Entry) => <ActiveBadge active={e.active} /> },
   ];
 
-  if (list.error) return <ErrorState onRetry={() => list.refetch()} />;
+  if (list.error) return <ErrorState error={list.error} onRetry={() => list.refetch()} />;
   return (
     <>
       <Table
@@ -276,7 +276,7 @@ function VehiclesTab({ canEdit, creating, onCreated }: TabProps) {
     { key: "active", title: t("vehicle.status"), render: (v: Vehicle) => <ActiveBadge active={v.active} /> },
   ];
 
-  if (list.error) return <ErrorState onRetry={() => list.refetch()} />;
+  if (list.error) return <ErrorState error={list.error} onRetry={() => list.refetch()} />;
   return (
     <>
       <Table
@@ -426,7 +426,7 @@ function ExpenseTab({ canEdit, creating, onCreated }: TabProps) {
     { key: "active", title: t("expense.status"), render: (e) => <ActiveBadge active={e.active} /> },
   ];
 
-  if (list.error) return <ErrorState onRetry={() => list.refetch()} />;
+  if (list.error) return <ErrorState error={list.error} onRetry={() => list.refetch()} />;
   return (
     <>
       <Table

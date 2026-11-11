@@ -91,7 +91,7 @@ export function ProductCardPage({ id }: { id: number }) {
   const t = useTranslations("products.card");
   const tl = useTranslations("products.list");
   const product = useProduct(id);
-  if (product.error) return <ErrorState onRetry={() => product.refetch()} />;
+  if (product.error) return <ErrorState error={product.error} onRetry={() => product.refetch()} />;
   if (!product.data)
     return (
       <div className="flex flex-col gap-4" aria-label={t("loading")}>
@@ -360,7 +360,7 @@ type StockQuery = ReturnType<typeof useProductStockCard>;
 
 function StockTab({ t, card, unit, productCode }: { t: CardT; card: StockQuery; unit: string; productCode: string }) {
   const [now] = useState(() => Date.now());
-  if (card.error) return <ErrorState onRetry={() => card.refetch()} />;
+  if (card.error) return <ErrorState error={card.error} onRetry={() => card.refetch()} />;
   if (!card.data) return <Skeleton className="h-64 w-full" />;
   const lines = card.data.lines;
   if (lines.length === 0) return <EmptyState icon={PackageOpen} title={t("noStockT")} description={t("noStock")} />;
@@ -446,7 +446,7 @@ function StockTab({ t, card, unit, productCode }: { t: CardT; card: StockQuery; 
 
 function PricesTab({ t, productId, branchId }: { t: CardT; productId: number; branchId: number | null }) {
   const h = usePriceHistory(productId, branchId);
-  if (h.error) return <ErrorState onRetry={() => h.refetch()} />;
+  if (h.error) return <ErrorState error={h.error} onRetry={() => h.refetch()} />;
   if (!h.data) return <Skeleton className="h-48 w-full" />;
   const rows = h.data.rows;
   return (
@@ -528,7 +528,7 @@ function PricesTab({ t, productId, branchId }: { t: CardT; productId: number; br
 
 function MovesTab({ t, card }: { t: CardT; card: StockQuery }) {
   const ts = useTranslations("stock");
-  if (card.error) return <ErrorState onRetry={() => card.refetch()} />;
+  if (card.error) return <ErrorState error={card.error} onRetry={() => card.refetch()} />;
   if (!card.data) return <Skeleton className="h-64 w-full" />;
   const moves = card.data.moves;
   if (moves.length === 0) return <EmptyState icon={ArrowRight} title={t("noMovesT")} description={t("noStock")} />;
@@ -589,7 +589,7 @@ function HistoryTab({ t, id }: { t: CardT; id: number }) {
     unitId: useDictionary("UNIT").data,
   };
   const employees = useEmployeeOptions().data;
-  if (h.error) return <ErrorState onRetry={() => h.refetch()} />;
+  if (h.error) return <ErrorState error={h.error} onRetry={() => h.refetch()} />;
   if (!h.data) return <Skeleton className="h-48 w-full" />;
   const name = (field: string, v: unknown): string => {
     if (v === null || v === undefined || v === "") return "";
