@@ -472,7 +472,7 @@ class ReceiptIT {
         mvc.perform(get("/api/supplier-bonuses/" + sup).param("branchId", "" + p.branchId()).cookie(admin))
                 .andExpect(jsonPath("$.pending", hasSize(0)))
                 .andExpect(jsonPath("$.moves", hasSize(1)));
-        assertThat(jdbc.sql("SELECT count(*) FROM audit_log WHERE action = 'receipt.bonusDecline' AND entity_id = :id").param("id", Long.parseLong(kr1))
+        assertThat(jdbc.sql("SELECT count(*) FROM audit_log WHERE action = 'receipt.bonusDecline' AND entity_id = :id").param("id", kr1)
                         .query(Long.class).single())
                 .isEqualTo(1L);
     }
