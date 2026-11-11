@@ -1,25 +1,35 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { AlarmClock, Gift } from "lucide-react";
+import { AlarmClock, CalendarClock, Check, CircleCheck, ClockAlert, FileText, Gift, Hourglass, PackagePlus, Wallet, X } from "lucide-react";
 import { useMemo, useState } from "react";
+import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Drawer } from "@/components/ui/drawer";
-import { Checkbox } from "@/components/ui/selection-controls";
+import { Modal } from "@/components/ui/modal";
+import { DateChip, MultiFilter } from "@/components/ui/multi-filter";
+import { RowMenu } from "@/components/ui/row-menu";
 import { EmptyState, ErrorState, ForbiddenState, NoResultsState } from "@/components/ui/system-states";
 import { Table, type TableColumn } from "@/components/ui/table";
+import { Tabs } from "@/components/ui/tabs";
 import { TextField } from "@/components/ui/text-field";
+import { toast } from "@/components/ui/toast";
 import { can } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
 import { formatIsoDate } from "@/features/counterparties/api";
-import { matchesDebt } from "@/features/debts/debts-page";
+import { KpiCard, PayablesHeader } from "@/features/debts/payables";
+import { sumOf } from "@/features/debts/receivables-model";
+import { RECEIPT_CREATE, useConfirmBonus, useDeclineBonus } from "@/features/receipts/api";
+import { describeError } from "@/features/setup/form-error";
 import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
+import { cn } from "@/lib/cn";
 import { formatDateTime, formatMoney } from "@/lib/format";
 import { useBranchStore } from "@/lib/stores/branch";
-import { HubTabs } from "@/components/shell/hub-tabs";
+import { BONUS_TABS, fitsBonus, inBonusTab, isLate, isSoon, isWaiting, type BonusTab } from "./bonus-model";
 
 export type BonusRow = components["schemas"]["BonusRow"];
 type BonusMove = components["schemas"]["BonusMove"];
@@ -37,108 +47,231 @@ const money = (v: string) =>
 const DOC_TYPES = ["BNS", "KR"] as const;
 const isDocType = (v: string): v is (typeof DOC_TYPES)[number] => (DOC_TYPES as readonly string[]).includes(v);
 
+type BonusReceiptRow = components["schemas"]["BonusReceiptRow"];
+type BonusBalanceRow = components["schemas"]["BonusBalanceRow"];
+
 /**
- * Pul → Bonus balans (SPEC 5.1): YB chegirmasi qarzdan ayrilmaydi — «Bonus tasdiqlandi» (BNS) bilan balansga tushadi va keyingi
- * kirimlarda ishlatiladi. Balans faqat jurnaldan; kutilayotgan — chegirmali, lekin hali tasdiqlanmagan kirimlar.
+ * YB qarzi → Bonus balans (prototip Payables, SPEC 5.1): YB chegirmasi qarzdan ayrilmaydi — «Bonus tasdiqlandi» (BNS) bilan balansga
+ * tushadi, «Bonus berilmadi» — sabab bilan yopiladi. 4 karta, koʻrinishlar, filtrlar, kirimlar jadvali va YB boʻyicha balanslar.
  */
 export function BonusPage() {
   const t = useTranslations("bonuses");
+  const tp = useTranslations("debts.pay");
   const me = useMe();
+  const router = useRouter();
+  const qc = useQueryClient();
   const selectedBranch = useBranchStore((s) => s.branchId);
   const allowed = BONUS_VIEW.some((k) => can(me.data, k));
-  const branchId = me.data?.allBranches ? (selectedBranch ?? null) : (me.data?.branchId ?? null);
+  const canDecide = can(me.data, "supplierBonus.confirm");
+  const canUse = can(me.data, RECEIPT_CREATE);
+  const branchId = me.data?.allBranches ? (selectedBranch ?? undefined) : undefined;
+  const allBranches = !!me.data?.allBranches && selectedBranch == null;
   const report = useQuery({
-    queryKey: ["supplier-bonuses", branchId],
-    queryFn: () => unwrap(api.GET("/api/supplier-bonuses", { params: { query: { branchId: branchId as number } } })),
-    enabled: allowed && branchId != null,
+    queryKey: ["supplier-bonuses", "receipts", branchId ?? null],
+    queryFn: () => unwrap(api.GET("/api/supplier-bonuses/receipts", { params: { query: { branchId } } })),
+    enabled: allowed && !!me.data,
   });
+  const confirm = useConfirmBonus();
+  const decline = useDeclineBonus();
+  const [tab, setTab] = useState<BonusTab>("all");
   const [q, setQ] = useState("");
-  const [idleOnly, setIdleOnly] = useState(false);
-  const [open, setOpen] = useState<BonusRow | null>(null);
-  const rows = useMemo(
-    () => (report.data?.rows ?? []).filter((r) => matchesDebt({ name: r.supplier, tin: r.tin }, q) && (!idleOnly || isIdle(r))),
-    [report.data, q, idleOnly],
+  const [suppliers, setSuppliers] = useState<string[]>([]);
+  const [branches, setBranches] = useState<string[]>([]);
+  const [range, setRange] = useState<{ from: string | null; to: string | null }>({ from: null, to: null });
+  const [dialog, setDialog] = useState<{ kind: "ok" | "no"; row: BonusReceiptRow } | null>(null);
+  const [reason, setReason] = useState("");
+  const [reasonError, setReasonError] = useState<string | null>(null);
+  const [open, setOpen] = useState<BonusBalanceRow | null>(null);
+
+  const all = useMemo(() => report.data?.rows ?? [], [report.data]);
+  const fitting = useMemo(
+    () => all.filter((r) => fitsBonus(r, { q, suppliers, branches, from: range.from, to: range.to })),
+    [all, q, suppliers, branches, range],
   );
+  const rows = fitting.filter((r) => inBonusTab(r, tab));
+  const balances = (report.data?.balances ?? []).filter(
+    (b) =>
+      (suppliers.length === 0 || suppliers.includes(String(b.supplierId))) &&
+      (branches.length === 0 || branches.includes(String(b.branchId))),
+  );
+  const filtered = q.trim() !== "" || suppliers.length > 0 || branches.length > 0 || range.from != null || range.to != null;
+  const clear = () => {
+    setQ("");
+    setSuppliers([]);
+    setBranches([]);
+    setRange({ from: null, to: null });
+  };
 
   if (me.data && !allowed) return <ForbiddenState description={t("forbidden")} />;
-  if (me.data && branchId == null)
-    return (
-      <>
-        <h1 className="mb-4 text-page-title">{t("title")}</h1>
-        <Card>
-          <EmptyState icon={Gift} title={t("noBranch.title")} description={t("noBranch.description")} />
-        </Card>
-      </>
-    );
 
-  const columns: TableColumn<BonusRow>[] = [
+  const wait = all.filter(isWaiting);
+  const soon = all.filter(isSoon);
+  const late = all.filter(isLate);
+  const withBalance = (report.data?.balances ?? []).filter((b) => !b.balance.startsWith("-") && b.balance !== "0.00");
+  const options = <K extends "supplierId" | "branchId">(key: K, label: (r: BonusReceiptRow) => string) =>
+    [...new Map(all.map((r) => [String(r[key]), label(r)])).entries()]
+      .map(([value, text]) => ({ value, label: text, count: all.filter((r) => String(r[key]) === value).length }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+
+  const refresh = () => qc.invalidateQueries({ queryKey: ["supplier-bonuses"] });
+  const run = (row: BonusReceiptRow, kind: "ok" | "no") => {
+    setReason("");
+    setReasonError(null);
+    confirm.reset();
+    decline.reset();
+    setDialog({ kind, row });
+  };
+  const submit = async () => {
+    if (!dialog) return;
+    if (dialog.kind === "ok") {
+      const d = await confirm.mutateAsync(dialog.row.receiptId).catch(() => null);
+      if (!d) return;
+      toast({ tone: "success", title: t("tOk", { n: d.bonusNumber ?? "" }) });
+    } else {
+      if (reason.trim() === "") {
+        setReasonError(t("reasonRequired"));
+        return;
+      }
+      const d = await decline.mutateAsync({ id: dialog.row.receiptId, reason: reason.trim() }).catch(() => null);
+      if (!d) return;
+      toast({ tone: "success", title: t("tNo") });
+    }
+    setDialog(null);
+    await refresh();
+  };
+  const dialogError = describeError(dialog?.kind === "ok" ? confirm.error : decline.error).message;
+  const balanceOf = (row: BonusReceiptRow) =>
+    report.data?.balances.find((b) => b.supplierId === row.supplierId && b.branchId === row.branchId)?.balance ?? "0.00";
+
+  const columns: TableColumn<BonusReceiptRow>[] = [
+    { key: "supplier", title: tp("col.supplier"), wrap: true, render: (r) => <span className="font-medium">{r.supplier}</span> },
+    ...(allBranches
+      ? [
+          {
+            key: "branch",
+            title: tp("col.branch"),
+            render: (r: BonusReceiptRow) => <span className="text-text-secondary">{r.branch}</span>,
+          },
+        ]
+      : []),
+    { key: "receiptNumber", title: t("col.receipt"), mono: true },
     {
-      key: "supplier",
-      title: t("col.supplier"),
+      key: "receiptSum",
+      title: t("col.receiptSum"),
+      align: "right",
+      render: (r) => <span className="tabular-nums">{formatMoney(r.receiptSum)}</span>,
+    },
+    {
+      key: "amount",
+      title: t("col.bonusPct"),
+      align: "right",
       render: (r) => (
-        <div className="min-w-0">
-          <div>{r.supplier}</div>
-          <div className="font-mono text-caption text-text-secondary">{r.tin}</div>
+        <div className="flex flex-col items-end">
+          <span className="font-semibold tabular-nums">{formatMoney(r.amount)}</span>
+          {r.percent ? <span className="text-caption text-text-secondary">{`${r.percent.replace(".", ",")}%`}</span> : null}
         </div>
       ),
     },
-    { key: "balance", title: t("balance"), align: "right", render: (r) => money(r.balance) },
-    { key: "pending", title: t("pending"), align: "right", render: (r) => money(r.pending) },
-    { key: "nextBonusDate", title: t("col.bonusDate"), render: (r) => formatIsoDate(r.nextBonusDate) },
     {
-      key: "idleDays",
-      title: t("col.idle"),
-      render: (r) =>
-        isIdle(r) ? (
-          <Badge tone="warning" icon={AlarmClock}>
-            {t("days", { count: r.idleDays ?? 0 })}
-          </Badge>
-        ) : r.idleDays != null ? (
-          <span className="text-text-secondary">{t("days", { count: r.idleDays })}</span>
-        ) : null,
+      key: "bonusDate",
+      title: t("col.bonusDate"),
+      render: (r) => (
+        <span className={cn("tabular-nums", isLate(r) && "font-semibold text-danger", isSoon(r) && "font-semibold text-warning")}>
+          {r.bonusDate ? formatIsoDate(r.bonusDate) : "—"}
+        </span>
+      ),
     },
-    { key: "lastMoveAt", title: t("col.lastMove"), render: (r) => (r.lastMoveAt ? formatDateTime(new Date(r.lastMoveAt)) : "") },
+    { key: "state", title: tp("col.status"), wrap: true, render: (r) => <BonusStatus r={r} /> },
   ];
-  const d = report.data;
 
   return (
-    <>
-      <HubTabs hub="supplierDebts" />
-      <h1 className="mb-4 text-page-title">{t("title")}</h1>
-      {d ? (
-        <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
-          <Card>
-            <div className="text-caption text-text-secondary">{t("balance")}</div>
-            <div className="mt-1 font-mono text-subtitle tabular-nums">
-              {formatMoney(d.balance)} {t("currency")}
-            </div>
-          </Card>
-          <Card>
-            <div className="text-caption text-text-secondary">{t("pendingBonuses")}</div>
-            <div className="mt-1 font-mono text-subtitle tabular-nums">
-              {formatMoney(d.pending)} {t("currency")}
-            </div>
-          </Card>
-          <Card>
-            <div className="text-caption text-text-secondary">{t("idleOver", { days: IDLE_DAYS })}</div>
-            <div className="mt-1 text-subtitle tabular-nums">{t("suppliersCount", { count: d.idle })}</div>
-          </Card>
+    <div className="flex min-w-0 flex-col gap-4">
+      <PayablesHeader count={report.data ? all.length : null} today={report.data?.today ?? null} />
+      {report.data ? (
+        <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+          <KpiCard
+            icon={Gift}
+            iconClass="bg-success-bg text-success"
+            label={t("kBalance")}
+            value={sumOf(report.data.balances, (b) => b.balance)}
+            note={t("nSuppliers", { n: withBalance.length })}
+            active={tab === "ok"}
+            onClick={() => setTab("ok")}
+          />
+          <KpiCard
+            icon={Hourglass}
+            iconClass="bg-warning-bg text-warning"
+            label={t("kPending")}
+            value={sumOf(wait, (r) => r.amount)}
+            note={tp("nDocs", { n: wait.length })}
+            active={tab === "wait"}
+            onClick={() => setTab("wait")}
+          />
+          <KpiCard
+            icon={CalendarClock}
+            iconClass="bg-warning-bg text-warning"
+            label={t("kSoon")}
+            value={sumOf(soon, (r) => r.amount)}
+            note={tp("nDocs", { n: soon.length })}
+            active={tab === "soon"}
+            onClick={() => setTab("soon")}
+          />
+          <KpiCard
+            icon={ClockAlert}
+            iconClass="bg-danger-bg text-danger"
+            label={t("kLate")}
+            value={sumOf(late, (r) => r.amount)}
+            note={tp("nDocs", { n: late.length })}
+            valueClass="text-danger"
+            highlight={late.length > 0}
+            active={tab === "late"}
+            onClick={() => setTab("late")}
+          />
         </div>
       ) : null}
+      <Tabs
+        aria-label={t("tabsLabel")}
+        value={tab}
+        onChange={(k) => setTab(k as BonusTab)}
+        items={BONUS_TABS.map((k) => ({ key: k, label: t(`tab.${k}`), count: fitting.filter((r) => inBonusTab(r, k)).length }))}
+      />
       {report.error ? (
         <ErrorState onRetry={() => report.refetch()} />
       ) : (
         <Table
-          caption={t("balance")}
+          caption={t("tableCaption")}
           columns={columns}
           rows={rows}
-          rowKey={(r) => String(r.supplierId)}
-          loading={report.isPending}
-          onRowClick={setOpen}
-          totals={d ? { supplier: t("total"), balance: money(d.balance), pending: money(d.pending) } : undefined}
+          rowKey={(r) => String(r.receiptId)}
+          loading={allowed && report.isPending}
+          onRowClick={(r) => (isWaiting(r) && canDecide ? run(r, "ok") : router.push(`/receipts/${r.receiptId}`))}
+          rowActions={(r) => (
+            <RowMenu
+              label={t("actions")}
+              items={[
+                ...(isWaiting(r) && canDecide
+                  ? [
+                      {
+                        key: "ok",
+                        label: t("confirm"),
+                        icon: <Check size={16} strokeWidth={1.5} aria-hidden />,
+                        onSelect: () => run(r, "ok"),
+                      },
+                      { key: "no", label: t("decline"), icon: <X size={16} strokeWidth={1.5} aria-hidden />, onSelect: () => run(r, "no") },
+                    ]
+                  : []),
+                {
+                  key: "open",
+                  label: tp("openRc"),
+                  icon: <FileText size={16} strokeWidth={1.5} aria-hidden />,
+                  onSelect: () => router.push(`/receipts/${r.receiptId}`),
+                },
+              ]}
+            />
+          )}
           toolbar={
-            <div className="flex flex-wrap items-center gap-4">
-              <div className="w-72">
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="w-80">
                 <TextField
                   label={t("search")}
                   variant="search"
@@ -149,15 +282,41 @@ export function BonusPage() {
                   className="[&>label]:sr-only"
                 />
               </div>
-              <Checkbox label={t("idleOver", { days: IDLE_DAYS })} checked={idleOnly} onChange={setIdleOnly} />
+              <MultiFilter
+                label={tp("col.supplier")}
+                options={options("supplierId", (r) => r.supplier)}
+                selected={suppliers}
+                onChange={setSuppliers}
+                searchable
+              />
+              {allBranches ? (
+                <MultiFilter
+                  label={tp("col.branch")}
+                  options={options("branchId", (r) => r.branch)}
+                  selected={branches}
+                  onChange={setBranches}
+                />
+              ) : null}
+              <DateChip
+                label={t("col.bonusDate")}
+                from={range.from}
+                to={range.to}
+                invalid={t("dateInvalid")}
+                onChange={(from, to) => setRange({ from, to })}
+              />
+              {filtered ? (
+                <Button variant="tertiary" size="sm" onClick={clear}>
+                  {tp("clearFilters")}
+                </Button>
+              ) : null}
             </div>
           }
           emptyState={
-            q || idleOnly ? (
+            filtered || tab !== "all" ? (
               <NoResultsState
                 onClearFilters={() => {
-                  setQ("");
-                  setIdleOnly(false);
+                  clear();
+                  setTab("all");
                 }}
               />
             ) : (
@@ -166,19 +325,143 @@ export function BonusPage() {
           }
         />
       )}
-      {open && branchId != null ? <BonusDrawer row={open} branchId={branchId} onClose={() => setOpen(null)} /> : null}
-    </>
+      {report.data ? (
+        <section className="min-w-0 rounded-card border border-border bg-surface">
+          <h2 className="border-b border-border px-4 py-3.5 text-body font-semibold">{t("balTitle")}</h2>
+          {balances.length === 0 ? (
+            <p className="px-4 py-5 text-table text-text-secondary">{t("balEmpty")}</p>
+          ) : (
+            <ul>
+              {balances.map((b) => {
+                const positive = b.balance !== "0.00" && !b.balance.startsWith("-");
+                const sub = [
+                  allBranches ? b.branch : null,
+                  b.idle ? t("idle", { days: IDLE_DAYS }) : b.pendingCount > 0 ? t("pendingN", { n: b.pendingCount }) : null,
+                ]
+                  .filter(Boolean)
+                  .join(" · ");
+                return (
+                  <li
+                    key={`${b.branchId}-${b.supplierId}`}
+                    className="flex flex-wrap items-center gap-x-6 gap-y-3 border-b border-border px-4 py-3 last:border-b-0"
+                  >
+                    <button type="button" onClick={() => setOpen(b)} className="flex min-w-[200px] flex-1 flex-col text-left">
+                      <span className="font-medium hover:underline">{b.supplier}</span>
+                      {sub ? <span className="text-caption text-text-secondary">{sub}</span> : null}
+                    </button>
+                    <span className="flex min-w-[140px] flex-col items-end">
+                      <span className="text-caption text-text-secondary">{t("balance")}</span>
+                      <span className={cn("font-semibold tabular-nums", positive ? "text-success" : "text-text-secondary")}>
+                        {formatMoney(b.balance)}
+                      </span>
+                    </span>
+                    <span className="flex min-w-[140px] flex-col items-end">
+                      <span className="text-caption text-text-secondary">{t("pending")}</span>
+                      <span className="font-medium tabular-nums">{b.pending === "0.00" ? "—" : formatMoney(b.pending)}</span>
+                    </span>
+                    {positive && canUse ? (
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        icon={PackagePlus}
+                        onClick={() =>
+                          router.push(`/receipts/new?bonusSupplier=${b.supplierId}&supplierName=${encodeURIComponent(b.supplier)}`)
+                        }
+                      >
+                        {t("useBonus")}
+                      </Button>
+                    ) : null}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
+      ) : null}
+      {dialog ? (
+        <Modal
+          open
+          onClose={() => setDialog(null)}
+          size="sm"
+          tone={dialog.kind === "no" ? "danger" : "default"}
+          title={dialog.kind === "ok" ? t("confirmTitle") : t("declineTitle")}
+          primaryAction={{
+            label: dialog.kind === "ok" ? t("confirm") : t("decline"),
+            onClick: () => void submit(),
+            loading: confirm.isPending || decline.isPending,
+          }}
+        >
+          <div className="flex flex-col gap-3">
+            <p className="text-text-secondary">{`${dialog.row.supplier} · ${dialog.row.receiptNumber}`}</p>
+            {dialog.kind === "ok" ? (
+              <ul className="flex flex-col gap-2">
+                <li className="flex items-center gap-2">
+                  <Gift size={16} strokeWidth={1.5} aria-hidden className="text-success" />
+                  {t("balChange", {
+                    a: formatMoney(balanceOf(dialog.row)),
+                    b: formatMoney(sumOf([balanceOf(dialog.row), dialog.row.amount], (v) => v)),
+                    s: formatMoney(dialog.row.amount),
+                  })}
+                </li>
+                <li className="flex items-center gap-2">
+                  <Wallet size={16} strokeWidth={1.5} aria-hidden className="text-text-secondary" />
+                  {t("noDebt")}
+                </li>
+              </ul>
+            ) : (
+              <>
+                <p>{t("declineText")}</p>
+                <TextField
+                  label={t("reason")}
+                  value={reason}
+                  onChange={(v) => {
+                    setReason(v);
+                    setReasonError(null);
+                  }}
+                  error={reasonError ?? undefined}
+                  required
+                  maxLength={300}
+                />
+              </>
+            )}
+            {dialogError ? <Alert tone="danger" title={dialogError} /> : null}
+          </div>
+        </Modal>
+      ) : null}
+      {open ? <BonusDrawer row={open} onClose={() => setOpen(null)} /> : null}
+    </div>
   );
 }
 
-function BonusDrawer(props: { row: BonusRow; branchId: number; onClose: () => void }) {
+function BonusStatus({ r }: { r: BonusReceiptRow }) {
+  const t = useTranslations("bonuses");
+  if (r.state === "CONFIRMED")
+    return (
+      <Badge tone="success" icon={CircleCheck}>
+        {`${t("tab.ok")} · ${r.bnsNumber ?? ""}`}
+      </Badge>
+    );
+  if (r.state === "DECLINED")
+    return (
+      <Badge tone="neutral" icon={X}>
+        {r.declineReason ? `${t("tab.no")} · ${r.declineReason}` : t("tab.no")}
+      </Badge>
+    );
+  return (
+    <Badge tone={isLate(r) ? "danger" : "warning"} icon={Hourglass}>
+      {t("tab.wait")}
+    </Badge>
+  );
+}
+
+function BonusDrawer(props: { row: BonusBalanceRow; onClose: () => void }) {
   const t = useTranslations("bonuses");
   const detail = useQuery({
-    queryKey: ["supplier-bonuses", props.branchId, props.row.supplierId],
+    queryKey: ["supplier-bonuses", props.row.branchId, props.row.supplierId],
     queryFn: () =>
       unwrap(
         api.GET("/api/supplier-bonuses/{supplierId}", {
-          params: { path: { supplierId: props.row.supplierId }, query: { branchId: props.branchId } },
+          params: { path: { supplierId: props.row.supplierId }, query: { branchId: props.row.branchId } },
         }),
       ),
   });
@@ -221,14 +504,7 @@ function BonusDrawer(props: { row: BonusRow; branchId: number; onClose: () => vo
     { key: "amount", title: t("col.bonus"), align: "right", render: (p) => money(p.amount) },
   ];
   return (
-    <Drawer
-      open
-      onClose={props.onClose}
-      size="lg"
-      kind={t("col.supplier")}
-      title={props.row.supplier}
-      subtitle={t("tin", { tin: props.row.tin })}
-    >
+    <Drawer open onClose={props.onClose} size="lg" kind={t("col.supplier")} title={props.row.supplier} subtitle={props.row.branch}>
       {detail.error ? (
         <ErrorState onRetry={() => detail.refetch()} />
       ) : (

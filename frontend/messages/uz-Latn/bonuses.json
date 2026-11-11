@@ -1,21 +1,13 @@
 {
   "title": "Bonus balans",
   "forbidden": "«Bonus balans» sahifasi sizning rolingiz uchun yopiq.",
-  "noBranch": {
-    "title": "Filialni tanlang",
-    "description": "Bonus balans filial boʻyicha yuritiladi — yuqorida filialni tanlang."
-  },
   "balance": "Bonus balans",
   "pending": "Kutilayotgan",
   "pendingBonuses": "Kutilayotgan bonuslar",
-  "idleOver": "{days} kundan koʻp ishlatilmagan",
-  "suppliersCount": "{count} ta yetkazib beruvchi",
   "days": "{count} kun",
   "currency": "soʻm",
-  "total": "Jami",
   "search": "Qidirish",
-  "searchPlaceholder": "Nomi yoki STIR",
-  "tin": "STIR {tin}",
+  "searchPlaceholder": "YB, kirim yoki BNS raqami",
   "overdue": "vaqti oʻtgan",
   "empty": {
     "title": "Bonus yoʻq",
@@ -48,6 +40,41 @@
     "employee": "Xodim",
     "receipt": "Kirim",
     "receiptDate": "Kirim sanasi",
-    "bonus": "Bonus"
-  }
+    "bonus": "Bonus",
+    "receiptSum": "Kirim summasi",
+    "bonusPct": "Bonus (summa, %)"
+  },
+  "kBalance": "Jami bonus balans",
+  "nSuppliers": "{n} ta yetkazib beruvchi",
+  "kPending": "Kutilayotgan bonuslar",
+  "kSoon": "Bugun / 3 kun ichida",
+  "kLate": "Kechikkan (tasdiqlanmagan)",
+  "tabsLabel": "Bonus koʻrinishlari",
+  "tab": {
+    "all": "Hammasi",
+    "wait": "Kutilmoqda",
+    "soon": "3 kun ichida",
+    "late": "Kechikkan",
+    "ok": "Tasdiqlandi",
+    "no": "Berilmadi"
+  },
+  "tableCaption": "Chegirmali kirimlar boʻyicha bonuslar",
+  "actions": "Amallar",
+  "confirm": "Bonus tasdiqlandi",
+  "decline": "Bonus berilmadi",
+  "dateInvalid": "Sana notoʻgʻri. KK.OO.YYYY koʻrinishida kiriting.",
+  "balTitle": "Yetkazib beruvchilar boʻyicha bonus balans",
+  "balEmpty": "Bonus balans yoʻq",
+  "idle": "{days} kundan beri ishlatilmagan",
+  "pendingN": "{n} ta bonus kutilmoqda",
+  "useBonus": "Bonus hisobidan kirim",
+  "confirmTitle": "Bonus tasdiqlandi?",
+  "declineTitle": "Bonus berilmadi deb belgilaysizmi?",
+  "balChange": "Bonus balans: {a} → {b} (+{s})",
+  "noDebt": "Qarzga taʼsir qilmaydi",
+  "declineText": "Kutilayotgan bonus yopiladi, bonus balansga hech narsa qoʻshilmaydi.",
+  "reason": "Sabab",
+  "reasonRequired": "Sabab kiritilmagan. Nima uchun bonus berilmaganini yozing.",
+  "tOk": "Bonus tasdiqlandi: {n}",
+  "tNo": "Bonus berilmadi deb belgilandi"
 }

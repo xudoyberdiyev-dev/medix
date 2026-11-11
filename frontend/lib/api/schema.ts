@@ -4730,6 +4730,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/receipts/{id}/bonus/decline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Bonus berilmadi
+         * @description YB chegirmani bermadi — sabab bilan; balansga ta'sir yo'q. Faqat o'tkazilgan, tasdiqlanmagan kirim, bir marta.
+         */
+        post: operations["declineBonus"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/receipts/{id}/cancel": {
         parameters: {
             query?: never;
@@ -5657,6 +5677,23 @@ export interface paths {
         };
         /** Filialdagi YB bonus balanslari va kutilayotgan bonuslar */
         get: operations["list_27"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/supplier-bonuses/receipts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Chegirmali kirimlar holati (kutilmoqda / tasdiqlandi / berilmadi) va YB × filial balanslari */
+        get: operations["receipts"];
         put?: never;
         post?: never;
         delete?: never;
@@ -7397,6 +7434,19 @@ export interface components {
         BlockRequest: {
             reason: string;
         };
+        BonusBalanceRow: {
+            balance: string;
+            branch: string;
+            /** Format: int64 */
+            branchId: number;
+            idle: boolean;
+            pending: string;
+            /** Format: int32 */
+            pendingCount: number;
+            supplier: string;
+            /** Format: int64 */
+            supplierId: number;
+        };
         BonusDetail: {
             balance: string;
             moves: components["schemas"]["BonusMove"][];
@@ -7432,6 +7482,44 @@ export interface components {
             docType: string;
             employee?: string;
             note?: string;
+        };
+        BonusReceiptRow: {
+            amount: string;
+            bnsNumber?: string;
+            /**
+             * Format: date
+             * @description Bonus olish sanasi
+             */
+            bonusDate?: string;
+            branch: string;
+            /** Format: int64 */
+            branchId: number;
+            /**
+             * Format: int32
+             * @description Olish sanasigacha kunlar (manfiy — kechikkan)
+             */
+            days?: number;
+            declineReason?: string;
+            /** @description Foizli chegirma — foiz */
+            percent?: string;
+            /** Format: date */
+            receiptDate: string;
+            /** Format: int64 */
+            receiptId: number;
+            receiptNumber: string;
+            /** @description Kirim summasi (chegirma bazasi) */
+            receiptSum: string;
+            /** @enum {string} */
+            state: "PENDING" | "CONFIRMED" | "DECLINED";
+            supplier: string;
+            /** Format: int64 */
+            supplierId: number;
+        };
+        BonusReceipts: {
+            balances: components["schemas"]["BonusBalanceRow"][];
+            rows: components["schemas"]["BonusReceiptRow"][];
+            /** Format: date */
+            today: string;
         };
         BonusRow: {
             balance: string;
@@ -20827,6 +20915,32 @@ export interface operations {
             };
         };
     };
+    declineBonus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReceiptCancelRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReceiptDetail"];
+                };
+            };
+        };
+    };
     cancel_3: {
         parameters: {
             query?: never;
@@ -22172,6 +22286,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BonusSummary"];
+                };
+            };
+        };
+    };
+    receipts: {
+        parameters: {
+            query?: {
+                branchId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BonusReceipts"];
                 };
             };
         };

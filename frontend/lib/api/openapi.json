@@ -11010,6 +11010,45 @@
         "tags" : [ "receipts" ]
       }
     },
+    "/api/receipts/{id}/bonus/decline" : {
+      "post" : {
+        "description" : "YB chegirmani bermadi — sabab bilan; balansga ta'sir yo'q. Faqat o'tkazilgan, tasdiqlanmagan kirim, bir marta.",
+        "operationId" : "declineBonus",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ReceiptCancelRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ReceiptDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Bonus berilmadi",
+        "tags" : [ "receipts" ]
+      }
+    },
     "/api/receipts/{id}/cancel" : {
       "post" : {
         "description" : "O'tkazilgan kirim — faqat receipt.cancelPosted va tovar ishlatilmagan bo'lsa.",
@@ -13308,6 +13347,34 @@
           }
         },
         "summary" : "Filialdagi YB bonus balanslari va kutilayotgan bonuslar",
+        "tags" : [ "supplier-bonuses" ]
+      }
+    },
+    "/api/supplier-bonuses/receipts" : {
+      "get" : {
+        "operationId" : "receipts",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BonusReceipts"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Chegirmali kirimlar holati (kutilmoqda / tasdiqlandi / berilmadi) va YB × filial balanslari",
         "tags" : [ "supplier-bonuses" ]
       }
     },
@@ -17061,6 +17128,39 @@
         },
         "required" : [ "reason" ]
       },
+      "BonusBalanceRow" : {
+        "type" : "object",
+        "properties" : {
+          "balance" : {
+            "type" : "string"
+          },
+          "branch" : {
+            "type" : "string"
+          },
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "idle" : {
+            "type" : "boolean"
+          },
+          "pending" : {
+            "type" : "string"
+          },
+          "pendingCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "supplier" : {
+            "type" : "string"
+          },
+          "supplierId" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "balance", "branch", "branchId", "idle", "pending", "pendingCount", "supplier", "supplierId" ]
+      },
       "BonusDetail" : {
         "type" : "object",
         "properties" : {
@@ -17160,6 +17260,90 @@
           }
         },
         "required" : [ "amount", "at", "balance", "docId", "docNumber", "docType" ]
+      },
+      "BonusReceiptRow" : {
+        "type" : "object",
+        "properties" : {
+          "amount" : {
+            "type" : "string"
+          },
+          "bnsNumber" : {
+            "type" : "string"
+          },
+          "bonusDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Bonus olish sanasi"
+          },
+          "branch" : {
+            "type" : "string"
+          },
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "days" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Olish sanasigacha kunlar (manfiy — kechikkan)"
+          },
+          "declineReason" : {
+            "type" : "string"
+          },
+          "percent" : {
+            "type" : "string",
+            "description" : "Foizli chegirma — foiz"
+          },
+          "receiptDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "receiptId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "receiptNumber" : {
+            "type" : "string"
+          },
+          "receiptSum" : {
+            "type" : "string",
+            "description" : "Kirim summasi (chegirma bazasi)"
+          },
+          "state" : {
+            "type" : "string",
+            "enum" : [ "PENDING", "CONFIRMED", "DECLINED" ]
+          },
+          "supplier" : {
+            "type" : "string"
+          },
+          "supplierId" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "amount", "branch", "branchId", "receiptDate", "receiptId", "receiptNumber", "receiptSum", "state", "supplier", "supplierId" ]
+      },
+      "BonusReceipts" : {
+        "type" : "object",
+        "properties" : {
+          "balances" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/BonusBalanceRow"
+            }
+          },
+          "rows" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/BonusReceiptRow"
+            }
+          },
+          "today" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        },
+        "required" : [ "balances", "rows", "today" ]
       },
       "BonusRow" : {
         "type" : "object",

@@ -165,6 +165,12 @@ export const usePostReceipt = () =>
 export const useConfirmBonus = () =>
   useReceiptMutation((id: number) => unwrap(api.POST("/api/receipts/{id}/bonus", { params: { path: { id } } })));
 
+/** «Bonus berilmadi» (prototip Payables): sabab bilan, balansga taʼsir yoʻq. */
+export const useDeclineBonus = () =>
+  useReceiptMutation(({ id, reason }: { id: number; reason: string }) =>
+    unwrap(api.POST("/api/receipts/{id}/bonus/decline", { params: { path: { id } }, body: { reason } })),
+  );
+
 export const useCancelReceipt = () =>
   useReceiptMutation(({ id, reason }: { id: number; reason: string }) =>
     unwrap(api.POST("/api/receipts/{id}/cancel", { params: { path: { id } }, body: { reason } })),

@@ -173,28 +173,7 @@ export function PayablesPage() {
 
   return (
     <div className="flex min-w-0 flex-col gap-4">
-      <HubTabs hub="supplierDebts" />
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="flex min-w-0 flex-col gap-1">
-          <h1 className="flex items-baseline gap-2 text-page-title">
-            {t("title")}
-            {q.data ? <span className="tabular text-body text-text-secondary">{formatQuantity(open.length)}</span> : null}
-          </h1>
-          {q.data ? <p className="text-table text-text-secondary">{t("asOf", { d: formatIsoDate(q.data.today) })}</p> : null}
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          {can(me.data, "recon.create") ? (
-            <Button variant="secondary" icon={FileCheck2} onClick={() => router.push("/reconciliations/new?side=SUPPLIER")}>
-              {t("recon")}
-            </Button>
-          ) : null}
-          {can(me.data, "payments.create") ? (
-            <Button icon={Plus} onClick={() => router.push("/payments/yt/new")}>
-              {t("newPay")}
-            </Button>
-          ) : null}
-        </div>
-      </div>
+      <PayablesHeader count={q.data ? open.length : null} today={q.data?.today ?? null} />
       {q.data ? (
         <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
           <Kpi
@@ -313,6 +292,42 @@ export function PayablesPage() {
   );
 }
 
+/**
+ * YB qarzi sarlavhasi (prototip Payables): nom, soni, «… holatiga», «Akt sverka» va «Yetkazib beruvchiga toʻlov»,
+ * ostida «Qarzlar / Bonus balans» yorliqlari — ikkala sahifada bir xil.
+ */
+export function PayablesHeader({ count, today }: { count: number | null; today: string | null }) {
+  const t = useTranslations("debts.pay");
+  const me = useMe();
+  const router = useRouter();
+  return (
+    <>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="flex min-w-0 flex-col gap-1">
+          <h1 className="flex items-baseline gap-2 text-page-title">
+            {t("title")}
+            {count != null ? <span className="tabular text-body text-text-secondary">{formatQuantity(count)}</span> : null}
+          </h1>
+          {today ? <p className="text-table text-text-secondary">{t("asOf", { d: formatIsoDate(today) })}</p> : null}
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          {can(me.data, "recon.create") ? (
+            <Button variant="secondary" icon={FileCheck2} onClick={() => router.push("/reconciliations/new?side=SUPPLIER")}>
+              {t("recon")}
+            </Button>
+          ) : null}
+          {can(me.data, "payments.create") ? (
+            <Button icon={Plus} onClick={() => router.push("/payments/yt/new")}>
+              {t("newPay")}
+            </Button>
+          ) : null}
+        </div>
+      </div>
+      <HubTabs hub="supplierDebts" className="mb-0" />
+    </>
+  );
+}
+
 function Kpi(props: {
   icon: LucideIcon;
   iconClass: string;
@@ -323,8 +338,23 @@ function Kpi(props: {
   onClick: () => void;
 }) {
   const t = useTranslations("debts.pay");
+  const { rows, ...rest } = props;
+  return <KpiCard {...rest} value={sumOf(rows, (r) => r.left)} note={t("nDocs", { n: rows.length })} highlight={rows.length > 0} />;
+}
+
+/** Bosiladigan summa kartasi (prototip Payables KPI): ikonka, nom, summa, izoh; faol — filtr. */
+export function KpiCard(props: {
+  icon: LucideIcon;
+  iconClass: string;
+  label: string;
+  value: string;
+  note: string;
+  valueClass?: string;
+  highlight?: boolean;
+  active: boolean;
+  onClick: () => void;
+}) {
   const Icon = props.icon;
-  const sum = sumOf(props.rows, (r) => r.left);
   return (
     <button
       type="button"
@@ -341,8 +371,10 @@ function Kpi(props: {
         </span>
         {props.label}
       </span>
-      <span className={cn("max-w-full truncate text-kpi tabular-nums", props.rows.length > 0 && props.valueClass)}>{formatMoney(sum)}</span>
-      <span className="text-caption text-text-secondary">{t("nDocs", { n: props.rows.length })}</span>
+      <span className={cn("max-w-full truncate text-kpi tabular-nums", props.highlight !== false && props.valueClass)}>
+        {formatMoney(props.value)}
+      </span>
+      <span className="text-caption text-text-secondary">{props.note}</span>
     </button>
   );
 }

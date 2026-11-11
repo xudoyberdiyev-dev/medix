@@ -304,6 +304,7 @@
       "accept": "Qabul qilindi",
       "post": "Oʻtkazildi",
       "bonusConfirm": "Bonus tasdiqlandi",
+      "bonusDecline": "Bonus berilmadi",
       "cancel": "Bekor qilindi"
     }
   },
