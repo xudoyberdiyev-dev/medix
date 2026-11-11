@@ -119,12 +119,12 @@ class ZoneTransfers {
     Optional<ZoneTransferDetail> find(long id, Actor actor) {
         record HeadRow(long id, String number, long branchId, long warehouseId, String warehouse, ZoneRef from, ZoneRef to, String status,
                 boolean needsApproval, String note, String createdBy, Timestamp createdAt, String postedBy, Timestamp postedAt,
-                String rejectedBy, Timestamp rejectedAt, String rejectReason) {}
+                String rejectedBy, Timestamp rejectedAt, String rejectReason, String cancelledBy, Timestamp cancelledAt) {}
         Optional<HeadRow> head = jdbc.sql("""
                 SELECT t.id, t.number, t.branch_id, t.warehouse_id, w.name AS warehouse,
                        fz.id AS from_id, fz.name AS from_name, fz.type AS from_type, tz.id AS to_id, tz.name AS to_name, tz.type AS to_type,
                        t.status, t.needs_approval, t.note, cb.full_name AS created_by, t.created_at, pb.full_name AS posted_by, t.posted_at,
-                       rb.full_name AS rejected_by, t.rejected_at, t.reject_reason
+                       rb.full_name AS rejected_by, t.rejected_at, t.reject_reason, xb.full_name AS cancelled_by, t.cancelled_at
                 FROM zone_transfer t
                 JOIN warehouse w ON w.id = t.warehouse_id
                 JOIN zone fz ON fz.id = t.from_zone_id
@@ -132,6 +132,7 @@ class ZoneTransfers {
                 JOIN employee cb ON cb.id = t.created_by
                 LEFT JOIN employee pb ON pb.id = t.posted_by
                 LEFT JOIN employee rb ON rb.id = t.rejected_by
+                LEFT JOIN employee xb ON xb.id = t.cancelled_by
                 WHERE t.id = :id""")
                 .param("id", id)
                 .query((rs, n) -> new HeadRow(rs.getLong("id"), rs.getString("number"), rs.getLong("branch_id"), rs.getLong("warehouse_id"),
@@ -140,7 +141,8 @@ class ZoneTransfers {
                         new ZoneRef(rs.getLong("to_id"), rs.getString("to_name"), ZoneType.valueOf(rs.getString("to_type"))),
                         rs.getString("status"), rs.getBoolean("needs_approval"), rs.getString("note"), rs.getString("created_by"),
                         rs.getTimestamp("created_at"), rs.getString("posted_by"), rs.getTimestamp("posted_at"), rs.getString("rejected_by"),
-                        rs.getTimestamp("rejected_at"), rs.getString("reject_reason")))
+                        rs.getTimestamp("rejected_at"), rs.getString("reject_reason"), rs.getString("cancelled_by"),
+                        rs.getTimestamp("cancelled_at")))
                 .optional()
                 .filter(h -> actor.canAccessBranch(h.branchId()));
         if (head.isEmpty()) {
@@ -159,7 +161,8 @@ class ZoneTransfers {
         long totalQty = lines.stream().mapToLong(ZoneTransferLine::qty).sum();
         return Optional.of(new ZoneTransferDetail(h.id(), h.number(), h.branchId(), h.warehouseId(), h.warehouse(), h.from(), h.to(),
                 Status.valueOf(h.status()), h.needsApproval(), h.note(), h.createdBy(), h.createdAt().toInstant(), h.postedBy(),
-                instant(h.postedAt()), h.rejectedBy(), instant(h.rejectedAt()), h.rejectReason(), totalQty, lines));
+                instant(h.postedAt()), h.rejectedBy(), instant(h.rejectedAt()), h.rejectReason(), h.cancelledBy(),
+                instant(h.cancelledAt()), totalQty, lines));
     }
 
     /** Zonadagi partiyalar — ko'chirish uchun tanlash (bo'sh = qoldiq − faol zahira). */
@@ -188,6 +191,103 @@ class ZoneTransfers {
     /** Yaratish: tasdiq kerak bo'lmasa yoki xodimda transfer.quar bo'lsa — darhol o'tkaziladi. */
     @Transactional
     long create(Actor actor, ZoneTransferRequest r, boolean canApprove) {
+        Route route = route(actor, r);
+        long id = insertHead(actor, route, r, "PENDING");
+        String number = number(id);
+        insertLines(id, r.lines());
+        // Tasdiqqa yuborilganda ham qoldiq yetishi tekshiriladi — yo'q tovar tasdiqqa bormasin.
+        checkFree(route.from().id(), route.to().id(), lines(id));
+        audit.record(AuditEntry.of("transfer.zk.create", "zone_transfer", id)
+                .change(null, Map.of("number", number, "lines", r.lines().size(), "approval", route.approval())), actor);
+        postOrAsk(actor, id, number, route, canApprove);
+        return id;
+    }
+
+    /** Qoralama (prototip TransferDoc — avtomatik saqlanadi): tovar joyida qoladi, qoldiq yetishi qulfsiz tekshiriladi. */
+    @Transactional
+    long createDraft(Actor actor, ZoneTransferRequest r) {
+        Route route = route(actor, r);
+        long id = insertHead(actor, route, r, "DRAFT");
+        insertLines(id, r.lines());
+        checkFreeSoft(route.from().id(), lines(id));
+        audit.record(AuditEntry.of("transfer.zk.draft", "zone_transfer", id)
+                .change(null, Map.of("number", number(id), "lines", r.lines().size())), actor);
+        return id;
+    }
+
+    /** Qoralamani tahrirlash: ombor, zonalar, izoh va qatorlar to'liq almashtiriladi. Filial o'zgarmaydi; faqat qoralama. */
+    @Transactional
+    void update(Actor actor, long id, ZoneTransferRequest r) {
+        Head h = lock(id, actor);
+        require(h, Status.DRAFT);
+        Route route = route(actor, r);
+        if (route.from().branchId() != h.branchId()) {
+            throw MedixException.badRequest("transfer.zk.otherBranch");
+        }
+        jdbc.sql("""
+                UPDATE zone_transfer SET warehouse_id = :w, from_zone_id = :f, to_zone_id = :t, needs_approval = :a, note = :note,
+                       updated_at = now(), version = version + 1 WHERE id = :id""")
+                .param("w", route.from().warehouseId())
+                .param("f", route.from().id())
+                .param("t", route.to().id())
+                .param("a", route.approval())
+                .param("note", blankToNull(r.note()))
+                .param("id", id)
+                .update();
+        jdbc.sql("DELETE FROM zone_transfer_line WHERE transfer_id = :id").param("id", id).update();
+        insertLines(id, r.lines());
+        checkFreeSoft(route.from().id(), lines(id));
+        audit.record(AuditEntry.of("transfer.zk.update", "zone_transfer", id)
+                .change(null, Map.of("number", h.number(), "lines", r.lines().size())), actor);
+    }
+
+    /** Qoralamani o'tkazish: tasdiq kerak bo'lmasa yoki xodimda transfer.quar bo'lsa — darhol, aks holda «Tasdiqda». */
+    @Transactional
+    void submit(Actor actor, long id, boolean canApprove) {
+        Head h = lock(id, actor);
+        require(h, Status.DRAFT);
+        ZoneInfo from = zone(actor, h.fromZoneId());
+        ZoneInfo to = zone(actor, h.toZoneId());
+        if (!from.warehouseActive()) {
+            throw MedixException.badRequest("transfer.zk.warehouseInactive");
+        }
+        if (!to.active()) {
+            throw MedixException.badRequest("transfer.zk.zoneInactive", to.name());
+        }
+        List<LineQty> lines = lines(id);
+        if (lines.isEmpty()) {
+            throw MedixException.badRequest("transfer.zk.noLines");
+        }
+        Route route = new Route(from, to, needsApproval(from.type(), to.type()));
+        checkFree(from.id(), to.id(), lines);
+        if (route.approval()) {
+            jdbc.sql("UPDATE zone_transfer SET status = 'PENDING', needs_approval = true, updated_at = now(), "
+                            + "version = version + 1 WHERE id = :id")
+                    .param("id", id)
+                    .update();
+        }
+        audit.record(AuditEntry.of("transfer.zk.submit", "zone_transfer", id)
+                .change(null, Map.of("number", h.number(), "lines", lines.size(), "approval", route.approval())), actor);
+        postOrAsk(actor, id, h.number(), route, canApprove);
+    }
+
+    /** Bekor qilish — faqat qoralama (tovar joyida). */
+    @Transactional
+    void cancel(Actor actor, long id) {
+        Head h = lock(id, actor);
+        require(h, Status.DRAFT);
+        jdbc.sql("""
+                UPDATE zone_transfer SET status = 'CANCELLED', cancelled_by = :by, cancelled_at = now(), updated_at = now(),
+                       version = version + 1 WHERE id = :id""")
+                .param("by", actor.employeeId())
+                .param("id", id)
+                .update();
+        audit.record(AuditEntry.of("transfer.zk.cancel", "zone_transfer", id).change(null, Map.of("number", h.number())), actor);
+    }
+
+    private record Route(ZoneInfo from, ZoneInfo to, boolean approval) {}
+
+    private Route route(Actor actor, ZoneTransferRequest r) {
         ZoneInfo from = zone(actor, r.fromZoneId());
         ZoneInfo to = zone(actor, r.toZoneId());
         if (from.id() == to.id()) {
@@ -208,23 +308,34 @@ class ZoneTransfers {
                 throw MedixException.badRequest("transfer.zk.duplicateBatch");
             }
         }
-        boolean approval = needsApproval(from.type(), to.type());
-        String number = numbers.next(DocumentPrefix.ZK, from.branchCode()).toString();
-        long id = jdbc.sql("""
+        return new Route(from, to, needsApproval(from.type(), to.type()));
+    }
+
+    private long insertHead(Actor actor, Route route, ZoneTransferRequest r, String status) {
+        String number = numbers.next(DocumentPrefix.ZK, route.from().branchCode()).toString();
+        return jdbc.sql("""
                 INSERT INTO zone_transfer (number, branch_id, warehouse_id, from_zone_id, to_zone_id, needs_approval, note, status, created_by)
-                VALUES (:n, :b, :w, :f, :t, :a, :note, 'PENDING', :by) RETURNING id""")
+                VALUES (:n, :b, :w, :f, :t, :a, :note, :s, :by) RETURNING id""")
                 .param("n", number)
-                .param("b", from.branchId())
-                .param("w", from.warehouseId())
-                .param("f", from.id())
-                .param("t", to.id())
-                .param("a", approval)
-                .param("note", r.note() == null || r.note().isBlank() ? null : r.note().strip())
+                .param("b", route.from().branchId())
+                .param("w", route.from().warehouseId())
+                .param("f", route.from().id())
+                .param("t", route.to().id())
+                .param("a", route.approval())
+                .param("note", blankToNull(r.note()))
+                .param("s", status)
                 .param("by", actor.employeeId())
                 .query(Long.class)
                 .single();
+    }
+
+    private String number(long id) {
+        return jdbc.sql("SELECT number FROM zone_transfer WHERE id = :id").param("id", id).query(String.class).single();
+    }
+
+    private void insertLines(long id, List<ZoneTransferLineRequest> lines) {
         int lineNo = 0;
-        for (ZoneTransferLineRequest l : r.lines()) {
+        for (ZoneTransferLineRequest l : lines) {
             Long product = jdbc.sql("SELECT product_id FROM batch WHERE id = :b").param("b", l.batchId()).query(Long.class).optional()
                     .orElseThrow(() -> MedixException.badRequest("stock.batchUnknown"));
             jdbc.sql("""
@@ -236,19 +347,21 @@ class ZoneTransfers {
                     .param("q", l.qty())
                     .update();
         }
-        // Tasdiqqa yuborilganda ham qoldiq yetishi tekshiriladi — yo'q tovar tasdiqqa bormasin.
-        checkFree(from.id(), to.id(), lines(id));
-        audit.record(AuditEntry.of("transfer.zk.create", "zone_transfer", id)
-                .change(null, Map.of("number", number, "lines", r.lines().size(), "approval", approval)), actor);
-        if (!approval || canApprove) {
-            doPost(actor, id, number, from.id(), to.id());
+    }
+
+    private void postOrAsk(Actor actor, long id, String number, Route route, boolean canApprove) {
+        if (!route.approval() || canApprove) {
+            doPost(actor, id, number, route.from().id(), route.to().id());
         } else {
             // Tasdiqlovchilarga (transfer.quar, filial doirasida) — karantindan chiqarish so'rovi
-            notifications.notify("transfer.quar", from.branchId(), List.of(),
-                    notifications.message("transfer.zk.approval", "transfer.zk.approval", "/zone-transfers?status=PENDING&open=" + id,
-                            "transfer.zk.approval:" + id, number, from.name(), to.name()));
+            notifications.notify("transfer.quar", route.from().branchId(), List.of(),
+                    notifications.message("transfer.zk.approval", "transfer.zk.approval", "/zone-transfers/" + id,
+                            "transfer.zk.approval:" + id, number, route.from().name(), route.to().name()));
         }
-        return id;
+    }
+
+    private static String blankToNull(String s) {
+        return s == null || s.isBlank() ? null : s.strip();
     }
 
     @Transactional
@@ -359,6 +472,41 @@ class ZoneTransfers {
         if (h.status() != Status.PENDING) {
             throw MedixException.conflict("transfer.zk.notPending", h.status().name());
         }
+    }
+
+    private static void require(Head h, Status status) {
+        if (h.status() != status) {
+            throw MedixException.conflict("transfer.zk.notDraft", h.status().name());
+        }
+    }
+
+    /** Qoralama uchun qulfsiz tekshiruv: bo'sh miqdor (qoldiq − faol zahira) yetadimi — yo'q tovarga hujjat tuzilmasin. */
+    private void checkFreeSoft(long zoneId, List<LineQty> lines) {
+        for (LineQty l : lines) {
+            int qty = jdbc.sql("SELECT coalesce(sum(qty), 0) FROM stock_balance WHERE zone_id = :z AND batch_id = :b")
+                    .param("z", zoneId)
+                    .param("b", l.batchId())
+                    .query(Integer.class)
+                    .single();
+            int reserved = jdbc.sql("""
+                    SELECT coalesce(sum(qty), 0) FROM stock_reservation WHERE zone_id = :z AND batch_id = :b AND status = 'ACTIVE'""")
+                    .param("z", zoneId)
+                    .param("b", l.batchId())
+                    .query(Integer.class)
+                    .single();
+            if (qty - reserved < l.qty()) {
+                throw MedixException.conflict("transfer.zk.notEnough", label(l.batchId()), String.valueOf(Math.max(qty - reserved, 0)),
+                        String.valueOf(reserved), String.valueOf(l.qty()));
+            }
+        }
+    }
+
+    private String label(long batchId) {
+        return jdbc.sql("SELECT p.name || ' · ' || b.number FROM batch b JOIN product p ON p.id = b.product_id WHERE b.id = :b")
+                .param("b", batchId)
+                .query(String.class)
+                .optional()
+                .orElse("?");
     }
 
     private ZoneInfo zone(Actor actor, long zoneId) {
