@@ -354,23 +354,16 @@ function DraftDoc({ doc }: { doc: InventoryCountDetail | null }) {
   const doStart = () => {
     if (!doc) return;
     if (timer.current) clearTimeout(timer.current);
-    update.mutate(
-      { id: doc.id, body: requestOf(f) },
-      {
-        onSuccess: () =>
-          start.mutate(doc.id, {
-            onSuccess: (d) => (setDlg(null), toast({ tone: "success", title: t("doc.tStarted", { n: d.number }) })),
-            onError: (e) => (
-              setDlg(null),
-              toast({ tone: "danger", title: t("doc.failed"), description: describeError(e).message ?? t("doc.retry") })
-            ),
-          }),
-        onError: (e) => (
-          setDlg(null),
-          toast({ tone: "danger", title: t("doc.failed"), description: describeError(e).message ?? t("doc.retry") })
-        ),
-      },
+    // mutateAsync: boshlangach hujjat qoralama emas — bu komponent almashadi (unmount), `mutate` chaqiruvi qaytmasligi mumkin
+    const failed = (e: unknown) => (
+      setDlg(null),
+      toast({ tone: "danger", title: t("doc.failed"), description: describeError(e).message ?? t("doc.retry") })
     );
+    update
+      .mutateAsync({ id: doc.id, body: requestOf(f) })
+      .then(() => start.mutateAsync(doc.id))
+      .then((d) => toast({ tone: "success", title: t("doc.tStarted", { n: d.number }) }))
+      .catch(failed);
   };
   const lockZones =
     f.scopeMode === "WAREHOUSE"
@@ -675,14 +668,12 @@ function DraftDoc({ doc }: { doc: InventoryCountDetail | null }) {
             disabled: !reason.trim(),
             loading: cancel.isPending,
             onClick: () =>
-              cancel.mutate(
-                { id: doc.id, reason },
-                {
-                  onSuccess: (d) => (setDlg(null), toast({ tone: "success", title: t("doc.tCancelled", { n: d.number }) })),
-                  onError: (e) =>
-                    toast({ tone: "danger", title: t("doc.failed"), description: describeError(e).message ?? t("doc.retry") }),
-                },
-              ),
+              cancel
+                .mutateAsync({ id: doc.id, reason })
+                .then((d) => toast({ tone: "success", title: t("doc.tCancelled", { n: d.number }) }))
+                .catch((e: unknown) =>
+                  toast({ tone: "danger", title: t("doc.failed"), description: describeError(e).message ?? t("doc.retry") }),
+                ),
           }}
           secondaryAction={{ label: t("doc.keep"), onClick: () => setDlg(null) }}
         >
