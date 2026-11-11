@@ -387,8 +387,8 @@ test("CEO: kirim — qoralama → qabul (kam keldi) → oʻtkazish → Qoldiqlar
   // Yetkazib beruvchi
   await page.goto("/suppliers");
   await page.getByRole("button", { name: "Yetkazib beruvchi qoʻshish" }).first().click();
-  await field(page, "STIR / JShShIR").fill("309876543");
-  await field(page, "Nomi").fill("Pharm Supply E2E");
+  await field(page, "STIR").fill("309876543");
+  await field(page, "Qisqa nomi").fill("Pharm Supply E2E");
   await choose(page, "Turi", /Distribyutor/);
   await field(page, "Litsenziya raqami").fill("FA-E2E-1");
   await field(page, "Amal qilish muddati").fill("31.12.2030");
@@ -458,8 +458,8 @@ test("CEO: buyurtma — mijoz, mahsulot, muammolar paneli, navbatga yuborish", a
 
   await page.goto("/customers");
   await page.getByRole("button", { name: "Mijoz qoʻshish" }).first().click();
-  await field(page, "STIR / JShShIR").fill("305551234");
-  await field(page, "Nomi").fill("Shifo Dorixona E2E");
+  await field(page, "STIR").fill("305551234");
+  await field(page, "Qisqa nomi").fill("Shifo Dorixona E2E");
   await choose(page, "Turi", /Dorixona/);
   await field(page, "Litsenziya raqami").fill("FA-E2E-2");
   await field(page, "Amal qilish muddati").fill("31.12.2030");
