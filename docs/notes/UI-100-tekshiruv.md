@@ -100,3 +100,6 @@ Demo workflow'ga 32 ta yangi marshrut qoʻshildi (yangi hujjat shakllari, hujjat
 **Kechki oyna natijasi:** yana 31 ekran tekshirildi (jami 79), 9 tasida farq topilib tuzatildi; backendda yetishmagan qism: `nextDue` (kontragent kartochkasi, finance ochiq API `DebtSummaries.nextDue`).
 
 **Ochiq (kichik):** OK/ZK yangi hujjatda «Zona» maydoni prototipda yoʻq (haqiqiy tizimda zona tanlovi kerak — FEFO partiyalar zonadan; ataylab qoldirildi); Reys sahifasidagi prototip izohi «Yuklash … Haydovchi panelida» — holat banneri bor.
+
+**Tungi oyna 12.11 (00:10–):** «Hujjat / Tarix» yorliqlari — prototipdagi kabi yangi kirim va yangi toʻlovda ham (Tarix — boʻsh holat, shakl saqlanib turadi); KO/BO (MoneyOpDoc) va BQ tovar (OpeningDoc) hujjatlariga qoʻshildi — backend `/api/cash-ops/{id}/history`, `/api/opening-balances/{id}/history` (audit jurnalidan) + IT.
+
