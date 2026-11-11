@@ -197,6 +197,13 @@
     "crumbNew": "Yangi",
     "stepDraft": "Qoralama",
     "stepPosted": "Oʻtkazildi",
-    "more": "Boshqa amallar"
+    "more": "Boshqa amallar",
+    "tabDoc": "Hujjat",
+    "tabHist": "Tarix",
+    "h_create": "hujjatni yaratdi",
+    "h_update": "tahrirladi",
+    "h_import": "Excelʼdan yukladi",
+    "h_post": "tasdiqladi",
+    "h_cancel": "bekor qildi"
   }
 }

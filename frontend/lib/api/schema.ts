@@ -853,6 +853,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/cash-ops/{id}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * KO/BO tarixi
+         * @description Audit jurnalidan: yaratildi, tasdiqlandi, rad etildi, bekor qilindi.
+         */
+        get: operations["opHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/cash-ops/{id}/pdf": {
         parameters: {
             query?: never;
@@ -1184,7 +1204,7 @@ export interface paths {
             cookie?: never;
         };
         /** Kartochka «Tarix»: yaratish, tahrir, shartlar, holat, litsenziya va shartnoma o'zgarishlari (yangisi birinchi) */
-        get: operations["history_5"];
+        get: operations["history_6"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2845,6 +2865,26 @@ export interface paths {
          * @description Qoralama — yaratish ruxsati bilan. O'tkazilgan — faqat opening.cancel, partiyalar ishlatilmagan bo'lsa.
          */
         post: operations["cancel_8"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/opening-balances/{id}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * BQ tarixi
+         * @description Audit jurnalidan: yaratildi, tahrirlandi, import, tasdiqlandi, bekor qilindi.
+         */
+        get: operations["history_5"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -8047,6 +8087,13 @@ export interface components {
             /** Format: int64 */
             version: number;
         };
+        CashOpHistoryEvent: {
+            action: string;
+            /** Format: date-time */
+            at: string;
+            employee?: string;
+            reason?: string;
+        };
         CashOpRequest: {
             /** Format: int64 */
             accountId: number;
@@ -10170,6 +10217,13 @@ export interface components {
             /** @enum {string} */
             status: "DRAFT" | "POSTED" | "CANCELLED";
             total: string;
+        };
+        OpeningHistoryEvent: {
+            action: string;
+            /** Format: date-time */
+            at: string;
+            employee?: string;
+            reason?: string;
         };
         OpeningImportError: {
             message: string;
@@ -15389,6 +15443,28 @@ export interface operations {
             };
         };
     };
+    opHistory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CashOpHistoryEvent"][];
+                };
+            };
+        };
+    };
     opPdf: {
         parameters: {
             query?: never;
@@ -15904,7 +15980,7 @@ export interface operations {
             };
         };
     };
-    history_5: {
+    history_6: {
         parameters: {
             query?: {
                 role?: "CUSTOMER" | "SUPPLIER" | "ALL";
@@ -18246,6 +18322,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["OpeningDetail"];
+                };
+            };
+        };
+    };
+    history_5: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OpeningHistoryEvent"][];
                 };
             };
         };

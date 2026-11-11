@@ -2003,6 +2003,38 @@
         "tags" : [ "cash" ]
       }
     },
+    "/api/cash-ops/{id}/history" : {
+      "get" : {
+        "description" : "Audit jurnalidan: yaratildi, tasdiqlandi, rad etildi, bekor qilindi.",
+        "operationId" : "opHistory",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/CashOpHistoryEvent"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "KO/BO tarixi",
+        "tags" : [ "cash" ]
+      }
+    },
     "/api/cash-ops/{id}/pdf" : {
       "get" : {
         "operationId" : "opPdf",
@@ -2847,7 +2879,7 @@
     },
     "/api/counterparties/{id}/history" : {
       "get" : {
-        "operationId" : "history_5",
+        "operationId" : "history_6",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -6290,6 +6322,38 @@
           }
         },
         "summary" : "Bekor qilish",
+        "tags" : [ "opening" ]
+      }
+    },
+    "/api/opening-balances/{id}/history" : {
+      "get" : {
+        "description" : "Audit jurnalidan: yaratildi, tahrirlandi, import, tasdiqlandi, bekor qilindi.",
+        "operationId" : "history_5",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/OpeningHistoryEvent"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "BQ tarixi",
         "tags" : [ "opening" ]
       }
     },
@@ -18817,6 +18881,25 @@
         },
         "required" : [ "account", "accountId", "accountKind", "amount", "branchId", "createdAt", "createdBy", "direction", "docType", "id", "item", "itemId", "number", "opDate", "source", "status", "version" ]
       },
+      "CashOpHistoryEvent" : {
+        "type" : "object",
+        "properties" : {
+          "action" : {
+            "type" : "string"
+          },
+          "at" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "employee" : {
+            "type" : "string"
+          },
+          "reason" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "action", "at" ]
+      },
       "CashOpRequest" : {
         "type" : "object",
         "properties" : {
@@ -24307,6 +24390,25 @@
           }
         },
         "required" : [ "branch", "branchId", "createdAt", "createdBy", "cutoffDate", "id", "kind", "lines", "number", "status", "total" ]
+      },
+      "OpeningHistoryEvent" : {
+        "type" : "object",
+        "properties" : {
+          "action" : {
+            "type" : "string"
+          },
+          "at" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "employee" : {
+            "type" : "string"
+          },
+          "reason" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "action", "at" ]
       },
       "OpeningImportError" : {
         "type" : "object",
