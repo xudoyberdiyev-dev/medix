@@ -83,7 +83,8 @@ class PurchaserHome {
                 SELECT count(*) AS p, count(*) FILTER (WHERE r.discount_date < :d) AS o
                 FROM receipt r
                 WHERE r.status = 'POSTED' AND r.discount_kind IS NOT NULL AND (CAST(:b AS BIGINT) IS NULL OR r.branch_id = :b)
-                  AND NOT EXISTS (SELECT 1 FROM supplier_bonus sb WHERE sb.receipt_id = r.id)""")
+                  AND NOT EXISTS (SELECT 1 FROM supplier_bonus sb WHERE sb.receipt_id = r.id)
+                  AND NOT EXISTS (SELECT 1 FROM supplier_bonus_decline sd WHERE sd.receipt_id = r.id)""")
                 .param("d", Date.valueOf(today)).param("b", branchId)
                 .query((rs, n) -> new BonusInfo(balance, rs.getInt("p"), rs.getInt("o")))
                 .single();
@@ -129,6 +130,7 @@ class PurchaserHome {
                 WHERE r.status = 'POSTED' AND r.discount_kind IS NOT NULL AND r.discount_date <= :d3
                   AND (CAST(:b AS BIGINT) IS NULL OR r.branch_id = :b)
                   AND NOT EXISTS (SELECT 1 FROM supplier_bonus sb WHERE sb.receipt_id = r.id)
+                  AND NOT EXISTS (SELECT 1 FROM supplier_bonus_decline sd WHERE sd.receipt_id = r.id)
                 ORDER BY r.discount_date, r.number LIMIT 10""")
                 .param("d3", Date.valueOf(today.plusDays(3))).param("b", branchId)
                 .query((rs, n) -> new BonusDue(rs.getLong("id"), rs.getString("supplier"), rs.getString("number"),

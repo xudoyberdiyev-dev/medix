@@ -2,6 +2,7 @@ package uz.medix.purchasing;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.matchesPattern;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -414,6 +415,66 @@ class ReceiptIT {
         }
         send(post("/api/receipts/" + doc + "/accept"), who, accept.append("]}").toString()).andExpect(status().isOk());
         return String.valueOf(doc);
+    }
+
+    /** Bonus balans yorligʻi (prototip Payables): kirimlar holati, «Bonus berilmadi» — sabab bilan, bir marta, balansga taʼsir yoʻq. */
+    @Test
+    void bonusReceiptsListAndDecline() throws Exception {
+        Place p = place();
+        long sup = supplier(p.branchId(), 15);
+        long a = product("KR bonus rad", false);
+        Cookie admin = loginAs("ADMIN", null);
+        String kr1 = postedReceipt(admin, doc(p, sup, false, line(a, "D1", p.main(), 10, 0, "1000")));
+        send(post("/api/receipts/" + kr1 + "/post"), admin, "{}").andExpect(status().isOk());
+        String kr2 = postedReceipt(admin, doc(p, sup, false, line(a, "D2", p.main(), 5, 0, "1000")));
+        send(post("/api/receipts/" + kr2 + "/post"), admin, "{}").andExpect(status().isOk());
+
+        String r1 = "$.rows[?(@.receiptId == " + kr1 + ")]";
+        String r2 = "$.rows[?(@.receiptId == " + kr2 + ")]";
+        String bal = "$.balances[?(@.supplierId == " + sup + ")]";
+        mvc.perform(get("/api/supplier-bonuses/receipts").param("branchId", "" + p.branchId()).cookie(admin))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.today").exists())
+                .andExpect(jsonPath(r1 + ".state").value(contains("PENDING")))
+                .andExpect(jsonPath(r1 + ".receiptSum").value(contains("10000.00")))
+                .andExpect(jsonPath(r1 + ".amount").value(contains("300.00")))
+                .andExpect(jsonPath(r1 + ".percent").value(contains("3")))
+                .andExpect(jsonPath(bal + ".pending").value(contains("450.00")))
+                .andExpect(jsonPath(bal + ".pendingCount").value(contains(2)));
+        Cookie keeper = loginAs("WAREHOUSE_MANAGER", p.branchId());
+        mvc.perform(get("/api/supplier-bonuses/receipts").cookie(keeper)).andExpect(status().isForbidden());
+        send(post("/api/receipts/" + kr1 + "/bonus/decline"), keeper, "{\"reason\":\"YB rad etdi\"}").andExpect(status().isForbidden());
+        send(post("/api/receipts/" + kr1 + "/bonus/decline"), admin, "{\"reason\":\"  \"}").andExpect(status().isBadRequest());
+
+        send(post("/api/receipts/" + kr1 + "/bonus/decline"), admin, "{\"reason\":\"YB rad etdi\"}").andExpect(status().isOk());
+        send(post("/api/receipts/" + kr1 + "/bonus/decline"), admin, "{\"reason\":\"yana\"}")
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("receipt.bonusDeclined"));
+        send(post("/api/receipts/" + kr1 + "/bonus"), admin, "")
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("receipt.bonusDeclined"));
+        send(post("/api/receipts/" + kr2 + "/bonus"), admin, "").andExpect(status().isOk());
+        send(post("/api/receipts/" + kr2 + "/bonus/decline"), admin, "{\"reason\":\"kech\"}")
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("receipt.bonusConfirmed"));
+
+        mvc.perform(get("/api/supplier-bonuses/receipts").cookie(admin))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath(r1 + ".state").value(contains("DECLINED")))
+                .andExpect(jsonPath(r1 + ".declineReason").value(contains("YB rad etdi")))
+                .andExpect(jsonPath(r2 + ".state").value(contains("CONFIRMED")))
+                .andExpect(jsonPath(r2 + ".bnsNumber").value(contains(matchesPattern("^BNS-[A-Z]{2,4}-\\d{6}$"))))
+                .andExpect(jsonPath(r2 + ".amount").value(contains("150.00")))
+                .andExpect(jsonPath(bal + ".balance").value(contains("150.00")))
+                .andExpect(jsonPath(bal + ".pending").value(contains("0.00")))
+                .andExpect(jsonPath(bal + ".pendingCount").value(contains(0)));
+        // Rad etilgan bonus kutilayotganlarga kirmaydi; balans jurnaliga yozuv yoʻq
+        mvc.perform(get("/api/supplier-bonuses/" + sup).param("branchId", "" + p.branchId()).cookie(admin))
+                .andExpect(jsonPath("$.pending", hasSize(0)))
+                .andExpect(jsonPath("$.moves", hasSize(1)));
+        assertThat(jdbc.sql("SELECT count(*) FROM audit_log WHERE action = 'receipt.bonusDecline' AND entity_id = :id").param("id", Long.parseLong(kr1))
+                        .query(Long.class).single())
+                .isEqualTo(1L);
     }
 
     /** Ro'yxat (prototip `Receipts`): yorliqlar soni, YB/ombor/sana/qidiruv filtrlari, bonus ustunlari, kartalar, narx yashirinligi. */

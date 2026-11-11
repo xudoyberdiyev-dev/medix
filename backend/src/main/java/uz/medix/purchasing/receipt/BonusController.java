@@ -39,6 +39,13 @@ class BonusController {
         return bonuses.list(actor(), branchId, q);
     }
 
+    @GetMapping("/receipts")
+    @PreAuthorize(VIEW)
+    @Operation(summary = "Chegirmali kirimlar holati (kutilmoqda / tasdiqlandi / berilmadi) va YB × filial balanslari")
+    BonusBalances.BonusReceipts receipts(@RequestParam(required = false) Long branchId) {
+        return bonuses.receipts(actor(), branchId);
+    }
+
     @GetMapping("/{supplierId}")
     @PreAuthorize(VIEW)
     @Operation(summary = "Bitta YB: bonus harakatlari (BNS, bonus hisobidan kirim) va kutilayotgan bonuslar")

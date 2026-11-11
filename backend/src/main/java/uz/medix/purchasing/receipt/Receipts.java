@@ -707,6 +707,9 @@ class Receipts {
         if (exists) {
             throw MedixException.conflict("receipt.bonusConfirmed");
         }
+        if (bonusDeclined(id)) {
+            throw MedixException.conflict("receipt.bonusDeclined");
+        }
         Money amount = DiscountKind.valueOf(d.discountKind()) == DiscountKind.SUM ? new Money(d.discountValue())
                 : new Money(d.debtAmount().multiply(d.discountValue()).movePointLeft(2));
         if (amount.isZero()) {
@@ -728,6 +731,37 @@ class Receipts {
         bonuses.lock(h.branchId(), h.supplierId());
         bonuses.record(h.branchId(), h.supplierId(), amount, BNS_TYPE, bnsId, number, h.number());
         audit.record(AuditEntry.of("receipt.bonusConfirm", "receipt", id).change(null, Map.of("bns", number, "amount", amount.toString())));
+    }
+
+    private boolean bonusDeclined(long id) {
+        return jdbc.sql("SELECT EXISTS (SELECT 1 FROM supplier_bonus_decline WHERE receipt_id = :id)").param("id", id).query(Boolean.class).single();
+    }
+
+    /**
+     * «Bonus berilmadi» (prototip Payables): YB kirimdagi chegirmani bermadi — sabab bilan qayd qilinadi, balansga ta'sir yo'q, kirim
+     * kutilayotgan bonuslardan chiqadi. Faqat o'tkazilgan, chegirmali, hali tasdiqlanmagan kirim; bir marta.
+     */
+    @Transactional
+    void declineBonus(Actor actor, long id, String reason) {
+        Head h = lock(id, actor);
+        requireStatus(h, ReceiptStatus.POSTED);
+        String kind = jdbc.sql("SELECT discount_kind FROM receipt WHERE id = :id").param("id", id).query(String.class).optional().orElse(null);
+        if (kind == null) {
+            throw MedixException.conflict("receipt.noDiscount");
+        }
+        if (jdbc.sql("SELECT EXISTS (SELECT 1 FROM supplier_bonus WHERE receipt_id = :id)").param("id", id).query(Boolean.class).single()) {
+            throw MedixException.conflict("receipt.bonusConfirmed");
+        }
+        if (bonusDeclined(id)) {
+            throw MedixException.conflict("receipt.bonusDeclined");
+        }
+        String why = reason.strip();
+        jdbc.sql("INSERT INTO supplier_bonus_decline (receipt_id, reason, created_by) VALUES (:r, :why, :by)")
+                .param("r", id)
+                .param("why", why)
+                .param("by", actor.employeeId())
+                .update();
+        audit.record(AuditEntry.of("receipt.bonusDecline", "receipt", id).change(null, Map.of("reason", why)));
     }
 
     // ===== Bekor qilish =====

@@ -114,7 +114,8 @@ class CounterpartyDocuments {
                                (SELECT sum(rl.qty * rl.price) FROM receipt_line rl WHERE rl.receipt_id = x.id), 0) * x.discount_value / 100, 2)
                            END, NULL::numeric, NULL::date, x.id
                     FROM receipt x WHERE x.supplier_id = :c AND x.status = 'POSTED' AND x.discount_kind IS NOT NULL
-                      AND NOT EXISTS (SELECT 1 FROM supplier_bonus sb WHERE sb.receipt_id = x.id)""";
+                      AND NOT EXISTS (SELECT 1 FROM supplier_bonus sb WHERE sb.receipt_id = x.id)
+                      AND NOT EXISTS (SELECT 1 FROM supplier_bonus_decline sd WHERE sd.receipt_id = x.id)""";
         };
         Long scope = actor.allBranches() ? null : actor.branchId();
         String scoped = "SELECT q.*, b.code AS branch_code, b.name AS branch_name FROM (" + sql + ") q JOIN branch b ON b.id = q.branch_id"

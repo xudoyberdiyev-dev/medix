@@ -11,6 +11,7 @@ import java.util.List;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import uz.medix.purchasing.receipt.ReceiptModels.DiscountKind;
 import uz.medix.shared.error.MedixException;
 import uz.medix.shared.money.Money;
 import uz.medix.shared.security.Actor;
@@ -41,6 +42,20 @@ public class BonusBalances {
 
     public record BonusDetail(long supplierId, String supplier, String balance, List<BonusMove> moves, List<PendingBonus> pending) {}
 
+    public enum BonusState { PENDING, CONFIRMED, DECLINED }
+
+    public record BonusReceiptRow(long receiptId, String receiptNumber, LocalDate receiptDate, long branchId, String branch, long supplierId,
+            String supplier, @Schema(description = "Kirim summasi (chegirma bazasi)") String receiptSum, String amount,
+            @Schema(nullable = true, description = "Foizli chegirma — foiz") String percent,
+            @Schema(nullable = true, description = "Bonus olish sanasi") LocalDate bonusDate,
+            @Schema(nullable = true, description = "Olish sanasigacha kunlar (manfiy — kechikkan)") Integer days, BonusState state,
+            @Schema(nullable = true) String bnsNumber, @Schema(nullable = true) String declineReason) {}
+
+    public record BonusBalanceRow(long branchId, String branch, long supplierId, String supplier, String balance, String pending,
+            int pendingCount, boolean idle) {}
+
+    public record BonusReceipts(LocalDate today, List<BonusReceiptRow> rows, List<BonusBalanceRow> balances) {}
+
     private final JdbcClient jdbc;
 
     BonusBalances(JdbcClient jdbc) {
@@ -52,7 +67,8 @@ public class BonusBalances {
                    CASE r.discount_kind WHEN 'SUM' THEN r.discount_value ELSE round(r.debt_amount * r.discount_value / 100, 2) END AS amount
             FROM receipt r
             WHERE r.branch_id = :b AND r.status = 'POSTED' AND r.discount_kind IS NOT NULL
-              AND NOT EXISTS (SELECT 1 FROM supplier_bonus s WHERE s.receipt_id = r.id)""";
+              AND NOT EXISTS (SELECT 1 FROM supplier_bonus s WHERE s.receipt_id = r.id)
+              AND NOT EXISTS (SELECT 1 FROM supplier_bonus_decline sd WHERE sd.receipt_id = r.id)""";
 
     private static LocalDate today() {
         return LocalDate.now(TASHKENT);
@@ -145,5 +161,73 @@ public class BonusBalances {
                 })
                 .list();
         return new BonusDetail(supplierId, supplier, running.toString(), List.copyOf(moves), pending);
+    }
+
+    /**
+     * Bonus balans yorligʻi (prototip Payables → Bonus balans): chegirmali barcha oʻtkazilgan kirimlar holati bilan (kutilmoqda /
+     * tasdiqlandi BNS / berilmadi) va YB × filial boʻyicha balanslar. Filial berilmasa — xodimning doirasi.
+     */
+    @Transactional(readOnly = true)
+    public BonusReceipts receipts(Actor actor, Long branchId) {
+        if (branchId != null && !actor.canAccessBranch(branchId)) {
+            throw MedixException.notFound("error.notFound");
+        }
+        Long scope = branchId != null ? branchId : actor.allBranches() ? null : actor.branchId();
+        LocalDate today = today();
+        if (scope == null && !actor.allBranches()) {
+            return new BonusReceipts(today, List.of(), List.of());
+        }
+        List<BonusReceiptRow> rows = jdbc.sql("""
+                SELECT r.id, r.number, r.receipt_date, r.branch_id, b.name AS branch, r.supplier_id, c.name AS supplier, r.debt_amount,
+                       r.discount_kind, r.discount_value, r.discount_date, sb.number AS bns_number, sb.amount AS bns_amount, sd.reason
+                FROM receipt r JOIN branch b ON b.id = r.branch_id JOIN counterparty c ON c.id = r.supplier_id
+                     LEFT JOIN supplier_bonus sb ON sb.receipt_id = r.id LEFT JOIN supplier_bonus_decline sd ON sd.receipt_id = r.id
+                WHERE r.status = 'POSTED' AND r.discount_kind IS NOT NULL AND (CAST(:b AS BIGINT) IS NULL OR r.branch_id = :b)
+                ORDER BY (sb.id IS NULL AND sd.id IS NULL) DESC, r.discount_date NULLS LAST, r.receipt_date DESC, r.id DESC
+                LIMIT 2000""")
+                .param("b", scope)
+                .query((rs, n) -> {
+                    BigDecimal base = rs.getBigDecimal("debt_amount") == null ? BigDecimal.ZERO : rs.getBigDecimal("debt_amount");
+                    boolean percent = DiscountKind.valueOf(rs.getString("discount_kind")) == DiscountKind.PERCENT;
+                    BigDecimal value = rs.getBigDecimal("discount_value");
+                    Money amount = rs.getBigDecimal("bns_amount") != null ? new Money(rs.getBigDecimal("bns_amount"))
+                            : percent ? new Money(base.multiply(value).movePointLeft(2)) : new Money(value);
+                    BonusState state = rs.getString("bns_number") != null ? BonusState.CONFIRMED
+                            : rs.getString("reason") != null ? BonusState.DECLINED : BonusState.PENDING;
+                    LocalDate due = rs.getDate("discount_date") == null ? null : rs.getDate("discount_date").toLocalDate();
+                    return new BonusReceiptRow(rs.getLong("id"), rs.getString("number"), rs.getDate("receipt_date").toLocalDate(), rs.getLong("branch_id"),
+                            rs.getString("branch"), rs.getLong("supplier_id"), rs.getString("supplier"), new Money(base).toString(), amount.toString(),
+                            percent ? value.stripTrailingZeros().toPlainString() : null, due,
+                            due == null ? null : (int) ChronoUnit.DAYS.between(today, due), state, rs.getString("bns_number"), rs.getString("reason"));
+                })
+                .list();
+        List<BonusBalanceRow> balances = jdbc.sql("""
+                WITH led AS (SELECT branch_id, supplier_id, sum(amount) AS balance, max(occurred_at) AS last_move
+                             FROM supplier_bonus_ledger WHERE (CAST(:b AS BIGINT) IS NULL OR branch_id = :b) GROUP BY branch_id, supplier_id),
+                     pen AS (SELECT r.branch_id, r.supplier_id, count(*) AS cnt,
+                                    sum(CASE r.discount_kind WHEN 'SUM' THEN r.discount_value ELSE round(r.debt_amount * r.discount_value / 100, 2) END) AS pending
+                             FROM receipt r
+                             WHERE r.status = 'POSTED' AND r.discount_kind IS NOT NULL AND (CAST(:b AS BIGINT) IS NULL OR r.branch_id = :b)
+                               AND NOT EXISTS (SELECT 1 FROM supplier_bonus s WHERE s.receipt_id = r.id)
+                               AND NOT EXISTS (SELECT 1 FROM supplier_bonus_decline sd WHERE sd.receipt_id = r.id)
+                             GROUP BY r.branch_id, r.supplier_id),
+                     k AS (SELECT branch_id, supplier_id FROM led UNION SELECT branch_id, supplier_id FROM pen)
+                SELECT k.branch_id, b.name AS branch, k.supplier_id, c.name AS supplier, coalesce(led.balance, 0) AS balance,
+                       coalesce(pen.pending, 0) AS pending, coalesce(pen.cnt, 0)::int AS cnt, led.last_move
+                FROM k JOIN branch b ON b.id = k.branch_id JOIN counterparty c ON c.id = k.supplier_id
+                     LEFT JOIN led ON led.branch_id = k.branch_id AND led.supplier_id = k.supplier_id
+                     LEFT JOIN pen ON pen.branch_id = k.branch_id AND pen.supplier_id = k.supplier_id
+                ORDER BY coalesce(led.balance, 0) DESC, coalesce(pen.pending, 0) DESC, c.name, b.name""")
+                .param("b", scope)
+                .query((rs, n) -> {
+                    Money balance = new Money(rs.getBigDecimal("balance"));
+                    Instant last = rs.getTimestamp("last_move") == null ? null : rs.getTimestamp("last_move").toInstant();
+                    Integer idleDays = idleDays(balance, last);
+                    return new BonusBalanceRow(rs.getLong("branch_id"), rs.getString("branch"), rs.getLong("supplier_id"), rs.getString("supplier"),
+                            balance.toString(), new Money(rs.getBigDecimal("pending")).toString(), rs.getInt("cnt"),
+                            idleDays != null && idleDays >= IDLE_DAYS);
+                })
+                .list();
+        return new BonusReceipts(today, rows, balances);
     }
 }
