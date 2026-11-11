@@ -90,4 +90,32 @@ test.describe("demo skrinshotlar", () => {
       await shot(page, name);
     }
   });
+
+  test("rollar bosh sahifasi", async ({ browser, baseURL }) => {
+    test.setTimeout(300_000);
+    mkdirSync(OUT, { recursive: true });
+    const roles: [string, string][] = [
+      ["director.1", "Rol-parol-2026"],
+      ["manager.1", "Rol-parol-2026"],
+      ["operator.1", "Operator-parol-2026"],
+      ["buyer.1", "Rol-parol-2026"],
+      ["accountant.1", "Rol-parol-2026"],
+      ["cashier.1", "Rol-parol-2026"],
+      ["keeper.1", "Rol-parol-2026"],
+      ["picker.1", "Rol-parol-2026"],
+      ["marker.1", "Rol-parol-2026"],
+      ["driver.1", "Rol-parol-2026"],
+    ];
+    for (const [login, password] of roles) {
+      const ctx = await browser.newContext({ baseURL, viewport: { width: 1440, height: 900 } });
+      const page = await ctx.newPage();
+      await page.goto("/login");
+      await page.getByLabel("Login", { exact: true }).fill(login);
+      await page.getByLabel("Parol", { exact: true }).fill(password);
+      await page.getByRole("button", { name: /kirish/i }).click();
+      await page.waitForURL((u) => !u.pathname.startsWith("/login"), { timeout: 15_000 }).catch(() => undefined);
+      await shot(page, `rol-${login.replace(".1", "")}`);
+      await ctx.close();
+    }
+  });
 });
