@@ -208,69 +208,10 @@ class StockOverviewController {
         Actor actor = actor();
         boolean showCost = showCost(auth);
         LocalDate today = today();
-        Map<String, Object> params = new HashMap<>();
-        params.put("today", Date.valueOf(today));
-        StringBuilder w = new StringBuilder(" WHERE s.qty > 0");
-        scope(actor, branchId, w, params);
-        in(w, params, "s.warehouse_id", "wh", warehouseId, false);
-        if (zoneType != null && !zoneType.isEmpty()) {
-            w.append(" AND z.type IN (:zt)");
-            params.put("zt", zoneType.stream().map(Enum::name).toList());
-        }
-        if (expiry != null && !expiry.isEmpty()) {
-            List<String> or = new ArrayList<>();
-            for (ExpiryBucket e : expiry) {
-                or.add(switch (e) {
-                    case EXPIRED -> "b.expiry_date < :today";
-                    case D0_30 -> "(b.expiry_date - :today) BETWEEN 0 AND 30";
-                    case D31_60 -> "(b.expiry_date - :today) BETWEEN 31 AND 60";
-                    case D61_90 -> "(b.expiry_date - :today) BETWEEN 61 AND 90";
-                    case D90_PLUS -> "(b.expiry_date - :today) > 90";
-                });
-            }
-            w.append(" AND (").append(String.join(" OR ", or)).append(")");
-        }
-        in(w, params, "rc.supplier_id", "sup", supplierId, true);
-        if (flag != null && !flag.isEmpty()) {
-            List<String> or = new ArrayList<>();
-            for (StockFlag f : flag) {
-                or.add(switch (f) {
-                    case MARKED -> "p.marked";
-                    case CONTROLLED -> "p.controlled";
-                    case PRESCRIPTION -> "p.prescription";
-                    case BONUS -> "b.bonus";
-                });
-            }
-            w.append(" AND (").append(String.join(" OR ", or)).append(")");
-        }
-        // Mahsulot filtrlari (qoldig'i yo'q mahsulotlarga ham)
-        StringBuilder pw = new StringBuilder();
-        in(pw, params, "p.manufacturer_id", "mf", manufacturerId, false);
-        in(pw, params, "p.category_id", "cat", categoryId, false);
-        in(pw, params, "p.country_id", "cn", countryId, true);
-        in(pw, params, "p.supply_employee_id", "se", supplyEmployeeId, true);
-        if (flag != null && !flag.isEmpty() && !flag.contains(StockFlag.BONUS)) {
-            List<String> or = new ArrayList<>();
-            flag.forEach(f -> or.add(switch (f) {
-                case MARKED -> "p.marked";
-                case CONTROLLED -> "p.controlled";
-                case PRESCRIPTION -> "p.prescription";
-                case BONUS -> "false";
-            }));
-            pw.append(" AND (").append(String.join(" OR ", or)).append(")");
-        }
-        String nq = SearchText.normalize(q);
-        if (!nq.isEmpty()) {
-            String[] parts = nq.split(" ");
-            pw.append(" AND (p.code = :exact OR EXISTS (SELECT 1 FROM bal x WHERE x.product_id = p.id AND (x.batch_number = :exact OR x.receipt_number = :exact))"
-                    + " OR (true");
-            for (int i = 0; i < parts.length && i < 8; i++) {
-                pw.append(" AND p.search_text LIKE :q").append(i).append(" ESCAPE '\\'");
-                params.put("q" + i, "%" + SearchText.likeEscape(parts[i]) + "%");
-            }
-            pw.append("))");
-            params.put("exact", q.strip());
-        }
+        Filter fl = filter(actor, today, branchId, warehouseId, zoneType, expiry, manufacturerId, categoryId, countryId, supplyEmployeeId, supplierId, flag, q);
+        Map<String, Object> params = fl.params();
+        StringBuilder w = fl.w();
+        StringBuilder pw = fl.pw();
         List<String> st = new ArrayList<>();
         boolean zero = stock != null && stock.contains(StockState.ZERO);
         if (stock == null || stock.isEmpty() || stock.contains(StockState.HAS)) {
@@ -332,6 +273,145 @@ class StockOverviewController {
                 .list();
         return new ProductStockPage(items, totals.total(), safePage, safeSize, totals.totalQty(), totals.availableQty(),
                 showCost ? new Money(totals.costSum()).toString() : null, new Money(totals.saleSum()).toString());
+    }
+
+    /** Prototip Stock «Partiya bo'yicha» ustunlari uchun saralash. Standart — yaroqlilik (FEFO). */
+    enum BatchSort { EXPIRY, NAME, CODE, WAREHOUSE, QTY, AVAILABLE, COST_SUM, SALE_SUM, RECEIPT_DATE }
+
+    record BatchStockRow(
+            long productId,
+            String productCode,
+            String productName,
+            @Schema(nullable = true) String manufacturer,
+            long branchId,
+            String branchCode,
+            long warehouseId,
+            String warehouse,
+            long zoneId,
+            String zone,
+            ZoneType zoneType,
+            boolean sellable,
+            long batchId,
+            String batchNumber,
+            @Schema(nullable = true) LocalDate producedOn,
+            LocalDate expiryDate,
+            @Schema(description = "Yaroqlilikka qolgan kunlar (manfiy — o'tgan)") long daysLeft,
+            int qty,
+            int reserved,
+            @Schema(description = "Sotuvga ochiq zonada, muddati o'tmagan: miqdor − band") int available,
+            @Schema(nullable = true, description = "Faqat special.cost ruxsati bilan") String cost,
+            @Schema(nullable = true, description = "Faqat special.cost ruxsati bilan") String costSum,
+            @Schema(description = "Bazaviy narx turida (partiya narxi, bo'lmasa mahsulot narxi), QQS bilan") String saleSum,
+            @Schema(nullable = true, description = "Kirim hujjati (partiya kirimdan bo'lsa)") Long receiptId,
+            @Schema(nullable = true) String receiptNumber,
+            @Schema(nullable = true) LocalDate receiptDate,
+            @Schema(nullable = true) String supplier,
+            boolean marked,
+            boolean controlled,
+            boolean prescription,
+            boolean bonus) {}
+
+    record BatchStockPage(
+            List<BatchStockRow> items,
+            long total,
+            int page,
+            int size,
+            @Schema(description = "Filtr bo'yicha jami (sahifadagi emas)") long totalQty,
+            long reservedQty,
+            long availableQty,
+            @Schema(nullable = true) String costSum,
+            String saleSum) {}
+
+    @GetMapping("/batches")
+    @PreAuthorize("hasAuthority('stock.view')")
+    @Transactional(readOnly = true)
+    @Operation(summary = "Qoldiqlar — partiya bo'yicha (zona × partiya)", description = "Filtrlar «mahsulot bo'yicha» bilan bir xil. "
+            + "stock=ALL_RESERVED — mavjudi 0, band > 0 qatorlar; faqat ZERO — bo'sh.")
+    BatchStockPage batches(
+            @RequestParam(required = false) Long branchId,
+            @RequestParam(required = false) List<Long> warehouseId,
+            @RequestParam(required = false) List<ZoneType> zoneType,
+            @RequestParam(required = false) List<ExpiryBucket> expiry,
+            @RequestParam(required = false) List<StockState> stock,
+            @RequestParam(required = false) List<Long> manufacturerId,
+            @RequestParam(required = false) List<Long> categoryId,
+            @Parameter(description = "0 — davlati belgilanmagan") @RequestParam(required = false) List<Long> countryId,
+            @Parameter(description = "0 — ta'minot mas'uli belgilanmagan") @RequestParam(required = false) List<Long> supplyEmployeeId,
+            @Parameter(description = "0 — yetkazib beruvchisiz") @RequestParam(required = false) List<Long> supplierId,
+            @RequestParam(required = false) List<StockFlag> flag,
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) BatchSort sort,
+            @RequestParam(defaultValue = "false") boolean desc,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "25") int size,
+            Authentication auth) {
+        boolean showCost = showCost(auth);
+        LocalDate today = today();
+        Filter fl = filter(actor(), today, branchId, warehouseId, zoneType, expiry, manufacturerId, categoryId, countryId, supplyEmployeeId,
+                supplierId, flag, q);
+        String avail = "(CASE WHEN bal.sellable AND NOT bal.expired THEN bal.qty - bal.res ELSE 0 END)";
+        StringBuilder sw = new StringBuilder();
+        if (stock != null && !stock.isEmpty() && !stock.contains(StockState.HAS)) {
+            sw.append(stock.contains(StockState.ALL_RESERVED) ? " AND " + avail + " = 0 AND bal.res > 0" : " AND false");
+        }
+        String from = " FROM bal JOIN product p ON p.id = bal.product_id JOIN zone z ON z.id = bal.zone_id"
+                + " JOIN warehouse w ON w.id = bal.warehouse_id JOIN branch br ON br.id = bal.branch_id"
+                + " LEFT JOIN manufacturer m ON m.id = p.manufacturer_id LEFT JOIN counterparty cp ON cp.id = bal.supplier_id"
+                + " WHERE true" + fl.pw() + sw;
+        String cte = cte(fl.w());
+        record Totals(long total, long totalQty, long reservedQty, long availableQty, BigDecimal costSum, BigDecimal saleSum) {}
+        Totals t = jdbc.sql(cte + "SELECT count(*) AS total, coalesce(sum(bal.qty), 0) AS total_qty, coalesce(sum(bal.res), 0) AS reserved_qty,"
+                        + " coalesce(sum(" + avail + "), 0) AS available_qty, coalesce(sum(bal.qty * bal.cost), 0) AS cost_sum,"
+                        + " coalesce(sum(bal.qty * bal.sale_price), 0) AS sale_sum" + from)
+                .params(fl.params())
+                .query(Totals.class)
+                .single();
+        int safePage = Math.max(page, 0);
+        int safeSize = Math.clamp(size, 1, 200);
+        List<BatchStockRow> items = jdbc.sql(cte + "SELECT p.id AS product_id, p.code, p.name, m.name AS manufacturer, br.id AS branch_id,"
+                        + " br.code AS branch_code, w.id AS warehouse_id, w.name AS warehouse, z.id AS zone_id, z.name AS zone, z.type AS zone_type,"
+                        + " z.sellable, bal.batch_id, bal.batch_number, bal.produced_on, bal.expiry_date, bal.qty, bal.res, " + avail + " AS available,"
+                        + " bal.cost, coalesce(bal.qty * bal.sale_price, 0) AS sale_sum, bal.receipt_id, bal.receipt_number, bal.receipt_date,"
+                        + " cp.name AS supplier, p.marked, p.controlled, p.prescription, bal.bonus"
+                        + from + " ORDER BY " + batchOrderBy(sort, desc) + ", bal.zone_id, bal.batch_id LIMIT :l OFFSET :o")
+                .params(fl.params())
+                .param("l", safeSize)
+                .param("o", (long) safePage * safeSize)
+                .query((rs, n) -> {
+                    LocalDate exp = rs.getDate("expiry_date").toLocalDate();
+                    Date made = rs.getDate("produced_on");
+                    Date rd = rs.getDate("receipt_date");
+                    BigDecimal cost = rs.getBigDecimal("cost");
+                    int qty = rs.getInt("qty");
+                    return new BatchStockRow(rs.getLong("product_id"), rs.getString("code"), rs.getString("name"), rs.getString("manufacturer"),
+                            rs.getLong("branch_id"), rs.getString("branch_code"), rs.getLong("warehouse_id"), rs.getString("warehouse"),
+                            rs.getLong("zone_id"), rs.getString("zone"), ZoneType.valueOf(rs.getString("zone_type")), rs.getBoolean("sellable"),
+                            rs.getLong("batch_id"), rs.getString("batch_number"), made == null ? null : made.toLocalDate(), exp,
+                            ChronoUnit.DAYS.between(today, exp), qty, rs.getInt("res"), rs.getInt("available"),
+                            showCost ? new Money(cost).toString() : null,
+                            showCost ? new Money(cost.multiply(BigDecimal.valueOf(qty))).toString() : null,
+                            new Money(rs.getBigDecimal("sale_sum")).toString(), rs.getObject("receipt_id", Long.class), rs.getString("receipt_number"),
+                            rd == null ? null : rd.toLocalDate(), rs.getString("supplier"), rs.getBoolean("marked"), rs.getBoolean("controlled"),
+                            rs.getBoolean("prescription"), rs.getBoolean("bonus"));
+                })
+                .list();
+        return new BatchStockPage(items, t.total(), safePage, safeSize, t.totalQty(), t.reservedQty(), t.availableQty(),
+                showCost ? new Money(t.costSum()).toString() : null, new Money(t.saleSum()).toString());
+    }
+
+    static String batchOrderBy(BatchSort sort, boolean desc) {
+        String d = desc ? " DESC NULLS LAST" : " NULLS LAST";
+        return switch (sort == null ? BatchSort.EXPIRY : sort) {
+            case EXPIRY -> "bal.expiry_date" + d + ", lower(p.name)";
+            case NAME -> "lower(p.name)" + (desc ? " DESC" : "") + ", bal.expiry_date";
+            case CODE -> "p.code" + (desc ? " DESC" : "") + ", bal.expiry_date";
+            case WAREHOUSE -> "lower(w.name)" + (desc ? " DESC" : "") + ", lower(z.name), lower(p.name)";
+            case QTY -> "bal.qty" + d + ", lower(p.name)";
+            case AVAILABLE -> "available" + d + ", lower(p.name)";
+            case COST_SUM -> "bal.qty * bal.cost" + d + ", lower(p.name)";
+            case SALE_SUM -> "bal.qty * bal.sale_price" + d + ", lower(p.name)";
+            case RECEIPT_DATE -> "bal.receipt_date" + d + ", lower(p.name)";
+        };
     }
 
     @GetMapping("/summary")
@@ -547,6 +627,78 @@ class StockOverviewController {
         return out;
     }
 
+    /** Partiya filtrlari ({@code w} — {@code bal} CTE uchun) va mahsulot filtrlari ({@code pw} — {@code p} ustida). */
+    record Filter(StringBuilder w, StringBuilder pw, Map<String, Object> params) {}
+
+    private static Filter filter(Actor actor, LocalDate today, Long branchId, List<Long> warehouseId, List<ZoneType> zoneType, List<ExpiryBucket> expiry,
+            List<Long> manufacturerId, List<Long> categoryId, List<Long> countryId, List<Long> supplyEmployeeId, List<Long> supplierId,
+            List<StockFlag> flag, String q) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("today", Date.valueOf(today));
+        StringBuilder w = new StringBuilder(" WHERE s.qty > 0");
+        scope(actor, branchId, w, params);
+        in(w, params, "s.warehouse_id", "wh", warehouseId, false);
+        if (zoneType != null && !zoneType.isEmpty()) {
+            w.append(" AND z.type IN (:zt)");
+            params.put("zt", zoneType.stream().map(Enum::name).toList());
+        }
+        if (expiry != null && !expiry.isEmpty()) {
+            List<String> or = new ArrayList<>();
+            for (ExpiryBucket e : expiry) {
+                or.add(switch (e) {
+                    case EXPIRED -> "b.expiry_date < :today";
+                    case D0_30 -> "(b.expiry_date - :today) BETWEEN 0 AND 30";
+                    case D31_60 -> "(b.expiry_date - :today) BETWEEN 31 AND 60";
+                    case D61_90 -> "(b.expiry_date - :today) BETWEEN 61 AND 90";
+                    case D90_PLUS -> "(b.expiry_date - :today) > 90";
+                });
+            }
+            w.append(" AND (").append(String.join(" OR ", or)).append(")");
+        }
+        in(w, params, "rc.supplier_id", "sup", supplierId, true);
+        if (flag != null && !flag.isEmpty()) {
+            List<String> or = new ArrayList<>();
+            for (StockFlag f : flag) {
+                or.add(switch (f) {
+                    case MARKED -> "p.marked";
+                    case CONTROLLED -> "p.controlled";
+                    case PRESCRIPTION -> "p.prescription";
+                    case BONUS -> "b.bonus";
+                });
+            }
+            w.append(" AND (").append(String.join(" OR ", or)).append(")");
+        }
+        // Mahsulot filtrlari (qoldig'i yo'q mahsulotlarga ham)
+        StringBuilder pw = new StringBuilder();
+        in(pw, params, "p.manufacturer_id", "mf", manufacturerId, false);
+        in(pw, params, "p.category_id", "cat", categoryId, false);
+        in(pw, params, "p.country_id", "cn", countryId, true);
+        in(pw, params, "p.supply_employee_id", "se", supplyEmployeeId, true);
+        if (flag != null && !flag.isEmpty() && !flag.contains(StockFlag.BONUS)) {
+            List<String> or = new ArrayList<>();
+            flag.forEach(f -> or.add(switch (f) {
+                case MARKED -> "p.marked";
+                case CONTROLLED -> "p.controlled";
+                case PRESCRIPTION -> "p.prescription";
+                case BONUS -> "false";
+            }));
+            pw.append(" AND (").append(String.join(" OR ", or)).append(")");
+        }
+        String nq = SearchText.normalize(q);
+        if (!nq.isEmpty()) {
+            String[] parts = nq.split(" ");
+            pw.append(" AND (p.code = :exact OR EXISTS (SELECT 1 FROM bal x WHERE x.product_id = p.id AND (x.batch_number = :exact OR x.receipt_number = :exact))"
+                    + " OR (true");
+            for (int i = 0; i < parts.length && i < 8; i++) {
+                pw.append(" AND p.search_text LIKE :q").append(i).append(" ESCAPE '\\'");
+                params.put("q" + i, "%" + SearchText.likeEscape(parts[i]) + "%");
+            }
+            pw.append("))");
+            params.put("exact", q.strip());
+        }
+        return new Filter(w, pw, params);
+    }
+
     private List<Facet> facets(String cte, String idExpr, String nameExpr, String joins, Map<String, Object> params) {
         return jdbc.sql(cte + "SELECT coalesce(" + idExpr + ", 0) AS id, " + nameExpr + " AS name, count(*) AS count FROM bal " + joins
                         + " GROUP BY 1, 2 ORDER BY count(*) DESC, 2 NULLS LAST LIMIT 500")
@@ -564,7 +716,7 @@ class StockOverviewController {
                 WITH bal AS (
                     SELECT s.product_id, s.batch_id, s.zone_id, s.warehouse_id, s.branch_id, s.qty, z.type AS zone_type, z.sellable,
                            b.number AS batch_number, b.expiry_date, b.expiry_date < :today AS expired, b.cost, b.bonus,
-                           rc.supplier_id, rc.number AS receipt_number, rc.receipt_date,
+                           rc.supplier_id, rc.id AS receipt_id, rc.number AS receipt_number, rc.receipt_date, b.produced_on,
                            coalesce((SELECT sum(r.qty) FROM stock_reservation r
                                      WHERE r.zone_id = s.zone_id AND r.batch_id = s.batch_id AND r.status = 'ACTIVE'), 0) AS res,
                            coalesce((SELECT bp.amount FROM batch_price bp
@@ -576,7 +728,7 @@ class StockOverviewController {
                                        AND pr.price_type_id = (SELECT id FROM price_type WHERE base)
                                      ORDER BY pr.effective_from DESC, pr.id DESC LIMIT 1)) AS sale_price
                     FROM stock_balance s JOIN batch b ON b.id = s.batch_id JOIN zone z ON z.id = s.zone_id JOIN product p ON p.id = s.product_id
-                    LEFT JOIN LATERAL (SELECT r.supplier_id, r.number, r.receipt_date FROM receipt_line l JOIN receipt r ON r.id = l.receipt_id
+                    LEFT JOIN LATERAL (SELECT r.id, r.supplier_id, r.number, r.receipt_date FROM receipt_line l JOIN receipt r ON r.id = l.receipt_id
                                        WHERE b.source_type = 'KR' AND l.id = b.source_id) rc ON true
                 """ + where + ")\n";
     }
