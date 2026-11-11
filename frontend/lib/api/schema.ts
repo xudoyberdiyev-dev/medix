@@ -4730,6 +4730,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/receipts/{id}/bonus/decline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Bonus berilmadi
+         * @description YB chegirmani bermadi — sabab bilan; balansga ta'sir yo'q. Faqat o'tkazilgan, tasdiqlanmagan kirim, bir marta.
+         */
+        post: operations["declineBonus"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/receipts/{id}/cancel": {
         parameters: {
             query?: never;
@@ -5511,6 +5531,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/stock/batches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Qoldiqlar — partiya bo'yicha (zona × partiya)
+         * @description Filtrlar «mahsulot bo'yicha» bilan bir xil. stock=ALL_RESERVED — mavjudi 0, band > 0 qatorlar; faqat ZERO — bo'sh.
+         */
+        get: operations["stockBatches"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/stock/expiry-groups": {
         parameters: {
             query?: never;
@@ -5657,6 +5697,23 @@ export interface paths {
         };
         /** Filialdagi YB bonus balanslari va kutilayotgan bonuslar */
         get: operations["list_27"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/supplier-bonuses/receipts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Chegirmali kirimlar holati (kutilmoqda / tasdiqlandi / berilmadi) va YB × filial balanslari */
+        get: operations["receipts"];
         put?: never;
         post?: never;
         delete?: never;
@@ -7394,8 +7451,100 @@ export interface components {
             /** Format: int32 */
             qty: number;
         };
+        BatchStockPage: {
+            /** Format: int64 */
+            availableQty: number;
+            costSum?: string;
+            items: components["schemas"]["BatchStockRow"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int64 */
+            reservedQty: number;
+            saleSum: string;
+            /** Format: int32 */
+            size: number;
+            /** Format: int64 */
+            total: number;
+            /**
+             * Format: int64
+             * @description Filtr bo'yicha jami (sahifadagi emas)
+             */
+            totalQty: number;
+        };
+        BatchStockRow: {
+            /**
+             * Format: int32
+             * @description Sotuvga ochiq zonada, muddati o'tmagan: miqdor − band
+             */
+            available: number;
+            /** Format: int64 */
+            batchId: number;
+            batchNumber: string;
+            bonus: boolean;
+            branchCode: string;
+            /** Format: int64 */
+            branchId: number;
+            controlled: boolean;
+            /** @description Faqat special.cost ruxsati bilan */
+            cost?: string;
+            /** @description Faqat special.cost ruxsati bilan */
+            costSum?: string;
+            /**
+             * Format: int64
+             * @description Yaroqlilikka qolgan kunlar (manfiy — o'tgan)
+             */
+            daysLeft: number;
+            /** Format: date */
+            expiryDate: string;
+            manufacturer?: string;
+            marked: boolean;
+            prescription: boolean;
+            /** Format: date */
+            producedOn?: string;
+            productCode: string;
+            /** Format: int64 */
+            productId: number;
+            productName: string;
+            /** Format: int32 */
+            qty: number;
+            /** Format: date */
+            receiptDate?: string;
+            /**
+             * Format: int64
+             * @description Kirim hujjati (partiya kirimdan bo'lsa)
+             */
+            receiptId?: number;
+            receiptNumber?: string;
+            /** Format: int32 */
+            reserved: number;
+            /** @description Bazaviy narx turida (partiya narxi, bo'lmasa mahsulot narxi), QQS bilan */
+            saleSum: string;
+            sellable: boolean;
+            supplier?: string;
+            warehouse: string;
+            /** Format: int64 */
+            warehouseId: number;
+            zone: string;
+            /** Format: int64 */
+            zoneId: number;
+            /** @enum {string} */
+            zoneType: "RECEIVING" | "MAIN" | "QUARANTINE" | "SHIPPING" | "COLD" | "SAFE";
+        };
         BlockRequest: {
             reason: string;
+        };
+        BonusBalanceRow: {
+            balance: string;
+            branch: string;
+            /** Format: int64 */
+            branchId: number;
+            idle: boolean;
+            pending: string;
+            /** Format: int32 */
+            pendingCount: number;
+            supplier: string;
+            /** Format: int64 */
+            supplierId: number;
         };
         BonusDetail: {
             balance: string;
@@ -7432,6 +7581,44 @@ export interface components {
             docType: string;
             employee?: string;
             note?: string;
+        };
+        BonusReceiptRow: {
+            amount: string;
+            bnsNumber?: string;
+            /**
+             * Format: date
+             * @description Bonus olish sanasi
+             */
+            bonusDate?: string;
+            branch: string;
+            /** Format: int64 */
+            branchId: number;
+            /**
+             * Format: int32
+             * @description Olish sanasigacha kunlar (manfiy — kechikkan)
+             */
+            days?: number;
+            declineReason?: string;
+            /** @description Foizli chegirma — foiz */
+            percent?: string;
+            /** Format: date */
+            receiptDate: string;
+            /** Format: int64 */
+            receiptId: number;
+            receiptNumber: string;
+            /** @description Kirim summasi (chegirma bazasi) */
+            receiptSum: string;
+            /** @enum {string} */
+            state: "PENDING" | "CONFIRMED" | "DECLINED";
+            supplier: string;
+            /** Format: int64 */
+            supplierId: number;
+        };
+        BonusReceipts: {
+            balances: components["schemas"]["BonusBalanceRow"][];
+            rows: components["schemas"]["BonusReceiptRow"][];
+            /** Format: date */
+            today: string;
         };
         BonusRow: {
             balance: string;
@@ -11626,6 +11813,8 @@ export interface components {
             bonusBalance?: string;
             /** Format: date-time */
             bonusConfirmedAt?: string;
+            /** @description «Bonus berilmadi» sababi (bonus yopilgan) */
+            bonusDeclineReason?: string;
             /** @description Tasdiqlangan bonus (BNS) raqami */
             bonusNumber?: string;
             /** Format: int64 */
@@ -20827,6 +21016,32 @@ export interface operations {
             };
         };
     };
+    declineBonus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReceiptCancelRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReceiptDetail"];
+                };
+            };
+        };
+    };
     cancel_3: {
         parameters: {
             query?: never;
@@ -21973,6 +22188,48 @@ export interface operations {
             };
         };
     };
+    stockBatches: {
+        parameters: {
+            query?: {
+                branchId?: number;
+                warehouseId?: number[];
+                /** @description Aniq zona (ombor daraxtidan tanlangan) */
+                zoneId?: number[];
+                zoneType?: ("RECEIVING" | "MAIN" | "QUARANTINE" | "SHIPPING" | "COLD" | "SAFE")[];
+                expiry?: ("EXPIRED" | "D0_30" | "D31_60" | "D61_90" | "D90_PLUS")[];
+                stock?: ("HAS" | "ZERO" | "ALL_RESERVED")[];
+                manufacturerId?: number[];
+                categoryId?: number[];
+                /** @description 0 — davlati belgilanmagan */
+                countryId?: number[];
+                /** @description 0 — ta'minot mas'uli belgilanmagan */
+                supplyEmployeeId?: number[];
+                /** @description 0 — yetkazib beruvchisiz */
+                supplierId?: number[];
+                flag?: ("MARKED" | "CONTROLLED" | "PRESCRIPTION" | "BONUS")[];
+                q?: string;
+                sort?: "EXPIRY" | "NAME" | "CODE" | "WAREHOUSE" | "QTY" | "AVAILABLE" | "COST_SUM" | "SALE_SUM" | "RECEIPT_DATE";
+                desc?: boolean;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BatchStockPage"];
+                };
+            };
+        };
+    };
     expiryGroups: {
         parameters: {
             query?: {
@@ -22052,6 +22309,8 @@ export interface operations {
             query?: {
                 branchId?: number;
                 warehouseId?: number[];
+                /** @description Aniq zona (ombor daraxtidan tanlangan) */
+                zoneId?: number[];
                 zoneType?: ("RECEIVING" | "MAIN" | "QUARANTINE" | "SHIPPING" | "COLD" | "SAFE")[];
                 expiry?: ("EXPIRED" | "D0_30" | "D31_60" | "D61_90" | "D90_PLUS")[];
                 stock?: ("HAS" | "ZERO" | "ALL_RESERVED")[];
@@ -22172,6 +22431,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BonusSummary"];
+                };
+            };
+        };
+    };
+    receipts: {
+        parameters: {
+            query?: {
+                branchId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BonusReceipts"];
                 };
             };
         };

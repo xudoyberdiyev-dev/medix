@@ -217,6 +217,7 @@ final class ReceiptModels {
             @Schema(nullable = true, description = "Tasdiqlangan bonus (BNS) raqami") String bonusNumber,
             @Schema(nullable = true) String bonusAmount,
             @Schema(nullable = true) Instant bonusConfirmedAt,
+            @Schema(nullable = true, description = "«Bonus berilmadi» sababi (bonus yopilgan)") String bonusDeclineReason,
             long totalQty,
             long totalBonusQty,
             @Schema(description = "Qabulda farq bor") boolean hasDiff,

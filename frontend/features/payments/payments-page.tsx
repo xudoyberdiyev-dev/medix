@@ -106,7 +106,7 @@ function KpiTile(props: {
         </span>
         {props.label}
       </span>
-      <span className="tabular max-w-full truncate text-kpi">{props.value}</span>
+      <span className="tabular max-w-full truncate text-stat">{props.value}</span>
       <span className="max-w-full truncate text-caption text-text-secondary">{props.note}</span>
     </button>
   );
@@ -272,7 +272,7 @@ export function PaymentsPage() {
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <h1 className="flex items-baseline gap-2 text-page-title">
           {t("title")}
-          {list.data ? <span className="tabular text-text-secondary">{formatQuantity(all.length)}</span> : null}
+          {list.data ? <span className="tabular text-body text-text-secondary">{formatQuantity(all.length)}</span> : null}
         </h1>
         <div className="flex items-center gap-2">
           {newButton("YT", false)}

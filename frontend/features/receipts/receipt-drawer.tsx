@@ -60,13 +60,14 @@ const TARGET_ZONES = new Set(["MAIN", "COLD", "SAFE", "QUARANTINE"]);
  * Kirim hujjati toʻliq SAHIFA sifatida (prototip `Receipts` hujjat koʻrinishi): `/receipts/new`, `/receipts/[id]`.
  * Yopish — roʻyxatga; yangi kirim saqlanganda manzil `/receipts/<id>` ga almashadi.
  */
-export function ReceiptDocumentPage({ id, copyFrom }: { id: number | null; copyFrom?: number }) {
+export function ReceiptDocumentPage({ id, copyFrom, bonusFor }: { id: number | null; copyFrom?: number; bonusFor?: BonusPreset }) {
   const router = useRouter();
   return (
     <ReceiptDrawer
       frame="page"
       id={id}
       copyFrom={copyFrom}
+      bonusFor={bonusFor}
       onClose={() => router.push("/receipts")}
       onCreated={(newId) => router.replace(`/receipts/${newId}`)}
     />
@@ -80,6 +81,8 @@ export function ReceiptDrawer(props: {
   frame?: "page";
   /** Prototip `Receipts` → «Nusxa olish»: yangi qoralama shu hujjatdan (yetkazib beruvchi, ombor, toʻlov, izoh, qatorlar). */
   copyFrom?: number;
+  /** Bonus balans → «Bonus hisobidan kirim»: yangi qoralama shu YB uchun, «Bonus hisobidan» belgisi bilan. */
+  bonusFor?: BonusPreset;
 }) {
   const t = useTranslations("receipts.drawer");
   const tr = useTranslations("receipts");
@@ -154,15 +157,23 @@ const emptyAdd = {
 };
 const isInt = (s: string) => /^\d+$/.test(s.trim());
 
+/** Yangi kirimni YB bonus balansidan boshlash (prototip Payables → «Bonus hisobidan kirim»). */
+export interface BonusPreset {
+  supplierId: number;
+  supplier: string;
+}
+
 function Editor({
   doc,
   source,
+  bonusFor,
   onClose,
   onCreated,
   frame,
 }: {
   doc: ReceiptDetail | null;
   source?: ReceiptDetail;
+  bonusFor?: BonusPreset;
   onClose: () => void;
   onCreated: (id: number) => void;
   frame?: "page";
@@ -188,8 +199,8 @@ function Editor({
 
   const init = doc ?? source ?? null;
   const [warehouseId, setWarehouseId] = useState<string | null>(init ? String(init.warehouseId) : null);
-  const [supplier, setSupplier] = useState<string | null>(init ? String(init.supplierId) : null);
-  const [supplierLabel, setSupplierLabel] = useState(init?.supplier ?? "");
+  const [supplier, setSupplier] = useState<string | null>(init ? String(init.supplierId) : bonusFor ? String(bonusFor.supplierId) : null);
+  const [supplierLabel, setSupplierLabel] = useState(init?.supplier ?? bonusFor?.supplier ?? "");
   const [date, setDate] = useState(formatIsoDate(doc?.receiptDate ?? todayTashkent()));
   const [invoice, setInvoice] = useState(doc?.invoiceNumber ?? "");
   const [invoiceDate, setInvoiceDate] = useState(formatIsoDate(doc?.invoiceDate));
@@ -197,7 +208,7 @@ function Editor({
   const [due, setDue] = useState(doc?.dueManual ? formatIsoDate(doc.dueDate) : "");
   const [owner, setOwner] = useState<string | null>(init?.ownerId ? String(init.ownerId) : null);
   const [prepaid, setPrepaid] = useState(doc?.prepaid ?? false);
-  const [fromBonus, setFromBonus] = useState(doc?.fromBonus ?? false);
+  const [fromBonus, setFromBonus] = useState(doc?.fromBonus ?? (!init && bonusFor != null));
   const confirmBonus = useConfirmBonus();
   const [discountKind, setDiscountKind] = useState<string | null>(doc?.discountKind ?? null);
   const [discountValue, setDiscountValue] = useState(doc?.discountValue ?? "");
@@ -377,7 +388,7 @@ function Editor({
           {t("returnToSupplier")}
         </Button>
       ) : null}
-      {doc?.status === "POSTED" && doc.discountKind && !doc.bonusNumber && can(me.data, BONUS_CONFIRM) ? (
+      {doc?.status === "POSTED" && doc.discountKind && !doc.bonusNumber && !doc.bonusDeclineReason && can(me.data, BONUS_CONFIRM) ? (
         <Button
           icon={BadgePercent}
           loading={confirmBonus.isPending}
@@ -781,7 +792,13 @@ function ReceiptCards({ doc }: { doc: ReceiptDetail }) {
     {
       label: t("bonus"),
       value: bonus ? formatMoney(bonus) : "—",
-      sub: doc.bonusNumber ?? (doc.discountDate ? day(doc.discountDate) : undefined),
+      sub:
+        doc.bonusNumber ??
+        (doc.bonusDeclineReason
+          ? t("bonusDeclined", { reason: doc.bonusDeclineReason })
+          : doc.discountDate
+            ? day(doc.discountDate)
+            : undefined),
     },
     {
       label: t("bonusGoods"),
@@ -859,6 +876,7 @@ const HISTORY_ACTIONS = {
   "receipt.accept": "accept",
   "receipt.post": "post",
   "receipt.bonusConfirm": "bonusConfirm",
+  "receipt.bonusDecline": "bonusDecline",
   "receipt.cancel": "cancel",
 } as const;
 const historyKey = (a: string) => (a in HISTORY_ACTIONS ? HISTORY_ACTIONS[a as keyof typeof HISTORY_ACTIONS] : null);

@@ -726,6 +726,7 @@ function CodesJournal({ today, mine }: { today: boolean; mine: boolean }) {
               setPage(1);
             }}
             placeholder={t("marking.searchPlaceholder")}
+            className="[&>label]:sr-only"
           />
         </div>
         {can(me.data, "marking.export") ? (

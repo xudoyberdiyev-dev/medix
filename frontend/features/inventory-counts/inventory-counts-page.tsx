@@ -287,7 +287,7 @@ function Kpi(props: {
         </span>
         {props.label}
       </span>
-      <span className="text-kpi tabular-nums">{props.value}</span>
+      <span className="text-stat tabular-nums">{props.value}</span>
       <span className="text-caption text-text-secondary">{props.note}</span>
     </button>
   );

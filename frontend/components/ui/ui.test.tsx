@@ -11,7 +11,7 @@ import { Checkbox } from "./selection-controls";
 import { Table, type TableColumn } from "./table";
 import { Tabs } from "./tabs";
 import { pageItems, rangeLabel } from "./pagination";
-import { TextField, parseAmount } from "./text-field";
+import { TextField, isSlashShortcut, parseAmount } from "./text-field";
 import { DEFAULT_TOAST_DURATION, Toaster, toast, toastStore } from "./toast";
 import { initials } from "./avatar";
 import { NoResultsState } from "./system-states";
@@ -82,6 +82,26 @@ describe("TextField", () => {
     expect(screen.getByLabelText("Parol")).toHaveAttribute("type", "password");
     await userEvent.click(screen.getByRole("button", { name: "Parolni koʻrsatish" }));
     expect(screen.getByLabelText("Parol")).toHaveAttribute("type", "text");
+  });
+
+  it("«/» qidiruvga oʻtadi, lekin yozilayotgan maydonda emas", () => {
+    const input = document.createElement("input");
+    const div = document.createElement("div");
+    expect(isSlashShortcut({ key: "/", ctrlKey: false, metaKey: false, altKey: false, target: div })).toBe(true);
+    expect(isSlashShortcut({ key: "/", ctrlKey: false, metaKey: false, altKey: false, target: input })).toBe(false);
+    expect(isSlashShortcut({ key: "/", ctrlKey: true, metaKey: false, altKey: false, target: div })).toBe(false);
+    expect(isSlashShortcut({ key: "k", ctrlKey: false, metaKey: false, altKey: false, target: div })).toBe(false);
+  });
+
+  it("boʻsh qidiruvda «/» belgisi koʻrinadi, matn kiritilganda yoʻqoladi", () => {
+    const { container, rerender } = render(<TextField label="Qidiruv" variant="search" value="" onChange={() => undefined} />);
+    expect(container.querySelector("kbd")).toHaveTextContent("/");
+    expect(screen.getByRole("searchbox")).toHaveAttribute("data-slash-focus");
+    rerender(<TextField label="Qidiruv" variant="search" value="abc" onChange={() => undefined} />);
+    expect(container.querySelector("kbd")).toBeNull();
+    rerender(<TextField label="Qidiruv" variant="search" slashFocus={false} value="" onChange={() => undefined} />);
+    expect(container.querySelector("kbd")).toBeNull();
+    expect(screen.getByRole("searchbox")).not.toHaveAttribute("data-slash-focus");
   });
 });
 

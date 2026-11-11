@@ -367,7 +367,8 @@ class DirectorHome {
                 SELECT count(*) FROM receipt r
                 WHERE r.status = 'POSTED' AND r.discount_kind IS NOT NULL AND r.discount_date <= :d
                   AND (CAST(:b AS BIGINT) IS NULL OR r.branch_id = :b)
-                  AND NOT EXISTS (SELECT 1 FROM supplier_bonus sb WHERE sb.receipt_id = r.id)""")
+                  AND NOT EXISTS (SELECT 1 FROM supplier_bonus sb WHERE sb.receipt_id = r.id)
+                  AND NOT EXISTS (SELECT 1 FROM supplier_bonus_decline sd WHERE sd.receipt_id = r.id)""")
                 .param("d", Date.valueOf(today)).param("b", branchId).query(Integer.class).single();
         // Karantindan sotuvga ochiq zonaga ko'chirish — tasdiq kutmoqda (ZK, transfer.quar)
         int zonePending = jdbc.sql("""

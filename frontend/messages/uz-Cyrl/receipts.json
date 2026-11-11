@@ -287,7 +287,8 @@
     "pcs": "{count} дона",
     "prepaid": "100% олдиндан",
     "fromBonus": "Бонус балансдан",
-    "dueManual": "Қўлда ўзгартирилган"
+    "dueManual": "Қўлда ўзгартирилган",
+    "bonusDeclined": "Берилмади: {reason}"
   },
   "payment": {
     "title": "Тўлов",
@@ -304,6 +305,7 @@
       "accept": "Қабул қилинди",
       "post": "Ўтказилди",
       "bonusConfirm": "Бонус тасдиқланди",
+      "bonusDecline": "Бонус берилмади",
       "cancel": "Бекор қилинди"
     }
   },

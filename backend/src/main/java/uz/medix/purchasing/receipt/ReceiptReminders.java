@@ -93,6 +93,7 @@ public class ReceiptReminders {
                 FROM receipt r JOIN counterparty c ON c.id = r.supplier_id
                 WHERE r.status = 'POSTED' AND r.discount_kind IS NOT NULL AND coalesce(r.discount_date, r.receipt_date) <= :today
                   AND NOT EXISTS (SELECT 1 FROM supplier_bonus b WHERE b.receipt_id = r.id)
+                  AND NOT EXISTS (SELECT 1 FROM supplier_bonus_decline sd WHERE sd.receipt_id = r.id)
                 ORDER BY r.id""")
                 .param("today", Date.valueOf(today))
                 .query(BonusDue.class)

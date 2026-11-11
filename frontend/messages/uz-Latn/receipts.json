@@ -287,7 +287,8 @@
     "pcs": "{count} dona",
     "prepaid": "100% oldindan",
     "fromBonus": "Bonus balansdan",
-    "dueManual": "Qoʻlda oʻzgartirilgan"
+    "dueManual": "Qoʻlda oʻzgartirilgan",
+    "bonusDeclined": "Berilmadi: {reason}"
   },
   "payment": {
     "title": "Toʻlov",
@@ -304,6 +305,7 @@
       "accept": "Qabul qilindi",
       "post": "Oʻtkazildi",
       "bonusConfirm": "Bonus tasdiqlandi",
+      "bonusDecline": "Bonus berilmadi",
       "cancel": "Bekor qilindi"
     }
   },

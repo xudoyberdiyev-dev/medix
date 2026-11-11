@@ -198,7 +198,7 @@ function KpiCard(props: {
         </span>
         {props.label}
       </span>
-      <span className={cn("max-w-full truncate text-kpi tabular-nums", props.valueClass)}>{props.value}</span>
+      <span className={cn("max-w-full truncate text-stat tabular-nums", props.valueClass)}>{props.value}</span>
       <span className="max-w-full truncate text-caption text-text-secondary">{props.note}</span>
     </button>
   );

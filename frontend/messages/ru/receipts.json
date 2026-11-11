@@ -287,7 +287,8 @@
     "pcs": "{count} шт.",
     "prepaid": "100% предоплата",
     "fromBonus": "С бонусного баланса",
-    "dueManual": "Изменён вручную"
+    "dueManual": "Изменён вручную",
+    "bonusDeclined": "Не предоставлен: {reason}"
   },
   "payment": {
     "title": "Оплата",
@@ -304,6 +305,7 @@
       "accept": "Принят",
       "post": "Проведён",
       "bonusConfirm": "Бонус подтверждён",
+      "bonusDecline": "Бонус не предоставлен",
       "cancel": "Отменён"
     }
   },

@@ -50,6 +50,11 @@
   --text-kpi: 28px;
   --text-kpi--line-height: 36px;
   --text-kpi--font-weight: 600;
+  /* Roʻyxat sahifalaridagi summa kartalari (prototip Payments/Payables/Transfers…: clamp(18px,1.6vw,24px)/30px) */
+  --text-stat: clamp(18px, 1.6vw, 24px);
+  --text-stat--line-height: 30px;
+  --text-stat--font-weight: 600;
+  --text-stat--letter-spacing: -0.02em;
   --text-body: 14px;
   --text-body--line-height: 20px;
   --text-table: 13px;

@@ -19,7 +19,7 @@ export function HubTabs({ hub, className }: { hub: HubKey; className?: string })
   return (
     <nav
       aria-label={t(hub)}
-      className={cn("mb-4 flex gap-1 scrollbar-none overflow-x-auto border-b border-border print:hidden", className)}
+      className={cn("flex gap-1 scrollbar-none overflow-x-auto border-b border-border print:hidden", className ?? "mb-4")}
     >
       {tabs.map((tab) => {
         const active = pathname === tab.href || pathname.startsWith(`${tab.href}/`);

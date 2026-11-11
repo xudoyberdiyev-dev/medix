@@ -11010,6 +11010,45 @@
         "tags" : [ "receipts" ]
       }
     },
+    "/api/receipts/{id}/bonus/decline" : {
+      "post" : {
+        "description" : "YB chegirmani bermadi — sabab bilan; balansga ta'sir yo'q. Faqat o'tkazilgan, tasdiqlanmagan kirim, bir marta.",
+        "operationId" : "declineBonus",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ReceiptCancelRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ReceiptDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Bonus berilmadi",
+        "tags" : [ "receipts" ]
+      }
+    },
     "/api/receipts/{id}/cancel" : {
       "post" : {
         "description" : "O'tkazilgan kirim — faqat receipt.cancelPosted va tovar ishlatilmagan bo'lsa.",
@@ -12854,6 +12893,201 @@
         "tags" : [ "stock" ]
       }
     },
+    "/api/stock/batches" : {
+      "get" : {
+        "description" : "Filtrlar «mahsulot bo'yicha» bilan bir xil. stock=ALL_RESERVED — mavjudi 0, band > 0 qatorlar; faqat ZERO — bo'sh.",
+        "operationId" : "stockBatches",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "warehouseId",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          }
+        }, {
+          "description" : "Aniq zona (ombor daraxtidan tanlangan)",
+          "in" : "query",
+          "name" : "zoneId",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          }
+        }, {
+          "in" : "query",
+          "name" : "zoneType",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "enum" : [ "RECEIVING", "MAIN", "QUARANTINE", "SHIPPING", "COLD", "SAFE" ]
+            }
+          }
+        }, {
+          "in" : "query",
+          "name" : "expiry",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "enum" : [ "EXPIRED", "D0_30", "D31_60", "D61_90", "D90_PLUS" ]
+            }
+          }
+        }, {
+          "in" : "query",
+          "name" : "stock",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "enum" : [ "HAS", "ZERO", "ALL_RESERVED" ]
+            }
+          }
+        }, {
+          "in" : "query",
+          "name" : "manufacturerId",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          }
+        }, {
+          "in" : "query",
+          "name" : "categoryId",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          }
+        }, {
+          "description" : "0 — davlati belgilanmagan",
+          "in" : "query",
+          "name" : "countryId",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          }
+        }, {
+          "description" : "0 — ta'minot mas'uli belgilanmagan",
+          "in" : "query",
+          "name" : "supplyEmployeeId",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          }
+        }, {
+          "description" : "0 — yetkazib beruvchisiz",
+          "in" : "query",
+          "name" : "supplierId",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          }
+        }, {
+          "in" : "query",
+          "name" : "flag",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "enum" : [ "MARKED", "CONTROLLED", "PRESCRIPTION", "BONUS" ]
+            }
+          }
+        }, {
+          "in" : "query",
+          "name" : "q",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "sort",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "EXPIRY", "NAME", "CODE", "WAREHOUSE", "QTY", "AVAILABLE", "COST_SUM", "SALE_SUM", "RECEIPT_DATE" ]
+          }
+        }, {
+          "in" : "query",
+          "name" : "desc",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
+          }
+        }, {
+          "in" : "query",
+          "name" : "page",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 0
+          }
+        }, {
+          "in" : "query",
+          "name" : "size",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 25
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BatchStockPage"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Qoldiqlar — partiya bo'yicha (zona × partiya)",
+        "tags" : [ "stock" ]
+      }
+    },
     "/api/stock/expiry-groups" : {
       "get" : {
         "description" : "Prototip «ExpiryControl» kartalari: partiya × zona soni, miqdor, tannarxda summa.",
@@ -13015,6 +13249,18 @@
         }, {
           "in" : "query",
           "name" : "warehouseId",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          }
+        }, {
+          "description" : "Aniq zona (ombor daraxtidan tanlangan)",
+          "in" : "query",
+          "name" : "zoneId",
           "required" : false,
           "schema" : {
             "type" : "array",
@@ -13308,6 +13554,34 @@
           }
         },
         "summary" : "Filialdagi YB bonus balanslari va kutilayotgan bonuslar",
+        "tags" : [ "supplier-bonuses" ]
+      }
+    },
+    "/api/supplier-bonuses/receipts" : {
+      "get" : {
+        "operationId" : "receipts",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BonusReceipts"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Chegirmali kirimlar holati (kutilmoqda / tasdiqlandi / berilmadi) va YB × filial balanslari",
         "tags" : [ "supplier-bonuses" ]
       }
     },
@@ -17050,6 +17324,168 @@
         },
         "required" : [ "balance", "docId", "docNumber", "docType", "occurredAt", "qty" ]
       },
+      "BatchStockPage" : {
+        "type" : "object",
+        "properties" : {
+          "availableQty" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "costSum" : {
+            "type" : "string"
+          },
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/BatchStockRow"
+            }
+          },
+          "page" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "reservedQty" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "saleSum" : {
+            "type" : "string"
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "total" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "totalQty" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Filtr bo'yicha jami (sahifadagi emas)"
+          }
+        },
+        "required" : [ "availableQty", "items", "page", "reservedQty", "saleSum", "size", "total", "totalQty" ]
+      },
+      "BatchStockRow" : {
+        "type" : "object",
+        "properties" : {
+          "available" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Sotuvga ochiq zonada, muddati o'tmagan: miqdor − band"
+          },
+          "batchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "batchNumber" : {
+            "type" : "string"
+          },
+          "bonus" : {
+            "type" : "boolean"
+          },
+          "branchCode" : {
+            "type" : "string"
+          },
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "controlled" : {
+            "type" : "boolean"
+          },
+          "cost" : {
+            "type" : "string",
+            "description" : "Faqat special.cost ruxsati bilan"
+          },
+          "costSum" : {
+            "type" : "string",
+            "description" : "Faqat special.cost ruxsati bilan"
+          },
+          "daysLeft" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Yaroqlilikka qolgan kunlar (manfiy — o'tgan)"
+          },
+          "expiryDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "manufacturer" : {
+            "type" : "string"
+          },
+          "marked" : {
+            "type" : "boolean"
+          },
+          "prescription" : {
+            "type" : "boolean"
+          },
+          "producedOn" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "productCode" : {
+            "type" : "string"
+          },
+          "productId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "productName" : {
+            "type" : "string"
+          },
+          "qty" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "receiptDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "receiptId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Kirim hujjati (partiya kirimdan bo'lsa)"
+          },
+          "receiptNumber" : {
+            "type" : "string"
+          },
+          "reserved" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "saleSum" : {
+            "type" : "string",
+            "description" : "Bazaviy narx turida (partiya narxi, bo'lmasa mahsulot narxi), QQS bilan"
+          },
+          "sellable" : {
+            "type" : "boolean"
+          },
+          "supplier" : {
+            "type" : "string"
+          },
+          "warehouse" : {
+            "type" : "string"
+          },
+          "warehouseId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "zone" : {
+            "type" : "string"
+          },
+          "zoneId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "zoneType" : {
+            "type" : "string",
+            "enum" : [ "RECEIVING", "MAIN", "QUARANTINE", "SHIPPING", "COLD", "SAFE" ]
+          }
+        },
+        "required" : [ "available", "batchId", "batchNumber", "bonus", "branchCode", "branchId", "controlled", "daysLeft", "expiryDate", "marked", "prescription", "productCode", "productId", "productName", "qty", "reserved", "saleSum", "sellable", "warehouse", "warehouseId", "zone", "zoneId", "zoneType" ]
+      },
       "BlockRequest" : {
         "type" : "object",
         "properties" : {
@@ -17060,6 +17496,39 @@
           }
         },
         "required" : [ "reason" ]
+      },
+      "BonusBalanceRow" : {
+        "type" : "object",
+        "properties" : {
+          "balance" : {
+            "type" : "string"
+          },
+          "branch" : {
+            "type" : "string"
+          },
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "idle" : {
+            "type" : "boolean"
+          },
+          "pending" : {
+            "type" : "string"
+          },
+          "pendingCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "supplier" : {
+            "type" : "string"
+          },
+          "supplierId" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "balance", "branch", "branchId", "idle", "pending", "pendingCount", "supplier", "supplierId" ]
       },
       "BonusDetail" : {
         "type" : "object",
@@ -17160,6 +17629,90 @@
           }
         },
         "required" : [ "amount", "at", "balance", "docId", "docNumber", "docType" ]
+      },
+      "BonusReceiptRow" : {
+        "type" : "object",
+        "properties" : {
+          "amount" : {
+            "type" : "string"
+          },
+          "bnsNumber" : {
+            "type" : "string"
+          },
+          "bonusDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Bonus olish sanasi"
+          },
+          "branch" : {
+            "type" : "string"
+          },
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "days" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Olish sanasigacha kunlar (manfiy — kechikkan)"
+          },
+          "declineReason" : {
+            "type" : "string"
+          },
+          "percent" : {
+            "type" : "string",
+            "description" : "Foizli chegirma — foiz"
+          },
+          "receiptDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "receiptId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "receiptNumber" : {
+            "type" : "string"
+          },
+          "receiptSum" : {
+            "type" : "string",
+            "description" : "Kirim summasi (chegirma bazasi)"
+          },
+          "state" : {
+            "type" : "string",
+            "enum" : [ "PENDING", "CONFIRMED", "DECLINED" ]
+          },
+          "supplier" : {
+            "type" : "string"
+          },
+          "supplierId" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "amount", "branch", "branchId", "receiptDate", "receiptId", "receiptNumber", "receiptSum", "state", "supplier", "supplierId" ]
+      },
+      "BonusReceipts" : {
+        "type" : "object",
+        "properties" : {
+          "balances" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/BonusBalanceRow"
+            }
+          },
+          "rows" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/BonusReceiptRow"
+            }
+          },
+          "today" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        },
+        "required" : [ "balances", "rows", "today" ]
       },
       "BonusRow" : {
         "type" : "object",
@@ -27740,6 +28293,10 @@
           "bonusConfirmedAt" : {
             "type" : "string",
             "format" : "date-time"
+          },
+          "bonusDeclineReason" : {
+            "type" : "string",
+            "description" : "«Bonus berilmadi» sababi (bonus yopilgan)"
           },
           "bonusNumber" : {
             "type" : "string",
