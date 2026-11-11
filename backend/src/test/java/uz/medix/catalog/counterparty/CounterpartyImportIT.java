@@ -146,6 +146,35 @@ class CounterpartyImportIT {
     }
 
     @Test
+    void existingCardGetsOnlyBranchTerms() throws Exception {
+        long b = branch();
+        Cookie director = loginAs("DIRECTOR", null);
+        String known = tin();
+        String supplierOnly = tin();
+        long id = jdbc.sql("INSERT INTO counterparty (tin, name, is_customer, is_supplier) VALUES (:t, 'Eski Dorixona', true, false) RETURNING id")
+                .param("t", known).query(Long.class).single();
+        jdbc.sql("INSERT INTO counterparty (tin, name, is_customer, is_supplier) VALUES (:t, 'Faqat YB', false, true)").param("t", supplierOnly).update();
+        String body = "{\"role\":\"CUSTOMER\",\"branchId\":" + b + ",\"rows\":["
+                + row(1, "\"stir\":\"" + known + "\",\"cname\":\"Boshqa nom\",\"limit\":\"5000000\",\"days\":\"20\"") + ","
+                + row(2, "\"stir\":\"" + supplierOnly + "\",\"cname\":\"Faqat YB\",\"days\":\"10\"") + "]}";
+        check(director, body, false)
+                .andExpect(jsonPath("$.rows[0].status").value("WARN"))
+                .andExpect(jsonPath("$.rows[0].existingId").value(id))
+                .andExpect(jsonPath("$.rows[0].messages[0].key").value("cTinExisting"))
+                .andExpect(jsonPath("$.rows[1].status").value("ERROR"))
+                .andExpect(jsonPath("$.rows[1].messages[0].key").value("cTinOtherRole"));
+        check(director, body, true)
+                .andExpect(jsonPath("$.created").value(0))
+                .andExpect(jsonPath("$.updated").value(1));
+        // Karta oʻzgarmaydi (nom), faqat filial sharti qoʻshildi
+        assertThat(jdbc.sql("SELECT name FROM counterparty WHERE id = :c").param("c", id).query(String.class).single()).isEqualTo("Eski Dorixona");
+        assertThat(jdbc.sql("SELECT credit_limit::text || '/' || payment_days FROM counterparty_branch_terms WHERE counterparty_id = :c AND branch_id = :b")
+                .param("c", id).param("b", b).query(String.class).single()).isEqualTo("5000000.00/20");
+        // Qayta — shart filialda bor: oʻtkazib yuboriladi
+        check(director, body, false).andExpect(jsonPath("$.rows[0].messages[0].key").value("cTinTaken"));
+    }
+
+    @Test
     void suppliersUseOwnFieldsAndPermissions() throws Exception {
         long b = branch();
         Cookie director = loginAs("DIRECTOR", null);

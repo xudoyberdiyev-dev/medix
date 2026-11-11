@@ -44,6 +44,8 @@ class CounterpartyImport {
     /** Prototip `BQ_FIELDS.sup`. */
     static final List<String> SUPPLIER_FIELDS = List.of("stir", "cname", "region", "address", "phone", "days", "lead");
 
+    private record Existing(long id, String name, boolean hasRole) {}
+
     static final List<String> REQUIRED = List.of("stir", "cname");
 
     record CounterpartyImportRequest(
@@ -52,9 +54,12 @@ class CounterpartyImport {
             @NotNull @Size(max = MAX_ROWS) List<@Valid ImportRowInput> rows) {}
 
     record CounterpartyImportRow(int row, RowStatus status, @Schema(nullable = true) String tin,
-            @Schema(nullable = true, description = "apply=true da yaratilgan kontragent") Long createdId, List<ImportMessage> messages) {}
+            @Schema(nullable = true, description = "apply=true da yaratilgan kontragent") Long createdId,
+            @Schema(nullable = true, description = "STIR bo'yicha mavjud karta — unga faqat tanlangan filial sharti qo'shiladi") Long existingId,
+            List<ImportMessage> messages) {}
 
-    record CounterpartyImportResult(boolean applied, int ok, int warn, int error, int created, List<CounterpartyImportRow> rows) {}
+    record CounterpartyImportResult(boolean applied, int ok, int warn, int error, int created,
+            @Schema(description = "Mavjud kartalarga filial sharti qo'shilgan qatorlar") int updated, List<CounterpartyImportRow> rows) {}
 
     private final Counterparties counterparties;
     private final JdbcClient jdbc;
@@ -93,6 +98,7 @@ class CounterpartyImport {
         int warn = 0;
         int error = 0;
         int created = 0;
+        int updated = 0;
         for (ImportRowInput in : req.rows()) {
             Map<String, String> v = new HashMap<>();
             for (String f : fields) {
@@ -105,17 +111,25 @@ class CounterpartyImport {
                     msgs.add(err("cReq", "f", f));
                 }
             }
+            Existing existing = null;
             String tin = v.get("stir").replaceAll("[\\s\\u00a0-]", "");
             if (!tin.isEmpty()) {
                 if (!tin.matches("^([0-9]{9}|[0-9]{14})$")) {
                     msgs.add(err("cTinBad", "t", v.get("stir")));
                 } else {
-                    Optional<String> owner = jdbc.sql("SELECT name FROM counterparty WHERE tin = :t").param("t", tin).query(String.class).optional();
+                    Optional<Existing> owner = jdbc.sql("SELECT id, name, is_customer, is_supplier FROM counterparty WHERE tin = :t")
+                            .param("t", tin)
+                            .query((rs, n) -> new Existing(rs.getLong("id"), rs.getString("name"), customer ? rs.getBoolean("is_customer") : rs.getBoolean("is_supplier")))
+                            .optional();
                     Integer prev = seenTins.get(tin);
-                    if (owner.isPresent()) {
-                        msgs.add(err("cTinTaken", "n", owner.get()));
-                    } else if (prev != null) {
+                    if (prev != null) {
                         msgs.add(err("cTinDupFile", "r", String.valueOf(prev)));
+                    } else if (owner.isPresent()) {
+                        seenTins.put(tin, in.row());
+                        existing = owner.get();
+                        if (!existing.hasRole()) {
+                            msgs.add(err("cTinOtherRole", "n", existing.name()));
+                        }
                     } else {
                         seenTins.put(tin, in.row());
                     }
@@ -155,7 +169,17 @@ class CounterpartyImport {
             if (hasTerms && req.branchId() == null) {
                 msgs.add(err("cBranchReq"));
             } else if (hasTerms && !termsAllowed) {
-                msgs.add(warn("cTermsSkipped"));
+                msgs.add(existing != null && existing.hasRole() ? err("cTinTaken", "n", existing.name()) : warn("cTermsSkipped"));
+            }
+            if (existing != null && existing.hasRole() && msgs.stream().noneMatch(m -> m.tone() == Tone.ERROR)) {
+                // Prototip: STIR bo'yicha mavjud kartaga faqat joriy filial sharti qo'shiladi; shart yo'q yoki filialda allaqachon bor — o'tkazib yuboriladi
+                boolean branchHasTerms = req.branchId() != null && jdbc.sql(
+                                "SELECT count(*) FROM counterparty_branch_terms WHERE counterparty_id = :c AND branch_id = :b")
+                        .param("c", existing.id())
+                        .param("b", req.branchId())
+                        .query(Long.class)
+                        .single() > 0;
+                msgs.add(!hasTerms || branchHasTerms ? err("cTinTaken", "n", existing.name()) : warn("cTinExisting", "n", existing.name()));
             }
             boolean hasErr = msgs.stream().anyMatch(m -> m.tone() == Tone.ERROR);
             RowStatus st = hasErr ? RowStatus.ERROR : msgs.isEmpty() ? RowStatus.OK : RowStatus.WARN;
@@ -165,7 +189,14 @@ class CounterpartyImport {
                 case ERROR -> error++;
             }
             Long createdId = null;
-            if (!hasErr && apply) {
+            Long existingId = existing != null && !hasErr ? existing.id() : null;
+            if (!hasErr && apply && existingId != null) {
+                TermsRequest terms = customer
+                        ? new TermsRequest(limit, days, null, null, null, null, null, null, null, null)
+                        : new TermsRequest(null, null, null, null, null, days, null, null, null, lead);
+                counterparties.saveTerms(existingId, req.branchId(), terms, customer, !customer);
+                updated++;
+            } else if (!hasErr && apply) {
                 CounterpartyRequest r = new CounterpartyRequest(tin, v.get("cname"), null, customer, !customer, kind, regionId,
                         blank(v.get("address")), blank(v.get("phone")), null, null, null, null, null, null, null, null);
                 createdId = counterparties.create(r);
@@ -177,13 +208,13 @@ class CounterpartyImport {
                 }
                 created++;
             }
-            out.add(new CounterpartyImportRow(in.row(), st, tin.isEmpty() ? null : tin, createdId, msgs));
+            out.add(new CounterpartyImportRow(in.row(), st, tin.isEmpty() ? null : tin, createdId, existingId, msgs));
         }
-        if (apply && created > 0) {
+        if (apply && created + updated > 0) {
             audit.record(AuditEntry.of("counterparty.import", "counterparty", null)
-                    .change(null, Map.of("role", req.role().name(), "created", created, "skipped", error)));
+                    .change(null, Map.of("role", req.role().name(), "created", created, "updated", updated, "skipped", error)));
         }
-        return new CounterpartyImportResult(apply && created > 0, ok, warn, error, created, out);
+        return new CounterpartyImportResult(apply && created + updated > 0, ok, warn, error, created, updated, out);
     }
 
     /** Tur: lotin, kirill va rus nomlari yoki enum nomi; tanilmasa — null (ogohlantirish, tur bo'sh qoladi). */
