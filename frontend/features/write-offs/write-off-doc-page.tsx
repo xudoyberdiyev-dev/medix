@@ -6,6 +6,8 @@ import { useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { DocumentHeader } from "@/components/ui/document-header";
+import { DocTabs, docEvents } from "@/components/ui/doc-tabs";
+import { HubTabs } from "@/components/shell/hub-tabs";
 import { Modal } from "@/components/ui/modal";
 import { ErrorState, ForbiddenState, Skeleton } from "@/components/ui/system-states";
 import { Table, type TableColumn } from "@/components/ui/table";
@@ -114,6 +116,7 @@ function View({ doc }: { doc: WriteOffDetail }) {
 
   return (
     <div className="flex min-w-0 flex-col gap-4 pb-12">
+      <HubTabs hub="returns" className="-mb-1" />
       <DocumentHeader
         parent={{ label: td("parent"), href: "/write-offs" }}
         crumb={doc.number}
@@ -146,55 +149,57 @@ function View({ doc }: { doc: WriteOffDetail }) {
           </>
         }
       />
-      {st === "PENDING" ? (
-        <Alert tone="warning" title={doc.needsDirector ? t("view.pendingDirectorTitle") : t("view.pendingTitle")}>
-          {doc.needsDirector
-            ? t("view.pendingDirectorBody", { limit: formatMoney(HC_DIRECTOR_LIMIT), zone: doc.zone.name })
-            : t("view.pendingBody", { zone: doc.zone.name })}
-        </Alert>
-      ) : null}
-      {st === "POSTED" ? <Alert tone="success" title={td("bPosted", { at: at(doc.postedAt), who: doc.postedBy ?? "" })} /> : null}
-      {st === "REJECTED" ? (
-        <Alert tone="info" title={t("view.rejectedTitle", { reason: doc.rejectReason ?? "" })}>
-          {t("view.rejectedBody", { who: doc.rejectedBy ?? "" })}
-        </Alert>
-      ) : null}
-      <div className="grid min-w-0 items-start gap-5 lg:grid-cols-[minmax(0,1fr)_280px]">
-        <div className="flex min-w-0 flex-col gap-4">
-          <section className="rounded-card border border-border bg-surface">
-            <h2 className="border-b border-border px-5 py-4 text-subtitle">{tw("info")}</h2>
-            <dl className="flex flex-col px-5 py-2">
-              <InfoRow k={tw("hDate")} v={formatDate(new Date(doc.createdAt))} />
-              <InfoRow k={t("view.warehouseZone")} v={`${doc.warehouse} · ${doc.zone.name}`} />
-              <InfoRow k={t("view.reason")} v={t(`reason.${doc.reason}`)} />
-              <InfoRow k={t("view.act")} v={doc.actNo ?? "—"} />
-              {doc.commission ? <InfoRow k={t("view.commission")} v={doc.commission} /> : null}
-              {doc.sourceTransfer ? <InfoRow k={t("view.source")} v={t("view.sourceBody", { number: doc.sourceTransfer })} /> : null}
-              <InfoRow k={tw("hBy")} v={doc.createdBy} />
-              {doc.note ? <InfoRow k={t("view.note")} v={doc.note} /> : null}
-            </dl>
-          </section>
-          <section className="rounded-card border border-border bg-surface">
-            <h2 className="flex items-center gap-2 px-5 py-4 text-subtitle">
-              {tw("lines")}
-              <span className="font-normal text-text-secondary">{doc.lines.length}</span>
-            </h2>
-            <Table caption={t("view.linesCaption")} density="compact" columns={columns} rows={doc.lines} rowKey={(l) => String(l.id)} />
-          </section>
+      <DocTabs events={docEvents(doc)}>
+        {st === "PENDING" ? (
+          <Alert tone="warning" title={doc.needsDirector ? t("view.pendingDirectorTitle") : t("view.pendingTitle")}>
+            {doc.needsDirector
+              ? t("view.pendingDirectorBody", { limit: formatMoney(HC_DIRECTOR_LIMIT), zone: doc.zone.name })
+              : t("view.pendingBody", { zone: doc.zone.name })}
+          </Alert>
+        ) : null}
+        {st === "POSTED" ? <Alert tone="success" title={td("bPosted", { at: at(doc.postedAt), who: doc.postedBy ?? "" })} /> : null}
+        {st === "REJECTED" ? (
+          <Alert tone="info" title={t("view.rejectedTitle", { reason: doc.rejectReason ?? "" })}>
+            {t("view.rejectedBody", { who: doc.rejectedBy ?? "" })}
+          </Alert>
+        ) : null}
+        <div className="grid min-w-0 items-start gap-5 lg:grid-cols-[minmax(0,1fr)_280px]">
+          <div className="flex min-w-0 flex-col gap-4">
+            <section className="rounded-card border border-border bg-surface">
+              <h2 className="border-b border-border px-5 py-4 text-subtitle">{tw("info")}</h2>
+              <dl className="flex flex-col px-5 py-2">
+                <InfoRow k={tw("hDate")} v={formatDate(new Date(doc.createdAt))} />
+                <InfoRow k={t("view.warehouseZone")} v={`${doc.warehouse} · ${doc.zone.name}`} />
+                <InfoRow k={t("view.reason")} v={t(`reason.${doc.reason}`)} />
+                <InfoRow k={t("view.act")} v={doc.actNo ?? "—"} />
+                {doc.commission ? <InfoRow k={t("view.commission")} v={doc.commission} /> : null}
+                {doc.sourceTransfer ? <InfoRow k={t("view.source")} v={t("view.sourceBody", { number: doc.sourceTransfer })} /> : null}
+                <InfoRow k={tw("hBy")} v={doc.createdBy} />
+                {doc.note ? <InfoRow k={t("view.note")} v={doc.note} /> : null}
+              </dl>
+            </section>
+            <section className="rounded-card border border-border bg-surface">
+              <h2 className="flex items-center gap-2 px-5 py-4 text-subtitle">
+                {tw("lines")}
+                <span className="font-normal text-text-secondary">{doc.lines.length}</span>
+              </h2>
+              <Table caption={t("view.linesCaption")} density="compact" columns={columns} rows={doc.lines} rowKey={(l) => String(l.id)} />
+            </section>
+          </div>
+          <aside className="flex min-w-0 flex-col gap-3">
+            <SideCard label={tw("sLines")} value={formatQuantity(doc.lines.length)} />
+            <SideCard label={tw("sQty")} value={formatQuantity(doc.totalQty)} />
+            {withCost && doc.totalCost ? <SideCard label={td("sCost")} value={formatMoney(doc.totalCost)} /> : null}
+            <SideCard label={td("sBy")} value={doc.createdBy} note={at(doc.createdAt)} />
+            <SideCard
+              label={st === "REJECTED" ? td("sRejected") : td("sPosted")}
+              value={(st === "REJECTED" ? doc.rejectedBy : doc.postedBy) ?? "—"}
+              note={st === "REJECTED" ? at(doc.rejectedAt) : at(doc.postedAt) || undefined}
+              muted={st === "PENDING"}
+            />
+          </aside>
         </div>
-        <aside className="flex min-w-0 flex-col gap-3">
-          <SideCard label={tw("sLines")} value={formatQuantity(doc.lines.length)} />
-          <SideCard label={tw("sQty")} value={formatQuantity(doc.totalQty)} />
-          {withCost && doc.totalCost ? <SideCard label={td("sCost")} value={formatMoney(doc.totalCost)} /> : null}
-          <SideCard label={td("sBy")} value={doc.createdBy} note={at(doc.createdAt)} />
-          <SideCard
-            label={st === "REJECTED" ? td("sRejected") : td("sPosted")}
-            value={(st === "REJECTED" ? doc.rejectedBy : doc.postedBy) ?? "—"}
-            note={st === "REJECTED" ? at(doc.rejectedAt) : at(doc.postedAt) || undefined}
-            muted={st === "PENDING"}
-          />
-        </aside>
-      </div>
+      </DocTabs>
       <Modal
         open={dlg === "approve"}
         onClose={() => setDlg(null)}

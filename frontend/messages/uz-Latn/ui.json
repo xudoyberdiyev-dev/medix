@@ -64,5 +64,16 @@
   "history": {
     "empty": "Tarix hali yoʻq",
     "emptyHint": "Hujjat bilan qilingan har bir amal shu yerda koʻrinadi."
+  },
+  "docTabs": {
+    "label": "Hujjat boʻlimlari",
+    "doc": "Hujjat",
+    "hist": "Tarix",
+    "a": {
+      "create": "Yaratildi",
+      "post": "Tasdiqlandi",
+      "reject": "Rad etildi",
+      "cancel": "Bekor qilindi"
+    }
   }
 }
