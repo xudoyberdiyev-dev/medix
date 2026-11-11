@@ -44,3 +44,11 @@ Har juftlik yonma-yon solishtirildi (matn, ustun, tugma, yorliq, KPI, tartib).
 | 36 | Audit jurnali | tuzatildi | sarlavha; Tafsilot — maydon nomlari tarjimasi, kirish «Muvaffaqiyatli»; Qurilma ustunida qurilma |
 | 37 | Sozlamalar | ✅ | |
 | 38 | Profil | tuzatildi | Til — uchta radio karta |
+| 39 | Ombor mudiri paneli (Monitor) | ✅ | prototipdagi «Demo soat» — demo vositasi, koʻchirilmaydi |
+| 40 | Yigʻuvchi paneli | ✅ | |
+| 41 | Markirovkachi paneli | ✅ | |
+| 42 | Haydovchi paneli | ✅ | |
+| 43 | Kassir paneli | tuzatildi | Davr (Bugun/Shu hafta/Shu oy/Ixtiyoriy), Hisob, Toʻlov turi (Hammasi/Naqd/Perechisleniye/Online), Filial; 5 karta — **kirim/chiqim tarkibi backendda qoʻshildi** (MT, boshqa, IO; YT, xarajatlar, IO; hujjatlar soni), barcha xarajat moddalari; hisoblar jadvali — Masʼul, Jami |
+| 44 | Operator bosh sahifasi | ✅ | |
+| 45 | Filial rahbari bosh sahifasi | ✅ | |
+| 46 | Buxgalter bosh sahifasi | ✅ | |
