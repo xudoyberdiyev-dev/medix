@@ -333,6 +333,14 @@ class OpeningBalanceIT {
                 .andExpect(jsonPath("$.status").value("CANCELLED"))
                 .andExpect(jsonPath("$.cancelReason").value("Ikki marta kiritilgan"));
         assertThat(stock(p.main(), a.id())).isEqualTo(6);
+        // Tarix (prototip OpeningDoc «Tarix»): yaratildi → tasdiqlandi → bekor qilindi (sabab bilan)
+        mvc.perform(get("/api/opening-balances/" + doc2 + "/history").cookie(director))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(3)))
+                .andExpect(jsonPath("$[0].action").value("opening.create"))
+                .andExpect(jsonPath("$[1].action").value("opening.post"))
+                .andExpect(jsonPath("$[2].action").value("opening.cancel"))
+                .andExpect(jsonPath("$[2].reason").value("Ikki marta kiritilgan"));
         // Jurnal: kirim va bekor qilish chiqimi saqlanadi (faqat qo'shiladi)
         assertThat(jdbc.sql("SELECT string_agg(qty::text, ',' ORDER BY id) FROM stock_move WHERE doc_type = 'BQ' AND doc_id = :d AND batch_id IN (SELECT batch_id FROM opening_balance_line WHERE opening_id = :d)")
                         .param("d", doc2).query(String.class).single())

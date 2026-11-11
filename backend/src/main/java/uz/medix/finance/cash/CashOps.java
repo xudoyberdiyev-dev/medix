@@ -311,4 +311,19 @@ class CashOps {
                 .filter(o -> actor.canAccessBranch(o.branchId()))
                 .orElseThrow(() -> MedixException.notFound("error.notFound"));
     }
+
+    /** KO/BO tarixi — audit jurnalidan (eng eskisi birinchi). Kirish huquqi — {@link #find} bilan tekshiriladi. */
+    @Transactional(readOnly = true)
+    List<CashModels.CashOpHistoryEvent> history(Actor actor, long id) {
+        find(actor, id);
+        return jdbc.sql("""
+                SELECT a.occurred_at, e.full_name AS employee, a.action, a.reason
+                FROM audit_log a LEFT JOIN employee e ON e.id = a.employee_id
+                WHERE a.entity_type = 'cash_op' AND a.entity_id = :id
+                ORDER BY a.occurred_at, a.id""")
+                .param("id", String.valueOf(id))
+                .query((rs, n) -> new CashModels.CashOpHistoryEvent(rs.getTimestamp("occurred_at").toInstant(), rs.getString("employee"),
+                        rs.getString("action"), rs.getString("reason")))
+                .list();
+    }
 }

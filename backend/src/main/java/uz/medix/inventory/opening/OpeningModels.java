@@ -25,6 +25,9 @@ final class OpeningModels {
 
     enum Source { MANUAL, IMPORT }
 
+    /** BQ tarixi (prototip OpeningDoc «Tarix»): audit jurnalidan. */
+    record OpeningHistoryEvent(Instant at, @Schema(nullable = true) String employee, String action, @Schema(nullable = true) String reason) {}
+
     record OpeningLineRequest(
             @NotNull(message = "{validation.required}") Long productId,
             @NotNull(message = "{validation.required}") Long zoneId,
