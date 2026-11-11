@@ -90,3 +90,9 @@ export function auditCsv(
     )
     .join("\n");
 }
+
+/** Kirish yozuvidagi qurilma (`newValue.device`, masalan «Windows · Chrome»); boʻlmasa — IP. */
+export function auditDevice(r: Pick<AuditRow, "newValue" | "ip">): string {
+  const d = parse(r.newValue).device;
+  return typeof d === "string" && d.trim() ? d : (r.ip ?? "—");
+}

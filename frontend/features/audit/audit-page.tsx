@@ -36,7 +36,7 @@ import { api, ApiError, unwrap } from "@/lib/api/client";
 import { cn } from "@/lib/cn";
 import { formatDateTime, formatQuantity } from "@/lib/format";
 import { isKnownAction } from "./actions";
-import { auditCsv, auditDiff, objectHref, type AuditCategory, type AuditRow, type AuditView } from "./audit-model";
+import { auditCsv, auditDevice, auditDiff, objectHref, type AuditCategory, type AuditRow, type AuditView } from "./audit-model";
 
 export { AUDIT_ACTIONS, isKnownAction } from "./actions";
 
@@ -110,6 +110,7 @@ const EXPORT_WARN = 5000;
 /** Boshqaruv → Audit jurnali (prototip AuditLog). */
 export function AuditPage() {
   const t = useTranslations("audit");
+  const fieldLabel = useFieldLabel();
   const me = useMe();
   const [view, setView] = useState<AuditView>("ALL");
   const [q, setQ] = useState("");
@@ -228,11 +229,18 @@ export function AuditPage() {
       key: "detail",
       title: t("detail"),
       render: (r) => {
-        const diff = auditDiff(r);
-        return <span className="text-text-secondary">{diff.length ? diff.map((d) => d.field).join(", ") : (r.reason ?? "—")}</span>;
+        if (r.category === "LOGIN") return <span className="text-text-secondary">{t("loginOk")}</span>;
+        const diff = auditDiff(r).filter((d) => d.field !== "device");
+        return (
+          <span className="text-text-secondary">
+            {diff.length
+              ? diff.map((d) => fieldLabel(d.field)).join(", ")
+              : (r.reason ?? (r.category === "LOGIN_FAIL" ? t("loginFail") : "—"))}
+          </span>
+        );
       },
     },
-    { key: "device", title: t("device"), mono: true, render: (r) => <span className="text-text-secondary">{r.ip ?? "—"}</span> },
+    { key: "device", title: t("device"), render: (r) => <span className="text-text-secondary">{auditDevice(r)}</span> },
   ];
 
   const counts = new Map((audit.data?.views ?? []).map((v) => [v.view, v.count]));
@@ -383,6 +391,7 @@ function AuditDrawer({
   catLabel: (c: AuditCategory) => string;
 }) {
   const t = useTranslations("audit");
+  const fieldLabel = useFieldLabel();
   const diff = auditDiff(row);
   const href = row.category === "LOGIN" || row.category === "LOGIN_FAIL" ? null : objectHref(row);
   const object = row.objectLabel ?? `${typeLabel(row.entityType)}${row.entityId ? ` #${row.entityId}` : ""}`;
@@ -395,7 +404,7 @@ function AuditDrawer({
     [t("entity"), object],
     [t("entityType"), typeLabel(row.entityType)],
     [t("reason"), row.reason ?? "—"],
-    [t("device"), row.ip ?? "—"],
+    [t("device"), auditDevice(row)],
   ];
   return (
     <Drawer
@@ -445,7 +454,7 @@ function AuditDrawer({
           <tbody>
             {diff.map((d) => (
               <tr key={d.field} className="border-t border-border">
-                <td className="px-3 py-2 font-medium">{d.field}</td>
+                <td className="px-3 py-2 font-medium">{fieldLabel(d.field)}</td>
                 <td className={cn("px-3 py-2 break-all text-text-secondary")}>{d.before}</td>
                 <td className="px-3 py-2 break-all">{d.after}</td>
               </tr>
@@ -457,4 +466,13 @@ function AuditDrawer({
       )}
     </Drawer>
   );
+}
+
+/** Audit maydon nomi (`status` → «Holat»); lugʻatda boʻlmasa — asl nomi. */
+function useFieldLabel(): (field: string) => string {
+  const tf = useTranslations("audit.fields");
+  return (field) => {
+    const key = field as "status";
+    return tf.has(key) ? tf(key) : field;
+  };
 }
