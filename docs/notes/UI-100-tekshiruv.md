@@ -86,7 +86,7 @@ Demo workflow'ga 32 ta yangi marshrut qoʻshildi (yangi hujjat shakllari, hujjat
 | 67 | Mahsulot importi | ✅ | |
 | 68 | Akt sverka hujjati | tuzatildi | mavjud boʻlmagan hujjat — «Hujjat topilmadi» (oldin «Maʼlumot yuklanmadi»); barcha hujjat sahifalarida (39 joy) |
 | 69 | Reys sahifasi | ✅ | |
-| 70 | YB kartochkasi | tuzatildi | «Keyingi toʻlov kuni» kartasi (backend `nextDue`) |
+| 70 | YB kartochkasi | tuzatildi | «Keyingi toʻlov kuni» (backend `nextDue` + IT), «Bonus balans», «Kutilayotgan» kartalari |
 | 71 | Yangi YB / mijoz shakli | tuzatildi | matnlar: «Asosiy», «STIR», «Qisqa nomi», «Kontaktlar», «Ism», «Lavozim», boʻlim izohlari |
 | 72 | Xodim kartochkasi | ✅ | |
 | 73 | Hisobot: Qaytarishlar | tuzatildi | sabab kodlari (DAMAGED …) tarjima qilinadi |
@@ -96,3 +96,7 @@ Demo workflow'ga 32 ta yangi marshrut qoʻshildi (yangi hujjat shakllari, hujjat
 | 77 | Boʻsh holat (filtr natijasiz) | ✅ | |
 | 78 | Avansni hisobga olish | ✅ | (parametrsiz URL — 404, ataylab) |
 | 79 | Yangi YB / mijoz (sahifa) | ✅ | |
+
+**Kechki oyna natijasi:** yana 31 ekran tekshirildi (jami 79), 9 tasida farq topilib tuzatildi; backendda yetishmagan qism: `nextDue` (kontragent kartochkasi, finance ochiq API `DebtSummaries.nextDue`).
+
+**Ochiq (kichik):** OK/ZK yangi hujjatda «Zona» maydoni prototipda yoʻq (haqiqiy tizimda zona tanlovi kerak — FEFO partiyalar zonadan; ataylab qoldirildi); Reys sahifasidagi prototip izohi «Yuklash … Haydovchi panelida» — holat banneri bor.
