@@ -137,7 +137,9 @@
       "doc": "Kirim hujjati",
       "supplier": "Yetkazib beruvchi",
       "tree": "Filial / Ombor / Zona",
-      "products": "Mahsulotlar"
+      "products": "Mahsulotlar",
+      "branch": "Filial",
+      "docDate": "Kirim sanasi"
     },
     "vWh": "Ombor daraxti",
     "tr": {
@@ -199,7 +201,12 @@
       "doc_BY": "Buyurtma — terish",
       "doc_QM": "Qaytgan tovar",
       "doc_SV": "Sotuv"
-    }
+    },
+    "columns": "Ustunlar",
+    "colsHint": "Koʻrinish va tartib — sudrab oʻzgartiring",
+    "colsReset": "Standartga qaytarish",
+    "fefo": "Partiyalar FEFO tartibida — eng yaqin yaroqlilik birinchi",
+    "emptyBatch": "Filtr boʻyicha partiya yoʻq"
   },
   "ex": {
     "threshold": "Ogohlantirish chegarasi: {days} kun",

@@ -7084,6 +7084,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/stock/batches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Qoldiqlar — partiya bo'yicha (zona × partiya)
+         * @description Partiya filtrlari (ombor, zona, muddat, yetkazib beruvchi, bonus) jamlanadigan qatorlarni tanlaydi; mahsulot filtrlari — mahsulotni. stock=ZERO — qoldig'i yo'q faol mahsulotlar.
+         */
+        get: operations["stockBatches"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -14004,6 +14024,70 @@ export interface components {
             warehouse: string;
             /** Format: int64 */
             warehouseId: number;
+        };
+        BatchStockRow: {
+            /** Format: int32 */
+            available: number;
+            /** Format: int64 */
+            batchId: number;
+            batchNumber: string;
+            bonus: boolean;
+            branchCode: string;
+            /** Format: int64 */
+            branchId: number;
+            controlled: boolean;
+            cost?: string;
+            costSum?: string;
+            /** Format: int64 */
+            daysLeft: number;
+            /** Format: date */
+            expiryDate: string;
+            manufacturer?: string;
+            marked: boolean;
+            prescription: boolean;
+            /** Format: date */
+            producedOn?: string;
+            productCode: string;
+            /** Format: int64 */
+            productId: number;
+            productName: string;
+            /** Format: int32 */
+            qty: number;
+            /** Format: date */
+            receiptDate?: string;
+            /** Format: int64 */
+            receiptId?: number;
+            receiptNumber?: string;
+            /** Format: int32 */
+            reserved: number;
+            saleSum: string;
+            sellable: boolean;
+            supplier?: string;
+            warehouse: string;
+            /** Format: int64 */
+            warehouseId: number;
+            zone: string;
+            /** Format: int64 */
+            zoneId: number;
+            /** @enum {string} */
+            zoneType: "RECEIVING" | "MAIN" | "QUARANTINE" | "SHIPPING" | "COLD" | "SAFE";
+        };
+        BatchStockPage: {
+            /** Format: int64 */
+            availableQty: number;
+            costSum?: string;
+            items: components["schemas"]["BatchStockRow"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int64 */
+            reservedQty: number;
+            saleSum: string;
+            /** Format: int32 */
+            size: number;
+            /** Format: int64 */
+            total: number;
+            /** Format: int64 */
+            totalQty: number;
         };
     };
     responses: never;
@@ -24243,6 +24327,46 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ZoneTransferDetail"];
+                };
+            };
+        };
+    };
+    stockBatches: {
+        parameters: {
+            query?: {
+                branchId?: number;
+                warehouseId?: number[];
+                zoneType?: ("RECEIVING" | "MAIN" | "QUARANTINE" | "SHIPPING" | "COLD" | "SAFE")[];
+                expiry?: ("EXPIRED" | "D0_30" | "D31_60" | "D61_90" | "D90_PLUS")[];
+                stock?: ("HAS" | "ZERO" | "ALL_RESERVED")[];
+                manufacturerId?: number[];
+                categoryId?: number[];
+                /** @description 0 — davlati belgilanmagan */
+                countryId?: number[];
+                /** @description 0 — ta'minot mas'uli belgilanmagan */
+                supplyEmployeeId?: number[];
+                /** @description 0 — yetkazib beruvchisiz (boshlang'ich qoldiq va b.) */
+                supplierId?: number[];
+                flag?: ("MARKED" | "CONTROLLED" | "PRESCRIPTION" | "BONUS")[];
+                q?: string;
+                sort?: "EXPIRY" | "NAME" | "CODE" | "WAREHOUSE" | "QTY" | "AVAILABLE" | "COST_SUM" | "SALE_SUM" | "RECEIPT_DATE";
+                desc?: boolean;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BatchStockPage"];
                 };
             };
         };

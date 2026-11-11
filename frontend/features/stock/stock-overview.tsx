@@ -7,11 +7,7 @@ import {
   ChevronRight,
   CircleX,
   Download,
-  FileText,
-  Gift,
-  Lock,
   Printer,
-  ScanBarcode,
   ShieldAlert,
   SlidersHorizontal,
   TriangleAlert,
@@ -23,6 +19,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import { ColumnsMenu, useColumnPrefs } from "@/components/ui/columns-menu";
 import { MultiFilter, type FilterOption } from "@/components/ui/multi-filter";
 import { RowMenu } from "@/components/ui/row-menu";
 import { Spinner } from "@/components/ui/spinner";
@@ -35,7 +32,7 @@ import { useMe } from "@/features/auth/session";
 import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
 import { cn } from "@/lib/cn";
-import { formatDate, formatMoney, formatQuantity } from "@/lib/format";
+import { formatMoney, formatQuantity } from "@/lib/format";
 import { useBranchStore } from "@/lib/stores/branch";
 import {
   DEFAULT_OVERVIEW,
@@ -51,68 +48,44 @@ import {
   kpiPatch,
   parseOverview,
   productQuery,
+  batchQuery,
   serializeOverview,
   type KpiKey,
   type OverviewFilters,
   type StockFlag,
 } from "./overview-state";
-import { StockPage, stockExportHref } from "./stock-page";
+import { stockExportHref } from "./stock-page";
 import { BatchPanel } from "./batch-panel";
+import { ExpiryCell, Flags, day } from "./stock-cells";
+import { BATCH_COLUMN_KEYS, BATCH_COST_KEYS, StockBatches, batchColumnLabels } from "./stock-batches";
 import { StockTransit } from "./stock-transit";
 import { StockTree } from "./stock-tree";
 
 type ProductRow = components["schemas"]["ProductStockRow"];
+
+/** Prototip `Stock` → PCOLS tartibida («Ustunlar» menyusi; ochish ustuni doim birinchi). */
+const PRODUCT_COLUMN_KEYS = [
+  "code",
+  "name",
+  "manufacturer",
+  "category",
+  "country",
+  "unit",
+  "total",
+  "reserved",
+  "available",
+  "closed",
+  "shipping",
+  "batches",
+  "nearestExpiry",
+  "costSum",
+  "saleSum",
+  "lastIn",
+  "supplyBy",
+  "flags",
+] as const;
 type StockRow = components["schemas"]["StockRow"];
 type Facet = components["schemas"]["Facet"];
-
-const day = (iso: string) => formatDate(new Date(`${iso}T00:00:00+05:00`));
-
-/** Yaroqlilik belgisi (prototip): oʻtgan — qizil, ≤30 kun — qizil, ≤90 — sariq, aks holda — sana. */
-function ExpiryCell({ date, days }: { date: string | null | undefined; days: number | null | undefined }) {
-  const t = useTranslations("stock");
-  if (!date || days == null) return <span className="text-text-secondary">—</span>;
-  if (days < 0)
-    return (
-      <span className="flex items-center gap-2">
-        {day(date)}
-        <Badge tone="danger" icon={CircleX}>
-          {t("ov.expiredShort")}
-        </Badge>
-      </span>
-    );
-  if (days <= 90)
-    return (
-      <span className="flex items-center gap-2">
-        {day(date)}
-        <Badge tone={days <= 30 ? "danger" : "warning"}>{t("ov.daysLeft", { days })}</Badge>
-      </span>
-    );
-  return <span>{day(date)}</span>;
-}
-
-const FLAG_ICON: Record<StockFlag, { icon: LucideIcon; cls: string }> = {
-  MARKED: { icon: ScanBarcode, cls: "text-text-secondary" },
-  CONTROLLED: { icon: Lock, cls: "text-danger" },
-  PRESCRIPTION: { icon: FileText, cls: "text-info" },
-  BONUS: { icon: Gift, cls: "text-primary" },
-};
-
-function Flags({ flags }: { flags: StockFlag[] }) {
-  const t = useTranslations("stock");
-  if (!flags.length) return null;
-  return (
-    <span className="flex items-center gap-1.5">
-      {flags.map((f) => {
-        const { icon: I, cls } = FLAG_ICON[f];
-        return (
-          <span key={f} title={t(`ov.flag.${f}`)} aria-label={t(`ov.flag.${f}`)}>
-            <I size={15} strokeWidth={1.5} className={cls} aria-hidden />
-          </span>
-        );
-      })}
-    </span>
-  );
-}
 
 function KpiTile({
   label,
@@ -318,6 +291,15 @@ export function StockOverview() {
     enabled: allowed && f.view === "product",
     placeholderData: keepPreviousData,
   });
+  const bQuery = batchQuery(f, branchId);
+  const batches = useQuery({
+    queryKey: ["stock", "batches", bQuery],
+    queryFn: () => unwrap(api.GET("/api/stock/batches", { params: { query: bQuery } })),
+    enabled: allowed && f.view === "batch" && !f.transit,
+    placeholderData: keepPreviousData,
+  });
+  const pPrefs = useColumnPrefs("medix-stock-pcols-v1", PRODUCT_COLUMN_KEYS);
+  const bPrefs = useColumnPrefs("medix-stock-bcols-v1", BATCH_COLUMN_KEYS);
 
   if (me.data && !allowed) return <ForbiddenState description={t("forbidden")} />;
 
@@ -328,7 +310,7 @@ export function StockOverview() {
   const countOf = (list: { code: string; count: number }[] | undefined, code: string) => list?.find((x) => x.code === code)?.count;
   const none = t("ov.none");
 
-  const columns: TableColumn<ProductRow>[] = [
+  const allColumns: TableColumn<ProductRow>[] = [
     {
       key: "expand",
       title: "",
@@ -431,6 +413,35 @@ export function StockOverview() {
       ),
     },
   ];
+  const byKey = new Map(allColumns.map((c) => [c.key, c]));
+  const columns = [byKey.get("expand"), ...pPrefs.cols.filter((c) => c.visible).map((c) => byKey.get(c.key))].filter(
+    (c): c is TableColumn<ProductRow> => Boolean(c),
+  );
+  const pLabels = Object.fromEntries(allColumns.filter((c) => c.key !== "expand").map((c) => [c.key, c.title]));
+  const bLabels = batchColumnLabels((k) => t(k as Parameters<typeof t>[0]));
+  const showBatchCost = batches.data ? batches.data.costSum != null : false;
+  const colsMenu =
+    f.view === "batch" ? (
+      <ColumnsMenu
+        label={t("ov.columns")}
+        hint={t("ov.colsHint")}
+        resetLabel={t("ov.colsReset")}
+        columns={bPrefs.cols.filter((c) => showBatchCost || !BATCH_COST_KEYS.includes(c.key as (typeof BATCH_COST_KEYS)[number]))}
+        labels={bLabels}
+        onChange={(next) => bPrefs.update([...next, ...bPrefs.cols.filter((c) => !next.some((x) => x.key === c.key))])}
+        onReset={bPrefs.reset}
+      />
+    ) : (
+      <ColumnsMenu
+        label={t("ov.columns")}
+        hint={t("ov.colsHint")}
+        resetLabel={t("ov.colsReset")}
+        columns={pPrefs.cols.filter((c) => byKey.has(c.key))}
+        labels={pLabels}
+        onChange={(next) => pPrefs.update([...next, ...pPrefs.cols.filter((c) => !next.some((x) => x.key === c.key))])}
+        onReset={pPrefs.reset}
+      />
+    );
   const sortKey = Object.entries(PRODUCT_SORT_COLUMNS).find(([, v]) => v === (f.sort ?? "NAME"))?.[0] ?? "name";
   const data = products.data;
   const toggle = (id: string) => setOpen((o) => (o.includes(id) ? o.filter((x) => x !== id) : [...o, id]));
@@ -516,7 +527,9 @@ export function StockOverview() {
           ]}
           value={f.view}
           onChange={(k) => {
-            const qs = serializeOverview({ ...DEFAULT_OVERVIEW, q: f.q, view: k === "batch" || k === "wh" ? k : "product" });
+            const view = k === "batch" || k === "wh" ? k : "product";
+            // Prototip: koʻrinish almashganda filtrlar saqlanadi (ombor daraxtida — faqat qidiruv)
+            const qs = serializeOverview(view === "wh" ? { ...DEFAULT_OVERVIEW, q: f.q, view } : { ...f, view, transit: false, page: 1 });
             router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
           }}
         />
@@ -524,8 +537,6 @@ export function StockOverview() {
 
       {f.transit ? (
         <StockTransit branchId={branchId} />
-      ) : f.view === "batch" ? (
-        <StockPage mode="stock" embedded />
       ) : f.view === "wh" ? (
         <StockTree
           branchId={branchId}
@@ -533,6 +544,7 @@ export function StockOverview() {
         />
       ) : (
         <>
+          {f.view === "batch" ? <p className="mb-2 text-caption text-text-secondary">{t("ov.fefo")}</p> : null}
           <div className="mb-3 flex flex-wrap items-center gap-2">
             <div className="w-96 max-w-full">
               <TextField
@@ -591,6 +603,7 @@ export function StockOverview() {
                 {t("ov.clearAll")}
               </button>
             ) : null}
+            <div className="ml-auto">{colsMenu}</div>
           </div>
           {more ? (
             <div className="mb-3 flex flex-wrap items-center gap-2">
@@ -635,7 +648,20 @@ export function StockOverview() {
               />
             </div>
           ) : null}
-          {products.error ? (
+          {f.view === "batch" ? (
+            <StockBatches
+              f={f}
+              data={batches.data}
+              loading={batches.isPending}
+              error={Boolean(batches.error)}
+              onRetry={() => batches.refetch()}
+              cols={bPrefs.cols}
+              apply={apply}
+              onOpen={(batchId, zoneId) => setPanel({ batchId, zoneId })}
+              onClearFilters={() => (setSearch(""), apply({ ...DEFAULT_OVERVIEW, view: "batch" }))}
+              filtered={Boolean(f.q) || hasAnyFilter(f)}
+            />
+          ) : products.error ? (
             <ErrorState onRetry={() => products.refetch()} />
           ) : (
             <Table

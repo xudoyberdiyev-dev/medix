@@ -327,7 +327,7 @@ class StockOverviewController {
     @Transactional(readOnly = true)
     @Operation(summary = "Qoldiqlar — partiya bo'yicha (zona × partiya)", description = "Filtrlar «mahsulot bo'yicha» bilan bir xil. "
             + "stock=ALL_RESERVED — mavjudi 0, band > 0 qatorlar; faqat ZERO — bo'sh.")
-    BatchStockPage batches(
+    BatchStockPage stockBatches(
             @RequestParam(required = false) Long branchId,
             @RequestParam(required = false) List<Long> warehouseId,
             @RequestParam(required = false) List<ZoneType> zoneType,

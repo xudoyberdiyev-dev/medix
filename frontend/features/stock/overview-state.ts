@@ -7,6 +7,9 @@ export type StockFlag = "MARKED" | "CONTROLLED" | "PRESCRIPTION" | "BONUS";
 export type ProductSort =
   "NAME" | "CODE" | "TOTAL" | "AVAILABLE" | "RESERVED" | "BATCHES" | "NEAREST_EXPIRY" | "COST_SUM" | "SALE_SUM" | "LAST_IN";
 
+/** «Partiya boʻyicha» saralash (standart — yaroqlilik, FEFO). */
+export type BatchSort = "EXPIRY" | "NAME" | "CODE" | "WAREHOUSE" | "QTY" | "AVAILABLE" | "COST_SUM" | "SALE_SUM" | "RECEIPT_DATE";
+
 export const ZONE_TYPES: ZoneTypeCode[] = ["MAIN", "RECEIVING", "QUARANTINE", "SHIPPING", "COLD", "SAFE"];
 export const EXPIRY_BUCKETS: ExpiryBucket[] = ["D0_30", "D31_60", "D61_90", "D90_PLUS", "EXPIRED"];
 export const STOCK_STATES: StockState[] = ["HAS", "ZERO", "ALL_RESERVED"];
@@ -31,6 +34,8 @@ export interface OverviewFilters {
   /** «Yoʻlda» kartasi bosilgan — asosiy jadval oʻrnida yoʻldagi tovar roʻyxati (prototip). */
   transit: boolean;
   sort: ProductSort | null;
+  /** Partiya koʻrinishi saralashi (URL `bsort`). */
+  bsort: BatchSort | null;
   desc: boolean;
   page: number;
   size: (typeof OVERVIEW_PAGE_SIZES)[number];
@@ -51,6 +56,7 @@ export const DEFAULT_OVERVIEW: OverviewFilters = {
   flags: [],
   transit: false,
   sort: null,
+  bsort: null,
   desc: false,
   page: 1,
   size: 25,
@@ -71,6 +77,20 @@ export const PRODUCT_SORT_COLUMNS: Record<string, ProductSort> = {
 };
 
 const SORTS = Object.values(PRODUCT_SORT_COLUMNS);
+
+/** Partiya jadvali ustuni ↔ server saralash maydoni. */
+export const BATCH_SORT_COLUMNS: Record<string, BatchSort> = {
+  exp: "EXPIRY",
+  name: "NAME",
+  code: "CODE",
+  wh: "WAREHOUSE",
+  qty: "QTY",
+  avail: "AVAILABLE",
+  costSum: "COST_SUM",
+  saleSum: "SALE_SUM",
+  docDate: "RECEIPT_DATE",
+};
+const BSORTS = Object.values(BATCH_SORT_COLUMNS);
 
 const ids = (v: string | null): number[] =>
   v
@@ -105,6 +125,7 @@ export function parseOverview(p: URLSearchParams): OverviewFilters {
     flags: codes(p.get("flag"), STOCK_FLAGS),
     transit: p.get("transit") === "1",
     sort: SORTS.find((x) => x === p.get("psort")) ?? null,
+    bsort: BSORTS.find((x) => x === p.get("bsort")) ?? null,
     desc: p.get("desc") === "1",
     page: Number.isInteger(page) && page > 1 ? page : 1,
     size: size === 50 || size === 100 ? size : 25,
@@ -129,6 +150,7 @@ export function serializeOverview(f: OverviewFilters): string {
   list("flag", f.flags);
   if (f.transit) p.set("transit", "1");
   if (f.sort) p.set("psort", f.sort);
+  if (f.bsort) p.set("bsort", f.bsort);
   if (f.desc) p.set("desc", "1");
   if (f.page > 1) p.set("page", String(f.page));
   if (f.size !== 25) p.set("size", String(f.size));
@@ -184,4 +206,11 @@ export function productQuery(f: OverviewFilters, branchId: number | null) {
     page: f.page - 1,
     size: f.size,
   };
+}
+
+/** Partiya boʻyicha jadval soʻrovi — filtrlar mahsulot koʻrinishi bilan bir xil. */
+export function batchQuery(f: OverviewFilters, branchId: number | null) {
+  const { sort: _ignored, ...rest } = productQuery(f, branchId);
+  void _ignored;
+  return { ...rest, sort: f.bsort ?? undefined };
 }
