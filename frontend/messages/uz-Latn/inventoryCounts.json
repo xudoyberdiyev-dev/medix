@@ -2,6 +2,7 @@
   "title": "Inventarizatsiya",
   "forbidden": "Bu sahifa sizning rolingiz uchun yopiq.",
   "start": "Inventarizatsiya boshlash",
+  "new": "Yangi inventarizatsiya",
   "caption": "Inventarizatsiya hujjatlari",
   "status": {
     "DRAFT": "Qoralama",
@@ -137,10 +138,10 @@
     "notePlaceholder": "Masalan: oylik inventarizatsiya"
   },
   "ov": {
-    "kCounting": "Sanoqda",
-    "kCountingNote": "sanoq davom etmoqda",
-    "kCheck": "Tekshiruvda",
-    "kCheckNote": "tasdiq kutmoqda",
+    "kCounting": "Jarayonda",
+    "kCountingNote": "Sanoq ketmoqda — zonalar qulflangan",
+    "kCheck": "Tasdiqlashda",
+    "kCheckNote": "Natija tekshirilmoqda",
     "nDocs": "{n} ta",
     "lastTitle": "Oxirgi toʻliq inventarizatsiya",
     "lastNever": "Oʻtkazilmagan",
@@ -151,7 +152,19 @@
     "all": "Hammasi",
     "commission": "Komissiya",
     "plusN": "+{n} kishi",
-    "scope": "Qamrov"
+    "scope": "Qamrov",
+    "warehouse": "Ombor",
+    "lines": "Qatorlar",
+    "diff": "Farq (dona / summa)",
+    "diffOk": "Mos",
+    "search": "Raqam, ombor yoki komissiya aʼzosi…",
+    "v": {
+      "DRAFT": "Qoralama",
+      "COUNTING": "Sanoqda",
+      "CHECK": "Tekshirishda",
+      "POSTED": "Tasdiqlangan",
+      "CANCELLED": "Bekor qilingan"
+    }
   },
   "doc": {
     "newT": "Yangi inventarizatsiya",

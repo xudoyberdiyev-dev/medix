@@ -47,7 +47,7 @@
     "soldRange": "Продажа: {from} – {to}",
     "soldFrom": "Продажа: с {date}",
     "soldTo": "Продажа: по {date}",
-    "create": "Создать заказ",
+    "create": "Новый заказ",
     "statusTabs": "Статусы заказов",
     "search": "Поиск",
     "searchPlaceholder": "Номер, клиент или ИНН",

@@ -468,7 +468,7 @@ test("CEO: buyurtma — mijoz, mahsulot, muammolar paneli, navbatga yuborish", a
   await page.keyboard.press("Escape");
 
   await page.goto("/orders");
-  await page.getByRole("button", { name: "Buyurtma kiritish" }).click();
+  await page.getByRole("button", { name: "Yangi buyurtma" }).click();
   await page.getByRole("combobox", { name: "Mijoz", exact: true }).click();
   await page.getByPlaceholder("Qidirish").fill("Shifo");
   await page.getByRole("option", { name: /Shifo Dorixona E2E/ }).click();
@@ -755,7 +755,7 @@ test("CEO: inventarizatsiya (IN) — hujjat sahifasi: qoralama (avtosaqlash) →
   await expect(page).toHaveURL(/\/$/);
 
   await page.goto("/inventory-counts");
-  await page.getByRole("button", { name: "Inventarizatsiya boshlash" }).first().click();
+  await page.getByRole("button", { name: "Yangi inventarizatsiya" }).first().click();
   await expect(page).toHaveURL(/\/inventory-counts\/new$/);
   await page.getByRole("combobox", { name: "Ombor", exact: true }).click();
   await page.getByRole("option", { name: /Markaziy ombor/ }).click();
@@ -842,7 +842,7 @@ test("CEO: filiallararo savdo (FS) — ikkinchi filial, joʻnatish (HF, tannarx)
 
   // Ikkinchi filial va uning ombori
   await page.goto("/settings/branches");
-  await page.getByRole("button", { name: "Filial qoʻshish" }).first().click();
+  await page.getByRole("button", { name: "Yangi filial" }).first().click();
   await field(page, "Kod").fill("SMQ");
   await field(page, "STIR").fill("309876543");
   await field(page, "Nomi").fill("E2E Samarqand");

@@ -21,7 +21,7 @@ test("Operator: saqlanmagan buyurtma boshqa sahifadan qaytganda tiklanadi", asyn
   await expect(page).toHaveURL(/\/$/);
 
   await page.goto("/orders");
-  await page.getByRole("button", { name: "Buyurtma kiritish" }).click();
+  await page.getByRole("button", { name: "Yangi buyurtma" }).click();
   await page.getByRole("combobox", { name: "Mijoz", exact: true }).click();
   await page.getByPlaceholder("Qidirish").fill("Baraka");
   await page.getByRole("option", { name: /Baraka Dorixona E2E/ }).click();
@@ -50,6 +50,6 @@ test("Operator: saqlanmagan buyurtma boshqa sahifadan qaytganda tiklanadi", asyn
   await page.getByRole("button", { name: "Saqlamasdan yopish" }).click();
   await expect(page).toHaveURL(/\/orders$/);
   await page.goto("/orders");
-  await expect(page.getByRole("button", { name: "Buyurtma kiritish" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Yangi buyurtma" })).toBeVisible();
   await expect(page).toHaveURL(/\/orders$/);
 });

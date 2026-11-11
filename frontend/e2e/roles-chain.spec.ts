@@ -233,7 +233,7 @@ test("Operator: naqd toʻlovli buyurtma kiritadi va navbatga yuboradi", async ({
   await expect(page).toHaveURL(/\/$/);
 
   await page.goto("/orders");
-  await page.getByRole("button", { name: "Buyurtma kiritish" }).click();
+  await page.getByRole("button", { name: "Yangi buyurtma" }).click();
   await page.getByRole("combobox", { name: "Mijoz", exact: true }).click();
   await page.getByPlaceholder("Qidirish").fill("Baraka");
   await page.getByRole("option", { name: /Baraka Dorixona E2E/ }).click();
@@ -427,7 +427,7 @@ test("Operator: maksimaldan koʻp — buyurtma Filial rahbari tasdigʻiga ketadi
   await login(page, "operator.1", OPERATOR_PASSWORD);
   await expect(page).toHaveURL(/\/$/);
   await page.goto("/orders");
-  await page.getByRole("button", { name: "Buyurtma kiritish" }).click();
+  await page.getByRole("button", { name: "Yangi buyurtma" }).click();
   await page.getByRole("combobox", { name: "Mijoz", exact: true }).click();
   await page.getByPlaceholder("Qidirish").fill("Baraka");
   await page.getByRole("option", { name: /Baraka Dorixona E2E/ }).click();
@@ -704,7 +704,7 @@ test("Operator: limitdan 20% dan koʻp oshgan buyurtma — Direktor tasdigʻiga"
   await login(page, "operator.1", OPERATOR_PASSWORD);
   await expect(page).toHaveURL(/\/$/);
   await page.goto("/orders");
-  await page.getByRole("button", { name: "Buyurtma kiritish" }).click();
+  await page.getByRole("button", { name: "Yangi buyurtma" }).click();
   await page.getByRole("combobox", { name: "Mijoz", exact: true }).click();
   await page.getByPlaceholder("Qidirish").fill("Baraka");
   await page.getByRole("option", { name: /Baraka Dorixona E2E/ }).click();
