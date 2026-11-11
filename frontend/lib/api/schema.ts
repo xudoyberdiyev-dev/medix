@@ -1026,6 +1026,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/counterparties/import/check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Import ustasi: qatorlarni tekshirish yoki yaratish
+         * @description role — CUSTOMER (clients.create) yoki SUPPLIER (suppliers.create). apply=false — har qator uchun holat va izohlar; apply=true — OK va ogohlantirishli qatorlar bitta tranzaksiyada yaratiladi, xato qatorlar o'tkazib yuboriladi. Limit va muddatlar branchId filial shartlariga yoziladi (clients.terms / suppliers.terms bo'lsa).
+         */
+        post: operations["importCheck_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/counterparties/import/profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Import ustasi: saqlangan moslashtirish profili
+         * @description Profil bo'lmasa — 204.
+         */
+        get: operations["importProfile_1"];
+        /**
+         * Import ustasi: moslashtirishni saqlash
+         * @description Keyingi safar avtomatik qo'llanadi.
+         */
+        put: operations["saveImportProfile_1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/counterparties/import/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Import ustasi: faylni o'qish
+         * @description .xlsx yoki .csv — varaqlar va katakchalar (matn). Hech narsa yozilmaydi; sarlavha va ustunlar brauzerda tanlanadi.
+         */
+        post: operations["importRead_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/counterparties/overview": {
         parameters: {
             query?: never;
@@ -8394,6 +8458,41 @@ export interface components {
             employee?: string;
             reason?: string;
         };
+        CounterpartyImportRequest: {
+            /**
+             * Format: int64
+             * @description Filial shartlari (limit, muddatlar) shu filialga yoziladi
+             */
+            branchId?: number;
+            /** @enum {string} */
+            role: "CUSTOMER" | "SUPPLIER" | "ALL";
+            rows: components["schemas"]["ImportRowInput"][];
+        };
+        CounterpartyImportResult: {
+            applied: boolean;
+            /** Format: int32 */
+            created: number;
+            /** Format: int32 */
+            error: number;
+            /** Format: int32 */
+            ok: number;
+            rows: components["schemas"]["CounterpartyImportRow"][];
+            /** Format: int32 */
+            warn: number;
+        };
+        CounterpartyImportRow: {
+            /**
+             * Format: int64
+             * @description apply=true da yaratilgan kontragent
+             */
+            createdId?: number;
+            messages: components["schemas"]["ImportMessage"][];
+            /** Format: int32 */
+            row: number;
+            /** @enum {string} */
+            status: "OK" | "WARN" | "ERROR";
+            tin?: string;
+        };
         CounterpartyOverviewPage: {
             branches: components["schemas"]["OverviewBranch"][];
             items: components["schemas"]["OverviewRow"][];
@@ -15705,6 +15804,107 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    importCheck_1: {
+        parameters: {
+            query?: {
+                apply?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CounterpartyImportRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CounterpartyImportResult"];
+                };
+            };
+        };
+    };
+    importProfile_1: {
+        parameters: {
+            query: {
+                role: "CUSTOMER" | "SUPPLIER" | "ALL";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportProfile"];
+                };
+            };
+        };
+    };
+    saveImportProfile_1: {
+        parameters: {
+            query: {
+                role: "CUSTOMER" | "SUPPLIER" | "ALL";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportProfileRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportProfile"];
+                };
+            };
+        };
+    };
+    importRead_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportFile"];
+                };
             };
         };
     };

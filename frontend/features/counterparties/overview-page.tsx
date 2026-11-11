@@ -16,6 +16,7 @@ import {
   ShieldX,
   SlidersHorizontal,
   Truck,
+  Upload,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -449,6 +450,11 @@ export function OverviewPage({ role }: { role: CounterpartyRole }) {
           {data ? <span className="text-body font-normal text-text-secondary tabular-nums">{formatQuantity(all.length)}</span> : null}
         </h1>
         <div className="flex items-center gap-2">
+          {canEdit ? (
+            <Button variant="secondary" icon={Upload} onClick={() => router.push(`${pathname}/import`)}>
+              {t("import")}
+            </Button>
+          ) : null}
           <Button variant="secondary" icon={FileSpreadsheet} onClick={() => window.location.assign(exportHref())}>
             {t("export")}
           </Button>
