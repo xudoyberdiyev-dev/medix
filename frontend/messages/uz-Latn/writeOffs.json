@@ -110,7 +110,11 @@
     "otherNote": "Sabab «Boshqa» — izoh yozing (nima boʻldi).",
     "noLines": "Kamida bitta partiyaga hisobdan chiqarish sonini kiriting.",
     "sent": "Tasdiqqa yuborildi",
-    "done": "Tovar hisobdan chiqarildi"
+    "done": "Tovar hisobdan chiqarildi",
+    "lines": "Qatorlar",
+    "linesHint": "Zonadagi partiyalar shu yerda chiqadi — hisobdan chiqariladigan miqdorni kiriting.",
+    "totalLines": "Qatorlar: {a} / {b}",
+    "totalQty": "Jami dona: {n}"
   },
   "doc": {
     "loading": "Hujjat yuklanmoqda",

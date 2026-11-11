@@ -132,7 +132,7 @@ export function IssuesList({ onOpenOrder }: { onOpenOrder: (id: number) => void 
   }
 
   const err = describeError(error);
-  if (issues.error) return <ErrorState onRetry={() => issues.refetch()} />;
+  if (issues.error) return <ErrorState error={issues.error} onRetry={() => issues.refetch()} />;
   if (issues.isPending) return <Skeleton className="h-24 w-full" />;
   return (
     <>

@@ -24,7 +24,7 @@ import { describeDevice, useEndOtherSessions, useMyActions, useMySessions, usePr
 export function ProfilePage() {
   const t = useTranslations("profile");
   const profile = useProfile();
-  if (profile.error) return <ErrorState onRetry={() => profile.refetch()} />;
+  if (profile.error) return <ErrorState error={profile.error} onRetry={() => profile.refetch()} />;
   if (!profile.data)
     return (
       <div className="flex flex-col gap-4">

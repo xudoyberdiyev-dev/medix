@@ -183,7 +183,7 @@ function BatchKids({
         <Spinner />
       </div>
     );
-  if (rows.error) return <ErrorState onRetry={() => rows.refetch()} />;
+  if (rows.error) return <ErrorState error={rows.error} onRetry={() => rows.refetch()} />;
   const items = (rows.data?.items ?? []).filter((r: StockRow) => r.productId === product.productId);
   const showCost = items.some((r) => r.cost != null);
   return (

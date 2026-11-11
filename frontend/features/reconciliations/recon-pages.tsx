@@ -425,7 +425,7 @@ export function ReconViewPage({ id }: { id: number }) {
   });
 
   if (me.data && !can(me.data, "recon.view")) return <ForbiddenState description={t("forbidden")} />;
-  if (q.error) return <ErrorState onRetry={() => q.refetch()} />;
+  if (q.error) return <ErrorState error={q.error} onRetry={() => q.refetch()} />;
   if (!q.data) return <Skeleton className="h-96" />;
   const d: ReconDetail = q.data;
   const h = d.head;

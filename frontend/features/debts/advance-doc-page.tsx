@@ -122,7 +122,7 @@ export function AdvanceNewPage({ side, party, branch }: { side: AdvSide; party: 
   const [error, setError] = useState<unknown>(null);
 
   if (me.data && !allowed) return <ForbiddenState description={t("forbidden")} />;
-  if (open.error) return <ErrorState onRetry={() => open.refetch()} />;
+  if (open.error) return <ErrorState error={open.error} onRetry={() => open.refetch()} />;
   if (!open.data || !me.data) return <Skeleton className="h-96" />;
 
   const docs: DocRow[] = open.data.docs.filter((d) => cents(d.open) > 0n);
@@ -296,7 +296,7 @@ export function AdvanceViewPage({ id }: { id: number }) {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<unknown>(null);
 
-  if (q.error) return <ErrorState onRetry={() => q.refetch()} />;
+  if (q.error) return <ErrorState error={q.error} onRetry={() => q.refetch()} />;
   if (!q.data) return <Skeleton className="h-96" />;
   const d = q.data;
   const side = d.side as AdvSide;

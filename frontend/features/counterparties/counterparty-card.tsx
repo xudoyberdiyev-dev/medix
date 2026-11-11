@@ -13,11 +13,15 @@ import { RowMenu, type RowMenuItem } from "@/components/ui/row-menu";
 import { ErrorState, Skeleton } from "@/components/ui/system-states";
 import { Tabs } from "@/components/ui/tabs";
 import { toast } from "@/components/ui/toast";
+import { useQuery } from "@tanstack/react-query";
 import { can } from "@/features/auth/can";
+import { BONUS_VIEW } from "@/features/bonuses/bonus-page";
+import { api, unwrap } from "@/lib/api/client";
 import { useMe } from "@/features/auth/session";
 import { DeactivateDialog } from "@/features/organization/deactivate-dialog";
 import { cn } from "@/lib/cn";
 import { formatMoney } from "@/lib/format";
+
 import {
   canBlockCard,
   canEditCard,
@@ -36,6 +40,8 @@ import { CardHistory } from "./card-history";
 import { docSections, sectionPermissions, type DocSection } from "./documents-model";
 import { ProductsTab, ReconTab } from "./card-extra-tabs";
 import { cents } from "./overview-model";
+
+const todayIso = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Tashkent" }).format(new Date());
 
 const BASE_TABS = ["general", "licenses", "terms", "contracts"] as const;
 type Tab = (typeof BASE_TABS)[number] | DocSection | "recon" | "products" | "history";
@@ -64,6 +70,31 @@ function InfoList({ title, rows }: { title: string; rows: [string, ReactNode, bo
         ))}
       </dl>
     </section>
+  );
+}
+
+/** YB kartochkasi: bonus balansi va kutilayotgan bonus (prototip CounterpartyCard; manba — «Bonus balans» sahifasi bilan bir xil API). */
+function SupplierBonusTiles({ supplierId, branchId }: { supplierId: number; branchId: number }) {
+  const t = useTranslations("counterparties.card");
+  const me = useMe();
+  const allowed = BONUS_VIEW.some((k) => can(me.data, k));
+  const q = useQuery({
+    queryKey: ["supplier-bonuses", branchId, supplierId],
+    queryFn: () => unwrap(api.GET("/api/supplier-bonuses/{supplierId}", { params: { path: { supplierId }, query: { branchId } } })),
+    enabled: allowed,
+  });
+  if (!allowed) return null;
+  const pending = q.data?.pending ?? [];
+  const pendingSum = pending.reduce((a, p) => a + cents(p.amount), 0n);
+  return (
+    <>
+      <Tile label={t("bonusBal")} value={q.data && cents(q.data.balance) > 0n ? formatMoney(q.data.balance) : "—"} href="/bonuses" />
+      <Tile
+        label={t("bonusPending")}
+        value={pendingSum > 0n ? formatMoney(`${pendingSum / 100n}.${(pendingSum % 100n).toString().padStart(2, "0")}`) : "—"}
+        sub={pending.length ? t("bonusPendingN", { n: pending.length }) : undefined}
+      />
+    </>
   );
 }
 
@@ -102,7 +133,7 @@ const fmtAccount = (a: string) => a.replace(/(\d{4})(?=\d)/g, "$1 ");
  */
 export function CounterpartyCardPage({ id, role }: { id: number; role: CounterpartyRole }) {
   const cp = useCounterparty(id);
-  if (cp.error) return <ErrorState onRetry={() => cp.refetch()} />;
+  if (cp.error) return <ErrorState error={cp.error} onRetry={() => cp.refetch()} />;
   if (!cp.data)
     return (
       <div className="flex flex-col gap-4">
@@ -344,6 +375,15 @@ function Card({ c, role }: { c: CounterpartyDetail; role: CounterpartyRole }) {
                     tone={cents(sel.overdue) > 0n ? "danger" : undefined}
                     sub={cents(sel.overdue) > 0n ? tl("late", { n: sel.maxOverdueDays }) : undefined}
                   />
+                  {!customers ? (
+                    <Tile
+                      label={t("nextDue")}
+                      value={sel.nextDue ? formatIsoDate(sel.nextDue.date) : "—"}
+                      tone={sel.nextDue && sel.nextDue.date < todayIso() ? "danger" : undefined}
+                      sub={sel.nextDue ? `${formatMoney(sel.nextDue.amount)} · ${sel.nextDue.number}` : undefined}
+                    />
+                  ) : null}
+                  {!customers ? <SupplierBonusTiles supplierId={c.id} branchId={sel.branchId} /> : null}
                   {customers ? (
                     <>
                       <Tile

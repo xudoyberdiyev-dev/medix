@@ -14,7 +14,7 @@ import { Table, type TableColumn } from "@/components/ui/table";
 import { Tabs } from "@/components/ui/tabs";
 import { can } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
-import { formatIsoDate } from "@/features/counterparties/api";
+import { formatIsoDate, useCounterparty } from "@/features/counterparties/api";
 import { StatusBadge as ReconStatusBadge } from "@/features/reconciliations/recon-pages";
 import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
@@ -74,6 +74,9 @@ export function DebtCardPage({ side, id, name }: { side: Side; id: number; name:
     enabled: !!me.data && canRecon,
   });
 
+  // Qarzi yoʻq kontragent (hisobotda qatori yoʻq) — nomi kartochkadan.
+  const party = useCounterparty(name ? null : id);
+
   if (me.data && !allowed) return <ForbiddenState description={td("forbidden", { title: td(`side.${side}.title`) })} />;
   if (report.error || docs.error) {
     return (
@@ -89,7 +92,7 @@ export function DebtCardPage({ side, id, name }: { side: Side; id: number; name:
   const row: DebtRow | undefined = report.data?.rows.find((r) => r.counterpartyId === id);
   const open: CardDoc[] = (docs.data ?? []).filter((d) => !d.open.startsWith("-") && d.open !== "0.00");
   const myRecons = (recons.data?.rows ?? []).filter((r) => r.counterpartyId === id && r.side === side);
-  const title = row?.name ?? name ?? "";
+  const title = row?.name ?? name ?? party.data?.name ?? "";
   const parentHref = `/debts/${PATH[side]}`;
   const sums = cardTotals(open);
   const debt = row?.buckets.debt ?? "0.00";
@@ -254,7 +257,7 @@ export function DebtCardPage({ side, id, name }: { side: Side; id: number; name:
             />
           ) : null}
         </div>
-        <aside className="grid grid-cols-2 content-start gap-3 md:grid-cols-5 min-[1100px]:grid-cols-1" aria-label={t("summary")}>
+        <aside className="grid grid-cols-1 content-start gap-3 max-md:grid-cols-2 md:max-[1099px]:grid-cols-5" aria-label={t("summary")}>
           <Kpi label={yt ? t("kOur") : t("kDebt")} value={formatMoney(debt)} />
           <Kpi
             label={t("kOverdue")}

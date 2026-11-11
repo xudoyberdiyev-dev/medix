@@ -163,8 +163,8 @@ test("CEO: ombor, yigʻuvchi, haydovchi va kassir xodimlari, mashina, mijoz", as
   // Mijoz
   await page.goto("/customers");
   await page.getByRole("button", { name: "Mijoz qoʻshish" }).first().click();
-  await field(page, "STIR / JShShIR").fill("305559876");
-  await field(page, "Nomi").fill(CUSTOMER);
+  await field(page, "STIR").fill("305559876");
+  await field(page, "Qisqa nomi").fill(CUSTOMER);
   await choose(page, "Turi", /Dorixona/);
   await field(page, "Litsenziya raqami").fill("FA-E2E-1");
   await field(page, "Amal qilish muddati").fill("31.12.2030");

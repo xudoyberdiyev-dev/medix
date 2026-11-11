@@ -111,7 +111,7 @@ export function DocsTab({ branchId }: { branchId: number | null }) {
   }
 
   const err = error instanceof Error && error.message === "date" ? { message: tr("shipments.dateError") } : describeError(error);
-  if (ready.error) return <ErrorState onRetry={() => ready.refetch()} />;
+  if (ready.error) return <ErrorState error={ready.error} onRetry={() => ready.refetch()} />;
   if (ready.isPending) return <Skeleton className="h-40 w-full" />;
   return (
     <>

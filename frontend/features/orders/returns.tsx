@@ -51,7 +51,7 @@ export function ReturnsList() {
   }
 
   const err = describeError(error);
-  if (list.error) return <ErrorState onRetry={() => list.refetch()} />;
+  if (list.error) return <ErrorState error={list.error} onRetry={() => list.refetch()} />;
   if (list.isPending) return <Skeleton className="h-24 w-full" />;
   if (list.data.length === 0)
     return (

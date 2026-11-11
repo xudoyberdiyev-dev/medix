@@ -157,7 +157,7 @@ function TripHistory() {
     queryKey: ["trips", "mine", "history"],
     queryFn: () => unwrap(api.GET("/api/trips/mine/history")),
   });
-  if (trips.error) return <ErrorState onRetry={() => trips.refetch()} />;
+  if (trips.error) return <ErrorState error={trips.error} onRetry={() => trips.refetch()} />;
   if (trips.isPending) return <Skeleton className="h-24 w-full" />;
   if (trips.data.length === 0)
     return (

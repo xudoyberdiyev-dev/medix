@@ -144,6 +144,9 @@ class CounterpartyOverviewIT {
                 .andExpect(jsonPath("$.branches[0].maxOverdueDays").value(40))
                 .andExpect(jsonPath("$.branches[0].limitLeft").value("3749999.50"))
                 .andExpect(jsonPath("$.branches[0].paymentDays").value(15))
+                .andExpect(jsonPath("$.branches[0].nextDue.date").value(today.minusDays(40).toString()))
+                .andExpect(jsonPath("$.branches[0].nextDue.amount").value("1250000.50"))
+                .andExpect(jsonPath("$.branches[0].nextDue.number").value("SV-OV-" + c))
                 .andExpect(jsonPath("$.branches.length()").value(1));
 
         // Boshqa filial tanlansa: sharti yo'q, qarz 0

@@ -43,7 +43,7 @@ export function StockTree({ branchId, onPickZone }: { branchId: number | null; o
         <Spinner />
       </div>
     );
-  if (tree.error) return <ErrorState onRetry={() => tree.refetch()} />;
+  if (tree.error) return <ErrorState error={tree.error} onRetry={() => tree.refetch()} />;
   const nodes = tree.data ?? [];
   if (!nodes.length) return <EmptyState icon={Warehouse} title={t("emptyStock")} description={t("emptyStockHint")} />;
   const showCost = nodes.some((n) => n.value != null);

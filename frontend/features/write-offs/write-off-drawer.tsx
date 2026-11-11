@@ -6,7 +6,7 @@ import { useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DocumentHeader } from "@/components/ui/document-header";
+import { NewDocFrame } from "@/components/shell/new-doc-frame";
 import { Drawer } from "@/components/ui/drawer";
 import { Modal } from "@/components/ui/modal";
 import { Select } from "@/components/ui/select";
@@ -312,14 +312,33 @@ export function CreateForm({
       {canApprove ? t("form.submit") : t("form.sendForApproval")}
     </Button>
   );
-  const body = (
-    <div className="flex flex-col gap-4">
-      {error ? (
-        <Alert tone="danger" title={t("form.errorTitle")}>
-          {error}
-        </Alert>
-      ) : null}
-      <div className="grid grid-cols-3 gap-4">
+  const pickedQty = picked.lines.reduce((a, l) => a + l.qty, 0);
+  const linesBlock = zone ? (
+    stock.error ? (
+      <ErrorState onRetry={() => stock.refetch()} />
+    ) : (
+      <Table
+        caption={t("form.stockCaption", { zone: zone.name })}
+        density="compact"
+        columns={columns}
+        rows={rows}
+        rowKey={(r) => String(r.batchId)}
+        loading={stock.isPending}
+        emptyState={<EmptyState icon={X} title={t("form.emptyZoneTitle")} description={t("form.emptyZoneHint")} />}
+      />
+    )
+  ) : page ? (
+    <EmptyState icon={X} title={t("form.pickZone")} description={t("form.linesHint")} />
+  ) : null;
+  const fillBtn =
+    reason === "EXPIRED" && expiredCount > 0 ? (
+      <Button variant="secondary" size="sm" icon={CalendarX} onClick={() => setQty(fillExpired(rows))}>
+        {t("form.fillExpired", { count: String(expiredCount) })}
+      </Button>
+    ) : null;
+  const head = (
+    <>
+      <div className={page ? "grid grid-cols-2 gap-4 lg:grid-cols-4" : "grid grid-cols-3 gap-4"}>
         <Select
           label={t("form.warehouse")}
           value={warehouseId}
@@ -345,60 +364,77 @@ export function CreateForm({
           options={HC_REASONS.map((value) => ({ value, label: t(`reason.${value}`) }))}
           required
         />
+        {page ? <TextField label={t("form.actNo")} value={actNo} onChange={setActNo} placeholder={t("form.actNoPlaceholder")} /> : null}
       </div>
-      <Alert tone="info" title={canApprove ? t("form.selfApproveTitle") : t("form.needApprovalTitle")}>
-        {canApprove
-          ? t("form.selfApproveBody", { limit: formatMoney(HC_DIRECTOR_LIMIT) })
-          : t("form.needApprovalBody", { limit: formatMoney(HC_DIRECTOR_LIMIT) })}
-      </Alert>
-      {zone ? (
-        stock.error ? (
-          <ErrorState onRetry={() => stock.refetch()} />
-        ) : (
-          <>
-            {reason === "EXPIRED" && expiredCount > 0 ? (
-              <div>
-                <Button variant="secondary" size="sm" icon={CalendarX} onClick={() => setQty(fillExpired(rows))}>
-                  {t("form.fillExpired", { count: String(expiredCount) })}
-                </Button>
-              </div>
-            ) : null}
-            <Table
-              caption={t("form.stockCaption", { zone: zone.name })}
-              density="compact"
-              columns={columns}
-              rows={rows}
-              rowKey={(r) => String(r.batchId)}
-              loading={stock.isPending}
-              emptyState={<EmptyState icon={X} title={t("form.emptyZoneTitle")} description={t("form.emptyZoneHint")} />}
-            />
-          </>
-        )
+      {page ? (
+        <TextField label={t("form.commission")} value={commission} onChange={setCommission} placeholder={t("form.commissionPlaceholder")} />
       ) : null}
+    </>
+  );
+  const approvalNote = (
+    <Alert tone="info" title={canApprove ? t("form.selfApproveTitle") : t("form.needApprovalTitle")}>
+      {canApprove
+        ? t("form.selfApproveBody", { limit: formatMoney(HC_DIRECTOR_LIMIT) })
+        : t("form.needApprovalBody", { limit: formatMoney(HC_DIRECTOR_LIMIT) })}
+    </Alert>
+  );
+  const noteField = (
+    <TextField
+      label={t("form.note")}
+      value={note}
+      onChange={setNote}
+      placeholder={t("form.notePlaceholder")}
+      required={reason === "OTHER"}
+    />
+  );
+  const errorAlert = error ? (
+    <Alert tone="danger" title={t("form.errorTitle")}>
+      {error}
+    </Alert>
+  ) : null;
+  const body = (
+    <div className="flex flex-col gap-4">
+      {errorAlert}
+      {head}
+      {approvalNote}
+      {fillBtn ? <div>{fillBtn}</div> : null}
+      {linesBlock}
       <div className="grid grid-cols-2 gap-4">
         <TextField label={t("form.actNo")} value={actNo} onChange={setActNo} placeholder={t("form.actNoPlaceholder")} />
         <TextField label={t("form.commission")} value={commission} onChange={setCommission} placeholder={t("form.commissionPlaceholder")} />
       </div>
-      <TextField
-        label={t("form.note")}
-        value={note}
-        onChange={setNote}
-        placeholder={t("form.notePlaceholder")}
-        required={reason === "OTHER"}
-      />
+      {noteField}
     </div>
   );
   if (page)
     return (
-      <div className="flex min-w-0 flex-col gap-4 pb-12">
-        <DocumentHeader
-          parent={{ label: t("doc.parent"), href: "/write-offs" }}
-          crumb={t("doc.crumbNew")}
-          title={t("form.title")}
-          actions={action}
-        />
-        <section className="rounded-card border border-border bg-surface p-5">{body}</section>
-      </div>
+      <NewDocFrame
+        hub="returns"
+        parent={{ label: t("doc.parent"), href: "/write-offs" }}
+        crumb={t("doc.crumbNew")}
+        title={t("form.title")}
+        actions={action}
+      >
+        {errorAlert}
+        <section className="flex flex-col gap-4 rounded-card border border-border bg-surface p-5">
+          {head}
+          {noteField}
+        </section>
+        {approvalNote}
+        <section className="rounded-card border border-border bg-surface">
+          <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-3">
+            <h2 className="text-subtitle">
+              {t("form.lines")} <span className="text-caption text-text-secondary">{formatQuantity(picked.lines.length)}</span>
+            </h2>
+            {fillBtn}
+          </div>
+          <div className="p-3">{linesBlock}</div>
+          <p className="flex justify-end gap-6 border-t border-border px-5 py-3 text-caption text-text-secondary">
+            <span>{t("form.totalLines", { a: formatQuantity(picked.lines.length), b: formatQuantity(rows.length) })}</span>
+            <span>{t("form.totalQty", { n: formatQuantity(pickedQty) })}</span>
+          </p>
+        </section>
+      </NewDocFrame>
     );
   return (
     <Drawer open onClose={onClose} size="lg" kind={t("kind")} title={t("form.title")} actions={action}>

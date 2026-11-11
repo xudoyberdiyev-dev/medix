@@ -90,7 +90,8 @@ class CounterpartyOverview {
             @Schema(nullable = true) String operator,
             @Schema(nullable = true) Integer paymentDays,
             @Schema(nullable = true, description = "Mijoz — oxirgi sotuv (id — buyurtma), YB — oxirgi kirim (id — kirim)") LastDoc lastDoc,
-            @Schema(nullable = true) LastDoc lastPayment) {}
+            @Schema(nullable = true) LastDoc lastPayment,
+            @Schema(nullable = true, description = "Eng yaqin to'lov kuni (kechikkan bo'lsa ham) — ochiq hujjatlar bo'yicha") LastDoc nextDue) {}
 
     record CounterpartySummary(List<BranchSummary> branches) {}
 
@@ -223,7 +224,8 @@ class CounterpartyOverview {
             out.add(new BranchSummary(b.id(), b.code(), b.name(), b.hasTerms(), debt.toString(),
                     d == null ? Money.ZERO.toString() : d.advance(), d == null ? Money.ZERO.toString() : d.overdue(),
                     d == null ? 0 : d.maxOverdueDays(), b.creditLimit() == null ? null : new Money(b.creditLimit()).toString(),
-                    left == null ? null : left.toString(), b.priceType(), b.operator(), b.paymentDays(), lastDoc, lastPay));
+                    left == null ? null : left.toString(), b.priceType(), b.operator(), b.paymentDays(), lastDoc, lastPay,
+                    debts.nextDue(actor, side, b.id(), id).map(x -> new LastDoc(x.date(), x.amount(), x.number(), null)).orElse(null)));
         }
         return new CounterpartySummary(out);
     }

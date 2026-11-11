@@ -48,7 +48,7 @@ export function PriceChangeDocumentPage({ id }: { id: number }) {
   const doc = usePriceChange(id);
   const branches = useBranchList();
   const back = "/prices?tab=documents";
-  if (doc.error) return <ErrorState onRetry={() => doc.refetch()} />;
+  if (doc.error) return <ErrorState error={doc.error} onRetry={() => doc.refetch()} />;
   if (!doc.data)
     return (
       <div className="flex flex-col gap-4" aria-busy>

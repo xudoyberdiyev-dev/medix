@@ -40,7 +40,7 @@ export function SupplierReturnDocPage({ id }: { id: number }) {
   const me = useMe();
   const doc = useSupplierReturn(id);
   if (me.data && !canAny(me.data, QY_VIEW_KEYS)) return <ForbiddenState description={t("forbidden")} />;
-  if (doc.error) return <ErrorState onRetry={() => doc.refetch()} />;
+  if (doc.error) return <ErrorState error={doc.error} onRetry={() => doc.refetch()} />;
   if (!doc.data)
     return (
       <div className="flex flex-col gap-4" aria-label={t("doc.loading")}>

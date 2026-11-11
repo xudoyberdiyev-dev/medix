@@ -77,7 +77,7 @@ export function WarehouseTransferDocPage({ id }: { id: number }) {
   const me = useMe();
   const doc = useWarehouseTransfer(id);
   if (me.data && !canAny(me.data, OK_VIEW_KEYS)) return <ForbiddenState />;
-  if (doc.error) return <ErrorState onRetry={() => doc.refetch()} />;
+  if (doc.error) return <ErrorState error={doc.error} onRetry={() => doc.refetch()} />;
   if (!doc.data)
     return (
       <div className="flex flex-col gap-4" aria-label={t("loading")}>

@@ -187,7 +187,7 @@ export function PriceSetPage() {
   }, [dirty]);
 
   if (me.data && !can(me.data, PRICE_CREATE)) return <ForbiddenState />;
-  if (grid.error) return <ErrorState onRetry={() => grid.refetch()} />;
+  if (grid.error) return <ErrorState error={grid.error} onRetry={() => grid.refetch()} />;
 
   const typeName = grid.data?.priceTypeName ?? typeOptions.find((x) => x.id === priceTypeId)?.name ?? "";
   const branchName = activeBranches.find((b) => b.id === branchId)?.name ?? "";

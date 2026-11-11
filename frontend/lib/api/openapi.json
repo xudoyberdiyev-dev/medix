@@ -18577,6 +18577,10 @@
           "name" : {
             "type" : "string"
           },
+          "nextDue" : {
+            "$ref" : "#/components/schemas/LastDoc",
+            "description" : "Eng yaqin to'lov kuni (kechikkan bo'lsa ham) — ochiq hujjatlar bo'yicha"
+          },
           "operator" : {
             "type" : "string"
           },
