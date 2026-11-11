@@ -345,7 +345,10 @@
     "blocked": "Bloklangan: {reason}",
     "ctrl": "Nazoratdagi mahsulotlar",
     "readOnly": "Faqat koʻrish",
-    "nextDue": "Keyingi toʻlov kuni"
+    "nextDue": "Keyingi toʻlov kuni",
+    "bonusBal": "Bonus balans",
+    "bonusPending": "Kutilayotgan",
+    "bonusPendingN": "{n} ta kirim boʻyicha bonus"
   },
   "docs": {
     "tab": {

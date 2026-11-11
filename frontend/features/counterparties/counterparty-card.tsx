@@ -13,7 +13,10 @@ import { RowMenu, type RowMenuItem } from "@/components/ui/row-menu";
 import { ErrorState, Skeleton } from "@/components/ui/system-states";
 import { Tabs } from "@/components/ui/tabs";
 import { toast } from "@/components/ui/toast";
+import { useQuery } from "@tanstack/react-query";
 import { can } from "@/features/auth/can";
+import { BONUS_VIEW } from "@/features/bonuses/bonus-page";
+import { api, unwrap } from "@/lib/api/client";
 import { useMe } from "@/features/auth/session";
 import { DeactivateDialog } from "@/features/organization/deactivate-dialog";
 import { cn } from "@/lib/cn";
@@ -67,6 +70,31 @@ function InfoList({ title, rows }: { title: string; rows: [string, ReactNode, bo
         ))}
       </dl>
     </section>
+  );
+}
+
+/** YB kartochkasi: bonus balansi va kutilayotgan bonus (prototip CounterpartyCard; manba — «Bonus balans» sahifasi bilan bir xil API). */
+function SupplierBonusTiles({ supplierId, branchId }: { supplierId: number; branchId: number }) {
+  const t = useTranslations("counterparties.card");
+  const me = useMe();
+  const allowed = BONUS_VIEW.some((k) => can(me.data, k));
+  const q = useQuery({
+    queryKey: ["supplier-bonuses", branchId, supplierId],
+    queryFn: () => unwrap(api.GET("/api/supplier-bonuses/{supplierId}", { params: { path: { supplierId }, query: { branchId } } })),
+    enabled: allowed,
+  });
+  if (!allowed) return null;
+  const pending = q.data?.pending ?? [];
+  const pendingSum = pending.reduce((a, p) => a + cents(p.amount), 0n);
+  return (
+    <>
+      <Tile label={t("bonusBal")} value={q.data && cents(q.data.balance) > 0n ? formatMoney(q.data.balance) : "—"} href="/bonuses" />
+      <Tile
+        label={t("bonusPending")}
+        value={pendingSum > 0n ? formatMoney(`${pendingSum / 100n}.${(pendingSum % 100n).toString().padStart(2, "0")}`) : "—"}
+        sub={pending.length ? t("bonusPendingN", { n: pending.length }) : undefined}
+      />
+    </>
   );
 }
 
@@ -355,6 +383,7 @@ function Card({ c, role }: { c: CounterpartyDetail; role: CounterpartyRole }) {
                       sub={sel.nextDue ? `${formatMoney(sel.nextDue.amount)} · ${sel.nextDue.number}` : undefined}
                     />
                   ) : null}
+                  {!customers ? <SupplierBonusTiles supplierId={c.id} branchId={sel.branchId} /> : null}
                   {customers ? (
                     <>
                       <Tile
