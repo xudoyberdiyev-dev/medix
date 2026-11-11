@@ -21339,6 +21339,38 @@
         },
         "required" : [ "status" ]
       },
+      "Flows" : {
+        "type" : "object",
+        "properties" : {
+          "customerPayments" : {
+            "type" : "string"
+          },
+          "expenseDocs" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "incomeDocs" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "otherExpense" : {
+            "type" : "string"
+          },
+          "otherIncome" : {
+            "type" : "string"
+          },
+          "supplierPayments" : {
+            "type" : "string"
+          },
+          "transfersIn" : {
+            "type" : "string"
+          },
+          "transfersOut" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "customerPayments", "expenseDocs", "incomeDocs", "otherExpense", "otherIncome", "supplierPayments", "transfersIn", "transfersOut" ]
+      },
       "FsShortageInfo" : {
         "type" : "object",
         "properties" : {
@@ -25675,6 +25707,10 @@
           "expensesTotal" : {
             "type" : "string"
           },
+          "flows" : {
+            "$ref" : "#/components/schemas/Flows",
+            "description" : "Kirim/chiqim tarkibi (prototip CashierPanel kartalari)"
+          },
           "from" : {
             "type" : "string",
             "format" : "date"
@@ -25700,7 +25736,7 @@
             "format" : "date"
           }
         },
-        "required" : [ "accounts", "balances", "customerDueSoon", "customerDueToday", "days", "draftPayments", "draftPaymentsAmount", "expense", "expenses", "expensesTotal", "from", "income", "pendingOps", "pendingOpsAmount", "recent", "to" ]
+        "required" : [ "accounts", "balances", "customerDueSoon", "customerDueToday", "days", "draftPayments", "draftPaymentsAmount", "expense", "expenses", "expensesTotal", "flows", "from", "income", "pendingOps", "pendingOpsAmount", "recent", "to" ]
       },
       "PartialRequest" : {
         "type" : "object",

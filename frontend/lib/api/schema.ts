@@ -8972,6 +8972,18 @@ export interface components {
             /** @enum {string} */
             status: "PLANNED" | "IN_TRANSIT" | "RETURN_WAIT" | "DONE" | "CANCELLED";
         };
+        Flows: {
+            customerPayments: string;
+            /** Format: int32 */
+            expenseDocs: number;
+            /** Format: int32 */
+            incomeDocs: number;
+            otherExpense: string;
+            otherIncome: string;
+            supplierPayments: string;
+            transfersIn: string;
+            transfersOut: string;
+        };
         FsShortageInfo: {
             amount?: string;
             canResolveAsBuyer: boolean;
@@ -10741,6 +10753,8 @@ export interface components {
             expense: string;
             expenses: components["schemas"]["ItemTotal"][];
             expensesTotal: string;
+            /** @description Kirim/chiqim tarkibi (prototip CashierPanel kartalari) */
+            flows: components["schemas"]["Flows"];
             /** Format: date */
             from: string;
             income: string;
