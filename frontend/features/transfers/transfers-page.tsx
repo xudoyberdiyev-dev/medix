@@ -105,7 +105,7 @@ function KpiTile(props: {
         </span>
         {props.label}
       </span>
-      <span className={cn("tabular max-w-full truncate text-kpi", props.warn && "text-warning")}>{props.value}</span>
+      <span className={cn("tabular max-w-full truncate text-stat", props.warn && "text-warning")}>{props.value}</span>
       <span className="max-w-full truncate text-caption text-text-secondary">{props.note}</span>
     </button>
   );

@@ -75,7 +75,7 @@ function KpiTile({
       className="flex min-w-0 flex-col items-start gap-1 rounded-card border border-border bg-surface px-4 py-3.5 text-left transition-colors hover:border-primary/50"
     >
       <span className="text-[12.5px] text-text-secondary">{label}</span>
-      <span className={cn("tabular text-kpi whitespace-nowrap", warn && "text-warning")}>{value}</span>
+      <span className={cn("tabular text-stat whitespace-nowrap", warn && "text-warning")}>{value}</span>
       {sub ? <span className={cn("text-caption", warn ? "text-warning" : "text-text-secondary")}>{sub}</span> : null}
     </button>
   );
