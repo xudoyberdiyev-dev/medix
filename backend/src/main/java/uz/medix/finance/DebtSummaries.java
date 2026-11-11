@@ -3,6 +3,7 @@ package uz.medix.finance;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import uz.medix.finance.PartyLedger.Side;
 import uz.medix.shared.security.Actor;
 
@@ -35,4 +36,8 @@ public interface DebtSummaries {
     Map<Long, PartyDebt> byParty(Actor actor, Side side, Long branchId);
     /** Ochiq qarz (mijozlar yoki YB) hujjatdagi to'lov kuni bo'yicha: kechikkan / bugun / 3 kun ichida. */
     DueSoon due(Actor actor, Side side, Long branchId, LocalDate today);
+    /** Eng yaqin to'lov kuni (kechikkan bo'lsa ham): ochiq hujjatlar bo'yicha sana, shu kundagi ochiq summa va eng kichik hujjat raqami. */
+    record NextDue(LocalDate date, String amount, String number) {}
+    /** Bitta kontragentning bitta filialdagi eng yaqin to'lov kuni (prototip CounterpartyCard «Keyingi to'lov kuni»). */
+    Optional<NextDue> nextDue(Actor actor, Side side, long branchId, long counterpartyId);
 }

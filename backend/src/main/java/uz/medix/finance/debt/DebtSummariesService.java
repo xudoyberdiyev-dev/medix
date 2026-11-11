@@ -7,6 +7,7 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -83,6 +84,31 @@ class DebtSummariesService implements DebtSummaries {
                 .query(Row.class)
                 .single();
         return new DueSoon(money(row.overdue()), money(row.today()), money(row.soon()));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<NextDue> nextDue(Actor actor, Side side, long branchId, long counterpartyId) {
+        if (!actor.canAccessBranch(branchId)) {
+            return Optional.empty();
+        }
+        return jdbc.sql("""
+                WITH own AS (SELECT doc_type, doc_id, min(due_date) AS due, min(doc_number) AS number, sum(amount) AS amt
+                             FROM party_ledger WHERE side = :side AND applies_doc_type IS NULL AND branch_id = :b AND counterparty_id = :c
+                             GROUP BY doc_type, doc_id),
+                     app AS (SELECT applies_doc_type AS t, applies_doc_id AS i, sum(amount) AS amt
+                             FROM party_ledger WHERE side = :side AND applies_doc_type IS NOT NULL AND branch_id = :b AND counterparty_id = :c
+                             GROUP BY applies_doc_type, applies_doc_id),
+                     open AS (SELECT own.due, own.number, own.amt + coalesce(app.amt, 0) AS open
+                              FROM own LEFT JOIN app ON app.t = own.doc_type AND app.i = own.doc_id)
+                SELECT due, sum(open) AS amount, min(number) AS number
+                FROM open WHERE open > 0 AND due IS NOT NULL
+                GROUP BY due ORDER BY due LIMIT 1""")
+                .param("side", side.name())
+                .param("b", branchId)
+                .param("c", counterpartyId)
+                .query((rs, n) -> new NextDue(rs.getDate("due").toLocalDate(), money(rs.getBigDecimal("amount")), rs.getString("number")))
+                .optional();
     }
 
     private static String money(BigDecimal v) {
