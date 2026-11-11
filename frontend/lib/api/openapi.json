@@ -27925,6 +27925,10 @@
             "type" : "string",
             "format" : "date-time"
           },
+          "bonusDeclineReason" : {
+            "type" : "string",
+            "description" : "«Bonus berilmadi» sababi (bonus yopilgan)"
+          },
           "bonusNumber" : {
             "type" : "string",
             "description" : "Tasdiqlangan bonus (BNS) raqami"

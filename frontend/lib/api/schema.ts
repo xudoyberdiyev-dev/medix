@@ -11714,6 +11714,8 @@ export interface components {
             bonusBalance?: string;
             /** Format: date-time */
             bonusConfirmedAt?: string;
+            /** @description «Bonus berilmadi» sababi (bonus yopilgan) */
+            bonusDeclineReason?: string;
             /** @description Tasdiqlangan bonus (BNS) raqami */
             bonusNumber?: string;
             /** Format: int64 */
