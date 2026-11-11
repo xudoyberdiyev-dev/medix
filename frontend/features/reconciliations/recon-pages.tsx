@@ -141,7 +141,15 @@ export function ReconListPage() {
         />
         <div className="flex flex-wrap items-center gap-2">
           <div className="w-full max-w-sm">
-            <TextField label={t("search")} variant="search" size="sm" value={search} onChange={setSearch} placeholder={t("search")} />
+            <TextField
+              label={t("search")}
+              variant="search"
+              size="sm"
+              value={search}
+              onChange={setSearch}
+              placeholder={t("search")}
+              className="[&>label]:sr-only"
+            />
           </div>
           <MultiFilter
             label={t("kind")}

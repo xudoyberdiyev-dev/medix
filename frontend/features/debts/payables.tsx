@@ -279,7 +279,15 @@ export function PayablesPage() {
           toolbar={
             <div className="flex flex-wrap items-center gap-2">
               <div className="w-80">
-                <TextField label={t("search")} variant="search" size="sm" value={search} onChange={setSearch} placeholder={t("search")} />
+                <TextField
+                  label={t("search")}
+                  variant="search"
+                  size="sm"
+                  value={search}
+                  onChange={setSearch}
+                  placeholder={t("search")}
+                  className="[&>label]:sr-only"
+                />
               </div>
               <MultiFilter label={t("col.supplier")} options={supplierOpts} selected={suppliers} onChange={setSuppliers} searchable />
               {allBranches ? <MultiFilter label={t("col.branch")} options={branchOpts} selected={branches} onChange={setBranches} /> : null}

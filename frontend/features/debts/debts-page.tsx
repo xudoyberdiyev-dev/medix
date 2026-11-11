@@ -354,7 +354,15 @@ export function DebtsPage({ side }: { side: Side }) {
           toolbar={
             <div className="flex flex-wrap items-center gap-4">
               <div className="w-72">
-                <TextField label={t("search")} variant="search" size="sm" value={q} onChange={setQ} placeholder={t("searchPlaceholder")} />
+                <TextField
+                  label={t("search")}
+                  variant="search"
+                  size="sm"
+                  value={q}
+                  onChange={setQ}
+                  placeholder={t("searchPlaceholder")}
+                  className="[&>label]:sr-only"
+                />
               </div>
               {isCustomer ? (
                 <>

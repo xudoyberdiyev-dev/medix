@@ -501,7 +501,15 @@ export function StaffManager({
 
             <div className="flex flex-wrap items-center gap-2">
               <div className="w-[260px] max-w-full">
-                <TextField label={t("searchEmp")} variant="search" size="sm" value={q} onChange={setQ} placeholder={t("searchEmp")} />
+                <TextField
+                  label={t("searchEmp")}
+                  variant="search"
+                  size="sm"
+                  value={q}
+                  onChange={setQ}
+                  placeholder={t("searchEmp")}
+                  className="[&>label]:sr-only"
+                />
               </div>
               <MultiFilter
                 label={t("cRole")}
