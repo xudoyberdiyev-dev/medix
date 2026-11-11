@@ -141,7 +141,7 @@ jobs:
           exit 1
       - name: Playwright brauzeri
         working-directory: frontend
-        run: pnpm exec playwright install --with-deps chromium
+        run: timeout 240 pnpm exec playwright install --with-deps chromium || pnpm exec playwright install chromium
       - name: E2E testlar
         working-directory: frontend
         run: pnpm e2e
