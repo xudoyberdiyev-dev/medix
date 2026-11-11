@@ -192,7 +192,7 @@ export function DebtsPage({ side }: { side: Side }) {
       title: t("side.CUSTOMER.party"),
       wrap: true,
       render: (r) => (
-        <div className="min-w-0">
+        <div className="min-w-[240px]">
           <div className="font-medium">{r.name}</div>
           <div className="text-caption text-text-secondary">
             {t("tin", { tin: "" }).trim()} <span className="font-mono">{r.tin}</span>
@@ -252,11 +252,18 @@ export function DebtsPage({ side }: { side: Side }) {
               </h1>
               <p className="text-table text-text-secondary">{tr("asOf", { d: formatIsoDate(todayTashkent()) })}</p>
             </div>
-            {can(me.data, "payments.create") ? (
-              <Button icon={Plus} onClick={() => router.push("/payments/mt/new")}>
-                {tr("payIn")}
-              </Button>
-            ) : null}
+            <div className="flex flex-wrap items-center gap-2">
+              {can(me.data, "recon.create") ? (
+                <Button variant="secondary" icon={FileCheck2} onClick={() => router.push("/reconciliations/new?side=CUSTOMER")}>
+                  {tr("recon")}
+                </Button>
+              ) : null}
+              {can(me.data, "payments.create") ? (
+                <Button icon={Plus} onClick={() => router.push("/payments/mt/new")}>
+                  {tr("payIn")}
+                </Button>
+              ) : null}
+            </div>
           </div>
           {report.data ? (
             <ReceivablesSummary
