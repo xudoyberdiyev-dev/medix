@@ -7949,6 +7949,8 @@ export interface components {
             /** Format: int32 */
             maxOverdueDays: number;
             name: string;
+            /** @description Eng yaqin to'lov kuni (kechikkan bo'lsa ham) — ochiq hujjatlar bo'yicha */
+            nextDue?: components["schemas"]["LastDoc"];
             operator?: string;
             overdue: string;
             /** Format: int32 */

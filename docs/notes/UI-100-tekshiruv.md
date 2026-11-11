@@ -58,3 +58,41 @@ Har juftlik yonma-yon solishtirildi (matn, ustun, tugma, yorliq, KPI, tartib).
 **Natija:** 48 ekran (rollar va hujjat sahifalari bilan) tekshirildi, 17 tasida farq topilib tuzatildi; backendda yetishmagan 3 qism qoʻshildi (V84 hisob-faktura raqami, kassir paneli kirim/chiqim tarkibi, HC «Kim tasdiqladi»).
 
 **Ochiq (100% hisobiga kirmaydi yoki kichik):** Mijozlar/YB «Excel'dan yuklash» — SmartUp namunasi kelgach; yangi (saqlanmagan) kirim/toʻlov hujjatida «Hujjat/Tarix» yorligʻi — tarix hujjat saqlangach paydo boʻladi; prototip demo vositalari (Demo soat, Rol menyusi) — koʻchirilmaydi (CLAUDE.md).
+
+## Kechki oyna 11.11 (20:00–22:30) — qoʻshimcha 31 ekran
+
+Demo workflow'ga 32 ta yangi marshrut qoʻshildi (yangi hujjat shakllari, hujjat va kartochka sahifalari, boʻsh holat); prototip — `Medix ERP` (login → hash → qatorni bosish).
+
+| # | Ekran | Holat | Izoh |
+|---|---|---|---|
+| 49 | Yangi mijozdan qaytarish (QM) | tuzatildi | «Qoralama» holati, bosqichlar «Qoralama → Tasdiqlangan», «Hujjat / Tarix» |
+| 50 | Yangi hisobdan chiqarish (HC) | tuzatildi | QM/HC/QY yorliqlari, «Qoralama», bosqichlar, sarlavha bloki (Ombor, Zona, Sabab, Dalolatnoma, Komissiya, Izoh), «Qatorlar N» bloki + «Muddati oʻtganlarni qoʻshish», jami (Qatorlar a/b, Jami dona) |
+| 51 | Yangi YB ga qaytarish (QY) | tuzatildi | QM/HC/QY yorliqlari, «Qoralama», bosqichlar, «Hujjat / Tarix» |
+| 52 | Yangi ombor koʻchirishi (OK) | ✅ | |
+| 53 | OK hujjati | ✅ | |
+| 54 | OK qabul | ✅ | (yoʻlda boʻlmasa — tushuntirish holati) |
+| 55 | Yangi zona koʻchirishi (ZK) | ✅ | |
+| 56 | ZK hujjati | ✅ | |
+| 57 | Yangi filiallararo savdo (FS) | ✅ | |
+| 58 | FS hujjati | ✅ | |
+| 59 | Kassa operatsiyasi hujjati | ✅ | |
+| 60 | Mijoz qarzi kartochkasi | tuzatildi | yon kartalar 1440 px da ustun boʻlib (oldin 4–5 ta tor ustun edi); qarzi yoʻq kontragent nomi sarlavhada |
+| 61 | YB qarzi kartochkasi | tuzatildi | xuddi shu |
+| 62 | Inventarizatsiya sanogʻi | ✅ | |
+| 63 | Yangi boshlangʻich qoldiq (tovar) | ✅ | |
+| 64 | Yangi YT / MT hujjati | ✅ | |
+| 65 | Narx oʻrnatish | ✅ | |
+| 66 | NO hujjati | ✅ | |
+| 67 | Mahsulot importi | ✅ | |
+| 68 | Akt sverka hujjati | tuzatildi | mavjud boʻlmagan hujjat — «Hujjat topilmadi» (oldin «Maʼlumot yuklanmadi»); barcha hujjat sahifalarida (39 joy) |
+| 69 | Reys sahifasi | ✅ | |
+| 70 | YB kartochkasi | tuzatildi | «Keyingi toʻlov kuni» kartasi (backend `nextDue`) |
+| 71 | Yangi YB / mijoz shakli | tuzatildi | matnlar: «Asosiy», «STIR», «Qisqa nomi», «Kontaktlar», «Ism», «Lavozim», boʻlim izohlari |
+| 72 | Xodim kartochkasi | ✅ | |
+| 73 | Hisobot: Qaytarishlar | tuzatildi | sabab kodlari (DAMAGED …) tarjima qilinadi |
+| 74 | Hisobot: Taʼminotchi xodim tovari | ✅ | |
+| 75 | Mahsulot / mijoz tahrirlash | ✅ | |
+| 76 | Login | ✅ | |
+| 77 | Boʻsh holat (filtr natijasiz) | ✅ | |
+| 78 | Avansni hisobga olish | ✅ | (parametrsiz URL — 404, ataylab) |
+| 79 | Yangi YB / mijoz (sahifa) | ✅ | |

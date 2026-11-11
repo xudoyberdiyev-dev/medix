@@ -18,6 +18,7 @@ import { useMe } from "@/features/auth/session";
 import { DeactivateDialog } from "@/features/organization/deactivate-dialog";
 import { cn } from "@/lib/cn";
 import { formatMoney } from "@/lib/format";
+
 import {
   canBlockCard,
   canEditCard,
@@ -36,6 +37,8 @@ import { CardHistory } from "./card-history";
 import { docSections, sectionPermissions, type DocSection } from "./documents-model";
 import { ProductsTab, ReconTab } from "./card-extra-tabs";
 import { cents } from "./overview-model";
+
+const todayIso = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Tashkent" }).format(new Date());
 
 const BASE_TABS = ["general", "licenses", "terms", "contracts"] as const;
 type Tab = (typeof BASE_TABS)[number] | DocSection | "recon" | "products" | "history";
@@ -344,6 +347,14 @@ function Card({ c, role }: { c: CounterpartyDetail; role: CounterpartyRole }) {
                     tone={cents(sel.overdue) > 0n ? "danger" : undefined}
                     sub={cents(sel.overdue) > 0n ? tl("late", { n: sel.maxOverdueDays }) : undefined}
                   />
+                  {!customers ? (
+                    <Tile
+                      label={t("nextDue")}
+                      value={sel.nextDue ? formatIsoDate(sel.nextDue.date) : "—"}
+                      tone={sel.nextDue && sel.nextDue.date < todayIso() ? "danger" : undefined}
+                      sub={sel.nextDue ? `${formatMoney(sel.nextDue.amount)} · ${sel.nextDue.number}` : undefined}
+                    />
+                  ) : null}
                   {customers ? (
                     <>
                       <Tile

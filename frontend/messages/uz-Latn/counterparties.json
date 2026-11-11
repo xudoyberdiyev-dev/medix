@@ -344,7 +344,8 @@
     "noBranches": "Hali hech bir filialda sharti yoki harakati yoʻq",
     "blocked": "Bloklangan: {reason}",
     "ctrl": "Nazoratdagi mahsulotlar",
-    "readOnly": "Faqat koʻrish"
+    "readOnly": "Faqat koʻrish",
+    "nextDue": "Keyingi toʻlov kuni"
   },
   "docs": {
     "tab": {
