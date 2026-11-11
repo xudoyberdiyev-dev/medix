@@ -353,7 +353,7 @@ export function Table<T>({
       </div>
 
       {pagination && !showEmpty ? (
-        <div className="border-t border-border px-4 py-2">
+        <div className="flex min-h-[52px] items-center border-t border-border px-4 py-2 [&>nav]:w-full">
           <Pagination {...pagination} />
         </div>
       ) : null}

@@ -29,7 +29,7 @@
   },
   "pagination": {
     "label": "Sahifalash",
-    "perPage": "Sahifada:",
+    "perPage": "Qatorlar:",
     "prev": "Oldingi sahifa",
     "next": "Keyingi sahifa"
   },
