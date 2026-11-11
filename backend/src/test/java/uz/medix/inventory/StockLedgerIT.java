@@ -363,6 +363,13 @@ class StockLedgerIT {
                 .andExpect(jsonPath("$.items[0].reserved").value(2))
                 .andExpect(jsonPath("$.items[0].available").value(3))
                 .andExpect(jsonPath("$.items[0].receiptNumber").doesNotExist());
+        mvc.perform(get("/api/stock/batches").param("q", "jamlanma qoldiq").param("branchId", br)
+                        .param("zoneId", String.valueOf(p.quarantineZone())).cookie(admin))
+                .andExpect(jsonPath("$.total").value(1))
+                .andExpect(jsonPath("$.items[0].batchNumber").value("J-2"));
+        mvc.perform(get("/api/stock/products").param("q", "jamlanma qoldiq").param("branchId", br)
+                        .param("zoneId", String.valueOf(p.mainZone())).cookie(admin))
+                .andExpect(jsonPath("$.items[0].total").value(5));
         mvc.perform(get("/api/stock/batches").param("q", "jamlanma qoldiq").param("branchId", br).param("stock", "ZERO").cookie(admin))
                 .andExpect(jsonPath("$.total").value(0));
         mvc.perform(get("/api/stock").param("q", "J-1").param("branchId", br).cookie(admin))

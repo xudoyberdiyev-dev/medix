@@ -190,6 +190,7 @@ class StockOverviewController {
     ProductStockPage products(
             @RequestParam(required = false) Long branchId,
             @RequestParam(required = false) List<Long> warehouseId,
+            @Parameter(description = "Aniq zona (ombor daraxtidan tanlangan)") @RequestParam(required = false) List<Long> zoneId,
             @RequestParam(required = false) List<ZoneType> zoneType,
             @RequestParam(required = false) List<ExpiryBucket> expiry,
             @RequestParam(required = false) List<StockState> stock,
@@ -208,7 +209,7 @@ class StockOverviewController {
         Actor actor = actor();
         boolean showCost = showCost(auth);
         LocalDate today = today();
-        Filter fl = filter(actor, today, branchId, warehouseId, zoneType, expiry, manufacturerId, categoryId, countryId, supplyEmployeeId, supplierId, flag, q);
+        Filter fl = filter(actor, today, branchId, warehouseId, zoneId, zoneType, expiry, manufacturerId, categoryId, countryId, supplyEmployeeId, supplierId, flag, q);
         Map<String, Object> params = fl.params();
         StringBuilder w = fl.w();
         StringBuilder pw = fl.pw();
@@ -330,6 +331,7 @@ class StockOverviewController {
     BatchStockPage stockBatches(
             @RequestParam(required = false) Long branchId,
             @RequestParam(required = false) List<Long> warehouseId,
+            @Parameter(description = "Aniq zona (ombor daraxtidan tanlangan)") @RequestParam(required = false) List<Long> zoneId,
             @RequestParam(required = false) List<ZoneType> zoneType,
             @RequestParam(required = false) List<ExpiryBucket> expiry,
             @RequestParam(required = false) List<StockState> stock,
@@ -347,7 +349,7 @@ class StockOverviewController {
             Authentication auth) {
         boolean showCost = showCost(auth);
         LocalDate today = today();
-        Filter fl = filter(actor(), today, branchId, warehouseId, zoneType, expiry, manufacturerId, categoryId, countryId, supplyEmployeeId,
+        Filter fl = filter(actor(), today, branchId, warehouseId, zoneId, zoneType, expiry, manufacturerId, categoryId, countryId, supplyEmployeeId,
                 supplierId, flag, q);
         String avail = "(CASE WHEN bal.sellable AND NOT bal.expired THEN bal.qty - bal.res ELSE 0 END)";
         StringBuilder sw = new StringBuilder();
@@ -635,7 +637,8 @@ class StockOverviewController {
     /** Partiya filtrlari ({@code w} — {@code bal} CTE uchun) va mahsulot filtrlari ({@code pw} — {@code p} ustida). */
     record Filter(StringBuilder w, StringBuilder pw, Map<String, Object> params) {}
 
-    private static Filter filter(Actor actor, LocalDate today, Long branchId, List<Long> warehouseId, List<ZoneType> zoneType, List<ExpiryBucket> expiry,
+    private static Filter filter(Actor actor, LocalDate today, Long branchId, List<Long> warehouseId, List<Long> zoneId,
+            List<ZoneType> zoneType, List<ExpiryBucket> expiry,
             List<Long> manufacturerId, List<Long> categoryId, List<Long> countryId, List<Long> supplyEmployeeId, List<Long> supplierId,
             List<StockFlag> flag, String q) {
         Map<String, Object> params = new HashMap<>();
@@ -643,6 +646,7 @@ class StockOverviewController {
         StringBuilder w = new StringBuilder(" WHERE s.qty > 0");
         scope(actor, branchId, w, params);
         in(w, params, "s.warehouse_id", "wh", warehouseId, false);
+        in(w, params, "s.zone_id", "zid", zoneId, false);
         if (zoneType != null && !zoneType.isEmpty()) {
             w.append(" AND z.type IN (:zt)");
             params.put("zt", zoneType.stream().map(Enum::name).toList());
