@@ -2478,6 +2478,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/marking/customer-codes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Mijoz nomidagi kodlar (O10c)
+         * @description Yetkazilgan, kodlar egasi «Mijoz nomiga» buyurtmalarning kodlari.
+         */
+        get: operations["customerCodes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/marking/import-template": {
         parameters: {
             query?: never;
@@ -18320,6 +18340,31 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    customerCodes: {
+        parameters: {
+            query: {
+                customerId: number;
+                q?: string;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarkCodePage"];
+                };
             };
         };
     };
