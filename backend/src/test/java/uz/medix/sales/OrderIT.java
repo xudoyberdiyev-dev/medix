@@ -978,7 +978,6 @@ class OrderIT {
         mvc.perform(get("/api/marking/codes/export").cookie(keeper)).andExpect(status().isForbidden());
     }
 
-    /** E1: markirovkasiz qatorlarni yangi Markirovkachi tasdiqlaydi va yakunlaydi → «Hisobdan o'tkazilmoqda». */
     /** O5: markirovka tayyor fayldan — oldindan ko'rish hech narsa saqlamaydi, qabul qilishda mos kelganlari yoziladi. */
     @Test
     void markingImportFromFilePreviewThenApply() throws Exception {
@@ -1041,6 +1040,7 @@ class OrderIT {
         mvc.perform(get("/api/marking/import-template").cookie(marker)).andExpect(status().isOk());
     }
 
+    /** E1: markirovkasiz qatorlarni yangi Markirovkachi tasdiqlaydi va yakunlaydi → «Hisobdan o'tkazilmoqda». */
     private void passMarking(long branchId, long o) throws Exception {
         Cookie m = loginAs("MARKER", branchId);
         send(post("/api/marking/orders/" + o + "/start"), m, "").andExpect(status().isOk());
