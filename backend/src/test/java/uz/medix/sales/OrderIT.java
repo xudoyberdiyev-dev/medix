@@ -1615,9 +1615,20 @@ class OrderIT {
                 .andExpect(jsonPath("$.netTotal").value(sv.get("net")))
                 .andExpect(jsonPath("$.lines[0].qty").value(5))
                 .andExpect(jsonPath("$.lines[0].vatRate").value("12"))
-                .andExpect(jsonPath("$.lines[0].cost").doesNotExist());
+                .andExpect(jsonPath("$.lines[0].cost").doesNotExist())
+                // O11: rasmiy shakl — tomonlar rekvizitlari, birlik, jami soʻz bilan, reys
+                .andExpect(jsonPath("$.seller.name").isNotEmpty())
+                .andExpect(jsonPath("$.buyer.tin").isNotEmpty())
+                .andExpect(jsonPath("$.lines[0].unit").isNotEmpty())
+                .andExpect(jsonPath("$.lines[0].markCount").value(0))
+                .andExpect(jsonPath("$.markCount").value(0))
+                .andExpect(jsonPath("$.missingIkpu").isNumber())
+                .andExpect(jsonPath("$.totalInWords", matchesPattern("^[A-Z].* soʻm \\d{2} tiyin$")))
+                .andExpect(jsonPath("$.tripNumber", matchesPattern("RS-[A-Z]{3}-\\d{6}")))
+                .andExpect(jsonPath("$.driver").value("Sinov DRIVER"));
         mvc.perform(get("/api/orders/" + o + "/invoice").cookie(driverSession)).andExpect(status().isForbidden());
-        assertThat(pdfText("/api/orders/" + o + "/invoice/pdf", keeper)).contains("Hisob-faktura", (String) sv.get("invoice_number"), "QQS", "Jami", "Rahbar")
+        assertThat(pdfText("/api/orders/" + o + "/invoice/pdf", keeper)).contains("HISOB-FAKTURA", (String) sv.get("invoice_number"), "QQS", "Jami",
+                        "Rahbar", "Bosh buxgalter", "MXIK", "Xaridor", "summa (QQS bilan)", "tiyin")
                 .doesNotContain("Takroriy nusxa");
         assertThat(pdfText("/api/orders/" + o + "/invoice/pdf", keeper)).contains("Takroriy nusxa · 2");
         var qm = jdbc.sql("SELECT total::text AS total, vat_total::text AS vat, cost_total::text AS cost FROM sales_return WHERE order_id = :o")

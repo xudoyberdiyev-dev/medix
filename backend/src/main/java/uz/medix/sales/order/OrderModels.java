@@ -316,7 +316,27 @@ final class OrderModels {
             String total,
             String vatTotal,
             @Schema(description = "QQSsiz qiymat") String netTotal,
-            List<InvoiceLine> lines) {}
+            List<InvoiceLine> lines,
+            @Schema(nullable = true, description = "Shartnoma sanasi") LocalDate contractDate,
+            @Schema(description = "Sotuvchi rekvizitlari (filial)") InvoiceParty seller,
+            @Schema(description = "Xaridor rekvizitlari") InvoiceParty buyer,
+            @Schema(description = "Jami summa soʻz bilan (QQS bilan)") String totalInWords,
+            @Schema(description = "Markirovka kodlari jami") long markCount,
+            @Schema(description = "MXIK (IKPU) kodi boʻsh qatorlar soni — ogohlantirish uchun") int missingIkpu,
+            @Schema(nullable = true, description = "Reys raqami (buyurtma reysda boʻlsa)") String tripNumber,
+            @Schema(nullable = true) String vehicle,
+            @Schema(nullable = true) String driver) {}
+
+    /** HF tomoni (O11): nomi, manzili, STIR, QQS toʻlovchi reg. kodi, hisob raqami, bank, MFO, telefon. */
+    record InvoiceParty(
+            String name,
+            @Schema(nullable = true) String address,
+            @Schema(nullable = true) String tin,
+            @Schema(nullable = true, description = "QQS toʻlovchi registratsiya kodi") String vatCode,
+            @Schema(nullable = true, description = "Hisob raqami (r/s)") String bankAccount,
+            @Schema(nullable = true) String bankName,
+            @Schema(nullable = true) String mfo,
+            @Schema(nullable = true) String phone) {}
 
     record InvoiceLine(
             String productCode,
@@ -329,7 +349,11 @@ final class OrderModels {
             String amount,
             @Schema(description = "QQS stavkasi, %") String vatRate,
             String vatAmount,
-            @Schema(description = "QQSsiz qiymat") String netAmount) {}
+            @Schema(description = "QQSsiz qiymat") String netAmount,
+            @Schema(nullable = true, description = "MXIK (IKPU) kodi") String ikpu,
+            @Schema(nullable = true, description = "Oʻlchov birligi") String unit,
+            @Schema(nullable = true, description = "Oʻlchov birligi kodi") String unitCode,
+            @Schema(description = "Shu qator (partiya) markirovka kodlari soni") int markCount) {}
 
     record CheckRequest(
             @NotNull(message = "{validation.required}") @Size(min = 1, max = MAX_LINES) List<Long> checkedLines,
