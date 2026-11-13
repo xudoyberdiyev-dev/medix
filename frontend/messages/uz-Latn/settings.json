@@ -74,6 +74,10 @@
     "bqCut": {
       "name": "Kesish sanasi",
       "desc": "SMARTUP dan koʻchirilgan qoldiqlar shu sanaga."
+    },
+    "returnDays": {
+      "name": "Mijozdan qaytarish muddati",
+      "desc": "Sotuv yetkazilgandan keyin shuncha kun ichida qaytarish mumkin; keyin — faqat Filial rahbari yoki Direktor ruxsati bilan. 0 — cheksiz."
     }
   },
   "unit": {
@@ -84,7 +88,8 @@
     "MIN": "daqiqa",
     "TRIES": "urinish",
     "LOCK": "daqiqa",
-    "DATE": "sana"
+    "DATE": "sana",
+    "RDAY": "kun"
   },
   "lastChange": "Oxirgi oʻzgarish: {t}, {n}",
   "defaultVal": "Standart qiymat",

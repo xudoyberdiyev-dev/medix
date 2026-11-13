@@ -9,14 +9,62 @@
     "url" : "/"
   } ],
   "tags" : [ {
-    "description" : "Akt sverka hujjatlari (AS-…)",
-    "name" : "reconciliations"
-  }, {
     "description" : "Boshlang'ich qoldiq: qarzlar, kassa va bank",
     "name" : "opening-finance"
   }, {
     "description" : "Sozlamalar",
     "name" : "settings"
+  }, {
+    "description" : "Hisobdan chiqarish (HC)",
+    "name" : "write-off"
+  }, {
+    "description" : "Sozlash ustasi",
+    "name" : "setup"
+  }, {
+    "description" : "Narxlar",
+    "name" : "pricing"
+  }, {
+    "description" : "Tasdiqlash navbati",
+    "name" : "approvals"
+  }, {
+    "description" : "Bank koʻchirmasi bilan solishtirish",
+    "name" : "bank-reconciliations"
+  }, {
+    "description" : "Kontragentlar",
+    "name" : "counterparties"
+  }, {
+    "description" : "YB ga qaytarish (QY)",
+    "name" : "supplier-return"
+  }, {
+    "description" : "Avansni hisobga olish (AH)",
+    "name" : "advance-offsets"
+  }, {
+    "description" : "Mahsulotlar",
+    "name" : "products"
+  }, {
+    "description" : "Mijozlar va yetkazib beruvchilar qarzi (muddat guruhlari)",
+    "name" : "debts"
+  }, {
+    "description" : "Yetkazib beruvchi bonus balansi",
+    "name" : "supplier-bonuses"
+  }, {
+    "description" : "Hisobotlar",
+    "name" : "reports"
+  }, {
+    "description" : "Tizimga kirish va sessiya",
+    "name" : "auth"
+  }, {
+    "description" : "Mijozdan qaytarish (QM)",
+    "name" : "customer-return"
+  }, {
+    "description" : "Kompaniya",
+    "name" : "company"
+  }, {
+    "description" : "Reyslar",
+    "name" : "trips"
+  }, {
+    "description" : "Akt sverka hujjatlari (AS-…)",
+    "name" : "reconciliations"
   }, {
     "description" : "Filiallar ro'yxati ko'rsatkichlari",
     "name" : "branch-stats"
@@ -26,9 +74,6 @@
   }, {
     "description" : "Kassa/bank operatsiyalari (KO/BO), o'tkazmalar (IO), ko'chirma, kunni yopish",
     "name" : "cash"
-  }, {
-    "description" : "Hisobdan chiqarish (HC)",
-    "name" : "write-off"
   }, {
     "description" : "Mijozdan to'lovlar (MT)",
     "name" : "payments"
@@ -42,32 +87,14 @@
     "description" : "Boshlang'ich qoldiq",
     "name" : "opening"
   }, {
-    "description" : "Sozlash ustasi",
-    "name" : "setup"
-  }, {
-    "description" : "Narxlar",
-    "name" : "pricing"
-  }, {
-    "description" : "Tasdiqlash navbati",
-    "name" : "approvals"
-  }, {
     "description" : "Xarajat va kirim moddalari",
     "name" : "expense-items"
   }, {
     "description" : "Kirim",
     "name" : "receipts"
   }, {
-    "description" : "Bank koʻchirmasi bilan solishtirish",
-    "name" : "bank-reconciliations"
-  }, {
-    "description" : "Kontragentlar",
-    "name" : "counterparties"
-  }, {
     "description" : "Rollar va ruxsatlar",
     "name" : "roles"
-  }, {
-    "description" : "YB ga qaytarish (QY)",
-    "name" : "supplier-return"
   }, {
     "description" : "Kichik ma'lumotnomalar",
     "name" : "dictionaries"
@@ -81,32 +108,20 @@
     "description" : "Bosh sahifalar",
     "name" : "home"
   }, {
-    "description" : "Avansni hisobga olish (AH)",
-    "name" : "advance-offsets"
-  }, {
-    "description" : "Mahsulotlar",
-    "name" : "products"
-  }, {
     "description" : "Kassir paneli",
     "name" : "cash-panel"
   }, {
     "description" : "Profil",
     "name" : "profile"
   }, {
+    "description" : "Savdo zonalari",
+    "name" : "sales-zones"
+  }, {
     "description" : "Filiallararo savdo (FS)",
     "name" : "branch-sale"
   }, {
     "description" : "Mashinalar",
     "name" : "vehicles"
-  }, {
-    "description" : "Mijozlar va yetkazib beruvchilar qarzi (muddat guruhlari)",
-    "name" : "debts"
-  }, {
-    "description" : "Yetkazib beruvchi bonus balansi",
-    "name" : "supplier-bonuses"
-  }, {
-    "description" : "Hisobotlar",
-    "name" : "reports"
   }, {
     "description" : "Qoldiqlar",
     "name" : "stock"
@@ -123,14 +138,8 @@
     "description" : "Zona ko'chirishi (ZK)",
     "name" : "zone-transfer"
   }, {
-    "description" : "Tizimga kirish va sessiya",
-    "name" : "auth"
-  }, {
     "description" : "Kassa va bank",
     "name" : "cash"
-  }, {
-    "description" : "Mijozdan qaytarish (QM)",
-    "name" : "customer-return"
   }, {
     "description" : "Markirovka",
     "name" : "marking"
@@ -141,14 +150,8 @@
     "description" : "Ombor ko'chirishi (OK)",
     "name" : "warehouse-transfer"
   }, {
-    "description" : "Kompaniya",
-    "name" : "company"
-  }, {
     "description" : "Ko'chirish — ZK, OK, FS bitta ro'yxatda",
     "name" : "transfer-overview"
-  }, {
-    "description" : "Reyslar",
-    "name" : "trips"
   }, {
     "description" : "Kassa, Terminal va bank hisoblari",
     "name" : "money-accounts"
@@ -467,7 +470,7 @@
     },
     "/api/audit" : {
       "get" : {
-        "operationId" : "list_32",
+        "operationId" : "list_33",
         "parameters" : [ {
           "in" : "query",
           "name" : "view",
@@ -808,7 +811,7 @@
     },
     "/api/bank-reconciliations" : {
       "get" : {
-        "operationId" : "list_26",
+        "operationId" : "list_27",
         "parameters" : [ {
           "in" : "query",
           "name" : "accountId",
@@ -837,7 +840,7 @@
         "tags" : [ "bank-reconciliations" ]
       },
       "post" : {
-        "operationId" : "create_26",
+        "operationId" : "create_27",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -932,7 +935,7 @@
     "/api/branch-payments" : {
       "get" : {
         "description" : "Filial to'lovchi yoki oluvchi bo'lganlari.",
-        "operationId" : "list_25",
+        "operationId" : "list_26",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -962,7 +965,7 @@
       },
       "post" : {
         "description" : "Darhol o'tkaziladi: to'lovchi hisobidan chiqim, oluvchi hisobiga kirim, filiallararo qarz kamayadi. Qarzdan oshmaydi.",
-        "operationId" : "create_25",
+        "operationId" : "create_26",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -1071,7 +1074,7 @@
     "/api/branch-sales" : {
       "get" : {
         "description" : "branchId — sotuvchi yoki xaridor filial.",
-        "operationId" : "list_24",
+        "operationId" : "list_25",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -1124,7 +1127,7 @@
       },
       "post" : {
         "description" : "Tovar joʻnatilguncha joyida qoladi.",
-        "operationId" : "create_24",
+        "operationId" : "create_25",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -1267,7 +1270,7 @@
       },
       "put" : {
         "description" : "Sotuvchi zona, xaridor ombori, izoh va qatorlar almashtiriladi. Faqat qoralama.",
-        "operationId" : "update_20",
+        "operationId" : "update_21",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -1500,7 +1503,7 @@
     },
     "/api/branches" : {
       "get" : {
-        "operationId" : "list_23",
+        "operationId" : "list_24",
         "responses" : {
           "200" : {
             "content" : {
@@ -1520,7 +1523,7 @@
         "tags" : [ "branches" ]
       },
       "post" : {
-        "operationId" : "create_23",
+        "operationId" : "create_24",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -1572,7 +1575,7 @@
     "/api/branches/{id}" : {
       "put" : {
         "description" : "Kod o'zgarmaydi.",
-        "operationId" : "update_19",
+        "operationId" : "update_20",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -1610,7 +1613,7 @@
     },
     "/api/branches/{id}/activate" : {
       "post" : {
-        "operationId" : "activate_6",
+        "operationId" : "activate_7",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -1639,7 +1642,7 @@
     "/api/branches/{id}/deactivate" : {
       "post" : {
         "description" : "Oxirgi faol filial nofaol qilinmaydi.",
-        "operationId" : "deactivate_6",
+        "operationId" : "deactivate_7",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -2263,7 +2266,7 @@
     "/api/counterparties" : {
       "get" : {
         "description" : "Qidiruv: nom, STIR, telefon, kontakt (lotin/kirill farqsiz).",
-        "operationId" : "list_22",
+        "operationId" : "list_23",
         "parameters" : [ {
           "in" : "query",
           "name" : "q",
@@ -2357,7 +2360,7 @@
         "tags" : [ "counterparties" ]
       },
       "post" : {
-        "operationId" : "create_22",
+        "operationId" : "create_23",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -2747,7 +2750,7 @@
         "tags" : [ "counterparties" ]
       },
       "put" : {
-        "operationId" : "update_18",
+        "operationId" : "update_19",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -2785,7 +2788,7 @@
     },
     "/api/counterparties/{id}/activate" : {
       "post" : {
-        "operationId" : "activate_5",
+        "operationId" : "activate_6",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -2936,7 +2939,7 @@
     },
     "/api/counterparties/{id}/deactivate" : {
       "post" : {
-        "operationId" : "deactivate_5",
+        "operationId" : "deactivate_6",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -3294,7 +3297,7 @@
     "/api/customer-returns" : {
       "get" : {
         "description" : "Qidiruv: raqam, mijoz, sotuv raqami.",
-        "operationId" : "list_21",
+        "operationId" : "list_22",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -3370,7 +3373,7 @@
       },
       "post" : {
         "description" : "«Qabul kutilmoqda» holatida yaratiladi; yaratuvchida qm.approve bo'lsa darhol qabul qilinadi.",
-        "operationId" : "create_21",
+        "operationId" : "create_22",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -3636,7 +3639,7 @@
     "/api/debts/customers" : {
       "get" : {
         "description" : "Muddati kelmagan / 1–30 / 31–60 / 61–90 / 90+ kun; avans qarzdan eng eskisidan ayriladi.",
-        "operationId" : "customers_1",
+        "operationId" : "customers_2",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -4032,7 +4035,7 @@
     },
     "/api/dictionaries/{kind}" : {
       "get" : {
-        "operationId" : "list_20",
+        "operationId" : "list_21",
         "parameters" : [ {
           "in" : "path",
           "name" : "kind",
@@ -4061,7 +4064,7 @@
         "tags" : [ "dictionaries" ]
       },
       "post" : {
-        "operationId" : "create_20",
+        "operationId" : "create_21",
         "parameters" : [ {
           "in" : "path",
           "name" : "kind",
@@ -4099,7 +4102,7 @@
     },
     "/api/dictionaries/{kind}/{id}" : {
       "put" : {
-        "operationId" : "update_17",
+        "operationId" : "update_18",
         "parameters" : [ {
           "in" : "path",
           "name" : "kind",
@@ -4145,7 +4148,7 @@
     },
     "/api/dictionaries/{kind}/{id}/activate" : {
       "post" : {
-        "operationId" : "activate_4",
+        "operationId" : "activate_5",
         "parameters" : [ {
           "in" : "path",
           "name" : "kind",
@@ -4182,7 +4185,7 @@
     "/api/dictionaries/{kind}/{id}/deactivate" : {
       "post" : {
         "description" : "Yozuv o'chirilmaydi; yangi hujjatlarda tanlanmaydi.",
-        "operationId" : "deactivate_4",
+        "operationId" : "deactivate_5",
         "parameters" : [ {
           "in" : "path",
           "name" : "kind",
@@ -4218,7 +4221,7 @@
     },
     "/api/employee-lookup" : {
       "get" : {
-        "operationId" : "list_31",
+        "operationId" : "list_32",
         "responses" : {
           "200" : {
             "content" : {
@@ -4240,7 +4243,7 @@
     },
     "/api/employees" : {
       "get" : {
-        "operationId" : "list_19",
+        "operationId" : "list_20",
         "responses" : {
           "200" : {
             "content" : {
@@ -4260,7 +4263,7 @@
         "tags" : [ "employees" ]
       },
       "post" : {
-        "operationId" : "create_19",
+        "operationId" : "create_20",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -4358,7 +4361,7 @@
     "/api/employees/{id}" : {
       "put" : {
         "description" : "Login, rol yoki filial oʻzgarsa ochiq sessiyalari tugatiladi.",
-        "operationId" : "update_16",
+        "operationId" : "update_17",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -4624,7 +4627,7 @@
     },
     "/api/expense-items" : {
       "get" : {
-        "operationId" : "list_18",
+        "operationId" : "list_19",
         "responses" : {
           "200" : {
             "content" : {
@@ -4644,7 +4647,7 @@
         "tags" : [ "expense-items" ]
       },
       "post" : {
-        "operationId" : "create_18",
+        "operationId" : "create_19",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -4711,7 +4714,7 @@
     },
     "/api/expense-items/{id}/activate" : {
       "post" : {
-        "operationId" : "activate_3",
+        "operationId" : "activate_4",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -4739,7 +4742,7 @@
     },
     "/api/expense-items/{id}/deactivate" : {
       "post" : {
-        "operationId" : "deactivate_3",
+        "operationId" : "deactivate_4",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -4919,7 +4922,7 @@
     },
     "/api/home/operator/customers" : {
       "get" : {
-        "operationId" : "customers",
+        "operationId" : "customers_1",
         "parameters" : [ {
           "in" : "query",
           "name" : "q",
@@ -4978,7 +4981,7 @@
     "/api/inventory-counts" : {
       "get" : {
         "description" : "Kamomad / ortiqcha tannarxi — faqat prices.cost.",
-        "operationId" : "list_17",
+        "operationId" : "list_18",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -5039,7 +5042,7 @@
       },
       "post" : {
         "description" : "Qoralama. Bitta omborda bitta faol inventarizatsiya.",
-        "operationId" : "create_17",
+        "operationId" : "create_18",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -5153,7 +5156,7 @@
       },
       "put" : {
         "description" : "Ombor (shu filialda), sana, qamrov, komissiya, ko'r sanoq — faqat qoralamada.",
-        "operationId" : "update_15",
+        "operationId" : "update_16",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -5944,7 +5947,7 @@
     },
     "/api/money-accounts" : {
       "get" : {
-        "operationId" : "list_16",
+        "operationId" : "list_17",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -5973,7 +5976,7 @@
         "tags" : [ "money-accounts" ]
       },
       "post" : {
-        "operationId" : "create_16",
+        "operationId" : "create_17",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -6265,7 +6268,7 @@
     },
     "/api/notifications" : {
       "get" : {
-        "operationId" : "list_30",
+        "operationId" : "list_31",
         "responses" : {
           "200" : {
             "content" : {
@@ -6336,7 +6339,7 @@
     },
     "/api/opening-balances" : {
       "get" : {
-        "operationId" : "list_15",
+        "operationId" : "list_16",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -6389,7 +6392,7 @@
       },
       "post" : {
         "description" : "Raqam darhol beriladi (BQ-TSH-000001). Qoralama qoldiqqa ta'sir qilmaydi.",
-        "operationId" : "create_15",
+        "operationId" : "create_16",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -6457,7 +6460,7 @@
       },
       "put" : {
         "description" : "Qatorlar to'liq almashtiriladi.",
-        "operationId" : "update_14",
+        "operationId" : "update_15",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -6649,7 +6652,7 @@
     "/api/opening-finance" : {
       "get" : {
         "description" : "Oxirgi 500 ta.",
-        "operationId" : "list_14",
+        "operationId" : "list_15",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -6678,7 +6681,7 @@
         "tags" : [ "opening-finance" ]
       },
       "post" : {
-        "operationId" : "create_14",
+        "operationId" : "create_15",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -6733,7 +6736,7 @@
         "tags" : [ "opening-finance" ]
       },
       "put" : {
-        "operationId" : "update_13",
+        "operationId" : "update_14",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -6839,7 +6842,7 @@
     "/api/orders" : {
       "get" : {
         "description" : "operatorId — kiritgan xodim; soldFrom/soldTo — shu davrda sotilgan yoki qaytarilgan (Savdo hisoboti qatoridan hujjatlarga o'tish, SPEC 8); orderFrom/orderTo — buyurtma sanasi; customerId/operatorId/statuses/deliveryType/paymentType/regionId — bir nechta qiymat (prototip filtr chiplari); q — raqam, STIR yoki mijoz nomi (lotin/kirill farqsiz); sort/desc — saralash (standart: kiritilgan vaqti, yangisi tepada).",
-        "operationId" : "list_13",
+        "operationId" : "list_14",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -7022,7 +7025,7 @@
       },
       "post" : {
         "description" : "Raqam darhol beriladi (BY-TSH-000001). Qoldiq va qarzga ta'sir qilmaydi.",
-        "operationId" : "create_13",
+        "operationId" : "create_14",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -7691,7 +7694,7 @@
         "tags" : [ "orders" ]
       },
       "put" : {
-        "operationId" : "update_12",
+        "operationId" : "update_13",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -8277,7 +8280,7 @@
     },
     "/api/payments/customer" : {
       "get" : {
-        "operationId" : "list_12",
+        "operationId" : "list_13",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -8322,7 +8325,7 @@
         "tags" : [ "payments" ]
       },
       "post" : {
-        "operationId" : "create_12",
+        "operationId" : "create_13",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -8449,7 +8452,7 @@
         "tags" : [ "payments" ]
       },
       "put" : {
-        "operationId" : "update_11",
+        "operationId" : "update_12",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -9029,7 +9032,7 @@
     },
     "/api/price-changes" : {
       "get" : {
-        "operationId" : "list_11",
+        "operationId" : "list_12",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -9127,7 +9130,7 @@
       },
       "post" : {
         "description" : "Raqam darhol beriladi (NO-TSH-000001).",
-        "operationId" : "create_11",
+        "operationId" : "create_12",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -9244,7 +9247,7 @@
         "tags" : [ "pricing" ]
       },
       "put" : {
-        "operationId" : "update_10",
+        "operationId" : "update_11",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -9455,7 +9458,7 @@
     },
     "/api/price-types" : {
       "get" : {
-        "operationId" : "list_10",
+        "operationId" : "list_11",
         "responses" : {
           "200" : {
             "content" : {
@@ -9476,7 +9479,7 @@
       },
       "post" : {
         "description" : "Bazaviy tur bitta: yangisi bazaviy boʻlsa oldingisi oddiy turga oʻtadi. Bazaviy tur partiyaga bogʻliq boʻlmaydi.",
-        "operationId" : "create_10",
+        "operationId" : "create_11",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -9546,7 +9549,7 @@
     "/api/price-types/{id}" : {
       "put" : {
         "description" : "Bazaviy turni yoki mijozlarga biriktirilgan turni nofaol qilib bo'lmaydi. Ro'yxat tarkibi (SPEC 6) o'zgarmaydi.",
-        "operationId" : "update_9",
+        "operationId" : "update_10",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -9914,7 +9917,7 @@
     "/api/products" : {
       "get" : {
         "description" : "Qidiruv lotin/kirill farqsiz: nom, kod, shtrix-kod, IKPU, Farm ID, ishlab chiqaruvchi. Yorliqlar soni va filtr variantlari (soni bilan) bilan.",
-        "operationId" : "list_9",
+        "operationId" : "list_10",
         "parameters" : [ {
           "in" : "query",
           "name" : "q",
@@ -10085,7 +10088,7 @@
       },
       "post" : {
         "description" : "8 raqamli kod: berilsa — shu (band bo'lsa 409), aks holda avtomatik.",
-        "operationId" : "create_9",
+        "operationId" : "create_10",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -10549,7 +10552,7 @@
         "tags" : [ "products" ]
       },
       "put" : {
-        "operationId" : "update_8",
+        "operationId" : "update_9",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -10587,7 +10590,7 @@
     },
     "/api/products/{id}/activate" : {
       "post" : {
-        "operationId" : "activate_2",
+        "operationId" : "activate_3",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -10654,7 +10657,7 @@
     },
     "/api/products/{id}/deactivate" : {
       "post" : {
-        "operationId" : "deactivate_2",
+        "operationId" : "deactivate_3",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -10742,7 +10745,7 @@
       },
       "put" : {
         "description" : "F.I.Sh., login (unikal), telefon, email, lavozim, tug'ilgan sana. Rol va filial o'zgarmaydi. Joriy sessiya yangi login va ism bilan darhol yangilanadi.",
-        "operationId" : "update_7",
+        "operationId" : "update_8",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -10836,7 +10839,7 @@
     "/api/receipts" : {
       "get" : {
         "description" : "Yorliqlar soni (holat filtrisiz), filtr variantlari va kartalar bilan.",
-        "operationId" : "list_8",
+        "operationId" : "list_9",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -10950,7 +10953,7 @@
       },
       "post" : {
         "description" : "Raqam darhol beriladi (KR-TSH-000001). Qoralama qoldiq va qarzga ta'sir qilmaydi.",
-        "operationId" : "create_8",
+        "operationId" : "create_9",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -11178,7 +11181,7 @@
       },
       "put" : {
         "description" : "Qatorlar to'liq almashtiriladi.",
-        "operationId" : "update_6",
+        "operationId" : "update_7",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -11434,7 +11437,7 @@
     "/api/reconciliations" : {
       "get" : {
         "description" : "Filial tanlanmasa — xodim koʻradigan barcha filiallar.",
-        "operationId" : "list_7",
+        "operationId" : "list_8",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -11460,7 +11463,7 @@
         "tags" : [ "reconciliations" ]
       },
       "post" : {
-        "operationId" : "create_7",
+        "operationId" : "create_8",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -12384,7 +12387,7 @@
     },
     "/api/roles" : {
       "get" : {
-        "operationId" : "list_29",
+        "operationId" : "list_30",
         "responses" : {
           "200" : {
             "content" : {
@@ -12525,6 +12528,207 @@
         },
         "summary" : "Rol ruxsatlarini saqlash",
         "tags" : [ "roles" ]
+      }
+    },
+    "/api/sales-zones" : {
+      "get" : {
+        "description" : "branchId — bitta filial; activeOnly — faqat faollari; q — nom bo'yicha.",
+        "operationId" : "list_7",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "activeOnly",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
+          }
+        }, {
+          "in" : "query",
+          "name" : "q",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/SalesZone"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Savdo zonalari (filial doirasida)",
+        "tags" : [ "sales-zones" ]
+      },
+      "post" : {
+        "operationId" : "create_7",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SalesZoneRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SalesZone"
+                }
+              }
+            },
+            "description" : "Created"
+          }
+        },
+        "summary" : "Savdo zonasi qo'shish",
+        "tags" : [ "sales-zones" ]
+      }
+    },
+    "/api/sales-zones/{id}" : {
+      "put" : {
+        "description" : "Mijozlari bor zonaning filiali o'zgarmaydi.",
+        "operationId" : "update_6",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SalesZoneRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SalesZone"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Savdo zonasini tahrirlash",
+        "tags" : [ "sales-zones" ]
+      }
+    },
+    "/api/sales-zones/{id}/activate" : {
+      "post" : {
+        "operationId" : "activate_2",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SalesZone"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Faollashtirish",
+        "tags" : [ "sales-zones" ]
+      }
+    },
+    "/api/sales-zones/{id}/customers" : {
+      "get" : {
+        "operationId" : "customers",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ZoneCustomer"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Zona mijozlari",
+        "tags" : [ "sales-zones" ]
+      }
+    },
+    "/api/sales-zones/{id}/deactivate" : {
+      "post" : {
+        "description" : "Mijozlari zonada qoladi; yangi biriktirishda tanlanmaydi.",
+        "operationId" : "deactivate_2",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SalesZone"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Faolsizlantirish",
+        "tags" : [ "sales-zones" ]
       }
     },
     "/api/search" : {
@@ -13026,7 +13230,7 @@
     "/api/stock" : {
       "get" : {
         "description" : "expiringWithinDays — muddat nazorati: shu kun ichida tugaydigan yoki o'tganlar.",
-        "operationId" : "list_28",
+        "operationId" : "list_29",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -13796,7 +14000,7 @@
     },
     "/api/supplier-bonuses" : {
       "get" : {
-        "operationId" : "list_27",
+        "operationId" : "list_28",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -26078,6 +26282,13 @@
           "region" : {
             "type" : "string"
           },
+          "salesZones" : {
+            "type" : "array",
+            "description" : "Mijoz: savdo zonalari (O6), filial doirasida",
+            "items" : {
+              "type" : "string"
+            }
+          },
           "status" : {
             "type" : "string",
             "enum" : [ "ACTIVE", "BLOCKED", "INACTIVE" ]
@@ -26089,7 +26300,7 @@
             "type" : "string"
           }
         },
-        "required" : [ "agingBuckets", "branches", "buyers", "controlledAllowed", "createdOn", "customer", "debt", "id", "inScope", "maxOverdueDays", "name", "operators", "overdue", "paymentDays", "priceTypes", "status", "supplier", "tin" ]
+        "required" : [ "agingBuckets", "branches", "buyers", "controlledAllowed", "createdOn", "customer", "debt", "id", "inScope", "maxOverdueDays", "name", "operators", "overdue", "paymentDays", "priceTypes", "salesZones", "status", "supplier", "tin" ]
       },
       "OwnGoods" : {
         "type" : "object",
@@ -30394,6 +30605,57 @@
         },
         "required" : [ "discount", "key", "name", "net", "netExVat", "orders", "returns", "returnsExVat", "sales", "salesExVat", "vat" ]
       },
+      "SalesZone" : {
+        "type" : "object",
+        "properties" : {
+          "active" : {
+            "type" : "boolean"
+          },
+          "branch" : {
+            "type" : "string"
+          },
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "customers" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Shu zonadagi mijozlar soni (filial shartlari bo'yicha)"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "note" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "active", "branch", "branchId", "customers", "id", "name" ]
+      },
+      "SalesZoneRequest" : {
+        "type" : "object",
+        "properties" : {
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "name" : {
+            "type" : "string",
+            "maxLength" : 100,
+            "minLength" : 0
+          },
+          "note" : {
+            "type" : "string",
+            "maxLength" : 300,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "branchId", "name" ]
+      },
       "SaveRequest" : {
         "type" : "object",
         "properties" : {
@@ -32121,6 +32383,10 @@
           "priceType" : {
             "$ref" : "#/components/schemas/Ref"
           },
+          "salesZone" : {
+            "$ref" : "#/components/schemas/Ref",
+            "description" : "Mijozning shu filialdagi savdo zonasi (O6)"
+          },
           "supplierDeliveryDays" : {
             "type" : "integer",
             "format" : "int32",
@@ -32173,6 +32439,11 @@
           "priceTypeId" : {
             "type" : "integer",
             "format" : "int64"
+          },
+          "salesZoneId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Savdo zonasi (O6): shu filialning faol zonasi; filialda zona bo'lsa mijoz uchun majburiy"
           },
           "supplierDeliveryDays" : {
             "type" : "integer",
@@ -34188,6 +34459,28 @@
           }
         },
         "required" : [ "active", "id", "name", "sellable", "type" ]
+      },
+      "ZoneCustomer" : {
+        "type" : "object",
+        "properties" : {
+          "active" : {
+            "type" : "boolean"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "region" : {
+            "type" : "string"
+          },
+          "tin" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "active", "id", "name" ]
       },
       "ZoneRef" : {
         "type" : "object",

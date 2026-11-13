@@ -106,7 +106,8 @@ class CustomerReturnController {
             description = "«Qabul kutilmoqda» holatida yaratiladi; yaratuvchida qm.approve bo'lsa darhol qabul qilinadi.")
     CustomerReturnDetail create(@Valid @RequestBody CustomerReturnRequest r, Authentication auth) {
         boolean canApprove = auth.getAuthorities().stream().anyMatch(a -> "qm.approve".equals(a.getAuthority()));
-        return detail(returns.create(actor(), r, canApprove));
+        boolean canLate = auth.getAuthorities().stream().anyMatch(a -> "qm.late".equals(a.getAuthority()));
+        return detail(returns.create(actor(), r, canApprove, canLate));
     }
 
     @PostMapping("/{id}/approve")

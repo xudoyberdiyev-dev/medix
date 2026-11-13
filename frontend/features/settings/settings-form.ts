@@ -1,6 +1,6 @@
 import { formatMoney } from "@/lib/format";
 
-export type SettingKind = "DAY" | "PCT" | "SUM" | "LEN" | "MIN" | "TRIES" | "LOCK";
+export type SettingKind = "DAY" | "PCT" | "SUM" | "LEN" | "MIN" | "TRIES" | "LOCK" | "RDAY";
 
 /**
  * Kiritilgan qiymatni serverga yuboriladigan koʻrinishga keltirish (prototip `num`): SUM — «2.000.000,00» yoki «2000000» →

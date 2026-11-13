@@ -15,6 +15,7 @@ import { can } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
 import { useDictionary } from "@/features/dictionaries/api";
 import { useBranchList } from "@/features/organization/api";
+import { useSalesZones, zoneOptions } from "@/features/sales-zones/api";
 import { describeError } from "@/features/setup/form-error";
 import { cn } from "@/lib/cn";
 import {
@@ -84,6 +85,7 @@ function FormBody({
   const tk = useTranslations("counterparties.overview");
   const tt = useTranslations("counterparties.terms");
   const tp = useTranslations("counterparties.paymentType");
+  const tz = useTranslations("salesZones");
   const router = useRouter();
   const me = useMe();
   const isNew = cp === null;
@@ -131,8 +133,12 @@ function FormBody({
     .map((b) => ({ value: String(b.id), label: b.name }));
   // Filial tanlanmagan boʻlsa (masalan, Direktor) — birinchi ruxsat etilgan filial
   const eff: CpForm = { ...f, branchId: f.branchId ?? branchOpts[0]?.value ?? null };
+  // O6: savdo zonasi — tanlangan filialning faol zonalari; boʻlsa majburiy
+  const zones = useSalesZones(eff.branchId ? Number(eff.branchId) : null, true, !supplier && isNew && canTerms && !!eff.branchId);
+  const zoneOpts = zoneOptions(zones.data, null);
+  const zoneRequired = zoneOpts.length > 0;
   const serverErr = describeError(save.error ?? saveLicense.error ?? saveTerms.error);
-  const local = tried ? validateForm(eff, { isNew, supplier, terms: canTerms }) : {};
+  const local = tried ? validateForm(eff, { isNew, supplier, terms: canTerms, zoneRequired }) : {};
   const err = (k: ErrKey): string | undefined => {
     const e = local[k];
     if (e) return t(`errors.${e}`);
@@ -151,7 +157,7 @@ function FormBody({
 
   const submit = async () => {
     setTried(true);
-    const e = Object.keys(validateForm(eff, { isNew, supplier, terms: canTerms }));
+    const e = Object.keys(validateForm(eff, { isNew, supplier, terms: canTerms, zoneRequired }));
     if (e.length) return setTimeout(() => focusField(e[0]), 0);
     if (dup) return top.current?.scrollIntoView({ behavior: "smooth" });
     setBusy(true);
@@ -515,6 +521,22 @@ function FormBody({
                       />
                     </div>
                   )}
+                  {!supplier ? (
+                    <div data-f="salesZoneId">
+                      <Select
+                        loading={zones.isLoading}
+                        label={tz("field")}
+                        required={zoneRequired}
+                        searchable
+                        value={f.salesZoneId}
+                        onChange={set("salesZoneId")}
+                        placeholder={tz("fieldPlaceholder")}
+                        error={err("salesZoneId")}
+                        hint={!zones.isLoading && !zoneRequired ? tz("fieldNone") : undefined}
+                        options={zoneOpts}
+                      />
+                    </div>
+                  ) : null}
                   {!supplier ? (
                     <div data-f="priceTypeId">
                       <Select

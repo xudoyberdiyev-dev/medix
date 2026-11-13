@@ -36,6 +36,8 @@ export interface OverviewLike {
   createdOn: string;
   lastSaleNumber?: string | null;
   lastReceiptNumber?: string | null;
+  /** Mijoz: savdo zonalari (O6) */
+  salesZones?: string[];
 }
 
 export const VIEWS_C = ["all", "debt", "licSoon", "ctrl", "blocked", "inactive"] as const;
@@ -51,6 +53,7 @@ export interface OverviewFilters {
   operators: string[];
   buyers: string[];
   regions: string[];
+  zones: string[];
   kinds: OverviewKind[];
   lic: LicenseState[];
   priceTypes: string[];
@@ -70,6 +73,7 @@ export const EMPTY_FILTERS: OverviewFilters = {
   operators: [],
   buyers: [],
   regions: [],
+  zones: [],
   kinds: [],
   lic: [],
   priceTypes: [],
@@ -207,6 +211,7 @@ export function applyFilters(rows: OverviewLike[], f: OverviewFilters, today: st
       any(f.operators, (o) => r.operators.includes(o)) &&
       any(f.buyers, (o) => r.buyers.includes(o)) &&
       any(f.regions, (g) => r.region === g) &&
+      any(f.zones, (z) => (r.salesZones ?? []).includes(z)) &&
       any(f.kinds, (k) => r.kind === k) &&
       any(f.lic, (s) => licenseOf(r.licenseValidUntil, today).state === s) &&
       any(f.priceTypes, (p) => r.priceTypes.includes(p)) &&
@@ -218,7 +223,8 @@ export function applyFilters(rows: OverviewLike[], f: OverviewFilters, today: st
 
 export function activeFilterCount(f: OverviewFilters): number {
   return (
-    [f.status, f.debt, f.branches, f.operators, f.buyers, f.regions, f.kinds, f.lic, f.priceTypes].filter((a) => a.length > 0).length +
+    [f.status, f.debt, f.branches, f.operators, f.buyers, f.regions, f.zones, f.kinds, f.lic, f.priceTypes].filter((a) => a.length > 0)
+      .length +
     (f.overLimit ? 1 : 0) +
     (f.ctrl ? 1 : 0) +
     (f.from ? 1 : 0)

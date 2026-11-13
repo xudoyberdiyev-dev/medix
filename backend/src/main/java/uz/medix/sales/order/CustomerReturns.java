@@ -8,6 +8,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -40,6 +41,8 @@ import uz.medix.shared.error.MedixException;
 import uz.medix.shared.money.Money;
 import uz.medix.shared.numbering.DocumentPrefix;
 import uz.medix.shared.numbering.DocumentSequenceService;
+import uz.medix.shared.settings.SettingKey;
+import uz.medix.shared.settings.SystemSettings;
 import uz.medix.shared.security.Actor;
 
 /**
@@ -63,9 +66,10 @@ class CustomerReturns {
     private final Notifications notifications;
     private final Clock clock;
     private final PriceBook prices;
+    private final SystemSettings settings;
 
     CustomerReturns(JdbcClient jdbc, StockLedger stock, PartyLedger parties, DocumentSequenceService numbers, AuditLog audit,
-            Notifications notifications, Clock clock, PriceBook prices) {
+            Notifications notifications, Clock clock, PriceBook prices, SystemSettings settings) {
         this.jdbc = jdbc;
         this.stock = stock;
         this.parties = parties;
@@ -74,6 +78,7 @@ class CustomerReturns {
         this.notifications = notifications;
         this.clock = clock;
         this.prices = prices;
+        this.settings = settings;
     }
 
     private static String money(BigDecimal v) {
@@ -148,7 +153,8 @@ class CustomerReturns {
         record H(long id, String number, long branchId, String branch, long customerId, String customer, long saleId, String saleNumber,
                 LocalDate saleDate, long orderId, String orderNumber, long warehouseId, String warehouse, String quarantine, LocalDate date,
                 String status, String note, BigDecimal total, String createdBy, Timestamp createdAt, String postedBy, Timestamp postedAt,
-                String rejectedBy, Timestamp rejectedAt, String rejectReason, String cancelledBy, Timestamp cancelledAt, String cancelReason) {}
+                String rejectedBy, Timestamp rejectedAt, String rejectReason, String cancelledBy, Timestamp cancelledAt, String cancelReason,
+                boolean late) {}
         Optional<H> head = jdbc.sql("""
                 SELECT h.id, h.number, h.branch_id, br.name AS branch, h.customer_id, c.name AS customer, h.sale_id, s.number AS sale_number,
                        s.sale_date, h.order_id, o.number AS order_number, h.warehouse_id, w.name AS warehouse,
@@ -156,7 +162,7 @@ class CustomerReturns {
                         ORDER BY z.id LIMIT 1) AS quarantine,
                        h.return_date, h.status, h.note, h.total, cb.full_name AS created_by, h.created_at, pb.full_name AS posted_by,
                        h.posted_at, rb.full_name AS rejected_by, h.rejected_at, h.reject_reason,
-                       xb.full_name AS cancelled_by, h.cancelled_at, h.cancel_reason
+                       xb.full_name AS cancelled_by, h.cancelled_at, h.cancel_reason, h.late
                 FROM customer_return h
                 JOIN branch br ON br.id = h.branch_id
                 JOIN counterparty c ON c.id = h.customer_id
@@ -176,7 +182,7 @@ class CustomerReturns {
                         rs.getString("note"), rs.getBigDecimal("total"), rs.getString("created_by"), rs.getTimestamp("created_at"),
                         rs.getString("posted_by"), rs.getTimestamp("posted_at"), rs.getString("rejected_by"), rs.getTimestamp("rejected_at"),
                         rs.getString("reject_reason"), rs.getString("cancelled_by"), rs.getTimestamp("cancelled_at"),
-                        rs.getString("cancel_reason")))
+                        rs.getString("cancel_reason"), rs.getBoolean("late")))
                 .optional()
                 .filter(h -> actor.canAccessBranch(h.branchId()));
         if (head.isEmpty()) {
@@ -199,7 +205,7 @@ class CustomerReturns {
                 h.saleNumber(), h.saleDate(), h.orderId(), h.orderNumber(), h.warehouseId(), h.warehouse(), h.quarantine(), h.date(),
                 Status.valueOf(h.status()), h.note(), money(h.total()), qty, h.createdBy(), h.createdAt().toInstant(), h.postedBy(),
                 instant(h.postedAt()), h.rejectedBy(), instant(h.rejectedAt()), h.rejectReason(), h.cancelledBy(), instant(h.cancelledAt()),
-                h.cancelReason(), lines));
+                h.cancelReason(), h.late(), lines));
     }
 
     /** Qatorlar bo'yicha qaytarilgan: o'tkazilgan QM (sales_return_line) + kutilayotgan QM (customer_return PENDING). */
@@ -212,6 +218,8 @@ class CustomerReturns {
     @Transactional(readOnly = true)
     List<ReturnableSale> sales(Actor actor, long customerId, Long branchId) {
         StringBuilder where = new StringBuilder(" WHERE s.customer_id = :c AND s.status = 'POSTED' AND o.status = 'DELIVERED'");
+        LocalDate today = LocalDate.now(clock.withZone(TASHKENT));
+        int limit = returnDays();
         Map<String, Object> params = new HashMap<>();
         params.put("c", customerId);
         if (!actor.allBranches()) {
@@ -224,14 +232,25 @@ class CustomerReturns {
         }
         return jdbc.sql("""
                 SELECT s.id, s.number, s.sale_date, s.total, s.warehouse_id, w.name AS warehouse,
+                       (o.status_changed_at AT TIME ZONE 'Asia/Tashkent')::date AS delivered_on,
                        (SELECT count(*) FROM sale_line sl WHERE sl.sale_id = s.id AND sl.qty >\s""" + RETURNED_SQL + """
                        ) AS returnable
                 FROM sale s JOIN sales_order o ON o.id = s.order_id JOIN warehouse w ON w.id = s.warehouse_id""" + where
                 + " ORDER BY s.sale_date DESC, s.id DESC LIMIT 200")
                 .params(params)
-                .query((rs, n) -> new ReturnableSale(rs.getLong("id"), rs.getString("number"), rs.getDate("sale_date").toLocalDate(),
-                        money(rs.getBigDecimal("total")), rs.getLong("warehouse_id"), rs.getString("warehouse"), rs.getInt("returnable")))
+                .query((rs, n) -> {
+                    LocalDate delivered = rs.getDate("delivered_on").toLocalDate();
+                    int ago = (int) ChronoUnit.DAYS.between(delivered, today);
+                    return new ReturnableSale(rs.getLong("id"), rs.getString("number"), rs.getDate("sale_date").toLocalDate(),
+                            money(rs.getBigDecimal("total")), rs.getLong("warehouse_id"), rs.getString("warehouse"), rs.getInt("returnable"),
+                            delivered, ago, limit > 0 && ago > limit);
+                })
                 .list();
+    }
+
+    /** Qaytarish muddati (kun), 0 — cheksiz (O8, Sozlamalar → Savdo). */
+    int returnDays() {
+        return settings.intValue(SettingKey.returnDays);
     }
 
     @Transactional(readOnly = true)
@@ -278,20 +297,21 @@ class CustomerReturns {
     }
 
     private record SaleHead(long id, String number, long orderId, long branchId, String branchCode, long customerId, String customer,
-            long warehouseId) {}
+            long warehouseId, LocalDate deliveredOn) {}
 
     /** Yetkazilgan, o'tkazilgan sotuv (filial doirasida). lock — sotuv qatori qulflanadi (bir sotuvga parallel QM navbatlanadi). */
     private SaleHead saleHead(Actor actor, long saleId, boolean lock) {
         SaleHead s = jdbc.sql("""
                 SELECT s.id, s.number, s.order_id, s.branch_id, br.code, s.customer_id, c.name AS customer, s.warehouse_id, s.status,
-                       o.status AS order_status
+                       o.status AS order_status, (o.status_changed_at AT TIME ZONE 'Asia/Tashkent')::date AS delivered_on
                 FROM sale s JOIN sales_order o ON o.id = s.order_id JOIN branch br ON br.id = s.branch_id
                 JOIN counterparty c ON c.id = s.customer_id
                 WHERE s.id = :id""" + (lock ? " FOR UPDATE OF s" : ""))
                 .param("id", saleId)
                 .query((rs, n) -> "POSTED".equals(rs.getString("status")) && "DELIVERED".equals(rs.getString("order_status"))
                         ? new SaleHead(rs.getLong("id"), rs.getString("number"), rs.getLong("order_id"), rs.getLong("branch_id"),
-                                rs.getString("code"), rs.getLong("customer_id"), rs.getString("customer"), rs.getLong("warehouse_id"))
+                                rs.getString("code"), rs.getLong("customer_id"), rs.getString("customer"), rs.getLong("warehouse_id"),
+                                rs.getDate("delivered_on").toLocalDate())
                         : null)
                 .optional()
                 .orElse(null);
@@ -304,8 +324,14 @@ class CustomerReturns {
     // ===== Yozish =====
 
     @Transactional
-    long create(Actor actor, CustomerReturnRequest r, boolean canApprove) {
+    long create(Actor actor, CustomerReturnRequest r, boolean canApprove, boolean canLate) {
         SaleHead sale = saleHead(actor, r.saleId(), true);
+        LocalDate today = LocalDate.now(clock.withZone(TASHKENT));
+        int limit = returnDays();
+        boolean late = limit > 0 && ChronoUnit.DAYS.between(sale.deliveredOn(), today) > limit;
+        if (late && !canLate) {
+            throw MedixException.forbidden("qm.lateReturn", limit);
+        }
         Map<Long, ReturnableLine> avail = lines(sale).stream()
                 .collect(Collectors.toMap(ReturnableLine::saleLineId, l -> l, (a, b) -> a, LinkedHashMap::new));
         Set<Long> seen = new HashSet<>();
@@ -330,8 +356,10 @@ class CustomerReturns {
         }
         String number = numbers.next(DocumentPrefix.QM, sale.branchCode()).toString();
         long id = jdbc.sql("""
-                INSERT INTO customer_return (number, branch_id, sale_id, order_id, customer_id, warehouse_id, return_date, note, total, created_by)
-                VALUES (:n, :b, :s, :o, :c, :w, :d, :note, :t, :by) RETURNING id""")
+                INSERT INTO customer_return (number, branch_id, sale_id, order_id, customer_id, warehouse_id, return_date, note, total, created_by,
+                                             late)
+                VALUES (:n, :b, :s, :o, :c, :w, :d, :note, :t, :by, :late) RETURNING id""")
+                .param("late", late)
                 .param("n", number)
                 .param("b", sale.branchId())
                 .param("s", sale.id())
@@ -363,7 +391,8 @@ class CustomerReturns {
             qty += p.req().qty();
         }
         audit.record(AuditEntry.of("qm.create", "customer_return", id)
-                .change(null, Map.of("number", number, "sale", sale.number(), "lines", priced.size(), "total", total.toString())), actor);
+                .change(null, Map.of("number", number, "sale", sale.number(), "lines", priced.size(), "total", total.toString(), "late", late)),
+                actor);
         if (canApprove) {
             doPost(actor, id);
         } else {
