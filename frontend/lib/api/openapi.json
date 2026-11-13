@@ -29240,7 +29240,7 @@
           "dueDate" : {
             "type" : "string",
             "format" : "date",
-            "description" : "Bo'sh — kirim sanasi + YB sharti (filial)"
+            "description" : "Bo'sh — hisob-faktura sanasi (yo'q bo'lsa kirim sanasi) + YB sharti (filial)"
           },
           "facturaNumber" : {
             "type" : "string",

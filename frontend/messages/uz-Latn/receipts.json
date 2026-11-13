@@ -106,7 +106,9 @@
       "qty": "Soni — butun musbat son.",
       "bonus": "Aksiya bonusi — butun son.",
       "price": "Narx notoʻgʻri. Masalan: 15.000,50.",
-      "duplicate": "Bu mahsulot va partiya allaqachon qoʻshilgan."
+      "duplicate": "Bu mahsulot va partiya allaqachon qoʻshilgan.",
+      "invoiceAfterReceipt": "Hisob-faktura sanasi kirim sanasidan keyin boʻlmaydi. Hisob-faktura sanasini tekshiring.",
+      "dueBeforeBase": "Toʻlov kuni hisob-faktura sanasidan (u boʻlmasa — kirim sanasidan) oldin boʻlmaydi. Sanani tekshiring."
     },
     "draftSaved": "Qoralama saqlandi",
     "cancelDoc": "Hujjatni bekor qilish",
@@ -129,7 +131,7 @@
       "invoiceDate": "Nakladnoy sanasi",
       "paymentType": "Toʻlov turi",
       "due": "Toʻlov kuni",
-      "dueHint": "Boʻsh — kirim sanasi + yetkazib beruvchi sharti",
+      "dueHint": "Boʻsh — hisob-faktura sanasi + yetkazib beruvchi sharti",
       "owner": "Kim nomiga",
       "ownerPlaceholder": "Kompaniya tovari",
       "prepaid": "100% oldindan toʻlangan",
@@ -158,7 +160,10 @@
       "branch": "Filial",
       "branchLocked": "Hujjat joriy filialda yaratiladi",
       "factura": "Hisob-faktura raqami",
-      "bonusOn": "Chegirma (bonus) bormi?"
+      "bonusOn": "Chegirma (bonus) bormi?",
+      "dueFromInvoice": "Hisob-faktura sanasi + {n} kun",
+      "dueFromReceipt": "Kirim sanasi + {n} kun",
+      "invoiceDateMissing": "Hisob-faktura sanasi kiritilmagan — toʻlov kuni kirim sanasidan hisoblandi"
     },
     "addLine": "Qator qoʻshish",
     "lines": "Qatorlar · {count}",

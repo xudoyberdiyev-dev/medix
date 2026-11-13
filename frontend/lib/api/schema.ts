@@ -12245,7 +12245,7 @@ export interface components {
             discountValue?: string;
             /**
              * Format: date
-             * @description Bo'sh — kirim sanasi + YB sharti (filial)
+             * @description Bo'sh — hisob-faktura sanasi (yo'q bo'lsa kirim sanasi) + YB sharti (filial)
              */
             dueDate?: string;
             /** @description Hisob-faktura raqami (yuk xatidan alohida) */

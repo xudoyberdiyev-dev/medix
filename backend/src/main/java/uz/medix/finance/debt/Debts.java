@@ -202,7 +202,8 @@ class Debts {
                      app AS (SELECT applies_doc_id AS i, sum(amount) AS amt FROM party_ledger
                              WHERE side = 'SUPPLIER' AND applies_doc_type = 'KR' AND (CAST(:b AS BIGINT) IS NULL OR branch_id = :b)
                              GROUP BY applies_doc_id)
-                SELECT r.id, r.number, r.branch_id, b.name AS bname, c.id AS cid, c.name AS cname, r.receipt_date, r.payment_type, e.full_name,
+                SELECT r.id, r.number, r.branch_id, b.name AS bname, c.id AS cid, c.name AS cname,
+                       coalesce(r.invoice_date, r.receipt_date) AS doc_date, r.payment_type, e.full_name,
                        r.due_date, r.prepaid, own.amt AS total, -coalesce(app.amt, 0) AS paid, own.amt + coalesce(app.amt, 0) AS left_amt
                 FROM own JOIN receipt r ON r.id = own.doc_id JOIN branch b ON b.id = r.branch_id JOIN counterparty c ON c.id = r.supplier_id
                      LEFT JOIN employee e ON e.id = r.owner_id LEFT JOIN app ON app.i = own.doc_id
@@ -216,7 +217,7 @@ class Debts {
                     LocalDate due = rs.getDate("due_date") == null ? null : rs.getDate("due_date").toLocalDate();
                     Integer days = due == null || !left.isPositive() ? null : (int) java.time.temporal.ChronoUnit.DAYS.between(today, due);
                     return new SupplierInvoice(rs.getLong("id"), rs.getString("number"), rs.getLong("branch_id"), rs.getString("bname"),
-                            rs.getLong("cid"), rs.getString("cname"), rs.getDate("receipt_date").toLocalDate(), rs.getString("payment_type"),
+                            rs.getLong("cid"), rs.getString("cname"), rs.getDate("doc_date").toLocalDate(), rs.getString("payment_type"),
                             rs.getString("full_name"), due, rs.getBoolean("prepaid"), new Money(rs.getBigDecimal("total")).toString(),
                             new Money(rs.getBigDecimal("paid")).toString(), left.isPositive() ? left.toString() : "0.00", days);
                 })
@@ -278,10 +279,13 @@ class Debts {
                 .single());
         record Raw(java.time.Instant at, LocalDate date, String type, long id, String number, String note, Money amount) {}
         List<Raw> raw = jdbc.sql("""
-                SELECT occurred_at, (occurred_at AT TIME ZONE 'Asia/Tashkent')::date AS d, doc_type, doc_id, doc_number, note, amount
-                FROM party_ledger WHERE branch_id = :b AND counterparty_id = :c AND side = :s
-                  AND (occurred_at AT TIME ZONE 'Asia/Tashkent')::date BETWEEN :f AND :t
-                ORDER BY occurred_at, id LIMIT 5000""")
+                SELECT pl.occurred_at, coalesce(rc.invoice_date, (pl.occurred_at AT TIME ZONE 'Asia/Tashkent')::date) AS d, pl.doc_type,
+                       pl.doc_id, pl.doc_number, pl.note, pl.amount
+                FROM party_ledger pl
+                     LEFT JOIN receipt rc ON pl.side = 'SUPPLIER' AND pl.doc_type = 'KR' AND rc.id = pl.doc_id
+                WHERE pl.branch_id = :b AND pl.counterparty_id = :c AND pl.side = :s
+                  AND (pl.occurred_at AT TIME ZONE 'Asia/Tashkent')::date BETWEEN :f AND :t
+                ORDER BY pl.occurred_at, pl.id LIMIT 5000""")
                 .param("b", branchId)
                 .param("c", counterpartyId)
                 .param("s", side.name())
