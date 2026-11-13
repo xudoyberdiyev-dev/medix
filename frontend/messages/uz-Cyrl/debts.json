@@ -139,7 +139,8 @@
     "groupDebtor": "Қарздор филиал",
     "groupCreditor": "Кредитор филиал",
     "groupAmount": "Қарз",
-    "groupBadge": "Гуруҳ ичида"
+    "groupBadge": "Гуруҳ ичида",
+    "zoneFilter": "Савдо зонаси"
   },
   "pay": {
     "title": "Етказиб берувчилар қарзи",

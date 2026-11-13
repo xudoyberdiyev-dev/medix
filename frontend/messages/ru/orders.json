@@ -98,7 +98,8 @@
       "region": "Регион",
       "operator": "Оператор",
       "payment": "Тип оплаты",
-      "date": "Дата"
+      "date": "Дата",
+      "zone": "Торговая зона"
     },
     "count": "{count} шт.",
     "selected": "Выбрано: {count}",

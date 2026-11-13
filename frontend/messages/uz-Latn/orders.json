@@ -98,7 +98,8 @@
       "region": "Hudud",
       "operator": "Operator",
       "payment": "Toʻlov turi",
-      "date": "Sana"
+      "date": "Sana",
+      "zone": "Savdo zonasi"
     },
     "count": "{count} ta",
     "selected": "{count} ta tanlandi",

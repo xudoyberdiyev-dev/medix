@@ -92,6 +92,7 @@ class SalesReportController {
                 case BRANCH -> "Filial";
                 case DAY -> "Sana";
                 case REGION -> "Hudud";
+                case SALES_ZONE -> "Savdo zonasi";
                 case PAYMENT_TYPE -> "Toʻlov turi";
                 case WEEK -> "Hafta";
                 case MONTH -> "Oy";

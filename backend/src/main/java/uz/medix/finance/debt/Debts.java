@@ -41,7 +41,8 @@ class Debts {
             @Schema(nullable = true) LocalDate lastPayment, @Schema(nullable = true, description = "Hudud (mijoz kartochkasidan)") String region,
             @Schema(nullable = true, description = "Masʼul operator (filial shartidan; filial tanlanmasa — barcha filiallardagilar)")
             String operator,
-            @Schema(nullable = true, description = "To'lov sharti, kun (faqat bitta filial tanlanganda)") Integer paymentDays) {}
+            @Schema(nullable = true, description = "To'lov sharti, kun (faqat bitta filial tanlanganda)") Integer paymentDays,
+            @Schema(nullable = true, description = "Mijoz: savdo zonasi (O6; filial tanlanmasa — barcha filiallardagilar)") String salesZone) {}
 
     record DebtReport(@Schema(nullable = true) Long branchId, LocalDate today, Buckets totals, List<DebtRow> rows,
             @Schema(description = "Guruh ichidagi (filiallararo, FS) ochiq qarz — jamiga kirmaydi") String groupDebt,
@@ -122,7 +123,8 @@ class Debts {
             List<GroupDebtRow> group = groupRows(side, branchId);
             return new DebtReport(branchId, today, Buckets.of(Aging.Result.EMPTY), List.of(), groupSum(group), group);
         }
-        record Info(String name, String tin, String phone, BigDecimal limit, LocalDate lastPayment, String region, String operator, Integer days) {}
+        record Info(String name, String tin, String phone, BigDecimal limit, LocalDate lastPayment, String region, String operator, Integer days,
+                String zone) {}
         String payDoc = side == Side.CUSTOMER ? "MT" : "YT";
         Map<Long, Info> info = new LinkedHashMap<>();
         jdbc.sql("""
@@ -131,7 +133,9 @@ class Debts {
                         WHERE p.counterparty_id = c.id AND p.side = :s AND p.doc_type = :pd AND (CAST(:b AS BIGINT) IS NULL OR p.branch_id = :b)) AS last_pay,
                        rg.name AS region,
                        (SELECT string_agg(DISTINCT e.full_name, ', ') FROM counterparty_branch_terms ot JOIN employee e ON e.id = ot.operator_employee_id
-                        WHERE ot.counterparty_id = c.id AND (CAST(:b AS BIGINT) IS NULL OR ot.branch_id = :b)) AS operator
+                        WHERE ot.counterparty_id = c.id AND (CAST(:b AS BIGINT) IS NULL OR ot.branch_id = :b)) AS operator,
+                       (SELECT string_agg(DISTINCT sz.name, ', ') FROM counterparty_branch_terms zt JOIN sales_zone sz ON sz.id = zt.sales_zone_id
+                        WHERE zt.counterparty_id = c.id AND (CAST(:b AS BIGINT) IS NULL OR zt.branch_id = :b)) AS zone
                 FROM counterparty c LEFT JOIN counterparty_branch_terms t ON t.counterparty_id = c.id AND t.branch_id = :b
                 LEFT JOIN region rg ON rg.id = c.region_id
                 WHERE c.id IN (:ids)""".formatted(side == Side.CUSTOMER ? "payment_days" : "supplier_payment_days"))
@@ -143,7 +147,8 @@ class Debts {
                     info.put(rs.getLong("id"), new Info(rs.getString("name"), rs.getString("tin"), rs.getString("phone"),
                             side == Side.CUSTOMER ? rs.getBigDecimal("credit_limit") : null,
                             rs.getDate("last_pay") == null ? null : rs.getDate("last_pay").toLocalDate(), rs.getString("region"),
-                            side == Side.CUSTOMER ? rs.getString("operator") : null, rs.getObject("pay_days", Integer.class)));
+                            side == Side.CUSTOMER ? rs.getString("operator") : null, rs.getObject("pay_days", Integer.class),
+                            side == Side.CUSTOMER ? rs.getString("zone") : null));
                     return 0;
                 })
                 .list();
@@ -154,7 +159,7 @@ class Debts {
             total = total.plus(r);
             Info c = info.get(e.getKey());
             rows.add(new DebtRow(e.getKey(), c.name(), c.tin(), c.phone(), Buckets.of(r), r.maxOverdueDays(),
-                    c.limit() == null ? null : new Money(c.limit()).toString(), c.lastPayment(), c.region(), c.operator(), c.days()));
+                    c.limit() == null ? null : new Money(c.limit()).toString(), c.lastPayment(), c.region(), c.operator(), c.days(), c.zone()));
         }
         // Eng ko'p muddati o'tgan qarz birinchi, keyin umumiy qarz
         rows.sort(Comparator.comparing((DebtRow r) -> Money.of(r.buckets().overdue())).reversed()

@@ -36,6 +36,7 @@ import { useMe } from "@/features/auth/session";
 import type { components } from "@/lib/api/schema";
 import { formatDate, formatMoney, formatQuantity, formatTime } from "@/lib/format";
 import { useBranchStore } from "@/lib/stores/branch";
+import { useSalesZones } from "@/features/sales-zones/api";
 import { useHiddenColumns } from "@/lib/use-hidden-columns";
 import { SavedViews } from "@/components/ui/saved-views";
 import { ORDER_CREATE, useOrders, type OrderStatus, type OrderSummary } from "./api";
@@ -261,6 +262,9 @@ export function OrdersPage() {
   }, [canCreate, router]);
   const branchId = me.data?.allBranches ? (selectedBranch ?? null) : null;
   const orders = useOrders(filters, branchId);
+  // O6: savdo zonasi filtri — ruxsat boʻlsa (zonalar roʻyxati), filial doirasida
+  const zoneList = useSalesZones(branchId, false, canAny(me.data, ["salesZones.view", "salesZones.edit", "orders.view"]));
+  const multiZoneBranch = new Set((zoneList.data ?? []).map((z) => z.branchId)).size > 1;
 
   const apply = (patch: Partial<OrderFilters>) => {
     const next = { ...filters, ...patch, ...("page" in patch ? {} : { page: 1 }) };
@@ -468,6 +472,15 @@ export function OrdersPage() {
           selected={filters.regions}
           onChange={(v) => apply({ regions: v })}
         />
+        {zoneList.data?.length ? (
+          <MultiFilter
+            label={t("list.f.zone")}
+            searchable
+            options={zoneList.data.map((z) => ({ value: z.id, label: multiZoneBranch ? `${z.name} · ${z.branch}` : z.name }))}
+            selected={filters.zones}
+            onChange={(v) => apply({ zones: v })}
+          />
+        ) : null}
         <MultiFilter
           label={t("list.f.operator")}
           options={refOptions(facets?.operators, filters.operators)}

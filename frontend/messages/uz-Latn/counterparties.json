@@ -532,7 +532,8 @@
       "phone": "Telefon",
       "limit": "Kredit limiti",
       "days": "Toʻlov muddati (kun)",
-      "lead": "Yetkazish muddati (kun)"
+      "lead": "Yetkazish muddati (kun)",
+      "zone": "Savdo zonasi"
     },
     "m": {
       "cReq": "«{f}» toʻldirilmagan",
@@ -547,7 +548,8 @@
       "cBranchReq": "Filial tanlanmagan — shartlarni yozib boʻlmaydi",
       "cTermsSkipped": "Shartlarni oʻzgartirish ruxsati yoʻq — limit va muddatlar yozilmaydi",
       "cTinExisting": "Mavjud karta: {n} — faqat filial sharti qoʻshiladi",
-      "cTinOtherRole": "Bu STIR boshqa roldagi kartada: {n} — kartani oching va rolni qoʻshing"
+      "cTinOtherRole": "Bu STIR boshqa roldagi kartada: {n} — kartani oching va rolni qoʻshing",
+      "cZoneUnknown": "Savdo zonasi topilmadi: «{t}» — shu filialda shu nomli faol zona yarating yoki nomni tuzating"
     },
     "termsAdd": "Filial sharti qoʻshiladi"
   }

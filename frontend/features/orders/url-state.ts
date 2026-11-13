@@ -41,6 +41,8 @@ export interface OrderFilters {
   delivery: DeliveryType[];
   payments: PaymentType[];
   regions: number[];
+  /** Savdo zonalari (O6) */
+  zones: number[];
   /** Sotuv/qaytarish davri (Savdo hisobotidan oʻtish). */
   soldFrom: string | null;
   soldTo: string | null;
@@ -64,6 +66,7 @@ export const DEFAULT_ORDER_FILTERS: OrderFilters = {
   delivery: [],
   payments: [],
   regions: [],
+  zones: [],
   soldFrom: null,
   soldTo: null,
   orderFrom: null,
@@ -115,6 +118,14 @@ export function parseOrderFilters(params: URLSearchParams, names: { customer: st
           .filter((v): v is number => v !== null),
       ),
     ],
+    zones: [
+      ...new Set(
+        params
+          .getAll("zoneId")
+          .map(positiveInt)
+          .filter((v): v is number => v !== null),
+      ),
+    ],
     soldFrom: isoDay(params.get("soldFrom")),
     soldTo: isoDay(params.get("soldTo")),
     orderFrom: isoDay(params.get("from")),
@@ -145,6 +156,7 @@ export function serializeOrderFilters(f: OrderFilters): string {
   f.delivery.forEach((v) => p.append("dt", v));
   f.payments.forEach((v) => p.append("pt", v));
   f.regions.forEach((v) => p.append("regionId", String(v)));
+  f.zones.forEach((v) => p.append("zoneId", String(v)));
   if (f.soldFrom) p.set("soldFrom", f.soldFrom);
   if (f.soldTo) p.set("soldTo", f.soldTo);
   if (f.orderFrom) p.set("from", f.orderFrom);
@@ -169,6 +181,7 @@ export function hasOrderFilters(f: OrderFilters): boolean {
     f.delivery.length ||
     f.payments.length ||
     f.regions.length ||
+    f.zones.length ||
     f.soldFrom ||
     f.soldTo ||
     f.orderFrom ||
@@ -189,6 +202,7 @@ export function orderQuery(f: OrderFilters, branchId: number | null) {
     deliveryType: f.delivery.length ? f.delivery : undefined,
     paymentType: f.payments.length ? f.payments : undefined,
     regionId: f.regions.length ? f.regions : undefined,
+    salesZoneId: f.zones.length ? f.zones : undefined,
     soldFrom: f.soldFrom ?? undefined,
     soldTo: f.soldTo ?? undefined,
     orderFrom: f.orderFrom ?? undefined,

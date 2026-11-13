@@ -6841,7 +6841,7 @@
     },
     "/api/orders" : {
       "get" : {
-        "description" : "operatorId — kiritgan xodim; soldFrom/soldTo — shu davrda sotilgan yoki qaytarilgan (Savdo hisoboti qatoridan hujjatlarga o'tish, SPEC 8); orderFrom/orderTo — buyurtma sanasi; customerId/operatorId/statuses/deliveryType/paymentType/regionId — bir nechta qiymat (prototip filtr chiplari); q — raqam, STIR yoki mijoz nomi (lotin/kirill farqsiz); sort/desc — saralash (standart: kiritilgan vaqti, yangisi tepada).",
+        "description" : "operatorId — kiritgan xodim; soldFrom/soldTo — shu davrda sotilgan yoki qaytarilgan (Savdo hisoboti qatoridan hujjatlarga o'tish, SPEC 8); orderFrom/orderTo — buyurtma sanasi; customerId/operatorId/statuses/deliveryType/paymentType/regionId/salesZoneId — bir nechta qiymat (prototip filtr chiplari); q — raqam, STIR yoki mijoz nomi (lotin/kirill farqsiz); sort/desc — saralash (standart: kiritilgan vaqti, yangisi tepada).",
         "operationId" : "list_14",
         "parameters" : [ {
           "in" : "query",
@@ -6917,6 +6917,17 @@
         }, {
           "in" : "query",
           "name" : "regionId",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          }
+        }, {
+          "in" : "query",
+          "name" : "salesZoneId",
           "required" : false,
           "schema" : {
             "type" : "array",
@@ -7311,6 +7322,17 @@
         }, {
           "in" : "query",
           "name" : "regionId",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          }
+        }, {
+          "in" : "query",
+          "name" : "salesZoneId",
           "required" : false,
           "schema" : {
             "type" : "array",
@@ -12176,7 +12198,7 @@
           "required" : false,
           "schema" : {
             "type" : "string",
-            "enum" : [ "CUSTOMER", "OPERATOR", "BRANCH", "DAY", "REGION", "PAYMENT_TYPE", "WEEK", "MONTH" ]
+            "enum" : [ "CUSTOMER", "OPERATOR", "BRANCH", "DAY", "REGION", "SALES_ZONE", "PAYMENT_TYPE", "WEEK", "MONTH" ]
           }
         }, {
           "in" : "query",
@@ -12184,7 +12206,7 @@
           "required" : false,
           "schema" : {
             "type" : "string",
-            "enum" : [ "CUSTOMER", "OPERATOR", "BRANCH", "DAY", "REGION", "PAYMENT_TYPE", "WEEK", "MONTH" ]
+            "enum" : [ "CUSTOMER", "OPERATOR", "BRANCH", "DAY", "REGION", "SALES_ZONE", "PAYMENT_TYPE", "WEEK", "MONTH" ]
           }
         }, {
           "in" : "query",
@@ -12252,7 +12274,7 @@
           "required" : false,
           "schema" : {
             "type" : "string",
-            "enum" : [ "CUSTOMER", "OPERATOR", "BRANCH", "DAY", "REGION", "PAYMENT_TYPE", "WEEK", "MONTH" ]
+            "enum" : [ "CUSTOMER", "OPERATOR", "BRANCH", "DAY", "REGION", "SALES_ZONE", "PAYMENT_TYPE", "WEEK", "MONTH" ]
           }
         }, {
           "in" : "query",
@@ -12260,7 +12282,7 @@
           "required" : false,
           "schema" : {
             "type" : "string",
-            "enum" : [ "CUSTOMER", "OPERATOR", "BRANCH", "DAY", "REGION", "PAYMENT_TYPE", "WEEK", "MONTH" ]
+            "enum" : [ "CUSTOMER", "OPERATOR", "BRANCH", "DAY", "REGION", "SALES_ZONE", "PAYMENT_TYPE", "WEEK", "MONTH" ]
           }
         }, {
           "in" : "query",
@@ -20730,6 +20752,10 @@
             "type" : "integer",
             "format" : "int64"
           },
+          "late" : {
+            "type" : "boolean",
+            "description" : "Qaytarish muddatidan keyin yaratilgan (O8, qm.late)"
+          },
           "lines" : {
             "type" : "array",
             "items" : {
@@ -20803,7 +20829,7 @@
             "format" : "int64"
           }
         },
-        "required" : [ "branch", "branchId", "createdAt", "createdBy", "customer", "customerId", "id", "lines", "number", "orderId", "orderNumber", "returnDate", "saleDate", "saleId", "saleNumber", "status", "total", "totalQty", "warehouse", "warehouseId" ]
+        "required" : [ "branch", "branchId", "createdAt", "createdBy", "customer", "customerId", "id", "late", "lines", "number", "orderId", "orderNumber", "returnDate", "saleDate", "saleId", "saleNumber", "status", "total", "totalQty", "warehouse", "warehouseId" ]
       },
       "CustomerReturnLine" : {
         "type" : "object",
@@ -21280,6 +21306,10 @@
           "region" : {
             "type" : "string",
             "description" : "Hudud (mijoz kartochkasidan)"
+          },
+          "salesZone" : {
+            "type" : "string",
+            "description" : "Mijoz: savdo zonasi (O6; filial tanlanmasa — barcha filiallardagilar)"
           },
           "tin" : {
             "type" : "string"
@@ -30233,9 +30263,23 @@
       "ReturnableSale" : {
         "type" : "object",
         "properties" : {
+          "daysAgo" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Yetkazilganidan beri kun"
+          },
+          "deliveredOn" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Yetkazilgan sana (Toshkent)"
+          },
           "id" : {
             "type" : "integer",
             "format" : "int64"
+          },
+          "late" : {
+            "type" : "boolean",
+            "description" : "Qaytarish muddati o'tgan (O8): faqat qm.late bilan"
           },
           "number" : {
             "type" : "string"
@@ -30259,7 +30303,7 @@
             "format" : "int64"
           }
         },
-        "required" : [ "id", "number", "returnableLines", "saleDate", "total", "warehouse", "warehouseId" ]
+        "required" : [ "daysAgo", "deliveredOn", "id", "late", "number", "returnableLines", "saleDate", "total", "warehouse", "warehouseId" ]
       },
       "ReturnedLine" : {
         "type" : "object",
@@ -30510,11 +30554,11 @@
           },
           "groupBy" : {
             "type" : "string",
-            "enum" : [ "CUSTOMER", "OPERATOR", "BRANCH", "DAY", "REGION", "PAYMENT_TYPE", "WEEK", "MONTH" ]
+            "enum" : [ "CUSTOMER", "OPERATOR", "BRANCH", "DAY", "REGION", "SALES_ZONE", "PAYMENT_TYPE", "WEEK", "MONTH" ]
           },
           "groupBy2" : {
             "type" : "string",
-            "enum" : [ "CUSTOMER", "OPERATOR", "BRANCH", "DAY", "REGION", "PAYMENT_TYPE", "WEEK", "MONTH" ]
+            "enum" : [ "CUSTOMER", "OPERATOR", "BRANCH", "DAY", "REGION", "SALES_ZONE", "PAYMENT_TYPE", "WEEK", "MONTH" ]
           },
           "mineOnly" : {
             "type" : "boolean"
@@ -30917,11 +30961,11 @@
         "properties" : {
           "key" : {
             "type" : "string",
-            "enum" : [ "expiryWarnDays", "invRemindDays", "orderLateDays", "limitBranchPct", "overdueDirDays", "priceWarnPct", "cashBranchApprove", "hcDirApprove", "ivDirApprove", "pwMin", "sessionMin", "pinTries", "pinLockMin" ]
+            "enum" : [ "expiryWarnDays", "invRemindDays", "orderLateDays", "limitBranchPct", "overdueDirDays", "priceWarnPct", "returnDays", "cashBranchApprove", "hcDirApprove", "ivDirApprove", "pwMin", "sessionMin", "pinTries", "pinLockMin" ]
           },
           "kind" : {
             "type" : "string",
-            "enum" : [ "DAY", "PCT", "SUM", "LEN", "MIN", "TRIES", "LOCK" ]
+            "enum" : [ "DAY", "PCT", "SUM", "LEN", "MIN", "TRIES", "LOCK", "RDAY" ]
           },
           "max" : {
             "type" : "integer",

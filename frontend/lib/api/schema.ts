@@ -3117,7 +3117,7 @@ export interface paths {
         };
         /**
          * Buyurtmalar
-         * @description operatorId — kiritgan xodim; soldFrom/soldTo — shu davrda sotilgan yoki qaytarilgan (Savdo hisoboti qatoridan hujjatlarga o'tish, SPEC 8); orderFrom/orderTo — buyurtma sanasi; customerId/operatorId/statuses/deliveryType/paymentType/regionId — bir nechta qiymat (prototip filtr chiplari); q — raqam, STIR yoki mijoz nomi (lotin/kirill farqsiz); sort/desc — saralash (standart: kiritilgan vaqti, yangisi tepada).
+         * @description operatorId — kiritgan xodim; soldFrom/soldTo — shu davrda sotilgan yoki qaytarilgan (Savdo hisoboti qatoridan hujjatlarga o'tish, SPEC 8); orderFrom/orderTo — buyurtma sanasi; customerId/operatorId/statuses/deliveryType/paymentType/regionId/salesZoneId — bir nechta qiymat (prototip filtr chiplari); q — raqam, STIR yoki mijoz nomi (lotin/kirill farqsiz); sort/desc — saralash (standart: kiritilgan vaqti, yangisi tepada).
          */
         get: operations["list_14"];
         put?: never;
@@ -8794,6 +8794,8 @@ export interface components {
             customerId: number;
             /** Format: int64 */
             id: number;
+            /** @description Qaytarish muddatidan keyin yaratilgan (O8, qm.late) */
+            late: boolean;
             lines: components["schemas"]["CustomerReturnLine"][];
             note?: string;
             number: string;
@@ -9013,6 +9015,8 @@ export interface components {
             phone?: string;
             /** @description Hudud (mijoz kartochkasidan) */
             region?: string;
+            /** @description Mijoz: savdo zonasi (O6; filial tanlanmasa — barcha filiallardagilar) */
+            salesZone?: string;
             tin: string;
         };
         Debtor: {
@@ -12643,8 +12647,20 @@ export interface components {
             sold: number;
         };
         ReturnableSale: {
+            /**
+             * Format: int32
+             * @description Yetkazilganidan beri kun
+             */
+            daysAgo: number;
+            /**
+             * Format: date
+             * @description Yetkazilgan sana (Toshkent)
+             */
+            deliveredOn: string;
             /** Format: int64 */
             id: number;
+            /** @description Qaytarish muddati o'tgan (O8): faqat qm.late bilan */
+            late: boolean;
             number: string;
             /** Format: int32 */
             returnableLines: number;
@@ -12763,9 +12779,9 @@ export interface components {
             /** Format: date */
             from: string;
             /** @enum {string} */
-            groupBy: "CUSTOMER" | "OPERATOR" | "BRANCH" | "DAY" | "REGION" | "PAYMENT_TYPE" | "WEEK" | "MONTH";
+            groupBy: "CUSTOMER" | "OPERATOR" | "BRANCH" | "DAY" | "REGION" | "SALES_ZONE" | "PAYMENT_TYPE" | "WEEK" | "MONTH";
             /** @enum {string} */
-            groupBy2?: "CUSTOMER" | "OPERATOR" | "BRANCH" | "DAY" | "REGION" | "PAYMENT_TYPE" | "WEEK" | "MONTH";
+            groupBy2?: "CUSTOMER" | "OPERATOR" | "BRANCH" | "DAY" | "REGION" | "SALES_ZONE" | "PAYMENT_TYPE" | "WEEK" | "MONTH";
             mineOnly: boolean;
             /** @enum {string} */
             paymentType?: "CASH" | "TRANSFER" | "ONLINE";
@@ -12917,9 +12933,9 @@ export interface components {
         };
         SettingValue: {
             /** @enum {string} */
-            key: "expiryWarnDays" | "invRemindDays" | "orderLateDays" | "limitBranchPct" | "overdueDirDays" | "priceWarnPct" | "cashBranchApprove" | "hcDirApprove" | "ivDirApprove" | "pwMin" | "sessionMin" | "pinTries" | "pinLockMin";
+            key: "expiryWarnDays" | "invRemindDays" | "orderLateDays" | "limitBranchPct" | "overdueDirDays" | "priceWarnPct" | "returnDays" | "cashBranchApprove" | "hcDirApprove" | "ivDirApprove" | "pwMin" | "sessionMin" | "pinTries" | "pinLockMin";
             /** @enum {string} */
-            kind: "DAY" | "PCT" | "SUM" | "LEN" | "MIN" | "TRIES" | "LOCK";
+            kind: "DAY" | "PCT" | "SUM" | "LEN" | "MIN" | "TRIES" | "LOCK" | "RDAY";
             /** Format: int64 */
             max: number;
             /** Format: int64 */
@@ -19038,6 +19054,7 @@ export interface operations {
                 deliveryType?: ("DELIVERY" | "PICKUP")[];
                 paymentType?: ("CASH" | "TRANSFER" | "ONLINE")[];
                 regionId?: number[];
+                salesZoneId?: number[];
                 soldFrom?: string;
                 soldTo?: string;
                 orderFrom?: string;
@@ -19177,6 +19194,7 @@ export interface operations {
                 deliveryType?: ("DELIVERY" | "PICKUP")[];
                 paymentType?: ("CASH" | "TRANSFER" | "ONLINE")[];
                 regionId?: number[];
+                salesZoneId?: number[];
                 soldFrom?: string;
                 soldTo?: string;
                 orderFrom?: string;
@@ -22108,8 +22126,8 @@ export interface operations {
                 branchId?: number;
                 from?: string;
                 to?: string;
-                groupBy?: "CUSTOMER" | "OPERATOR" | "BRANCH" | "DAY" | "REGION" | "PAYMENT_TYPE" | "WEEK" | "MONTH";
-                groupBy2?: "CUSTOMER" | "OPERATOR" | "BRANCH" | "DAY" | "REGION" | "PAYMENT_TYPE" | "WEEK" | "MONTH";
+                groupBy?: "CUSTOMER" | "OPERATOR" | "BRANCH" | "DAY" | "REGION" | "SALES_ZONE" | "PAYMENT_TYPE" | "WEEK" | "MONTH";
+                groupBy2?: "CUSTOMER" | "OPERATOR" | "BRANCH" | "DAY" | "REGION" | "SALES_ZONE" | "PAYMENT_TYPE" | "WEEK" | "MONTH";
                 paymentType?: "CASH" | "TRANSFER" | "ONLINE";
                 regionId?: number;
             };
@@ -22136,8 +22154,8 @@ export interface operations {
                 branchId?: number;
                 from?: string;
                 to?: string;
-                groupBy?: "CUSTOMER" | "OPERATOR" | "BRANCH" | "DAY" | "REGION" | "PAYMENT_TYPE" | "WEEK" | "MONTH";
-                groupBy2?: "CUSTOMER" | "OPERATOR" | "BRANCH" | "DAY" | "REGION" | "PAYMENT_TYPE" | "WEEK" | "MONTH";
+                groupBy?: "CUSTOMER" | "OPERATOR" | "BRANCH" | "DAY" | "REGION" | "SALES_ZONE" | "PAYMENT_TYPE" | "WEEK" | "MONTH";
+                groupBy2?: "CUSTOMER" | "OPERATOR" | "BRANCH" | "DAY" | "REGION" | "SALES_ZONE" | "PAYMENT_TYPE" | "WEEK" | "MONTH";
                 paymentType?: "CASH" | "TRANSFER" | "ONLINE";
                 regionId?: number;
             };
