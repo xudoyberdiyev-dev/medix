@@ -39,6 +39,7 @@ import uz.medix.sales.order.MarkingModels.ScanRequest;
 import uz.medix.sales.order.MarkingModels.ScanResult;
 import uz.medix.sales.order.OrderModels.OrderReasonRequest;
 import uz.medix.shared.error.MedixException;
+import uz.medix.shared.gs1.Gs1Code;
 import uz.medix.shared.security.Actor;
 import uz.medix.shared.security.CurrentActor;
 import uz.medix.shared.text.Texts;
@@ -131,10 +132,66 @@ class MarkingController {
 
     @PostMapping("/orders/{id}/finish")
     @PreAuthorize("hasAuthority('marking.scan')")
-    @Operation(summary = "Markirovkani yakunlash", description = "Barcha kodlar skanerlangan va markirovkasiz qatorlar tasdiqlangan bo'lsa → «Hisobdan o'tkazilmoqda».")
-    MarkWork finish(@PathVariable long id) {
-        marking.finish(actor(), id);
+    @Operation(summary = "Markirovkani yakunlash",
+            description = "Barcha kodlar skanerlangan va markirovkasiz qatorlar tasdiqlangan bo'lsa → «Hisobdan o'tkazilmoqda». "
+                    + "O10a: kodlar bo'lsa — avval tekshiruv fayli (verify-export) yuklab olinadi va verified=true («Saplayn'da tekshirildi»).")
+    MarkWork finish(@PathVariable long id, @RequestBody(required = false) MarkingModels.FinishRequest r) {
+        marking.finish(actor(), id, r != null && r.verified());
         return marking.get(actor(), id);
+    }
+
+    private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+
+    /**
+     * O10a «Excel'ga chiqarish»: Saplayn'da tekshirish uchun buyurtma kodlari .xlsx — to'liq skanerlangan kod (kripto-qismi bilan,
+     * GS ajratgichi «&lt;GS&gt;» ko'rinishida), qavsli kod, GTIN, seriya, mahsulot, partiya, yaroqlilik, Q/D, buyurtma, mijoz, STIR.
+     * Yuklab olish qayd etiladi — shundan keyin yakunlash mumkin.
+     */
+    @GetMapping("/orders/{id}/verify-export")
+    @PreAuthorize("hasAuthority('marking.scan')")
+    @Operation(summary = "Saplayn tekshiruvi uchun kodlar .xlsx")
+    void verifyExport(@PathVariable long id, HttpServletResponse response) throws IOException {
+        List<OrderMarking.VerifyRow> rows = marking.verifyExport(actor(), id);
+        String name = "saplayn-" + rows.getFirst().orderNumber().replaceAll("[^A-Za-z0-9-]", "");
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        response.setHeader("Content-Disposition", "attachment; filename=\"" + name + ".xlsx\"");
+        try (SXSSFWorkbook wb = new SXSSFWorkbook(200)) {
+            Sheet sheet = wb.createSheet("Kodlar");
+            CellStyle header = wb.createCellStyle();
+            Font font = wb.createFont();
+            font.setBold(true);
+            header.setFont(font);
+            List<String> titles = List.of("Toʻliq kod (GS = <GS>)", "Kod (qavsli)", "GTIN", "Seriya", "Mahsulot", "Partiya", "Yaroqlilik",
+                    "Q/D", "Buyurtma №", "Mijoz", "STIR");
+            Row h = sheet.createRow(0);
+            for (int i = 0; i < titles.size(); i++) {
+                Cell c = h.createCell(i);
+                c.setCellValue(titles.get(i));
+                c.setCellStyle(header);
+            }
+            int r = 1;
+            for (OrderMarking.VerifyRow v : rows) {
+                Row row = sheet.createRow(r++);
+                int i = 0;
+                row.createCell(i++).setCellValue(Gs1Code.visibleGs(v.scanned()));
+                row.createCell(i++).setCellValue(v.code());
+                row.createCell(i++).setCellValue(v.gtin());
+                row.createCell(i++).setCellValue(v.serial());
+                row.createCell(i++).setCellValue(v.product());
+                row.createCell(i++).setCellValue(nz(v.batch()));
+                row.createCell(i++).setCellValue(v.expiry() == null ? "" : DATE.format(v.expiry()));
+                row.createCell(i++).setCellValue(v.kind() == MarkKind.BOX ? "Q" : "D");
+                row.createCell(i++).setCellValue(v.orderNumber());
+                row.createCell(i++).setCellValue(v.customer());
+                row.createCell(i).setCellValue(v.tin());
+            }
+            int[] widths = {70, 60, 16, 20, 40, 14, 12, 5, 16, 30, 15};
+            for (int i = 0; i < titles.size(); i++) {
+                sheet.setColumnWidth(i, widths[i] * 256);
+            }
+            sheet.createFreezePane(0, 1);
+            wb.write(response.getOutputStream());
+        }
     }
 
     @GetMapping("/codes")

@@ -17,6 +17,7 @@ import {
   ReceiptText,
   ScanBarcode,
   ScanLine,
+  ShieldCheck,
   Tag,
   Timer,
   Trash2,
@@ -29,6 +30,7 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/selection-controls";
 import { Icon, type LucideIcon } from "@/components/ui/icon";
 import { Modal } from "@/components/ui/modal";
 import { Pagination } from "@/components/ui/pagination";
@@ -46,7 +48,7 @@ import type { components } from "@/lib/api/schema";
 import { cn } from "@/lib/cn";
 import { formatDateTime, formatQuantity } from "@/lib/format";
 import { GS, parseGs1 } from "@/lib/gs1";
-import { codesExportUrl, useOrder } from "./api";
+import { codesExportUrl, useOrder, verifyExportUrl } from "./api";
 import { IssueButton } from "./issues";
 import { MarkImportButton } from "./mark-import";
 import { day } from "./orders-page";
@@ -374,7 +376,16 @@ function ActiveMarking({ work }: { work: MarkWork }) {
   const [removePending, setRemovePending] = useState(false);
   const [confirming, setConfirming] = useState<number | "all" | null>(null);
   const [confirmError, setConfirmError] = useState<unknown>(null);
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
+  const [verified, setVerified] = useState(false);
+  const exportedAt = work.exportedAt ?? null;
+  // O10a: yangi kod qabul qilinsa server faylni «yuklab olinmagan» qiladi — tasdiq belgisi ham qaytadan
+  useEffect(() => {
+    if (!exportedAt) setVerified(false);
+  }, [exportedAt]);
   const hasMarked = work.lines.length > 0;
+  const hasCodes = work.codes.length > 0;
   const unconfirmed = work.unmarkedLines.filter((l) => !l.confirmed);
   const t = work.deadline ? timerText(new Date(work.deadline), now, tr) : null;
 
@@ -446,12 +457,36 @@ function ActiveMarking({ work }: { work: MarkWork }) {
     }
   }
 
+  /** O10a «Excelʼga chiqarish»: Saplayn tekshiruvi fayli; yuklab olingani serverda qayd etiladi. */
+  async function exportForVerify() {
+    setExporting(true);
+    setExportError(null);
+    try {
+      const res = await fetch(verifyExportUrl(work.id), { credentials: "same-origin" });
+      if (!res.ok) throw new Error(String(res.status));
+      const name = /filename="([^"]+)"/.exec(res.headers.get("Content-Disposition") ?? "")?.[1] ?? `saplayn-${work.number}.xlsx`;
+      const url = URL.createObjectURL(await res.blob());
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = name;
+      a.click();
+      URL.revokeObjectURL(url);
+      await qc.invalidateQueries({ queryKey: ["marking", "mine"] });
+    } catch {
+      setExportError(tr("marking.verifyExportFailed"));
+    } finally {
+      setExporting(false);
+    }
+  }
+
   async function finish() {
     setFinishing(true);
     setFinishError(null);
     try {
       await ensureCsrf();
-      const w = await unwrap(api.POST("/api/marking/orders/{id}/finish", { params: { path: { id: work.id } } }));
+      const w = await unwrap(
+        api.POST("/api/marking/orders/{id}/finish", { params: { path: { id: work.id } }, body: { verified: hasCodes && verified } }),
+      );
       toast({ tone: "success", title: tr("marking.finished"), description: tr("marking.finishedHint", { number: w.number }) });
       qc.setQueryData(["marking", "mine"], null);
       await qc.invalidateQueries({ queryKey: ["marking"] });
@@ -639,12 +674,42 @@ function ActiveMarking({ work }: { work: MarkWork }) {
               ) : null}
             </section>
           ) : null}
+          {hasCodes && work.complete ? (
+            <section className="mt-4 rounded-card border border-border p-3" aria-label={tr("marking.verifyTitle")}>
+              <h3 className="flex items-center gap-1.5 font-semibold">
+                <Icon icon={ShieldCheck} size="sm" /> {tr("marking.verifyTitle")}
+              </h3>
+              <p className="mt-1 text-caption text-text-secondary">{tr("marking.verifyHint")}</p>
+              <div className="mt-3 flex flex-wrap items-center gap-3">
+                <Button variant="secondary" icon={FileDown} loading={exporting} onClick={() => void exportForVerify()}>
+                  {tr("marking.verifyExport")}
+                </Button>
+                <span className={cn("inline-flex items-center gap-1 text-caption", exportedAt ? "text-success" : "text-text-secondary")}>
+                  <Icon icon={exportedAt ? CheckCircle2 : Info} size="sm" />
+                  {exportedAt ? tr("marking.verifyExported", { time: formatDateTime(exportedAt) }) : tr("marking.verifyNotExported")}
+                </span>
+              </div>
+              {exportError ? <Alert tone="danger" title={exportError} className="mt-2" /> : null}
+              <Checkbox
+                className="mt-3"
+                label={tr("marking.verifyCheck")}
+                checked={verified}
+                disabled={!exportedAt}
+                onChange={setVerified}
+              />
+            </section>
+          ) : null}
           {finishErr.message ? <Alert tone="danger" title={finishErr.message} className="mt-3" /> : null}
           <div className="mt-4 flex flex-wrap justify-end gap-2">
             <IssueButton orderId={work.id} />
             {hasMarked && !work.complete ? <MarkImportButton orderId={work.id} /> : null}
-            <Button icon={CheckCircle2} disabled={!work.complete} loading={finishing} onClick={() => void finish()}>
-              {tr("marking.finish")}
+            <Button
+              icon={CheckCircle2}
+              disabled={!work.complete || (hasCodes && (!exportedAt || !verified))}
+              loading={finishing}
+              onClick={() => void finish()}
+            >
+              {hasCodes ? tr("marking.verifyFinish") : tr("marking.finish")}
             </Button>
           </div>
         </Card>
@@ -691,6 +756,9 @@ function ActiveMarking({ work }: { work: MarkWork }) {
           {removing?.productName} · <span className="font-mono">{removing?.serial}</span> {tr("marking.removeText")}
         </p>
         <TextField label={tr("marking.reason")} value={reason} onChange={setReason} maxLength={300} error={removeErr.fields.reason} />
+        <Button size="sm" variant="tertiary" className="mt-2" onClick={() => setReason(tr("marking.reasonSaplayn"))}>
+          {tr("marking.reasonSaplayn")}
+        </Button>
         {removeErr.message ? <Alert tone="danger" title={removeErr.message} className="mt-3" /> : null}
       </Modal>
     </div>

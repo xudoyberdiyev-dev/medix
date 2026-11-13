@@ -84,6 +84,23 @@ public record Gs1Code(String gtin, String serial, String batch, LocalDate expiry
         return new Ok(new Gs1Code(gtin, serial, batch, expiry, k));
     }
 
+    /**
+     * Skanerdan kelgan to'liq kod (kripto-qismi va GS ajratgichi bilan) — simvologiya belgisisiz, ko'pi bilan 300 belgi
+     * (O10a: Saplayn tekshiruvi uchun eksport).
+     */
+    public static String scanned(String raw) {
+        String s = raw.strip();
+        if (s.startsWith("]d2") || s.startsWith("]C1") || s.startsWith("]Q3")) {
+            s = s.substring(3);
+        }
+        return s.length() > 300 ? s.substring(0, 300) : s;
+    }
+
+    /** GS ajratgichini (U+001D) ko'rinadigan «<GS>» qilib ko'rsatish (Excel katagida boshqaruv belgisi yo'qolmasin). */
+    public static String visibleGs(String s) {
+        return s == null ? null : s.replace(String.valueOf(GS), "<GS>");
+    }
+
     /** Odam o'qiydigan ko'rinish (kodlar jurnali uchun). */
     public String humanReadable() {
         return "(01)" + gtin + "(21)" + serial + (expiry == null ? "" : "(17)" + String.format("%02d%02d%02d", expiry.getYear() % 100,

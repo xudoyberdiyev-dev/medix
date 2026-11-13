@@ -142,6 +142,11 @@ export async function loadOrder(id: number) {
   return unwrap(api.GET("/api/orders/{id}", { params: { path: { id } } }));
 }
 
+/** O10a: Saplayn tekshiruvi uchun buyurtma kodlari .xlsx (yuklab olish serverda qayd etiladi). */
+export function verifyExportUrl(orderId: number): string {
+  return `/api/marking/orders/${orderId}/verify-export`;
+}
+
 /** Kodlar .xlsx manzili (jurnal filtrlari bilan; orderId — bitta buyurtma). */
 export function codesExportUrl(f: { today?: boolean; mine?: boolean; q?: string; orderId?: number }): string {
   const p = new URLSearchParams();

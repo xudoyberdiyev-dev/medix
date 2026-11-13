@@ -448,7 +448,16 @@
     "tm": "Markirovka: {n} daqiqa",
     "noneBadge": "Markirovkasiz",
     "noneBtn": "Markirovkasiz — tasdiqlash",
-    "oneActive": "Avval joriy markirovkani yakunlang"
+    "oneActive": "Avval joriy markirovkani yakunlang",
+    "verifyTitle": "Saplayn tekshiruvi",
+    "verifyHint": "Kodlarni Excelʼga chiqaring, Saplaynʼda firmamiz nomida va takrorlanmaganini tekshiring, keyin yakunlang.",
+    "verifyExport": "Excelʼga chiqarish",
+    "verifyExported": "Yuklab olindi: {time}",
+    "verifyNotExported": "Fayl hali yuklab olinmagan",
+    "verifyCheck": "Kodlar firmamiz nomida va takrorlanmagan — Saplaynʼda tekshirdim",
+    "verifyFinish": "Saplaynʼda tekshirildi — yakunlash",
+    "verifyExportFailed": "Faylni yuklab boʻlmadi",
+    "reasonSaplayn": "Saplayn: boshqa firma nomida / yaroqsiz"
   },
   "monitor": {
     "forbidden": "Monitor Ombor mudiri, Filial rahbari va Direktor uchun.",
@@ -891,7 +900,8 @@
       "submit": "Yuborildi",
       "time": "Vaqt berildi",
       "undelivered": "Yetkazilmadi",
-      "update": "Tahrirlandi"
+      "update": "Tahrirlandi",
+      "markExport": "Kodlar Saplayn tekshiruviga yuklab olindi"
     },
     "tPay": "Toʻlov",
     "payEmptyT": "Sotuv hali rasmiylashtirilmagan",

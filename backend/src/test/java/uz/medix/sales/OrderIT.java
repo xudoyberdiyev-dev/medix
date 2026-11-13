@@ -915,9 +915,32 @@ class OrderIT {
         long s3 = jdbc.sql("SELECT id FROM sales_order_mark WHERE order_id = :o AND serial = 'S3'").param("o", o1).query(Long.class).single();
         send(post("/api/marking/orders/" + o1 + "/codes/" + s3 + "/remove"), marker, "{\"reason\":\"Qadoq shikastlangan\"}")
                 .andExpect(jsonPath("$.unitsScanned").value(2));
+        // O10a: tekshiruv fayli oldin yuklab olingan bo'lsa ham, yangi kod qabul qilinsa — qayta yuklab olish kerak
+        mvc.perform(get("/api/marking/orders/" + o1 + "/verify-export").cookie(marker)).andExpect(status().isOk());
         send(post("/api/marking/orders/" + o1 + "/finish"), marker, "").andExpect(jsonPath("$.code").value("marking.incomplete"));
         send(post("/api/marking/orders/" + o1 + "/scan"), marker, mark(ean, "S3", "LOT-7", "D")).andExpect(status().isOk());
-        send(post("/api/marking/orders/" + o1 + "/finish"), marker, "").andExpect(jsonPath("$.status").value("CHECKING"));
+        send(post("/api/marking/orders/" + o1 + "/finish"), marker, "{\"verified\":true}")
+                .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("marking.notExported"));
+        // Boshqa markirovkachi faylni yuklab ololmaydi
+        mvc.perform(get("/api/marking/orders/" + o1 + "/verify-export").cookie(marker2))
+                .andExpect(status().isForbidden());
+        MvcResult xlsx = mvc.perform(get("/api/marking/orders/" + o1 + "/verify-export").cookie(marker)).andExpect(status().isOk()).andReturn();
+        try (var wb = new org.apache.poi.xssf.usermodel.XSSFWorkbook(new java.io.ByteArrayInputStream(xlsx.getResponse().getContentAsByteArray()))) {
+            var sheet = wb.getSheetAt(0);
+            assertThat(sheet.getLastRowNum()).isEqualTo(3);
+            assertThat(sheet.getRow(1).getCell(0).getStringCellValue()).startsWith("(01)0" + ean).doesNotContain("\u001D");
+            assertThat(sheet.getRow(1).getCell(2).getStringCellValue()).isEqualTo("0" + ean);
+            assertThat(sheet.getRow(1).getCell(10).getStringCellValue()).matches("\\d{9}|\\d{14}");
+        }
+        send(post("/api/marking/orders/" + o1 + "/finish"), marker, "")
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("marking.notVerified"));
+        send(post("/api/marking/orders/" + o1 + "/finish"), marker, "{\"verified\":false}")
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("marking.notVerified"));
+        send(post("/api/marking/orders/" + o1 + "/finish"), marker, "{\"verified\":true}").andExpect(jsonPath("$.status").value("CHECKING"));
+        assertThat(jdbc.sql("SELECT mark_verified_by IS NOT NULL AND mark_exported_at IS NOT NULL FROM sales_order WHERE id = :o").param("o", o1)
+                .query(Boolean.class).single()).isTrue();
+        assertThat(jdbc.sql("SELECT count(*) FROM sales_order_mark WHERE order_id = :o AND status = 'ACTIVE' AND scanned_raw IS NOT NULL")
+                .param("o", o1).query(Long.class).single()).isEqualTo(3L);
         assertThatThrownBy(() -> jdbc.sql("DELETE FROM sales_order_mark WHERE id = :m").param("m", s3).update()).hasMessageContaining("oʻchirilmaydi");
 
         // Global takror: boshqa buyurtmada shu kod qabul qilinmaydi
@@ -1114,7 +1137,8 @@ class OrderIT {
         send(post("/api/marking/orders/" + o + "/confirm"), marker, "{\"lineIds\":[" + plainLine + "]}").andExpect(status().isOk());
         assertThat(jdbc.sql("SELECT count(*) FROM sales_order_mark_confirm WHERE order_id = :o").param("o", o).query(Long.class).single())
                 .isEqualTo(1);
-        send(post("/api/marking/orders/" + o + "/finish"), marker, "").andExpect(jsonPath("$.status").value("CHECKING"));
+        mvc.perform(get("/api/marking/orders/" + o + "/verify-export").cookie(marker)).andExpect(status().isOk());
+        send(post("/api/marking/orders/" + o + "/finish"), marker, "{\"verified\":true}").andExpect(jsonPath("$.status").value("CHECKING"));
 
         // Hammasi markirovkasiz — «Markirovkasiz — tasdiqlash»
         long o2 = draft(operator, order(p, c, new long[][] {{plain, 2}}));
