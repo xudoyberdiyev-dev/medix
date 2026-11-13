@@ -153,7 +153,7 @@ export interface paths {
             cookie?: never;
         };
         /** Audit yozuvlari (yangilari birinchi), yorliqlar soni bilan */
-        get: operations["list_35"];
+        get: operations["list_36"];
         put?: never;
         post?: never;
         delete?: never;
@@ -170,7 +170,7 @@ export interface paths {
             cookie?: never;
         };
         /** Excel eksport uchun yozuvlar (filtr boʻyicha, koʻpi bilan 5000 ta) */
-        get: operations["export_4"];
+        get: operations["export_6"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1017,7 +1017,7 @@ export interface paths {
          * Excel'ga eksport (.xlsx)
          * @description Jadvaldagi filtrlar va saralash bilan; ko'pi bilan 50 000 qator. Mijozlar — clients.view, YB — suppliers.view; telefon va kontakt — clients.contact / suppliers.contact bilan.
          */
-        get: operations["export_3"];
+        get: operations["export_5"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1802,7 +1802,7 @@ export interface paths {
             cookie?: never;
         };
         /** Faol xodimlar (tanlash uchun) */
-        get: operations["list_34"];
+        get: operations["list_35"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2455,7 +2455,7 @@ export interface paths {
          * Faktura navbati
          * @description Filtrlar: filial (barcha filiallar doirasida), holat, davr (navbatga tushgan sana), qidiruv (buyurtma, mijoz, STIR, HF, e-faktura №). Kutilayotganlar — eng uzoq kutayotgani birinchi.
          */
-        get: operations["list_33"];
+        get: operations["list_34"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2589,6 +2589,23 @@ export interface paths {
          * @description E-faktura raqami va sanasi; e-faktura va TTN fayllari oldin yuklangan bo'lishi shart.
          */
         post: operations["sent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/invoice-tasks/{id}/ttn/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** TTN — PDF (faktura vazifasi) */
+        get: operations["task"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -3021,7 +3038,7 @@ export interface paths {
             cookie?: never;
         };
         /** Oxirgi 50 ta bildirishnoma va o'qilmaganlar soni */
-        get: operations["list_32"];
+        get: operations["list_33"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3574,6 +3591,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/orders/ttn/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * TTN — PDF (reysdagi barcha buyurtmalar)
+         * @description Har buyurtma alohida varaqda.
+         */
+        get: operations["trip"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/orders/{id}": {
         parameters: {
             query?: never;
@@ -3903,6 +3940,26 @@ export interface paths {
          * @description Yig'ish va markirovka uchun daqiqa (har buyurtmaga alohida). Faqat «Navbatda».
          */
         post: operations["giveTime"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orders/{id}/ttn/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * TTN — PDF (buyurtma)
+         * @description Nakladnoy berilmagan bo'lsa — 409.
+         */
+        get: operations["order"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -4663,7 +4720,7 @@ export interface paths {
          * Excel'ga eksport (.xlsx)
          * @description Jadvaldagi filtrlar bilan (yoki tanlanganlar — ids); ko'pi bilan 50 000 qator.
          */
-        get: operations["export_2"];
+        get: operations["export_4"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5217,6 +5274,43 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/reports/accountants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Buxgalter natijasi
+         * @description Yuborilgan fakturalar, o'rtacha vaqt «Yuklanmoqda → Yuborildi», 1 kundan kechikkanlar; hozir navbatda. Davr — yuborilgan sana (standart: oy boshidan bugungacha).
+         */
+        get: operations["accountants"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reports/accountants/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Buxgalter natijasi .xlsx */
+        get: operations["export_3"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/reports/expenses": {
         parameters: {
             query?: never;
@@ -5294,6 +5388,43 @@ export interface paths {
         };
         /** Bugungi natijam (Markirovkachi) */
         get: operations["markerToday"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reports/marking-codes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Markirovka kodlari hisoboti
+         * @description Davr — skanerlangan sana (standart: oy boshidan bugungacha); mijoz, mahsulot, egasi (mijoz / zaxira), holat, qidiruv. Olib tashlangan kodlar — faqat status=REMOVED bilan.
+         */
+        get: operations["list_32"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reports/marking-codes/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Markirovka kodlari hisoboti .xlsx */
+        get: operations["export_2"];
         put?: never;
         post?: never;
         delete?: never;
@@ -7704,6 +7835,46 @@ export interface components {
             /** Format: date */
             today: string;
             work: components["schemas"]["AccountantWork"];
+        };
+        AccountantReportView: {
+            /** Format: int64 */
+            branchId?: number;
+            /** Format: date */
+            from: string;
+            /**
+             * Format: int32
+             * @description Hozir navbatda (yuborilishi kerak)
+             */
+            queue: number;
+            /**
+             * Format: int32
+             * @description Navbatda 1 kundan ko'p kutayotganlar
+             */
+            queueLate: number;
+            rows: components["schemas"]["AccountantRow"][];
+            /** Format: date */
+            to: string;
+            total: components["schemas"]["AccountantRow"];
+        };
+        AccountantRow: {
+            /**
+             * Format: int32
+             * @description O'rtacha vaqt «Yuklanmoqda → Yuborildi», daqiqa
+             */
+            avgMinutes: number;
+            /** Format: int64 */
+            employeeId: number;
+            /**
+             * Format: int32
+             * @description 1 kundan ko'p kutib yuborilganlar
+             */
+            late: number;
+            name: string;
+            /**
+             * Format: int32
+             * @description Yuborilgan fakturalar
+             */
+            sent: number;
         };
         AccountantWork: {
             /** Format: int32 */
@@ -12952,6 +13123,65 @@ export interface components {
         RenameZoneRequest: {
             name: string;
         };
+        ReportCode: {
+            batch?: string;
+            branch: string;
+            customer: string;
+            /** Format: int64 */
+            customerId: number;
+            /** Format: date */
+            expiryDate?: string;
+            gtin: string;
+            /** Format: int64 */
+            id: number;
+            /** @enum {string} */
+            kind: "BOX" | "UNIT";
+            /** Format: int64 */
+            orderId: number;
+            orderNumber: string;
+            /** @enum {string} */
+            owner: "CUSTOMER" | "RESERVE";
+            /** Format: int64 */
+            productId: number;
+            productName: string;
+            /**
+             * @description Zaxira kodi holati (zaxiraga tushgan bo'lsa)
+             * @enum {string}
+             */
+            reserveStatus?: "IN_RESERVE" | "USED" | "WRITTEN_OFF";
+            /** @description To'liq skanerlangan kod (kripto-qismi bilan) */
+            scanned: string;
+            /** Format: date-time */
+            scannedAt: string;
+            serial: string;
+            /** @enum {string} */
+            status: "ACTIVE" | "REMOVED" | "RELEASED" | "SOLD" | "RETURNED";
+        };
+        ReportCodePage: {
+            /**
+             * Format: int64
+             * @description Egasi bo'yicha (boshqa filtrlar bilan)
+             */
+            customerOwned: number;
+            /** Format: date */
+            from: string;
+            items: components["schemas"]["ReportCode"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int64 */
+            reserveOwned: number;
+            /** Format: int32 */
+            size: number;
+            /**
+             * Format: int64
+             * @description Sotilgan kodlar (boshqa filtrlar bilan)
+             */
+            sold: number;
+            /** Format: date */
+            to: string;
+            /** Format: int64 */
+            total: number;
+        };
         ReserveCloseRequest: {
             note: string;
         };
@@ -15214,7 +15444,7 @@ export interface operations {
             };
         };
     };
-    list_35: {
+    list_36: {
         parameters: {
             query?: {
                 view?: "ALL" | "CANCEL" | "FAIL" | "PERM" | "CTRL";
@@ -15245,7 +15475,7 @@ export interface operations {
             };
         };
     };
-    export_4: {
+    export_6: {
         parameters: {
             query?: {
                 view?: "ALL" | "CANCEL" | "FAIL" | "PERM" | "CTRL";
@@ -16476,7 +16706,7 @@ export interface operations {
             };
         };
     };
-    export_3: {
+    export_5: {
         parameters: {
             query?: {
                 q?: string;
@@ -17624,7 +17854,7 @@ export interface operations {
             };
         };
     };
-    list_34: {
+    list_35: {
         parameters: {
             query?: never;
             header?: never;
@@ -18535,7 +18765,7 @@ export interface operations {
             };
         };
     };
-    list_33: {
+    list_34: {
         parameters: {
             query?: {
                 branchId?: number;
@@ -18724,6 +18954,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["InvoiceTask"];
+                };
+            };
+        };
+    };
+    task: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
                 };
             };
         };
@@ -19294,7 +19546,7 @@ export interface operations {
             };
         };
     };
-    list_32: {
+    list_33: {
         parameters: {
             query?: never;
             header?: never;
@@ -20105,6 +20357,28 @@ export interface operations {
             };
         };
     };
+    trip: {
+        parameters: {
+            query: {
+                tripId: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
+                };
+            };
+        };
+    };
     get_9: {
         parameters: {
             query?: never;
@@ -20534,6 +20808,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["OrderDetail"];
+                };
+            };
+        };
+    };
+    order: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
                 };
             };
         };
@@ -21695,7 +21991,7 @@ export interface operations {
             };
         };
     };
-    export_2: {
+    export_4: {
         parameters: {
             query?: {
                 q?: string;
@@ -22545,6 +22841,52 @@ export interface operations {
             };
         };
     };
+    accountants: {
+        parameters: {
+            query?: {
+                branchId?: number;
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountantReportView"];
+                };
+            };
+        };
+    };
+    export_3: {
+        parameters: {
+            query?: {
+                branchId?: number;
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     expenses: {
         parameters: {
             query?: {
@@ -22658,6 +23000,64 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["WorkerRow"];
                 };
+            };
+        };
+    };
+    list_32: {
+        parameters: {
+            query?: {
+                branchId?: number;
+                from?: string;
+                to?: string;
+                customerId?: number;
+                productId?: number;
+                owner?: "CUSTOMER" | "RESERVE";
+                status?: "ACTIVE" | "REMOVED" | "RELEASED" | "SOLD" | "RETURNED";
+                q?: string;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportCodePage"];
+                };
+            };
+        };
+    };
+    export_2: {
+        parameters: {
+            query?: {
+                branchId?: number;
+                from?: string;
+                to?: string;
+                customerId?: number;
+                productId?: number;
+                owner?: "CUSTOMER" | "RESERVE";
+                status?: "ACTIVE" | "REMOVED" | "RELEASED" | "SOLD" | "RETURNED";
+                q?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

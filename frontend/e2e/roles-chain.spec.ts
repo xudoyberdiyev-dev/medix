@@ -888,6 +888,13 @@ test("Buxgalter: «Fakturalar» navbati — naqd buyurtmalar navbatga tushmaydi 
   await expect(page.getByText(/^Integratsiya hali ulanmagan/)).toBeVisible();
   await expect(page.getByRole("tab", { name: /^Yuborilishi kerak/ })).toHaveAttribute("aria-selected", "true");
   await expect(page.getByText("Navbatda faktura yoʻq")).toBeVisible();
+  // O10f / O10g hisobotlari
+  await page.goto("/reports/accountants");
+  await expect(page.getByRole("heading", { name: "Buxgalter natijasi" }).first()).toBeVisible();
+  await expect(page.getByTestId("accountants-queue")).toContainText("Hozir navbatda: 0");
+  await page.goto("/reports/marking-codes");
+  await expect(page.getByRole("heading", { name: "Markirovka kodlari" }).first()).toBeVisible();
+  await expect(page.getByTestId("marking-codes-summary")).toBeVisible();
 });
 
 test("Operator: mijozdan qaytarish (QM) — sotuv asosida, Ombor mudiriga yuboradi", async ({ page }) => {
