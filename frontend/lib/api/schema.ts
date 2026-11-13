@@ -2575,6 +2575,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/invoice-tasks/{id}/invoice/xlsx": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Hisob-faktura — Excel (.xlsx)
+         * @description PDF bilan bir xil ustunlar (O11). Sotuv bo'lmasa — 404.
+         */
+        get: operations["invoiceXlsx_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/invoice-tasks/{id}/sent": {
         parameters: {
             query?: never;
@@ -19021,6 +19041,26 @@ export interface operations {
                 content: {
                     "application/pdf": string;
                 };
+            };
+        };
+    };
+    invoiceXlsx_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

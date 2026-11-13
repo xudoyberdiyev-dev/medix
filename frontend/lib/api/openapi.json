@@ -5789,6 +5789,28 @@
         "tags" : [ "invoice-tasks" ]
       }
     },
+    "/api/invoice-tasks/{id}/invoice/xlsx" : {
+      "get" : {
+        "description" : "PDF bilan bir xil ustunlar (O11). Sotuv bo'lmasa — 404.",
+        "operationId" : "invoiceXlsx_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        },
+        "summary" : "Hisob-faktura — Excel (.xlsx)",
+        "tags" : [ "invoice-tasks" ]
+      }
+    },
     "/api/invoice-tasks/{id}/sent" : {
       "post" : {
         "description" : "E-faktura raqami va sanasi; e-faktura va TTN fayllari oldin yuklangan bo'lishi shart.",
