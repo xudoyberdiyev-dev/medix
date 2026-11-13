@@ -2293,7 +2293,7 @@ export interface paths {
         };
         /**
          * Topilgan partiyani qidirish
-         * @description Partiya raqami, mahsulot kodi yoki nomi bo'yicha (20 ta).
+         * @description Partiya raqami, mahsulot kodi yoki nomi bo'yicha (20 ta); bo'sh so'rov — birinchi 20 ta.
          */
         get: operations["batches"];
         put?: never;
@@ -4646,7 +4646,10 @@ export interface paths {
         };
         /** O'z profilim */
         get: operations["get_5"];
-        /** Telefon raqamini yangilash */
+        /**
+         * O'z ma'lumotlarimni yangilash
+         * @description F.I.Sh., login (unikal), telefon, email, lavozim, tug'ilgan sana. Rol va filial o'zgarmaydi. Joriy sessiya yangi login va ism bilan darhol yangilanadi.
+         */
         put: operations["update_7"];
         post?: never;
         delete?: never;
@@ -17681,8 +17684,8 @@ export interface operations {
     };
     batches: {
         parameters: {
-            query: {
-                q: string;
+            query?: {
+                q?: string;
             };
             header?: never;
             path: {

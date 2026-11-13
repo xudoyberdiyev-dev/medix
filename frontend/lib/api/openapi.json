@@ -5220,7 +5220,7 @@
     },
     "/api/inventory-counts/{id}/batches" : {
       "get" : {
-        "description" : "Partiya raqami, mahsulot kodi yoki nomi bo'yicha (20 ta).",
+        "description" : "Partiya raqami, mahsulot kodi yoki nomi bo'yicha (20 ta); bo'sh so'rov — birinchi 20 ta.",
         "operationId" : "batches",
         "parameters" : [ {
           "in" : "path",
@@ -5233,9 +5233,10 @@
         }, {
           "in" : "query",
           "name" : "q",
-          "required" : true,
+          "required" : false,
           "schema" : {
-            "type" : "string"
+            "type" : "string",
+            "default" : ""
           }
         } ],
         "responses" : {
@@ -10675,6 +10676,7 @@
         "tags" : [ "profile" ]
       },
       "put" : {
+        "description" : "F.I.Sh., login (unikal), telefon, email, lavozim, tug'ilgan sana. Rol va filial o'zgarmaydi. Joriy sessiya yangi login va ism bilan darhol yangilanadi.",
         "operationId" : "update_7",
         "requestBody" : {
           "content" : {
@@ -10698,7 +10700,7 @@
             "description" : "OK"
           }
         },
-        "summary" : "Telefon raqamini yangilash",
+        "summary" : "O'z ma'lumotlarimni yangilash",
         "tags" : [ "profile" ]
       }
     },
