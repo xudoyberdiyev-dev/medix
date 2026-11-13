@@ -36,6 +36,7 @@
   "to": "По",
   "dateInvalid": "Неверная дата",
   "pdf": "СФ PDF",
+  "invoiceXlsx": "СФ — Excel",
   "codesXlsx": "Коды .xlsx",
   "ttn": "ТТН PDF",
   "markSent": "Отметить отправленной",

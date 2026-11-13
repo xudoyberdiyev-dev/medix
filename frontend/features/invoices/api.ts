@@ -101,6 +101,7 @@ export function useMarkInvoiceSent() {
 }
 
 export const invoicePdfUrl = (id: number) => `/api/invoice-tasks/${id}/invoice/pdf`;
+export const invoiceXlsxUrl = (id: number) => `/api/invoice-tasks/${id}/invoice/xlsx`;
 export const invoiceCodesUrl = (id: number) => `/api/invoice-tasks/${id}/codes`;
 export const invoiceFileUrl = (fileId: number) => `/api/invoice-tasks/files/${fileId}`;
 

@@ -28,6 +28,7 @@ import {
   INVOICES_VIEW,
   invoiceCodesUrl,
   invoicePdfUrl,
+  invoiceXlsxUrl,
   uploadInvoiceFile,
   useInvoiceTasks,
   useMarkInvoiceSent,
@@ -152,6 +153,13 @@ export function InvoicesPage() {
         label: t("pdf"),
         icon: <Printer size={16} strokeWidth={1.5} aria-hidden />,
         onSelect: () => open(invoicePdfUrl(x.id)),
+      });
+    if (x.invoiceNumber)
+      items.push({
+        key: "xlsx",
+        label: t("invoiceXlsx"),
+        icon: <FileSpreadsheet size={16} strokeWidth={1.5} aria-hidden />,
+        onSelect: () => open(invoiceXlsxUrl(x.id)),
       });
     items.push({
       key: "ttn",

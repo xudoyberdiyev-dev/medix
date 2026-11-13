@@ -52,11 +52,13 @@ class InvoiceTaskController {
 
     private final InvoiceTasks tasks;
     private final OrderInvoicePdf invoicePdf;
+    private final OrderInvoiceExcel invoiceExcel;
     private final CurrentActor currentActor;
 
-    InvoiceTaskController(InvoiceTasks tasks, OrderInvoicePdf invoicePdf, CurrentActor currentActor) {
+    InvoiceTaskController(InvoiceTasks tasks, OrderInvoicePdf invoicePdf, OrderInvoiceExcel invoiceExcel, CurrentActor currentActor) {
         this.tasks = tasks;
         this.invoicePdf = invoicePdf;
+        this.invoiceExcel = invoiceExcel;
         this.currentActor = currentActor;
     }
 
@@ -130,6 +132,18 @@ class InvoiceTaskController {
     ResponseEntity<byte[]> invoicePdf(@PathVariable long id) {
         InvoiceTask t = tasks.get(actor(), id);
         return invoicePdf.render(actor(), t.orderId()).response();
+    }
+
+    @GetMapping("/{id}/invoice/xlsx")
+    @PreAuthorize("hasAuthority('invoices.view')")
+    @Operation(summary = "Hisob-faktura — Excel (.xlsx)", description = "PDF bilan bir xil ustunlar (O11). Sotuv bo'lmasa — 404.")
+    void invoiceXlsx(@PathVariable long id, HttpServletResponse response) throws IOException {
+        InvoiceTask t = tasks.get(actor(), id);
+        java.io.ByteArrayOutputStream buf = new java.io.ByteArrayOutputStream();
+        String number = invoiceExcel.write(actor(), t.orderId(), buf);
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        response.setHeader("Content-Disposition", "attachment; filename=\"" + number + ".xlsx\"");
+        buf.writeTo(response.getOutputStream());
     }
 
     /** Kodlar .xlsx — 1C ga yuklash formati: to'liq kod (GS = &lt;GS&gt;), GTIN, mahsulot, Q/D, soni. */
