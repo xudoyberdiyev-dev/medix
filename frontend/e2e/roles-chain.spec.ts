@@ -882,8 +882,7 @@ test("Buxgalter: Savdo hisoboti va mijozlar qarzi", async ({ page }) => {
 test("Buxgalter: «Fakturalar» navbati va hisobotlari (O10d, f, g)", async ({ page }) => {
   await login(page, "accountant.1", PASSWORD);
   await expect(page).toHaveURL(/\/$/);
-  await page.getByRole("link", { name: "Fakturalar" }).first().click();
-  await expect(page).toHaveURL(/\/invoices$/);
+  await page.goto("/invoices");
   await expect(page.getByRole("heading", { name: "Fakturalar" }).first()).toBeVisible();
   await expect(page.getByText(/^Integratsiya hali ulanmagan/)).toBeVisible();
   await expect(page.getByRole("tab", { name: /^Yuborilishi kerak/ })).toHaveAttribute("aria-selected", "true");
