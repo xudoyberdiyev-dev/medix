@@ -50,16 +50,21 @@ class OrderController {
     private final OrderPickSheetPdf pickSheet;
     private final OrderInvoices invoices;
     private final OrderInvoicePdf invoicePdf;
+    private final OrderInvoiceExcel invoiceExcel;
     private final CurrentActor currentActor;
+    private final CodesOwners codesOwners;
 
     record ReturnAcceptRequest(@jakarta.validation.constraints.NotNull(message = "{validation.required}") @jakarta.validation.constraints.Min(0)
             Integer receivedQty) {}
 
     OrderController(Orders orders, OrderPicking picking, OrderMonitor monitor, OrderIssues issues, OrderSales sales, OrderWaybillPdf waybill,
-            OrderPickSheetPdf pickSheet, OrderInvoices invoices, OrderInvoicePdf invoicePdf, CurrentActor currentActor) {
+            OrderPickSheetPdf pickSheet, OrderInvoices invoices, OrderInvoicePdf invoicePdf, OrderInvoiceExcel invoiceExcel, CurrentActor currentActor,
+            CodesOwners codesOwners) {
+        this.codesOwners = codesOwners;
         this.pickSheet = pickSheet;
         this.invoices = invoices;
         this.invoicePdf = invoicePdf;
+        this.invoiceExcel = invoiceExcel;
         this.sales = sales;
         this.waybill = waybill;
         this.issues = issues;
@@ -177,6 +182,25 @@ class OrderController {
         return invoicePdf.render(actor(), id).response();
     }
 
+    @GetMapping(value = "/{id}/invoice/xlsx")
+    @PreAuthorize("hasAuthority('orders.view')")
+    @Operation(summary = "Hisob-faktura — Excel (.xlsx)", description = "PDF bilan bir xil ustunlar (O11). Sotuv bo'lmasa — 404.")
+    void invoiceXlsx(@PathVariable long id, jakarta.servlet.http.HttpServletResponse response) throws java.io.IOException {
+        java.io.ByteArrayOutputStream buf = new java.io.ByteArrayOutputStream();
+        String number = invoiceExcel.write(actor(), id, buf);
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        response.setHeader("Content-Disposition", "attachment; filename=\"" + number + ".xlsx\"");
+        buf.writeTo(response.getOutputStream());
+    }
+
+    @GetMapping(value = "/invoices/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
+    @PreAuthorize("hasAuthority('orders.view')")
+    @Operation(summary = "Hisob-fakturalar — ommaviy PDF", description = "Bir nechta buyurtma (masalan, reys boʻyicha), 50 tagacha; "
+            + "sotuvi yoʻq buyurtmalar oʻtkazib yuboriladi (O11).")
+    ResponseEntity<byte[]> invoicesPdf(@RequestParam List<Long> ids) {
+        return invoicePdf.renderMany(actor(), ids).response();
+    }
+
     @GetMapping(value = "/{id}/waybill/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
     @PreAuthorize("hasAnyAuthority('orders.view', 'approvals.view')")
     @Operation(summary = "Nakladnoy — PDF (chop etish)", description = "Nakladnoy raqamlanmagan bo'lsa — 409.")
@@ -279,6 +303,15 @@ class OrderController {
     @Operation(summary = "Qoralamaga qaytarish", description = "Faqat «Tasdiqlashda» holatidan.")
     OrderDetail returnToDraft(@PathVariable long id, Authentication auth) {
         orders.returnToDraft(actor(), id, has(auth, "approvals.branch") || has(auth, "approvals.director"));
+        return detail(id);
+    }
+
+    @PostMapping("/{id}/codes-owner")
+    @PreAuthorize("hasAuthority('marking.owner')")
+    @Operation(summary = "Kodlar egasini o'zgartirish (O10b)",
+            description = "«Mijoz nomiga» yoki «Zaxira kodlarga». Buyurtma yopilguncha (Yetkazildi / Yetkazilmadi / Bekor / Rad etildi).")
+    OrderDetail setCodesOwner(@PathVariable long id, @Valid @RequestBody OrderModels.CodesOwnerRequest r) {
+        codesOwners.set(actor(), id, r.owner());
         return detail(id);
     }
 

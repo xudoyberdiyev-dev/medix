@@ -1,4 +1,5 @@
 import {
+  Archive,
   ArrowLeftRight,
   Banknote,
   Boxes,
@@ -11,6 +12,7 @@ import {
   Database,
   Factory,
   FileCheck2,
+  FileText,
   HandCoins,
   House,
   LayoutGrid,
@@ -195,6 +197,7 @@ export const navigation: NavGroup[] = [
         icon: PackageMinus,
         anyOf: ["qm.view", "qm.create", "qm.approve", "hc.view", "hc.create", "hc.approve", "qy.view", "qy.create", "qy.approve"],
       },
+      { key: "reserveCodes", label: "Zaxira kodlar", href: "/reserve-codes", icon: Archive, anyOf: ["zcodes.view"] },
       { key: "opening", label: "Boshlangʻich qoldiq", href: "/opening", icon: Database, anyOf: ["opening.list", "opening.view"] },
     ],
   },
@@ -205,6 +208,7 @@ export const navigation: NavGroup[] = [
       { key: "payments", label: "Toʻlovlar", href: "/payments", icon: Wallet, anyOf: ["payments.view"] },
       { key: "cash", label: "Kassa", href: "/cash", icon: Banknote, anyOf: ["cash.view"] },
       { key: "bank", label: "Bank", href: "/bank", icon: Landmark, anyOf: ["bank.view"] },
+      { key: "invoices", label: "Fakturalar", href: "/invoices", icon: FileText, anyOf: ["invoices.view"] },
       { key: "customer-debts", label: "Mijozlar qarzi", href: "/debts/customers", icon: HandCoins, anyOf: ["cdebt.view"] },
       {
         key: "supplier-debts",

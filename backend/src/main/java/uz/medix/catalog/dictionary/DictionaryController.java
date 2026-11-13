@@ -31,7 +31,8 @@ class DictionaryController {
 
     record EntryRequest(
             @NotBlank(message = "{validation.required}") @Size(max = 200) String name,
-            @Schema(nullable = true, description = "Birlik — qisqa yozuvi, davlat — ISO kodi (UZ)") @Size(max = 50) String shortName) {}
+            @Schema(nullable = true, description = "Birlik — qisqa yozuvi, davlat — ISO kodi (UZ)") @Size(max = 50) String shortName,
+            @Schema(nullable = true, description = "Faqat birlik — soliq klassifikatori kodi (raqam)") @Size(max = 10) String code) {}
 
     private final Dictionaries dictionaries;
 
@@ -67,7 +68,7 @@ class DictionaryController {
     @Operation(summary = "Yozuv qo'shish")
     Dictionaries.Entry create(@PathVariable DictionaryKind kind, @Valid @RequestBody EntryRequest r, Authentication auth) {
         requireEdit(auth, kind);
-        return dictionaries.create(kind, r.name(), r.shortName());
+        return dictionaries.create(kind, r.name(), r.shortName(), r.code());
     }
 
     @PutMapping("/{id}")
@@ -75,7 +76,7 @@ class DictionaryController {
     Dictionaries.Entry update(@PathVariable DictionaryKind kind, @PathVariable long id, @Valid @RequestBody EntryRequest r,
             Authentication auth) {
         requireEdit(auth, kind);
-        return dictionaries.update(kind, id, r.name(), r.shortName());
+        return dictionaries.update(kind, id, r.name(), r.shortName(), r.code());
     }
 
     @PostMapping("/{id}/deactivate")

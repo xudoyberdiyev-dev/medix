@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import uz.medix.TestcontainersConfig;
 
-/** 1.3: 136 ta ruxsat kaliti (132 + E7 orders.discount + settings.edit, settings.security + qm.cancelPosted; O6 salesZones.view, salesZones.edit; O8 qm.late = 139) va 11 rolning standart matritsasi (T12-topshirish §7). */
+/** 1.3: 136 ta ruxsat kaliti (132 + E7 orders.discount + settings.edit, settings.security + qm.cancelPosted; O6 salesZones.view, salesZones.edit; O8 qm.late = 139; O10 marking.owner, zcodes.view, zcodes.edit = 142; O10d invoices.view, invoices.send = 144) va 11 rolning standart matritsasi (T12-topshirish §7). */
 @SpringBootTest
 @Import(TestcontainersConfig.class)
 class PermissionMatrixIT {
@@ -29,7 +29,7 @@ class PermissionMatrixIT {
 
     @Test
     void catalogAndDefaults() {
-        assertThat(jdbc.sql("SELECT count(*) FROM permission").query(Long.class).single()).isEqualTo(139);
+        assertThat(jdbc.sql("SELECT count(*) FROM permission").query(Long.class).single()).isEqualTo(144);
         assertThat(of("DIRECTOR")).contains("prices.below", "approvals.director", "staff.edit").doesNotContain("marking.scan");
         assertThat(of("ADMIN")).contains("staff.edit", "roles.view").doesNotContain("prices.below", "approvals.director");
         assertThat(of("BRANCH_MANAGER")).contains("staff.view", "clients.terms", "approvals.branch").doesNotContain("staff.edit", "warehouses.view");
@@ -37,7 +37,7 @@ class PermissionMatrixIT {
         assertThat(of("PURCHASER")).contains("products.create", "prices.create", "suppliers.terms").doesNotContain("clients.create");
         assertThat(of("WAREHOUSE_MANAGER")).contains("receipt.accept", "special.whs").doesNotContain("receipt.post", "prices.cost");
         assertThat(of("CASHIER")).contains("cash.create", "special.till").doesNotContain("cash.closeDiff");
-        assertThat(of("ACCOUNTANT")).contains("receipt.post", "lookups.items").doesNotContain("stock.view");
+        assertThat(of("ACCOUNTANT")).contains("receipt.post", "lookups.items", "invoices.view", "invoices.send").doesNotContain("stock.view");
         assertThat(of("MARKER")).containsExactlyInAnyOrder("marking.export", "marking.scan", "marking.view", "orders.view");
         assertThat(of("PICKER")).containsExactlyInAnyOrder("orders.view", "picking.do");
         assertThat(of("DRIVER")).containsExactly("trip.driver");

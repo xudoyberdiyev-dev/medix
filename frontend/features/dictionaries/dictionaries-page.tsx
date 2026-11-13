@@ -166,6 +166,7 @@ function DictionaryTab({ meta, canEdit, creating, onCreated }: TabProps & { meta
   const columns: TableColumn<Entry>[] = [
     { key: "name", title: t("entry.name") },
     ...(text.shortName ? [{ key: "shortName", title: text.shortName.label, mono: text.shortName.mono }] : []),
+    ...(meta.kind === "UNIT" ? [{ key: "code", title: t("unitCode.label"), mono: true }] : []),
     { key: "active", title: t("entry.status"), render: (e: Entry) => <ActiveBadge active={e.active} /> },
   ];
 
@@ -219,6 +220,8 @@ function EntryDialog({ meta, entry, onClose }: { meta: DictionaryMeta; entry: En
   const save = useSaveEntry(meta.kind);
   const [name, setName] = useState(entry?.name ?? "");
   const [shortName, setShortName] = useState(entry?.shortName ?? "");
+  const [code, setCode] = useState(entry?.code ?? "");
+  const td = useTranslations("dictionaries");
   const err = describeError(save.error);
   return (
     <Modal
@@ -231,7 +234,7 @@ function EntryDialog({ meta, entry, onClose }: { meta: DictionaryMeta; entry: En
         loading: save.isPending,
         onClick: () =>
           save.mutate(
-            { id: entry?.id, name, shortName },
+            { id: entry?.id, name, shortName, code: meta.kind === "UNIT" ? code : undefined },
             { onSuccess: (e) => (toast({ tone: "success", title: entry ? t("saved") : t("created"), description: e.name }), onClose()) },
           ),
       }}
@@ -246,6 +249,16 @@ function EntryDialog({ meta, entry, onClose }: { meta: DictionaryMeta; entry: En
             error={err.fields.shortName}
             hint={text.shortName.hint}
             maxLength={50}
+          />
+        ) : null}
+        {meta.kind === "UNIT" ? (
+          <TextField
+            label={td("unitCode.label")}
+            value={code}
+            onChange={(v) => setCode(v.replace(/\D/g, ""))}
+            error={err.fields.code}
+            hint={td("unitCode.hint")}
+            maxLength={10}
           />
         ) : null}
         {err.message ? <Alert tone="danger" title={err.message} /> : null}

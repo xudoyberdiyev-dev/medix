@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="uz">
+<head>
+    <meta charset="UTF-8"/>
+    <title>TTN</title>
+    <style th:replace="~{_base :: css}"></style>
+    <style>
+        .ttn { page-break-after: always; }
+        .ttn.last { page-break-after: auto; }
+        table.grid td { border: 1px solid #d9dee5; padding: 4px 6px; }
+        table.grid td.muted { width: 120px; }
+    </style>
+</head>
+<body>
+<div th:each="d, it : ${docs}" th:class="${it.last} ? 'ttn last' : 'ttn'">
+    <div class="head center">
+        <h1>Tovar-transport yuk xati (TTN) <span class="mono" th:text="${d.number}">NK-TSH-000001</span></h1>
+        <div class="muted"><span th:text="${d.date}">06.11.2026</span> · buyurtma <span class="mono" th:text="${d.orderNumber}">BY</span>
+            · reys <span class="mono" th:text="${d.trip}">RS</span></div>
+    </div>
+    <table class="grid">
+        <tr>
+            <td class="muted">Yuk joʻnatuvchi</td>
+            <td><span class="b" th:text="${d.sellerName}">MChJ</span> · STIR <span th:text="${d.sellerTin}">STIR</span><br/>
+                <span class="caption" th:text="${d.sellerAddress} + ' · ' + ${d.sellerPhone}">Manzil</span></td>
+        </tr>
+        <tr>
+            <td class="muted">Yuk qabul qiluvchi</td>
+            <td><span class="b" th:text="${d.customer}">Mijoz</span> · STIR <span th:text="${d.customerTin}">STIR</span></td>
+        </tr>
+        <tr>
+            <td class="muted">Yuklash punkti</td>
+            <td th:text="${d.warehouse} + ' · ' + ${d.sellerAddress}">Ombor</td>
+        </tr>
+        <tr>
+            <td class="muted">Tushirish punkti</td>
+            <td th:text="${d.address}">Manzil</td>
+        </tr>
+        <tr>
+            <td class="muted">Avtomobil</td>
+            <td th:text="${d.vehicle}">01 A 123 BC · Labo</td>
+        </tr>
+        <tr>
+            <td class="muted">Haydovchi</td>
+            <td th:text="${d.driver}">F.I.Sh.</td>
+        </tr>
+        <tr>
+            <td class="muted">Joylar soni</td>
+            <td th:text="${d.places}">1</td>
+        </tr>
+    </table>
+    <h2>Yuk tarkibi</h2>
+    <table>
+        <thead>
+        <tr>
+            <th class="num">№</th>
+            <th>Mahsulot</th>
+            <th>Partiya · muddati</th>
+            <th class="r">Miqdor</th>
+            <th class="r">Narx (QQS bilan)</th>
+            <th class="r">Summa, soʻm</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="l, li : ${d.lines}">
+            <td class="num" th:text="${li.count}">1</td>
+            <td><span class="mono muted" th:text="${l.code}">0001</span> <span th:text="${l.name}">Mahsulot</span></td>
+            <td class="caption" th:text="${l.batches}">B1</td>
+            <td class="r" th:text="${l.qty}">1</td>
+            <td class="r" th:text="${l.price}">0,00</td>
+            <td class="r" th:text="${l.amount}">0,00</td>
+        </tr>
+        </tbody>
+        <tfoot>
+        <tr class="b">
+            <td colspan="3">Jami</td>
+            <td class="r" th:text="${d.totalQty}">0</td>
+            <td></td>
+            <td class="r" th:text="${d.total}">0,00</td>
+        </tr>
+        <tr>
+            <td colspan="5" class="r muted">shu jumladan QQS</td>
+            <td class="r" th:text="${d.vat}">0,00</td>
+        </tr>
+        </tfoot>
+    </table>
+    <table class="signs">
+        <tr>
+            <td>Yukni topshirdi (Ombor mudiri)<br/>____________________</td>
+            <td>Yukni qabul qildi (Haydovchi)<br/>____________________</td>
+            <td>Yukni qabul qildi (Mijoz, M.Oʻ.)<br/>____________________</td>
+        </tr>
+    </table>
+</div>
+</body>
+</html>

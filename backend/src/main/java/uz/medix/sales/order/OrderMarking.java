@@ -302,8 +302,8 @@ class OrderMarking {
         long markId;
         try {
             markId = jdbc.sql("""
-                    INSERT INTO sales_order_mark (order_id, line_id, batch_id, gtin, serial, batch_no, expiry_date, kind, raw, scanned_by)
-                    VALUES (:o, :l, :b, :g, :s, :bn, :e, :k, :raw, :by) RETURNING id""")
+                    INSERT INTO sales_order_mark (order_id, line_id, batch_id, gtin, serial, batch_no, expiry_date, kind, raw, scanned_raw, scanned_by)
+                    VALUES (:o, :l, :b, :g, :s, :bn, :e, :k, :raw, :sraw, :by) RETURNING id""")
                     .param("o", id)
                     .param("l", t.lineId())
                     .param("b", batch.batchId())
@@ -313,6 +313,7 @@ class OrderMarking {
                     .param("e", code.expiry() == null ? null : Date.valueOf(code.expiry()))
                     .param("k", kind == MarkKind.BOX ? "Q" : "D")
                     .param("raw", code.humanReadable())
+                    .param("sraw", Gs1Code.scanned(raw))
                     .param("by", actor.employeeId())
                     .query(Long.class)
                     .single();
@@ -320,6 +321,8 @@ class OrderMarking {
             // Parallel skanerlash: boshqa buyurtmada shu daqiqada qabul qilindi
             throw MedixException.conflict("marking.duplicate", "—");
         }
+        // O10a: yangi kod Saplayn'da tekshirilmagan — tekshiruv faylini qayta yuklab olish kerak
+        jdbc.sql("UPDATE sales_order SET mark_exported_at = NULL WHERE id = :id AND mark_exported_at IS NOT NULL").param("id", id).update();
         return markId;
     }
 
@@ -379,7 +382,7 @@ class OrderMarking {
      * → «Hisobdan o'tkazilmoqda».
      */
     @Transactional
-    void finish(Actor actor, long id) {
+    void finish(Actor actor, long id, boolean verified) {
         mineLocked(actor, id);
         MarkWork w = work(id, actor);
         int left = w.lines().stream().mapToInt(l -> l.qty() - l.scanned()).sum();
@@ -390,13 +393,54 @@ class OrderMarking {
         if (unconfirmed > 0) {
             throw MedixException.conflict("marking.unconfirmed", unconfirmed);
         }
+        boolean hasCodes = !w.codes().isEmpty();
+        // O10a: kodlar bo'lsa — avval tekshiruv fayli yuklab olinadi, keyin «Saplayn'da tekshirildi» tasdig'i
+        if (hasCodes && w.exportedAt() == null) {
+            throw MedixException.conflict("marking.notExported");
+        }
+        if (hasCodes && !verified) {
+            throw MedixException.badRequest("marking.notVerified");
+        }
         jdbc.sql("""
                 UPDATE sales_order SET status = 'CHECKING', mark_finished_at = now(), status_changed_at = now(), updated_at = now(),
-                       version = version + 1 WHERE id = :id""")
+                       mark_verified_by = :by, version = version + 1 WHERE id = :id""")
                 .param("id", id)
+                .param("by", hasCodes ? actor.employeeId() : null)
                 .update();
         audit.record(AuditEntry.of("order.markFinish", "sales_order", id).change(Map.of("status", OrderStatus.MARKING.name()),
-                Map.of("status", OrderStatus.CHECKING.name(), "codes", w.codes().size())));
+                Map.of("status", OrderStatus.CHECKING.name(), "codes", w.codes().size(), "saplaynVerified", hasCodes)));
+    }
+
+    /** Saplayn tekshiruvi fayli qatori (O10a). */
+    record VerifyRow(String scanned, String code, String gtin, String serial, String product, String batch, LocalDate expiry, MarkKind kind,
+            String orderNumber, String customer, String tin) {}
+
+    /**
+     * O10a «Excel'ga chiqarish»: buyurtmaning faol kodlari (to'liq skanerlangan ko'rinishda) — Saplayn'da tekshirish uchun.
+     * Yuklab olingan payt qayd etiladi; shundan keyingina «Saplayn'da tekshirildi — yakunlash» mumkin.
+     */
+    @Transactional
+    List<VerifyRow> verifyExport(Actor actor, long id) {
+        mineLocked(actor, id);
+        List<VerifyRow> rows = jdbc.sql("""
+                SELECT coalesce(m.scanned_raw, m.raw) AS scanned, m.raw, m.gtin, m.serial, p.name AS product, m.batch_no,
+                       coalesce(m.expiry_date, b.expiry_date) AS expiry, m.kind, o.number, c.name AS customer, c.tin
+                FROM sales_order_mark m JOIN sales_order o ON o.id = m.order_id JOIN sales_order_line l ON l.id = m.line_id
+                JOIN product p ON p.id = l.product_id JOIN batch b ON b.id = m.batch_id JOIN counterparty c ON c.id = o.customer_id
+                WHERE m.order_id = :id AND m.status = 'ACTIVE' ORDER BY l.line_no, m.scanned_at, m.id""")
+                .param("id", id)
+                .query((rs, n) -> new VerifyRow(rs.getString("scanned"), rs.getString("raw"), rs.getString("gtin"), rs.getString("serial"),
+                        rs.getString("product"), rs.getString("batch_no"),
+                        rs.getDate("expiry") == null ? null : rs.getDate("expiry").toLocalDate(),
+                        "Q".equals(rs.getString("kind")) ? MarkKind.BOX : MarkKind.UNIT, rs.getString("number"), rs.getString("customer"),
+                        rs.getString("tin")))
+                .list();
+        if (rows.isEmpty()) {
+            throw MedixException.conflict("marking.nothingToExport");
+        }
+        jdbc.sql("UPDATE sales_order SET mark_exported_at = now() WHERE id = :id").param("id", id).update();
+        audit.record(AuditEntry.of("order.markExport", "sales_order", id).change(null, Map.of("codes", rows.size())));
+        return rows;
     }
 
     /** Kodlar jurnali: o'z filiali; mine — faqat o'zim skanerlaganlar; q — GTIN, seriya, partiya yoki buyurtma raqami. */
@@ -436,6 +480,36 @@ class OrderMarking {
         return new MarkCodePage(items, total, page, size);
     }
 
+    /**
+     * O10c: mijoz nomidagi kodlar (mijoz kartochkasi «Markirovka kodlari»): yetkazilgan, kodlar egasi «Mijoz nomiga» buyurtmalar.
+     * O'z filiali (barcha filiallar doirasi — hammasi); q — GTIN, seriya, partiya yoki buyurtma raqami.
+     */
+    @Transactional(readOnly = true)
+    MarkCodePage customerCodes(Actor actor, long customerId, String q, int page, int size) {
+        StringBuilder where = new StringBuilder("WHERE o.customer_id = :c AND o.status = 'DELIVERED' AND m.status = 'SOLD' AND "
+                + CodesOwners.EFFECTIVE + " = 'CUSTOMER'");
+        Map<String, Object> params = new LinkedHashMap<>();
+        params.put("c", customerId);
+        if (!actor.allBranches()) {
+            where.append(" AND o.branch_id = :branch");
+            params.put("branch", actor.branchId());
+        }
+        if (q != null && !q.isBlank()) {
+            where.append(" AND (m.gtin LIKE :q OR upper(m.serial) LIKE :q OR upper(m.batch_no) LIKE :q OR o.number LIKE :q)");
+            params.put("q", "%" + q.strip().toUpperCase(Locale.ROOT).replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%");
+        }
+        String from = " FROM sales_order_mark m JOIN sales_order o ON o.id = m.order_id JOIN sales_order_line l ON l.id = m.line_id "
+                + "JOIN product p ON p.id = l.product_id JOIN employee e ON e.id = m.scanned_by ";
+        long total = jdbc.sql("SELECT count(*)" + from + where).params(params).query(Long.class).single();
+        List<MarkCode> items = jdbc.sql(SELECT_CODE + from + where + " ORDER BY m.closed_at DESC, m.id DESC LIMIT :lim OFFSET :off")
+                .params(params)
+                .param("lim", size)
+                .param("off", (long) page * size)
+                .query((rs, n) -> code(rs))
+                .list();
+        return new MarkCodePage(items, total, page, size);
+    }
+
     // ===== Ichki =====
 
     private static final String SELECT_CODE = """
@@ -466,14 +540,15 @@ class OrderMarking {
 
     private MarkWork work(long id, Actor actor) {
         record HeadRow(long id, String number, String customer, String status, long branchId, Integer markMinutes, String marker, Long markerId,
-                Instant startedAt) {}
+                Instant startedAt, Instant exportedAt) {}
         HeadRow h = jdbc.sql("""
-                SELECT o.id, o.number, c.name AS customer, o.status, o.branch_id, o.mark_minutes, mk.full_name AS marker, o.marker_id, o.mark_started_at
+                SELECT o.id, o.number, c.name AS customer, o.status, o.branch_id, o.mark_minutes, mk.full_name AS marker, o.marker_id, o.mark_started_at,
+                       o.mark_exported_at
                 FROM sales_order o JOIN counterparty c ON c.id = o.customer_id LEFT JOIN employee mk ON mk.id = o.marker_id WHERE o.id = :id""")
                 .param("id", id)
                 .query((rs, n) -> new HeadRow(rs.getLong("id"), rs.getString("number"), rs.getString("customer"), rs.getString("status"),
                         rs.getLong("branch_id"), (Integer) rs.getObject("mark_minutes"), rs.getString("marker"), (Long) rs.getObject("marker_id"),
-                        instant(rs.getTimestamp("mark_started_at"))))
+                        instant(rs.getTimestamp("mark_started_at")), instant(rs.getTimestamp("mark_exported_at"))))
                 .optional()
                 .filter(x -> actor.canAccessBranch(x.branchId()))
                 .orElseThrow(() -> MedixException.notFound("error.notFound"));
@@ -538,7 +613,7 @@ class OrderMarking {
         return new MarkWork(h.id(), h.number(), h.customer(), h.status(), h.markMinutes(), h.marker(), h.markerId(), h.startedAt(),
                 deadline(h.startedAt(), h.markMinutes()), lines, unmarked, codes, boxes, boxesNeeded, units, unitsNeeded,
                 complete && unmarked.stream().allMatch(MarkingModels.UnmarkedLine::confirmed) && !(rows.isEmpty() && unmarked.isEmpty()),
-                rows.isEmpty() && !unmarked.isEmpty());
+                rows.isEmpty() && !unmarked.isEmpty(), h.exportedAt());
     }
 
     static MarkKind kindOf(String unitShortName) {

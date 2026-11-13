@@ -298,6 +298,7 @@ Eslatma: oldingi «Omborchi» va «Ombor nazoratchisi» («Ombor menejeri») rol
 **Holatlar mashinalari** (9 ta, batafsili `notes/T12-topshirish.md` da): buyurtma (5.2), kirim (5.1), MT, YT, NO (Qoralama → Direktor tasdig'ida → Tasdiqlangan / Rad etilgan / Bekor qilingan), reys, inventarizatsiya (Qoralama → Sanoq → Tekshirish → Tasdiqlangan), ko'chirish (Jo'natildi → Yo'lda → Qabul qilindi), akt sverka.
 
 **Chop etish shakllari:** nakladnoy, hisob-faktura, terish varag'i (bir necha buyurtma bitta varaqda), yo'l varaqasi, kassa orderi, NO, akt sverka.
+**Hisob-faktura — rasmiy shakl (egasi 13.11.2026, O11):** albom A4; sotuvchi va xaridor: nomi, manzili, STIR, QQS to'lovchi reg. kodi, hisob raqami, bank, MFO, telefon; shartnoma raqami va sanasi; qatorlar: MXIK (IKPU), o'lchov birligi va uning kodi, partiya/yaroqlilik, miqdor, narx, QQSsiz qiymat, QQS stavkasi va summasi, QQS bilan qiymat, markirovka kodlari soni (to'liq ro'yxat — .xlsx ilova); jami so'z bilan; imzolar: Rahbar, Bosh buxgalter, Topshirdi, Qabul qildi (ishonchnoma). PDF va Excel; reys bo'yicha ommaviy chop etish; MXIK bo'sh qatorlar — buyurtma kartasida ogohlantirish, Mahsulotlarda «MXIK yo'q» filtri.
 
 ---
 

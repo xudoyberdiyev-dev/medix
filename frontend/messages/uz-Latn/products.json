@@ -30,7 +30,8 @@
       "category": "Kategoriya",
       "country": "Davlat",
       "supply": "Taʼminot masʼuli",
-      "status": "Holat"
+      "status": "Holat",
+      "noIkpu": "MXIK yoʻq"
     },
     "clearFilters": "Filtrlarni tozalash",
     "columns": "Ustunlar",

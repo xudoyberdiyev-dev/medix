@@ -14,10 +14,12 @@ import { useMe } from "@/features/auth/session";
 import { api, unwrap } from "@/lib/api/client";
 import { cn } from "@/lib/cn";
 import { formatDate, formatMoney, formatQuantity, formatTime } from "@/lib/format";
+import { CodesOwnerValue } from "./codes-owner";
 import { useOrderHistory, type OrderDetail } from "./api";
 import { formatPct } from "./discount";
 import { pickPhase, pickRows } from "./order-pick";
 import { day } from "./orders-page";
+import { OrderInvoiceDocs } from "@/features/invoices/order-docs";
 
 type Status = OrderDetail["status"];
 
@@ -181,12 +183,14 @@ const HISTORY_ACTIONS = new Set<string>([
   "backToDocumenting",
   "cancel",
   "check",
+  "codesOwner",
   "create",
   "delivered",
   "documented",
   "issue",
   "issueResolve",
   "markConfirm",
+  "markExport",
   "markFinish",
   "markRemove",
   "markStart",
@@ -207,12 +211,14 @@ type HistoryAction =
   | "backToDocumenting"
   | "cancel"
   | "check"
+  | "codesOwner"
   | "create"
   | "delivered"
   | "documented"
   | "issue"
   | "issueResolve"
   | "markConfirm"
+  | "markExport"
   | "markFinish"
   | "markRemove"
   | "markStart"
@@ -390,6 +396,9 @@ function OrderPayment({ doc }: { doc: OrderDetail }) {
   );
 }
 
+/** «Hujjatlar» (O10d faktura) — buyurtma «Yuklanmoqda» dan keyin. */
+const DOCS_STATUSES = new Set<OrderDetail["status"]>(["LOADING", "IN_TRANSIT", "DELIVERED", "UNDELIVERED"]);
+
 export function OrderCardBody({ doc, shipping }: { doc: OrderDetail; shipping?: ReactNode }) {
   const t = useTranslations("orders");
   const [tab, setTab] = useState("order");
@@ -407,6 +416,7 @@ export function OrderCardBody({ doc, shipping }: { doc: OrderDetail; shipping?: 
           { key: "pick", label: t("card.tPick") },
           { key: "ship", label: t("card.tShip") },
           { key: "pay", label: t("card.tPay") },
+          ...(DOCS_STATUSES.has(doc.status) ? [{ key: "docs", label: t("card.tDocs") }] : []),
           { key: "history", label: t("card.tHistory") },
         ]}
       />
@@ -414,6 +424,8 @@ export function OrderCardBody({ doc, shipping }: { doc: OrderDetail; shipping?: 
         <OrderHistory id={doc.id} />
       ) : tab === "pay" ? (
         <OrderPayment doc={doc} />
+      ) : tab === "docs" ? (
+        <OrderInvoiceDocs orderId={doc.id} />
       ) : tab === "pick" ? (
         <OrderPicking doc={doc} />
       ) : tab === "ship" ? (
@@ -446,6 +458,7 @@ export function OrderCardBody({ doc, shipping }: { doc: OrderDetail; shipping?: 
                   value: doc.credit.paymentDays ? t("card.payTerm", { pay, days: doc.credit.paymentDays }) : pay,
                 },
                 { label: t("drawer.note"), value: doc.note || "—" },
+                ...(doc.lines.some((l) => l.marked) ? [{ label: t("codesOwner.label"), value: <CodesOwnerValue doc={doc} /> }] : []),
               ]}
             />
           </div>

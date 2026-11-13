@@ -80,8 +80,8 @@ export function useDictionary(kind: DictionaryKind) {
 }
 
 export const useSaveEntry = (kind: DictionaryKind) =>
-  useInvalidating(dictKey(kind), ({ id, name, shortName }: { id?: number; name: string; shortName?: string }) => {
-    const body = { name, shortName: shortName?.trim() || undefined };
+  useInvalidating(dictKey(kind), ({ id, name, shortName, code }: { id?: number; name: string; shortName?: string; code?: string }) => {
+    const body = { name, shortName: shortName?.trim() || undefined, code: code?.trim() || undefined };
     return id
       ? unwrap(api.PUT("/api/dictionaries/{kind}/{id}", { params: { path: { kind, id } }, body }))
       : unwrap(api.POST("/api/dictionaries/{kind}", { params: { path: { kind } }, body }));

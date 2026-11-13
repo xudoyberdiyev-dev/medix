@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { mkdirSync } from "node:fs";
+import { mkdirSync, writeFileSync } from "node:fs";
 
 /**
  * Egasiga ko'rsatish uchun skrinshotlar (faqat «Demo skrinshotlar» workflow'ida, DEMO_SHOTS=1).
@@ -106,7 +106,31 @@ const pages: [string, string][] = [
   ["/orders?q=yoqmahsulotxyz", "a0-bosh-holat"],
   ["/customers/import", "a1-mijoz-import"],
   ["/suppliers/import", "a2-yb-import"],
+  ["/sales-zones", "a3-savdo-zonalari"],
+  ["/invoices", "a4-fakturalar"],
+  ["/reserve-codes", "a5-zaxira-kodlar"],
+  ["/reports/accountants", "a6-hisobot-buxgalter"],
+  ["/reports/marking-codes", "a7-hisobot-markirovka"],
 ];
+
+/** HF va TTN PDF'larini saqlaydi (mahalliy `pdftoppm` bilan koʻrish uchun). */
+async function savePdfs(page: Page) {
+  let hf = false;
+  let ttn = false;
+  for (let id = 1; id <= 15 && !(hf && ttn); id++) {
+    for (const [kind, url] of [
+      ["hf", `/api/orders/${id}/invoice/pdf`],
+      ["ttn", `/api/orders/${id}/ttn/pdf`],
+    ] as const) {
+      if ((kind === "hf" && hf) || (kind === "ttn" && ttn)) continue;
+      const res = await page.request.get(url).catch(() => null);
+      if (!res?.ok() || !(res.headers()["content-type"] ?? "").includes("pdf")) continue;
+      writeFileSync(`${OUT}/b0-${kind}-${id}.pdf`, await res.body());
+      if (kind === "hf") hf = true;
+      else ttn = true;
+    }
+  }
+}
 
 async function shot(page: Page, name: string) {
   await page.waitForLoadState("networkidle").catch(() => undefined);
@@ -130,6 +154,7 @@ test.describe("demo skrinshotlar", () => {
       await page.goto(path).catch(() => undefined);
       await shot(page, name);
     }
+    await savePdfs(page);
   });
 
   test("rollar bosh sahifasi", async ({ browser, baseURL }) => {

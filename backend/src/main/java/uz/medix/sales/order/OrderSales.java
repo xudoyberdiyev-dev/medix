@@ -210,7 +210,7 @@ class OrderSales {
                 .param("w", sale.warehouseId())
                 .update();
         jdbc.sql("""
-                UPDATE sales_order_mark SET status = 'RELEASED', closed_by = :by, closed_at = now(), close_reason = :r
+                UPDATE sales_order_mark SET status = 'RETURNED', closed_by = :by, closed_at = now(), close_reason = :r
                 WHERE order_id = :o AND status = 'SOLD'""")
                 .param("by", actor.employeeId())
                 .param("r", "Yetkazilmadi: " + why)
@@ -428,6 +428,9 @@ class OrderSales {
                 WHERE id = :id AND status = 'IN_TRANSIT'""")
                 .param("id", orderId)
                 .update();
+        // O10b: to'liq qaytgan partiya kodlari — «Qaytarilgan»; qolganlari zaxira egali bo'lsa — «Zaxira kodlar»
+        CodesOwners.onPartialReturn(jdbc, orderId, qmId, actor.employeeId(), "Qisman yetkazildi: " + why);
+        CodesOwners.onDelivered(jdbc, orderId);
         Money net = new Money(sale.total()).minus(total);
         audit.record(AuditEntry.of("order.partial", "sales_order", orderId)
                 .change(Map.of("status", "IN_TRANSIT"), Map.of("status", "DELIVERED", "return", number, "returnTotal", total.toString(),

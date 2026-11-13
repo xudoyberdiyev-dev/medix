@@ -56,4 +56,13 @@ class Gs1CodeTest {
         assertThat(Gs1Code.gtin14("12345670")).contains("00000012345670");
         assertThat(Gs1Code.gtin14("ABC")).isEmpty();
     }
+
+    @Test
+    void scannedKeepsCryptoTailAndShowsGs() {
+        String raw = "]d20104601234567893215ABCD\u001D91Q\u001D93Ab1c\u001D10LOT7";
+        String scanned = Gs1Code.scanned(raw);
+        assertThat(scanned).startsWith("0104601234567893").contains("93Ab1c");
+        assertThat(Gs1Code.visibleGs(scanned)).isEqualTo("0104601234567893215ABCD<GS>91Q<GS>93Ab1c<GS>10LOT7");
+        assertThat(Gs1Code.scanned("x".repeat(400))).hasSize(300);
+    }
 }

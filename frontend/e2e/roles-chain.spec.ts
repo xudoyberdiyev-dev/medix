@@ -308,12 +308,12 @@ test("Markirovkachi: birinchi kirish, kodlarni skanerlaydi (xato kod rad etiladi
   await expect(page.getByText(/shu buyurtmada allaqachon skanerlangan/).first()).toBeVisible();
   await expect(page.getByText("2 / 2").first()).toBeVisible();
   // E1: aralash buyurtma — kodlar toʻliq, lekin markirovkasiz qator (Paracetamol) tasdiqlanmaguncha yakunlab boʻlmaydi
-  await expect(page.getByRole("button", { name: "Markirovkani yakunlash" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Saplaynʼda tekshirildi — yakunlash" })).toBeDisabled();
   const unmarked = page.getByRole("region", { name: "Markirovkasiz qatorlar" });
   await expect(unmarked).toContainText("Paracetamol E2E");
   await unmarked.getByRole("button", { name: "Tasdiqlash", exact: true }).click();
   await expect(unmarked.getByText("Tasdiqlandi")).toBeVisible();
-  await page.getByRole("button", { name: "Markirovkani yakunlash" }).click();
+  await saplaynFinish(page);
   await expect(page.getByText("Markirovka yakunlandi").first()).toBeVisible();
 });
 
@@ -408,6 +408,27 @@ test("Operator: buyurtma «Yetkazildi» holatida", async ({ page }) => {
   const tabs = page.getByRole("tablist", { name: "Buyurtma holatlari" });
   await tabs.getByRole("tab", { name: /^Yetkazildi/ }).click();
   await expect(page.getByRole("cell", { name: CUSTOMER }).first()).toBeVisible();
+});
+
+test("Ombor mudiri: naqd buyurtma kodlari «Zaxira kodlar»da — biri ishlatildi deb belgilanadi (O10b/c)", async ({ page }) => {
+  await login(page, "keeper.1", PASSWORD);
+  await expect(page).toHaveURL(/\/$/);
+  await page.goto("/reserve-codes");
+  await expect(page.getByRole("heading", { name: "Zaxira kodlar" }).first()).toBeVisible();
+  await expect(page.getByRole("tab", { name: /^Zaxirada/ })).toHaveAttribute("aria-selected", "true");
+  const rows = page.getByRole("row").filter({ hasText: CUSTOMER });
+  await expect(rows).toHaveCount(2);
+  await rows.first().getByRole("button", { name: "Amallar" }).click();
+  await page.getByRole("menuitem", { name: "Ishlatildi deb belgilash" }).click();
+  const dialog = page.getByRole("dialog", { name: "Kodni ishlatildi deb belgilash" });
+  await dialog.getByRole("button", { name: "Ishlatildi deb belgilash" }).click();
+  await expect(dialog.getByText(/^Izoh yozing/)).toBeVisible();
+  await field(dialog, "Izoh").fill("Naqd mijozga qayta ishlatildi");
+  await dialog.getByRole("button", { name: "Ishlatildi deb belgilash" }).click();
+  await expect(page.getByText("Kod ishlatildi deb belgilandi").first()).toBeVisible();
+  await expect(rows).toHaveCount(1);
+  await page.getByRole("tab", { name: /^Ishlatildi/ }).click();
+  await expect(page.getByText("Naqd mijozga qayta ishlatildi")).toBeVisible();
 });
 
 test("CEO: Paracetamol uchun maksimal miqdor — 5", async ({ page }) => {
@@ -858,6 +879,24 @@ test("Buxgalter: Savdo hisoboti va mijozlar qarzi", async ({ page }) => {
   }
 });
 
+test("Buxgalter: «Fakturalar» navbati va hisobotlari (O10d, f, g)", async ({ page }) => {
+  await login(page, "accountant.1", PASSWORD);
+  await expect(page).toHaveURL(/\/$/);
+  await page.goto("/invoices");
+  await expect(page.getByRole("heading", { name: "Fakturalar" }).first()).toBeVisible();
+  await expect(page.getByText(/^Integratsiya hali ulanmagan/)).toBeVisible();
+  await expect(page.getByRole("tab", { name: /^Yuborilishi kerak/ })).toHaveAttribute("aria-selected", "true");
+  // Naqd buyurtmalar navbatga tushmaydi; Perechisleniye boʻlsa — qator
+  await expect(page.getByText("Navbatda faktura yoʻq").or(page.getByRole("row").nth(1)).first()).toBeVisible();
+  // O10f / O10g hisobotlari
+  await page.goto("/reports/accountants");
+  await expect(page.getByRole("heading", { name: "Buxgalter natijasi" }).first()).toBeVisible();
+  await expect(page.getByTestId("accountants-queue")).toContainText("Hozir navbatda:");
+  await page.goto("/reports/marking-codes");
+  await expect(page.getByRole("heading", { name: "Markirovka kodlari" }).first()).toBeVisible();
+  await expect(page.getByTestId("marking-codes-summary")).toBeVisible();
+});
+
 test("Operator: mijozdan qaytarish (QM) — sotuv asosida, Ombor mudiriga yuboradi", async ({ page }) => {
   await login(page, "operator.1", OPERATOR_PASSWORD);
   await expect(page).toHaveURL(/\/$/);
@@ -936,3 +975,15 @@ test("CEO: Mijozlar — Excelʼdan yuklash (faylda takror STIR oʻtkazib yuboril
   await expect(page.getByText("1 ta mijoz yaratildi, 1 ta qator oʻtkazib yuborildi").first()).toBeVisible();
   await expect(page).toHaveURL(/\/customers$/);
 });
+
+/** O10a: kodlar boʻlsa — Excelʼga chiqarish → «Saplaynʼda tekshirdim» → yakunlash. */
+async function saplaynFinish(page: Page) {
+  const finish = page.getByRole("button", { name: "Saplaynʼda tekshirildi — yakunlash" });
+  await expect(finish).toBeDisabled();
+  const download = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Excelʼga chiqarish" }).click();
+  expect((await download).suggestedFilename()).toMatch(/^saplayn-.*\.xlsx$/);
+  await expect(page.getByText(/^Yuklab olindi:/)).toBeVisible();
+  await page.getByRole("checkbox", { name: /Saplaynʼda tekshirdim/ }).check();
+  await finish.click();
+}

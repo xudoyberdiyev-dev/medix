@@ -37,8 +37,10 @@ export type ReportKey =
   | "operators"
   | "supplier-staff"
   | "supplier-company"
+  | "accountants"
   | "pickers"
   | "markers"
+  | "marking-codes"
   | "customer-debts"
   | "supplier-debts"
   | "reconciliations"
@@ -157,6 +159,15 @@ export const REPORTS: ReportEntry[] = [
     allOf: ["prices.cost"],
   },
   {
+    key: "accountants",
+    group: "staff",
+    icon: FileCheck2,
+    title: "Buxgalter natijasi",
+    description: "Yuborilgan fakturalar, oʻrtacha vaqt «Yuklanmoqda → Yuborildi», kechikkanlar va hozirgi navbat.",
+    href: "/reports/accountants",
+    anyOf: ["invoices.view"],
+  },
+  {
     key: "pickers",
     group: "other",
     icon: Timer,
@@ -174,6 +185,16 @@ export const REPORTS: ReportEntry[] = [
     description: "Har markirovkachi boʻyicha: skanerlangan va olib tashlangan kodlar; vaqtida / kechikkan.",
     href: "/reports/markers",
     anyOf: ["reports.markers"],
+    section: "wh",
+  },
+  {
+    key: "marking-codes",
+    group: "other",
+    icon: ScanBarcode,
+    title: "Markirovka kodlari",
+    description: "Davr, mijoz, mahsulot, egasi (mijoz / zaxira) va holat boʻyicha kodlar; Excel.",
+    href: "/reports/marking-codes",
+    anyOf: ["marking.view", "zcodes.view", "invoices.view"],
     section: "wh",
   },
   {

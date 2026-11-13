@@ -31,7 +31,7 @@ class AccountantHome {
     record CalendarDay(LocalDate date, String incoming, String outgoing) {}
 
     /** Ish ro'yxati: YT tasdig'i, ko'chirma bilan solishtirilmagan bank operatsiyalari, yopilmagan kassa kunlari. */
-    record AccountantWork(int ytPending, int bankUnreconciled, int cashDaysOpen) {}
+    record AccountantWork(int ytPending, int bankUnreconciled, int cashDaysOpen, int invoicesPending, int invoicesOverdue) {}
 
     record BranchMoney(long id, String name, String cash, String bank, String total) {}
 
@@ -91,6 +91,13 @@ class AccountantHome {
 
         int yt = jdbc.sql("SELECT count(*) FROM supplier_payment WHERE status = 'PENDING' AND (CAST(:b AS BIGINT) IS NULL OR branch_id = :b)")
                 .param("b", branchId).query(Integer.class).single();
+        // O10d: faktura navbati — kutilayotgan va 1 kundan ko'p kutayotganlar (bekor qilingan buyurtmalarsiz)
+        record Inv(int pending, int overdue) {}
+        Inv inv = jdbc.sql("""
+                SELECT count(*) AS pending, count(*) FILTER (WHERE t.opened_at < now() - INTERVAL '1 day') AS overdue
+                FROM invoice_task t JOIN sales_order o ON o.id = t.order_id
+                WHERE t.status = 'PENDING' AND o.status NOT IN ('CANCELLED', 'REJECTED') AND (CAST(:b AS BIGINT) IS NULL OR t.branch_id = :b)""")
+                .param("b", branchId).query((rs, n) -> new Inv(rs.getInt("pending"), rs.getInt("overdue"))).single();
         // Bank: oxirgi solishtirish sanasidan keyingi (bugungacha) operatsiyalar
         int bank = jdbc.sql("""
                 SELECT count(*) FROM money_move m JOIN money_account a ON a.id = m.account_id
@@ -121,6 +128,6 @@ class AccountantHome {
         var cashTotal = money.stream().map(x -> DirectorHome.m(new BigDecimal(x.cash()))).reduce(DirectorHome.m(null), (a, b2) -> a.plus(b2));
         var bankTotal = money.stream().map(x -> DirectorHome.m(new BigDecimal(x.bank()))).reduce(DirectorHome.m(null), (a, b2) -> a.plus(b2));
         return new AccountantHomeView(today, branchId, cashTotal.toString(), bankTotal.toString(), c.debt(), c.overdue(), s.debt(),
-                DirectorHome.m(due7).toString(), calendar, new AccountantWork(yt, bank, cashOpen), money);
+                DirectorHome.m(due7).toString(), calendar, new AccountantWork(yt, bank, cashOpen, inv.pending(), inv.overdue()), money);
     }
 }

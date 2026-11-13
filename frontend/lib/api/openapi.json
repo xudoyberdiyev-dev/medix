@@ -51,6 +51,12 @@
     "description" : "Hisobotlar",
     "name" : "reports"
   }, {
+    "description" : "Buxgalter faktura navbati",
+    "name" : "invoice-tasks"
+  }, {
+    "description" : "Tovar-transport yuk xati",
+    "name" : "ttn"
+  }, {
     "description" : "Tizimga kirish va sessiya",
     "name" : "auth"
   }, {
@@ -152,6 +158,9 @@
   }, {
     "description" : "Ko'chirish — ZK, OK, FS bitta ro'yxatda",
     "name" : "transfer-overview"
+  }, {
+    "description" : "Zaxira markirovka kodlari",
+    "name" : "reserve-codes"
   }, {
     "description" : "Kassa, Terminal va bank hisoblari",
     "name" : "money-accounts"
@@ -470,7 +479,7 @@
     },
     "/api/audit" : {
       "get" : {
-        "operationId" : "list_33",
+        "operationId" : "list_36",
         "parameters" : [ {
           "in" : "query",
           "name" : "view",
@@ -582,7 +591,7 @@
     },
     "/api/audit/export" : {
       "get" : {
-        "operationId" : "export_3",
+        "operationId" : "export_6",
         "parameters" : [ {
           "in" : "query",
           "name" : "view",
@@ -1436,7 +1445,7 @@
     "/api/branch-sales/{id}/shortage" : {
       "get" : {
         "description" : "Ochiqmi, summa (special.cost) va hal qilish tarixi.",
-        "operationId" : "get_27",
+        "operationId" : "get_28",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -2107,7 +2116,7 @@
     },
     "/api/cash-panel" : {
       "get" : {
-        "operationId" : "get_26",
+        "operationId" : "get_27",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -2390,7 +2399,7 @@
     "/api/counterparties/export" : {
       "get" : {
         "description" : "Jadvaldagi filtrlar va saralash bilan; ko'pi bilan 50 000 qator. Mijozlar — clients.view, YB — suppliers.view; telefon va kontakt — clients.contact / suppliers.contact bilan.",
-        "operationId" : "export_2",
+        "operationId" : "export_5",
         "parameters" : [ {
           "in" : "query",
           "name" : "q",
@@ -3474,7 +3483,7 @@
     },
     "/api/customer-returns/{id}" : {
       "get" : {
-        "operationId" : "get_25",
+        "operationId" : "get_26",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -4221,7 +4230,7 @@
     },
     "/api/employee-lookup" : {
       "get" : {
-        "operationId" : "list_32",
+        "operationId" : "list_35",
         "responses" : {
           "200" : {
             "content" : {
@@ -4770,7 +4779,7 @@
     },
     "/api/home/accountant" : {
       "get" : {
-        "operationId" : "get_24",
+        "operationId" : "get_25",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -4798,7 +4807,7 @@
     },
     "/api/home/branch" : {
       "get" : {
-        "operationId" : "get_23",
+        "operationId" : "get_24",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -4842,7 +4851,7 @@
     },
     "/api/home/director" : {
       "get" : {
-        "operationId" : "get_22",
+        "operationId" : "get_23",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -5512,6 +5521,364 @@
         "tags" : [ "inventory-count" ]
       }
     },
+    "/api/invoice-tasks" : {
+      "get" : {
+        "description" : "Filtrlar: filial (barcha filiallar doirasida), holat, davr (navbatga tushgan sana), qidiruv (buyurtma, mijoz, STIR, HF, e-faktura №). Kutilayotganlar — eng uzoq kutayotgani birinchi.",
+        "operationId" : "list_34",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "status",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "PENDING", "SENT" ]
+          }
+        }, {
+          "in" : "query",
+          "name" : "from",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "in" : "query",
+          "name" : "to",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "in" : "query",
+          "name" : "q",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "page",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 0
+          }
+        }, {
+          "in" : "query",
+          "name" : "size",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 50
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/InvoiceTaskPage"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Faktura navbati",
+        "tags" : [ "invoice-tasks" ]
+      }
+    },
+    "/api/invoice-tasks/by-order/{orderId}" : {
+      "get" : {
+        "description" : "Buyurtma kartochkasi «Hujjatlar». Vazifa bo'lmasa — 404.",
+        "operationId" : "byOrder",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "orderId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/InvoiceTaskDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Buyurtmaning faktura vazifasi va fayllari",
+        "tags" : [ "invoice-tasks" ]
+      }
+    },
+    "/api/invoice-tasks/files/{fileId}" : {
+      "get" : {
+        "operationId" : "file",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "fileId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "string",
+                  "format" : "byte"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Yuklangan faylni yuklab olish",
+        "tags" : [ "invoice-tasks" ]
+      }
+    },
+    "/api/invoice-tasks/{id}" : {
+      "get" : {
+        "operationId" : "get_22",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/InvoiceTask"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Faktura vazifasi",
+        "tags" : [ "invoice-tasks" ]
+      }
+    },
+    "/api/invoice-tasks/{id}/codes" : {
+      "get" : {
+        "operationId" : "codes_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        },
+        "summary" : "Kodlar .xlsx (1C uchun)",
+        "tags" : [ "invoice-tasks" ]
+      }
+    },
+    "/api/invoice-tasks/{id}/files" : {
+      "post" : {
+        "description" : "PDF, JPG, PNG; ≤ 10 MB. Faqat «Yuborilishi kerak» holatida.",
+        "operationId" : "upload",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "kind",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "EFAKTURA", "TTN" ]
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "multipart/form-data" : {
+              "schema" : {
+                "type" : "object",
+                "properties" : {
+                  "file" : {
+                    "type" : "string",
+                    "format" : "binary"
+                  }
+                },
+                "required" : [ "file" ]
+              }
+            }
+          }
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/UploadedFile"
+                }
+              }
+            },
+            "description" : "Created"
+          }
+        },
+        "summary" : "E-faktura / TTN faylini yuklash",
+        "tags" : [ "invoice-tasks" ]
+      }
+    },
+    "/api/invoice-tasks/{id}/invoice/pdf" : {
+      "get" : {
+        "description" : "Sotuv hali o'tkazilmagan bo'lsa — 404.",
+        "operationId" : "invoicePdf_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/pdf" : {
+                "schema" : {
+                  "type" : "string",
+                  "format" : "byte"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Hisob-faktura — PDF",
+        "tags" : [ "invoice-tasks" ]
+      }
+    },
+    "/api/invoice-tasks/{id}/invoice/xlsx" : {
+      "get" : {
+        "description" : "PDF bilan bir xil ustunlar (O11). Sotuv bo'lmasa — 404.",
+        "operationId" : "invoiceXlsx_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        },
+        "summary" : "Hisob-faktura — Excel (.xlsx)",
+        "tags" : [ "invoice-tasks" ]
+      }
+    },
+    "/api/invoice-tasks/{id}/sent" : {
+      "post" : {
+        "description" : "E-faktura raqami va sanasi; e-faktura va TTN fayllari oldin yuklangan bo'lishi shart.",
+        "operationId" : "sent",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/InvoiceSentRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/InvoiceTask"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "«Yuborildi» deb belgilash",
+        "tags" : [ "invoice-tasks" ]
+      }
+    },
+    "/api/invoice-tasks/{id}/ttn/pdf" : {
+      "get" : {
+        "operationId" : "task",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/pdf" : {
+                "schema" : {
+                  "type" : "string",
+                  "format" : "byte"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "TTN — PDF (faktura vazifasi)",
+        "tags" : [ "ttn" ]
+      }
+    },
     "/api/marking/codes" : {
       "get" : {
         "operationId" : "codes",
@@ -5622,6 +5989,60 @@
           }
         },
         "summary" : "Kodlar .xlsx",
+        "tags" : [ "marking" ]
+      }
+    },
+    "/api/marking/customer-codes" : {
+      "get" : {
+        "description" : "Yetkazilgan, kodlar egasi «Mijoz nomiga» buyurtmalarning kodlari.",
+        "operationId" : "customerCodes",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "customerId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "q",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "page",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 0
+          }
+        }, {
+          "in" : "query",
+          "name" : "size",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 50
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/MarkCodePage"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Mijoz nomidagi kodlar (O10c)",
         "tags" : [ "marking" ]
       }
     },
@@ -5774,7 +6195,7 @@
     },
     "/api/marking/orders/{id}/finish" : {
       "post" : {
-        "description" : "Barcha kodlar skanerlangan va markirovkasiz qatorlar tasdiqlangan bo'lsa → «Hisobdan o'tkazilmoqda».",
+        "description" : "Barcha kodlar skanerlangan va markirovkasiz qatorlar tasdiqlangan bo'lsa → «Hisobdan o'tkazilmoqda». O10a: kodlar bo'lsa — avval tekshiruv fayli (verify-export) yuklab olinadi va verified=true («Saplayn'da tekshirildi»).",
         "operationId" : "finish_1",
         "parameters" : [ {
           "in" : "path",
@@ -5785,6 +6206,15 @@
             "format" : "int64"
           }
         } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/FinishRequest"
+              }
+            }
+          }
+        },
         "responses" : {
           "200" : {
             "content" : {
@@ -5919,6 +6349,27 @@
           }
         },
         "summary" : "Markirovkani boshlash",
+        "tags" : [ "marking" ]
+      }
+    },
+    "/api/marking/orders/{id}/verify-export" : {
+      "get" : {
+        "operationId" : "verifyExport",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        },
+        "summary" : "Saplayn tekshiruvi uchun kodlar .xlsx",
         "tags" : [ "marking" ]
       }
     },
@@ -6268,7 +6719,7 @@
     },
     "/api/notifications" : {
       "get" : {
-        "operationId" : "list_31",
+        "operationId" : "list_33",
         "responses" : {
           "200" : {
             "content" : {
@@ -7415,6 +7866,39 @@
         "tags" : [ "orders" ]
       }
     },
+    "/api/orders/invoices/pdf" : {
+      "get" : {
+        "description" : "Bir nechta buyurtma (masalan, reys boʻyicha), 50 tagacha; sotuvi yoʻq buyurtmalar oʻtkazib yuboriladi (O11).",
+        "operationId" : "invoicesPdf",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "ids",
+          "required" : true,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/pdf" : {
+                "schema" : {
+                  "type" : "string",
+                  "format" : "byte"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Hisob-fakturalar — ommaviy PDF",
+        "tags" : [ "orders" ]
+      }
+    },
     "/api/orders/issues" : {
       "get" : {
         "description" : "Ombor mudiri paneli: ochiq (standart) yoki barchasi; buyurtma bo'yicha.",
@@ -7687,6 +8171,36 @@
         "tags" : [ "orders" ]
       }
     },
+    "/api/orders/ttn/pdf" : {
+      "get" : {
+        "description" : "Har buyurtma alohida varaqda.",
+        "operationId" : "trip",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "tripId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/pdf" : {
+                "schema" : {
+                  "type" : "string",
+                  "format" : "byte"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "TTN — PDF (reysdagi barcha buyurtmalar)",
+        "tags" : [ "ttn" ]
+      }
+    },
     "/api/orders/{id}" : {
       "get" : {
         "description" : "Qoralamada — joriy narxlar, qoldiq va «N ta muammo» paneli.",
@@ -7858,6 +8372,45 @@
         "tags" : [ "orders" ]
       }
     },
+    "/api/orders/{id}/codes-owner" : {
+      "post" : {
+        "description" : "«Mijoz nomiga» yoki «Zaxira kodlarga». Buyurtma yopilguncha (Yetkazildi / Yetkazilmadi / Bekor / Rad etildi).",
+        "operationId" : "setCodesOwner",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CodesOwnerRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OrderDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Kodlar egasini o'zgartirish (O10b)",
+        "tags" : [ "orders" ]
+      }
+    },
     "/api/orders/{id}/history" : {
       "get" : {
         "description" : "Audit jurnalidan: yaratildi, yuborildi, tasdiqlandi, yig'ildi, markirovka, jo'natildi, yetkazildi va h.k.",
@@ -7946,6 +8499,28 @@
           }
         },
         "summary" : "Hisob-faktura — PDF (chop etish)",
+        "tags" : [ "orders" ]
+      }
+    },
+    "/api/orders/{id}/invoice/xlsx" : {
+      "get" : {
+        "description" : "PDF bilan bir xil ustunlar (O11). Sotuv bo'lmasa — 404.",
+        "operationId" : "invoiceXlsx",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        },
+        "summary" : "Hisob-faktura — Excel (.xlsx)",
         "tags" : [ "orders" ]
       }
     },
@@ -8268,6 +8843,36 @@
         },
         "summary" : "Vaqt berish",
         "tags" : [ "orders" ]
+      }
+    },
+    "/api/orders/{id}/ttn/pdf" : {
+      "get" : {
+        "description" : "Nakladnoy berilmagan bo'lsa — 409.",
+        "operationId" : "order",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/pdf" : {
+                "schema" : {
+                  "type" : "string",
+                  "format" : "byte"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "TTN — PDF (buyurtma)",
+        "tags" : [ "ttn" ]
       }
     },
     "/api/orders/{id}/waybill/pdf" : {
@@ -10040,6 +10645,15 @@
             "type" : "boolean"
           }
         }, {
+          "description" : "Faqat MXIK (IKPU) kodi boʻsh mahsulotlar (O11)",
+          "in" : "query",
+          "name" : "noIkpu",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
+          }
+        }, {
           "description" : "Qoldiq va narx filiali",
           "in" : "query",
           "name" : "branchId",
@@ -10201,7 +10815,7 @@
     "/api/products/export" : {
       "get" : {
         "description" : "Jadvaldagi filtrlar bilan (yoki tanlanganlar — ids); ko'pi bilan 50 000 qator.",
-        "operationId" : "export_1",
+        "operationId" : "export_4",
         "parameters" : [ {
           "in" : "query",
           "name" : "q",
@@ -10311,6 +10925,14 @@
           "required" : false,
           "schema" : {
             "type" : "boolean"
+          }
+        }, {
+          "in" : "query",
+          "name" : "noIkpu",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
           }
         }, {
           "in" : "query",
@@ -11578,6 +12200,88 @@
         "tags" : [ "reconciliations" ]
       }
     },
+    "/api/reports/accountants" : {
+      "get" : {
+        "description" : "Yuborilgan fakturalar, o'rtacha vaqt «Yuklanmoqda → Yuborildi», 1 kundan kechikkanlar; hozir navbatda. Davr — yuborilgan sana (standart: oy boshidan bugungacha).",
+        "operationId" : "accountants",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "from",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "in" : "query",
+          "name" : "to",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AccountantReportView"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Buxgalter natijasi",
+        "tags" : [ "reports" ]
+      }
+    },
+    "/api/reports/accountants/export" : {
+      "get" : {
+        "operationId" : "export_3",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "from",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "in" : "query",
+          "name" : "to",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        },
+        "summary" : "Buxgalter natijasi .xlsx",
+        "tags" : [ "reports" ]
+      }
+    },
     "/api/reports/expenses" : {
       "get" : {
         "operationId" : "expenses",
@@ -11788,6 +12492,184 @@
           }
         },
         "summary" : "Bugungi natijam (Markirovkachi)",
+        "tags" : [ "reports" ]
+      }
+    },
+    "/api/reports/marking-codes" : {
+      "get" : {
+        "description" : "Davr — skanerlangan sana (standart: oy boshidan bugungacha); mijoz, mahsulot, egasi (mijoz / zaxira), holat, qidiruv. Olib tashlangan kodlar — faqat status=REMOVED bilan.",
+        "operationId" : "list_32",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "from",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "in" : "query",
+          "name" : "to",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "in" : "query",
+          "name" : "customerId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "productId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "owner",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "CUSTOMER", "RESERVE" ]
+          }
+        }, {
+          "in" : "query",
+          "name" : "status",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "ACTIVE", "REMOVED", "RELEASED", "SOLD", "RETURNED" ]
+          }
+        }, {
+          "in" : "query",
+          "name" : "q",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "page",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 0
+          }
+        }, {
+          "in" : "query",
+          "name" : "size",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 50
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ReportCodePage"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Markirovka kodlari hisoboti",
+        "tags" : [ "reports" ]
+      }
+    },
+    "/api/reports/marking-codes/export" : {
+      "get" : {
+        "operationId" : "export_2",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "from",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "in" : "query",
+          "name" : "to",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "in" : "query",
+          "name" : "customerId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "productId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "owner",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "CUSTOMER", "RESERVE" ]
+          }
+        }, {
+          "in" : "query",
+          "name" : "status",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "ACTIVE", "REMOVED", "RELEASED", "SOLD", "RETURNED" ]
+          }
+        }, {
+          "in" : "query",
+          "name" : "q",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        },
+        "summary" : "Markirovka kodlari hisoboti .xlsx",
         "tags" : [ "reports" ]
       }
     },
@@ -12405,6 +13287,214 @@
         },
         "summary" : "Ta'minotchi xodim / korxona tovari .xlsx",
         "tags" : [ "reports" ]
+      }
+    },
+    "/api/reserve-codes" : {
+      "get" : {
+        "description" : "Filtrlar: filial (barcha filiallar doirasida), mahsulot, holat, davr (zaxiraga tushgan sana), qidiruv.",
+        "operationId" : "list_31",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "productId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "status",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "IN_RESERVE", "USED", "WRITTEN_OFF" ]
+          }
+        }, {
+          "in" : "query",
+          "name" : "from",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "in" : "query",
+          "name" : "to",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "in" : "query",
+          "name" : "q",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "page",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 0
+          }
+        }, {
+          "in" : "query",
+          "name" : "size",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 50
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ReserveCodePage"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Zaxira kodlar",
+        "tags" : [ "reserve-codes" ]
+      }
+    },
+    "/api/reserve-codes/export" : {
+      "get" : {
+        "operationId" : "export_1",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "productId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "status",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "IN_RESERVE", "USED", "WRITTEN_OFF" ]
+          }
+        }, {
+          "in" : "query",
+          "name" : "from",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "in" : "query",
+          "name" : "to",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "in" : "query",
+          "name" : "q",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        },
+        "summary" : "Zaxira kodlar .xlsx",
+        "tags" : [ "reserve-codes" ]
+      }
+    },
+    "/api/reserve-codes/{id}/use" : {
+      "post" : {
+        "operationId" : "use",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ReserveCloseRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        },
+        "summary" : "Ishlatildi deb belgilash",
+        "tags" : [ "reserve-codes" ]
+      }
+    },
+    "/api/reserve-codes/{id}/write-off" : {
+      "post" : {
+        "operationId" : "writeOff",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ReserveCloseRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        },
+        "summary" : "Hisobdan chiqarish",
+        "tags" : [ "reserve-codes" ]
       }
     },
     "/api/roles" : {
@@ -17126,6 +18216,71 @@
         },
         "required" : [ "bank", "branchId", "calendar", "cash", "customerDebt", "customerOverdue", "money", "supplierDebt", "supplierDue7", "today", "work" ]
       },
+      "AccountantReportView" : {
+        "type" : "object",
+        "properties" : {
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "from" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "queue" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Hozir navbatda (yuborilishi kerak)"
+          },
+          "queueLate" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Navbatda 1 kundan ko'p kutayotganlar"
+          },
+          "rows" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AccountantRow"
+            }
+          },
+          "to" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "total" : {
+            "$ref" : "#/components/schemas/AccountantRow"
+          }
+        },
+        "required" : [ "from", "queue", "queueLate", "rows", "to", "total" ]
+      },
+      "AccountantRow" : {
+        "type" : "object",
+        "properties" : {
+          "avgMinutes" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "O'rtacha vaqt «Yuklanmoqda → Yuborildi», daqiqa"
+          },
+          "employeeId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "late" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "1 kundan ko'p kutib yuborilganlar"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "sent" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Yuborilgan fakturalar"
+          }
+        },
+        "required" : [ "avgMinutes", "employeeId", "late", "name", "sent" ]
+      },
       "AccountantWork" : {
         "type" : "object",
         "properties" : {
@@ -17137,12 +18292,20 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "invoicesOverdue" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "invoicesPending" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
           "ytPending" : {
             "type" : "integer",
             "format" : "int32"
           }
         },
-        "required" : [ "bankUnreconciled", "cashDaysOpen", "ytPending" ]
+        "required" : [ "bankUnreconciled", "cashDaysOpen", "invoicesOverdue", "invoicesPending", "ytPending" ]
       },
       "Act" : {
         "type" : "object",
@@ -19788,6 +20951,16 @@
         },
         "required" : [ "code", "count" ]
       },
+      "CodesOwnerRequest" : {
+        "type" : "object",
+        "properties" : {
+          "owner" : {
+            "type" : "string",
+            "enum" : [ "CUSTOMER", "RESERVE" ]
+          }
+        },
+        "required" : [ "owner" ]
+      },
       "Company" : {
         "type" : "object",
         "properties" : {
@@ -21725,6 +22898,10 @@
           "active" : {
             "type" : "boolean"
           },
+          "code" : {
+            "type" : "string",
+            "description" : "Faqat birlik — soliq klassifikatori kodi (hisob-faktura)"
+          },
           "id" : {
             "type" : "integer",
             "format" : "int64"
@@ -21741,6 +22918,12 @@
       "EntryRequest" : {
         "type" : "object",
         "properties" : {
+          "code" : {
+            "type" : "string",
+            "description" : "Faqat birlik — soliq klassifikatori kodi (raqam)",
+            "maxLength" : 10,
+            "minLength" : 0
+          },
           "name" : {
             "type" : "string",
             "maxLength" : 200,
@@ -21957,6 +23140,16 @@
           }
         },
         "required" : [ "count", "id", "name" ]
+      },
+      "FinishRequest" : {
+        "type" : "object",
+        "properties" : {
+          "verified" : {
+            "type" : "boolean",
+            "description" : "«Kodlar firmamiz nomida va takrorlanmagan — Saplayn'da tekshirdim»"
+          }
+        },
+        "required" : [ "verified" ]
       },
       "FinishResult" : {
         "type" : "object",
@@ -23234,14 +24427,26 @@
             "type" : "integer",
             "format" : "int64"
           },
+          "buyer" : {
+            "$ref" : "#/components/schemas/InvoiceParty",
+            "description" : "Xaridor rekvizitlari"
+          },
           "contract" : {
             "type" : "string",
             "description" : "Sotuv sanasida amaldagi shartnoma"
+          },
+          "contractDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Shartnoma sanasi"
           },
           "customer" : {
             "type" : "string"
           },
           "customerTin" : {
+            "type" : "string"
+          },
+          "driver" : {
             "type" : "string"
           },
           "dueDate" : {
@@ -23256,6 +24461,16 @@
             "items" : {
               "$ref" : "#/components/schemas/InvoiceLine"
             }
+          },
+          "markCount" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Markirovka kodlari jami"
+          },
+          "missingIkpu" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "MXIK (IKPU) kodi boʻsh qatorlar soni — ogohlantirish uchun"
           },
           "netTotal" : {
             "type" : "string",
@@ -23275,6 +24490,10 @@
           "saleNumber" : {
             "type" : "string"
           },
+          "seller" : {
+            "$ref" : "#/components/schemas/InvoiceParty",
+            "description" : "Sotuvchi rekvizitlari (filial)"
+          },
           "status" : {
             "type" : "string",
             "description" : "POSTED yoki CANCELLED"
@@ -23282,14 +24501,56 @@
           "total" : {
             "type" : "string"
           },
+          "totalInWords" : {
+            "type" : "string",
+            "description" : "Jami summa soʻz bilan (QQS bilan)"
+          },
+          "tripNumber" : {
+            "type" : "string",
+            "description" : "Reys raqami (buyurtma reysda boʻlsa)"
+          },
           "vatTotal" : {
+            "type" : "string"
+          },
+          "vehicle" : {
             "type" : "string"
           },
           "warehouse" : {
             "type" : "string"
           }
         },
-        "required" : [ "branchId", "customer", "invoiceNumber", "lines", "netTotal", "orderNumber", "paymentType", "saleDate", "saleNumber", "status", "total", "vatTotal", "warehouse" ]
+        "required" : [ "branchId", "buyer", "customer", "invoiceNumber", "lines", "markCount", "missingIkpu", "netTotal", "orderNumber", "paymentType", "saleDate", "saleNumber", "seller", "status", "total", "totalInWords", "vatTotal", "warehouse" ]
+      },
+      "InvoiceFile" : {
+        "type" : "object",
+        "properties" : {
+          "contentType" : {
+            "type" : "string"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "createdBy" : {
+            "type" : "string"
+          },
+          "fileName" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "kind" : {
+            "type" : "string",
+            "enum" : [ "EFAKTURA", "TTN" ]
+          },
+          "sizeBytes" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "contentType", "createdAt", "createdBy", "fileName", "id", "kind", "sizeBytes" ]
       },
       "InvoiceLine" : {
         "type" : "object",
@@ -23304,8 +24565,17 @@
             "type" : "string",
             "format" : "date"
           },
+          "ikpu" : {
+            "type" : "string",
+            "description" : "MXIK (IKPU) kodi"
+          },
           "manufacturer" : {
             "type" : "string"
+          },
+          "markCount" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Shu qator (partiya) markirovka kodlari soni"
           },
           "netAmount" : {
             "type" : "string",
@@ -23325,6 +24595,14 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "unit" : {
+            "type" : "string",
+            "description" : "Oʻlchov birligi"
+          },
+          "unitCode" : {
+            "type" : "string",
+            "description" : "Oʻlchov birligi kodi"
+          },
           "vatAmount" : {
             "type" : "string"
           },
@@ -23333,7 +24611,191 @@
             "description" : "QQS stavkasi, %"
           }
         },
-        "required" : [ "amount", "batch", "expiryDate", "netAmount", "price", "productCode", "productName", "qty", "vatAmount", "vatRate" ]
+        "required" : [ "amount", "batch", "expiryDate", "markCount", "netAmount", "price", "productCode", "productName", "qty", "vatAmount", "vatRate" ]
+      },
+      "InvoiceParty" : {
+        "type" : "object",
+        "properties" : {
+          "address" : {
+            "type" : "string"
+          },
+          "bankAccount" : {
+            "type" : "string",
+            "description" : "Hisob raqami (r/s)"
+          },
+          "bankName" : {
+            "type" : "string"
+          },
+          "mfo" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "phone" : {
+            "type" : "string"
+          },
+          "tin" : {
+            "type" : "string"
+          },
+          "vatCode" : {
+            "type" : "string",
+            "description" : "QQS toʻlovchi registratsiya kodi"
+          }
+        },
+        "required" : [ "name" ]
+      },
+      "InvoiceSentRequest" : {
+        "type" : "object",
+        "properties" : {
+          "efakturaDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "efakturaNumber" : {
+            "type" : "string",
+            "maxLength" : 60,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "efakturaDate", "efakturaNumber" ]
+      },
+      "InvoiceTask" : {
+        "type" : "object",
+        "properties" : {
+          "branch" : {
+            "type" : "string"
+          },
+          "codes" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Faol / sotilgan markirovka kodlari soni"
+          },
+          "codesOwner" : {
+            "type" : "string",
+            "enum" : [ "CUSTOMER", "RESERVE" ]
+          },
+          "customer" : {
+            "type" : "string"
+          },
+          "customerId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "customerTin" : {
+            "type" : "string"
+          },
+          "efakturaDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "efakturaNumber" : {
+            "type" : "string"
+          },
+          "hasEfakturaFile" : {
+            "type" : "boolean"
+          },
+          "hasTtnFile" : {
+            "type" : "boolean"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "invoiceNumber" : {
+            "type" : "string",
+            "description" : "Hisob-faktura raqami (sotuv o'tkazilgach)"
+          },
+          "openedAt" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Navbatga tushgan payt («Yuklanmoqda»)"
+          },
+          "orderId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "orderNumber" : {
+            "type" : "string"
+          },
+          "orderStatus" : {
+            "type" : "string",
+            "enum" : [ "DRAFT", "PENDING_APPROVAL", "QUEUED", "PICKING", "MARKING", "CHECKING", "DOCUMENTING", "LOADING", "IN_TRANSIT", "DELIVERED", "UNDELIVERED", "REJECTED", "CANCELLED" ]
+          },
+          "paymentType" : {
+            "type" : "string",
+            "enum" : [ "CASH", "TRANSFER", "ONLINE" ]
+          },
+          "sentAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "sentBy" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "PENDING", "SENT" ]
+          },
+          "total" : {
+            "type" : "string",
+            "description" : "Summa (sotuv bo'lsa — sotuvdan, aks holda buyurtmadan)"
+          },
+          "vat" : {
+            "type" : "string",
+            "description" : "QQS (sotuv o'tkazilgach)"
+          }
+        },
+        "required" : [ "branch", "codes", "codesOwner", "customer", "customerId", "hasEfakturaFile", "hasTtnFile", "id", "openedAt", "orderId", "orderNumber", "orderStatus", "paymentType", "status", "total" ]
+      },
+      "InvoiceTaskDetail" : {
+        "type" : "object",
+        "description" : "Buyurtma kartochkasi «Hujjatlar»: faktura vazifasi va fayllari",
+        "properties" : {
+          "files" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/InvoiceFile"
+            }
+          },
+          "task" : {
+            "$ref" : "#/components/schemas/InvoiceTask"
+          }
+        },
+        "required" : [ "files", "task" ]
+      },
+      "InvoiceTaskPage" : {
+        "type" : "object",
+        "properties" : {
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/InvoiceTask"
+            }
+          },
+          "page" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "pending" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Holat bo'yicha sonlar (boshqa filtrlar bilan)"
+          },
+          "sent" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "total" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "items", "page", "pending", "sent", "size", "total" ]
       },
       "IssueRequest" : {
         "type" : "object",
@@ -23736,7 +25198,7 @@
           },
           "status" : {
             "type" : "string",
-            "enum" : [ "ACTIVE", "REMOVED", "RELEASED", "SOLD" ]
+            "enum" : [ "ACTIVE", "REMOVED", "RELEASED", "SOLD", "RETURNED" ]
           }
         },
         "required" : [ "batch", "code", "gtin", "id", "kind", "lineId", "orderId", "orderNumber", "productName", "scannedAt", "scannedBy", "serial", "status" ]
@@ -23977,6 +25439,11 @@
           "deadline" : {
             "type" : "string",
             "format" : "date-time"
+          },
+          "exportedAt" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "O10a: Saplayn tekshiruvi fayli yuklab olingan payt (yangi kod qabul qilinsa — null)"
           },
           "id" : {
             "type" : "integer",
@@ -25525,6 +26992,15 @@
           "cancelledBy" : {
             "type" : "string"
           },
+          "codesOwner" : {
+            "type" : "string",
+            "description" : "O10b: kodlar egasi (standart — to'lov turidan: Perechisleniye → mijoz, qolgani → zaxira)",
+            "enum" : [ "CUSTOMER", "RESERVE" ]
+          },
+          "codesOwnerManual" : {
+            "type" : "boolean",
+            "description" : "Kodlar egasi qo'lda tanlangan"
+          },
           "createdAt" : {
             "type" : "string",
             "format" : "date-time"
@@ -25676,7 +27152,7 @@
             "format" : "int64"
           }
         },
-        "required" : [ "approvalReasons", "branchId", "createdAt", "createdBy", "createdById", "credit", "customer", "customerId", "deliveryType", "discountTotal", "documents", "fefoDeviation", "grossTotal", "holder", "id", "issues", "lines", "number", "orderDate", "paymentType", "priceChanged", "repickLineIds", "status", "total", "vatTotal", "warehouse", "warehouseId" ]
+        "required" : [ "approvalReasons", "branchId", "codesOwner", "codesOwnerManual", "createdAt", "createdBy", "createdById", "credit", "customer", "customerId", "deliveryType", "discountTotal", "documents", "fefoDeviation", "grossTotal", "holder", "id", "issues", "lines", "number", "orderDate", "paymentType", "priceChanged", "repickLineIds", "status", "total", "vatTotal", "warehouse", "warehouseId" ]
       },
       "OrderDocuments" : {
         "type" : "object",
@@ -30042,6 +31518,246 @@
         },
         "required" : [ "name" ]
       },
+      "ReportCode" : {
+        "type" : "object",
+        "properties" : {
+          "batch" : {
+            "type" : "string"
+          },
+          "branch" : {
+            "type" : "string"
+          },
+          "customer" : {
+            "type" : "string"
+          },
+          "customerId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "expiryDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "gtin" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "kind" : {
+            "type" : "string",
+            "enum" : [ "BOX", "UNIT" ]
+          },
+          "orderId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "orderNumber" : {
+            "type" : "string"
+          },
+          "owner" : {
+            "type" : "string",
+            "enum" : [ "CUSTOMER", "RESERVE" ]
+          },
+          "productId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "productName" : {
+            "type" : "string"
+          },
+          "reserveStatus" : {
+            "type" : "string",
+            "description" : "Zaxira kodi holati (zaxiraga tushgan bo'lsa)",
+            "enum" : [ "IN_RESERVE", "USED", "WRITTEN_OFF" ]
+          },
+          "scanned" : {
+            "type" : "string",
+            "description" : "To'liq skanerlangan kod (kripto-qismi bilan)"
+          },
+          "scannedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "serial" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "ACTIVE", "REMOVED", "RELEASED", "SOLD", "RETURNED" ]
+          }
+        },
+        "required" : [ "branch", "customer", "customerId", "gtin", "id", "kind", "orderId", "orderNumber", "owner", "productId", "productName", "scanned", "scannedAt", "serial", "status" ]
+      },
+      "ReportCodePage" : {
+        "type" : "object",
+        "properties" : {
+          "customerOwned" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Egasi bo'yicha (boshqa filtrlar bilan)"
+          },
+          "from" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ReportCode"
+            }
+          },
+          "page" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "reserveOwned" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "sold" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Sotilgan kodlar (boshqa filtrlar bilan)"
+          },
+          "to" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "total" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "customerOwned", "from", "items", "page", "reserveOwned", "size", "sold", "to", "total" ]
+      },
+      "ReserveCloseRequest" : {
+        "type" : "object",
+        "properties" : {
+          "note" : {
+            "type" : "string",
+            "maxLength" : 300,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "note" ]
+      },
+      "ReserveCode" : {
+        "type" : "object",
+        "properties" : {
+          "batch" : {
+            "type" : "string"
+          },
+          "branch" : {
+            "type" : "string"
+          },
+          "changedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "changedBy" : {
+            "type" : "string"
+          },
+          "code" : {
+            "type" : "string",
+            "description" : "Qavsli kod"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Zaxiraga tushgan payt (yetkazilgan)"
+          },
+          "customer" : {
+            "type" : "string"
+          },
+          "expiryDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "gtin" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "kind" : {
+            "type" : "string",
+            "enum" : [ "BOX", "UNIT" ]
+          },
+          "note" : {
+            "type" : "string"
+          },
+          "orderId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "orderNumber" : {
+            "type" : "string"
+          },
+          "productId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "productName" : {
+            "type" : "string"
+          },
+          "scanned" : {
+            "type" : "string",
+            "description" : "To'liq skanerlangan kod (kripto-qismi bilan)"
+          },
+          "serial" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "IN_RESERVE", "USED", "WRITTEN_OFF" ]
+          }
+        },
+        "required" : [ "batch", "branch", "code", "createdAt", "customer", "gtin", "id", "kind", "orderId", "orderNumber", "productId", "productName", "scanned", "serial", "status" ]
+      },
+      "ReserveCodePage" : {
+        "type" : "object",
+        "properties" : {
+          "inReserve" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Holat bo'yicha sonlar (boshqa filtrlar bilan)"
+          },
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ReserveCode"
+            }
+          },
+          "page" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "total" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "used" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "writtenOff" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "inReserve", "items", "page", "size", "total", "used", "writtenOff" ]
+      },
       "ReservedBatch" : {
         "type" : "object",
         "properties" : {
@@ -33414,6 +35130,16 @@
           }
         },
         "required" : [ "name" ]
+      },
+      "UploadedFile" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "id" ]
       },
       "VatRequest" : {
         "type" : "object",

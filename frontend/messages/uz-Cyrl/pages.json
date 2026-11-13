@@ -27,6 +27,8 @@
   "reportsExpenses": "Харажатлар ҳисоботи",
   "reportsMarkers": "Маркировкачилар натижаси",
   "reportsPickers": "Йиғувчилар натижаси",
+  "reportsAccountants": "Бухгалтер натижаси",
+  "reportsMarkingCodes": "Маркировка кодлари",
   "reportsProducts": "Маҳсулотлар савдоси",
   "reportsReturns": "Қайтаришлар",
   "reportsSales": "Савдо ҳисоботи",
@@ -47,5 +49,7 @@
   "warehouse": "Омбор мудири панели",
   "warehouseTransfers": "Омбор кўчиришлари",
   "writeOffs": "Ҳисобдан чиқариш",
-  "zoneTransfers": "Зона кўчиришлари"
+  "zoneTransfers": "Зона кўчиришлари",
+  "reserveCodes": "Захира кодлар",
+  "invoices": "Фактуралар"
 }

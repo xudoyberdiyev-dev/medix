@@ -1,0 +1,38 @@
+{
+  "title": "Zaxira kodlar",
+  "subtitle": "«Zaxira kodlarga» egali buyurtmalar yetkazilganda tushgan markirovka kodlari",
+  "excel": "Excelʼga yuklash",
+  "tabsAria": "Holat boʻyicha",
+  "all": "Hammasi",
+  "status": {
+    "IN_RESERVE": "Zaxirada",
+    "USED": "Ishlatildi",
+    "WRITTEN_OFF": "Hisobdan chiqarildi"
+  },
+  "col": {
+    "product": "Mahsulot va kod",
+    "batch": "Partiya / yaroqlilik",
+    "order": "Buyurtma / mijoz",
+    "branch": "Filial",
+    "date": "Zaxiraga tushgan",
+    "status": "Holat"
+  },
+  "search": "Qidiruv",
+  "searchPlaceholder": "Mahsulot, GTIN, seriya, partiya yoki buyurtma",
+  "branch": "Filial",
+  "allBranches": "Barcha filiallar",
+  "from": "Dan",
+  "to": "Gacha",
+  "dateInvalid": "Sana notoʻgʻri",
+  "use": "Ishlatildi deb belgilash",
+  "writeOff": "Hisobdan chiqarish",
+  "useTitle": "Kodni ishlatildi deb belgilash",
+  "writeOffTitle": "Kodni hisobdan chiqarish",
+  "fromOrder": "{number} buyurtmasidan",
+  "note": "Izoh",
+  "noteError": "Izoh yozing — kod qayerga ishlatildi yoki nega chiqarildi",
+  "used": "Kod ishlatildi deb belgilandi",
+  "writtenOff": "Kod hisobdan chiqarildi",
+  "emptyTitle": "Zaxira kodlar yoʻq",
+  "emptyDescription": "«Zaxira kodlarga» egali buyurtma yetkazilganda uning kodlari shu yerda paydo boʻladi."
+}

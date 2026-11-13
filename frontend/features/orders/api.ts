@@ -104,6 +104,12 @@ export const useSaveOrder = () =>
     id ? unwrap(api.PUT("/api/orders/{id}", { params: { path: { id } }, body })) : unwrap(api.POST("/api/orders", { body })),
   );
 
+/** O10b: kodlar egasi — «Mijoz nomiga» / «Zaxira kodlarga» (marking.owner, buyurtma yopilguncha). */
+export const useSetCodesOwner = () =>
+  useOrderMutation(({ id, owner }: { id: number; owner: OrderDetail["codesOwner"] }) =>
+    unwrap(api.POST("/api/orders/{id}/codes-owner", { params: { path: { id } }, body: { owner } })),
+  );
+
 export const useSubmitOrder = () =>
   useOrderMutation((id: number) => unwrap(api.POST("/api/orders/{id}/submit", { params: { path: { id } } })));
 
@@ -140,6 +146,11 @@ export async function defaultPaymentType(customerId: number) {
 
 export async function loadOrder(id: number) {
   return unwrap(api.GET("/api/orders/{id}", { params: { path: { id } } }));
+}
+
+/** O10a: Saplayn tekshiruvi uchun buyurtma kodlari .xlsx (yuklab olish serverda qayd etiladi). */
+export function verifyExportUrl(orderId: number): string {
+  return `/api/marking/orders/${orderId}/verify-export`;
 }
 
 /** Kodlar .xlsx manzili (jurnal filtrlari bilan; orderId — bitta buyurtma). */

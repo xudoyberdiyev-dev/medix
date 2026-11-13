@@ -38,7 +38,9 @@
     "roles": "Rollar",
     "audit": "Audit",
     "settings": "Sozlamalar",
-    "special": "Maxsus"
+    "special": "Maxsus",
+    "zcodes": "Zaxira kodlar",
+    "invoices": "Fakturalar"
   },
   "forbidden": "Rollar va ruxsatlarni Direktor va Bosh administrator boshqaradi.",
   "title": "Rollar va ruxsatlar",
@@ -303,6 +305,11 @@
     "transfer_zk": "Zona koʻchirish (ZK): yaratish",
     "trip_driver": "Reys: haydovchi",
     "warehouses_view": "Omborlar va zonalar",
-    "qm_late": "Mijozdan qaytarish: muddati oʻtgan sotuvni qaytarish"
+    "qm_late": "Mijozdan qaytarish: muddati oʻtgan sotuvni qaytarish",
+    "marking_owner": "Markirovka: kodlar egasini oʻzgartirish (mijoz / zaxira)",
+    "zcodes_view": "Zaxira kodlar: koʻrish",
+    "zcodes_edit": "Zaxira kodlar: ishlatildi / hisobdan chiqarish",
+    "invoices_view": "Fakturalar: navbatni koʻrish, HF va kodlarni yuklab olish",
+    "invoices_send": "Fakturalar: fayl yuklash, «Yuborildi» deb belgilash"
   }
 }

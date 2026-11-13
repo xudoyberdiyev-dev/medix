@@ -20,6 +20,7 @@ import {
   TriangleAlert,
   X,
   type LucideIcon,
+  FileText,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
@@ -312,6 +313,8 @@ export function TripPage({ id }: { id: number }) {
     ) : null;
 
   const sheetHref = `/api/trips/${id}/sheet/pdf`;
+  /** O11: reysdagi hujjatlashtirilgan buyurtmalar HF — bitta PDF. */
+  const invoiceOrderIds = st === "PLANNED" || st === "CANCELLED" ? [] : stops.filter((s) => s.waybillNumber).map((s) => s.orderId);
   return (
     <div className="flex min-w-0 flex-col gap-4">
       <DocumentHeader
@@ -345,6 +348,23 @@ export function TripPage({ id }: { id: number }) {
             <Button variant="secondary" icon={Printer} onClick={() => window.open(sheetHref, "_blank", "noopener")}>
               {t("print")}
             </Button>
+            <Button
+              variant="secondary"
+              icon={FileText}
+              onClick={() => window.open(`/api/orders/ttn/pdf?tripId=${id}`, "_blank", "noopener")}
+            >
+              {t("ttn")}
+            </Button>
+            {invoiceOrderIds.length > 0 ? (
+              <Button
+                variant="secondary"
+                icon={FileText}
+                data-testid="trip-invoices-pdf"
+                onClick={() => window.open(`/api/orders/invoices/pdf?ids=${invoiceOrderIds.join(",")}`, "_blank", "noopener")}
+              >
+                {t("invoicesPdf")}
+              </Button>
+            ) : null}
             {canTrip && st === "PLANNED" ? (
               <RowMenu
                 label={t("more")}

@@ -153,7 +153,7 @@ export interface paths {
             cookie?: never;
         };
         /** Audit yozuvlari (yangilari birinchi), yorliqlar soni bilan */
-        get: operations["list_33"];
+        get: operations["list_36"];
         put?: never;
         post?: never;
         delete?: never;
@@ -170,7 +170,7 @@ export interface paths {
             cookie?: never;
         };
         /** Excel eksport uchun yozuvlar (filtr boʻyicha, koʻpi bilan 5000 ta) */
-        get: operations["export_3"];
+        get: operations["export_6"];
         put?: never;
         post?: never;
         delete?: never;
@@ -602,7 +602,7 @@ export interface paths {
          * FS kamomadi
          * @description Ochiqmi, summa (special.cost) va hal qilish tarixi.
          */
-        get: operations["get_27"];
+        get: operations["get_28"];
         put?: never;
         post?: never;
         delete?: never;
@@ -915,7 +915,7 @@ export interface paths {
             cookie?: never;
         };
         /** Kassir paneli: qoldiqlar, kirim/chiqim, xarajat moddalari, kutilayotganlar, hisoblar, dinamika, oxirgi operatsiyalar */
-        get: operations["get_26"];
+        get: operations["get_27"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1017,7 +1017,7 @@ export interface paths {
          * Excel'ga eksport (.xlsx)
          * @description Jadvaldagi filtrlar va saralash bilan; ko'pi bilan 50 000 qator. Mijozlar — clients.view, YB — suppliers.view; telefon va kontakt — clients.contact / suppliers.contact bilan.
          */
-        get: operations["export_2"];
+        get: operations["export_5"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1457,7 +1457,7 @@ export interface paths {
             cookie?: never;
         };
         /** QM hujjati */
-        get: operations["get_25"];
+        get: operations["get_26"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1802,7 +1802,7 @@ export interface paths {
             cookie?: never;
         };
         /** Faol xodimlar (tanlash uchun) */
-        get: operations["list_32"];
+        get: operations["list_35"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2085,7 +2085,7 @@ export interface paths {
             cookie?: never;
         };
         /** Buxgalter bosh sahifasi: kassa/bank, qarzlar, to'lov taqvimi (14 kun), ish ro'yxati, pul filiallar bo'yicha */
-        get: operations["get_24"];
+        get: operations["get_25"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2102,7 +2102,7 @@ export interface paths {
             cookie?: never;
         };
         /** Filial rahbari bosh sahifasi: tasdiqlarim, ko'rsatkichlar, bugungi reyslar, pul hisoblari */
-        get: operations["get_23"];
+        get: operations["get_24"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2119,7 +2119,7 @@ export interface paths {
             cookie?: never;
         };
         /** Direktor bosh sahifasi: 4 karta, filiallar kesimi, «Diqqat talab qiladi», eng katta qarzdorlar */
-        get: operations["get_22"];
+        get: operations["get_23"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2444,6 +2444,194 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/invoice-tasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Faktura navbati
+         * @description Filtrlar: filial (barcha filiallar doirasida), holat, davr (navbatga tushgan sana), qidiruv (buyurtma, mijoz, STIR, HF, e-faktura №). Kutilayotganlar — eng uzoq kutayotgani birinchi.
+         */
+        get: operations["list_34"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/invoice-tasks/by-order/{orderId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Buyurtmaning faktura vazifasi va fayllari
+         * @description Buyurtma kartochkasi «Hujjatlar». Vazifa bo'lmasa — 404.
+         */
+        get: operations["byOrder"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/invoice-tasks/files/{fileId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Yuklangan faylni yuklab olish */
+        get: operations["file"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/invoice-tasks/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Faktura vazifasi */
+        get: operations["get_22"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/invoice-tasks/{id}/codes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Kodlar .xlsx (1C uchun) */
+        get: operations["codes_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/invoice-tasks/{id}/files": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * E-faktura / TTN faylini yuklash
+         * @description PDF, JPG, PNG; ≤ 10 MB. Faqat «Yuborilishi kerak» holatida.
+         */
+        post: operations["upload"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/invoice-tasks/{id}/invoice/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Hisob-faktura — PDF
+         * @description Sotuv hali o'tkazilmagan bo'lsa — 404.
+         */
+        get: operations["invoicePdf_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/invoice-tasks/{id}/invoice/xlsx": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Hisob-faktura — Excel (.xlsx)
+         * @description PDF bilan bir xil ustunlar (O11). Sotuv bo'lmasa — 404.
+         */
+        get: operations["invoiceXlsx_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/invoice-tasks/{id}/sent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * «Yuborildi» deb belgilash
+         * @description E-faktura raqami va sanasi; e-faktura va TTN fayllari oldin yuklangan bo'lishi shart.
+         */
+        post: operations["sent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/invoice-tasks/{id}/ttn/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** TTN — PDF (faktura vazifasi) */
+        get: operations["task"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/marking/codes": {
         parameters: {
             query?: never;
@@ -2470,6 +2658,26 @@ export interface paths {
         };
         /** Kodlar .xlsx */
         get: operations["exportCodes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/marking/customer-codes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Mijoz nomidagi kodlar (O10c)
+         * @description Yetkazilgan, kodlar egasi «Mijoz nomiga» buyurtmalarning kodlari.
+         */
+        get: operations["customerCodes"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2586,7 +2794,7 @@ export interface paths {
         put?: never;
         /**
          * Markirovkani yakunlash
-         * @description Barcha kodlar skanerlangan va markirovkasiz qatorlar tasdiqlangan bo'lsa → «Hisobdan o'tkazilmoqda».
+         * @description Barcha kodlar skanerlangan va markirovkasiz qatorlar tasdiqlangan bo'lsa → «Hisobdan o'tkazilmoqda». O10a: kodlar bo'lsa — avval tekshiruv fayli (verify-export) yuklab olinadi va verified=true («Saplayn'da tekshirildi»).
          */
         post: operations["finish_1"];
         delete?: never;
@@ -2649,6 +2857,23 @@ export interface paths {
          * @description Bir markirovkachida bitta faol buyurtma.
          */
         post: operations["start_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/marking/orders/{id}/verify-export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Saplayn tekshiruvi uchun kodlar .xlsx */
+        get: operations["verifyExport"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -2833,7 +3058,7 @@ export interface paths {
             cookie?: never;
         };
         /** Oxirgi 50 ta bildirishnoma va o'qilmaganlar soni */
-        get: operations["list_31"];
+        get: operations["list_33"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3212,6 +3437,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/orders/invoices/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Hisob-fakturalar — ommaviy PDF
+         * @description Bir nechta buyurtma (masalan, reys boʻyicha), 50 tagacha; sotuvi yoʻq buyurtmalar oʻtkazib yuboriladi (O11).
+         */
+        get: operations["invoicesPdf"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/orders/issues": {
         parameters: {
             query?: never;
@@ -3386,6 +3631,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/orders/ttn/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * TTN — PDF (reysdagi barcha buyurtmalar)
+         * @description Har buyurtma alohida varaqda.
+         */
+        get: operations["trip"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/orders/{id}": {
         parameters: {
             query?: never;
@@ -3464,6 +3729,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/orders/{id}/codes-owner": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Kodlar egasini o'zgartirish (O10b)
+         * @description «Mijoz nomiga» yoki «Zaxira kodlarga». Buyurtma yopilguncha (Yetkazildi / Yetkazilmadi / Bekor / Rad etildi).
+         */
+        post: operations["setCodesOwner"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/orders/{id}/history": {
         parameters: {
             query?: never;
@@ -3516,6 +3801,26 @@ export interface paths {
          * @description Sotuv bo'lmasa — 404.
          */
         get: operations["invoicePdf"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orders/{id}/invoice/xlsx": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Hisob-faktura — Excel (.xlsx)
+         * @description PDF bilan bir xil ustunlar (O11). Sotuv bo'lmasa — 404.
+         */
+        get: operations["invoiceXlsx"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3695,6 +4000,26 @@ export interface paths {
          * @description Yig'ish va markirovka uchun daqiqa (har buyurtmaga alohida). Faqat «Navbatda».
          */
         post: operations["giveTime"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orders/{id}/ttn/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * TTN — PDF (buyurtma)
+         * @description Nakladnoy berilmagan bo'lsa — 409.
+         */
+        get: operations["order"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -4455,7 +4780,7 @@ export interface paths {
          * Excel'ga eksport (.xlsx)
          * @description Jadvaldagi filtrlar bilan (yoki tanlanganlar — ids); ko'pi bilan 50 000 qator.
          */
-        get: operations["export_1"];
+        get: operations["export_4"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5009,6 +5334,43 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/reports/accountants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Buxgalter natijasi
+         * @description Yuborilgan fakturalar, o'rtacha vaqt «Yuklanmoqda → Yuborildi», 1 kundan kechikkanlar; hozir navbatda. Davr — yuborilgan sana (standart: oy boshidan bugungacha).
+         */
+        get: operations["accountants"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reports/accountants/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Buxgalter natijasi .xlsx */
+        get: operations["export_3"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/reports/expenses": {
         parameters: {
             query?: never;
@@ -5086,6 +5448,43 @@ export interface paths {
         };
         /** Bugungi natijam (Markirovkachi) */
         get: operations["markerToday"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reports/marking-codes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Markirovka kodlari hisoboti
+         * @description Davr — skanerlangan sana (standart: oy boshidan bugungacha); mijoz, mahsulot, egasi (mijoz / zaxira), holat, qidiruv. Olib tashlangan kodlar — faqat status=REMOVED bilan.
+         */
+        get: operations["list_32"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reports/marking-codes/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Markirovka kodlari hisoboti .xlsx */
+        get: operations["export_2"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5275,6 +5674,77 @@ export interface paths {
         get: operations["supplierGoodsExport"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reserve-codes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Zaxira kodlar
+         * @description Filtrlar: filial (barcha filiallar doirasida), mahsulot, holat, davr (zaxiraga tushgan sana), qidiruv.
+         */
+        get: operations["list_31"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reserve-codes/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Zaxira kodlar .xlsx */
+        get: operations["export_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reserve-codes/{id}/use": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Ishlatildi deb belgilash */
+        post: operations["use"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reserve-codes/{id}/write-off": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Hisobdan chiqarish */
+        post: operations["writeOff"];
         delete?: never;
         options?: never;
         head?: never;
@@ -7426,11 +7896,55 @@ export interface components {
             today: string;
             work: components["schemas"]["AccountantWork"];
         };
+        AccountantReportView: {
+            /** Format: int64 */
+            branchId?: number;
+            /** Format: date */
+            from: string;
+            /**
+             * Format: int32
+             * @description Hozir navbatda (yuborilishi kerak)
+             */
+            queue: number;
+            /**
+             * Format: int32
+             * @description Navbatda 1 kundan ko'p kutayotganlar
+             */
+            queueLate: number;
+            rows: components["schemas"]["AccountantRow"][];
+            /** Format: date */
+            to: string;
+            total: components["schemas"]["AccountantRow"];
+        };
+        AccountantRow: {
+            /**
+             * Format: int32
+             * @description O'rtacha vaqt «Yuklanmoqda → Yuborildi», daqiqa
+             */
+            avgMinutes: number;
+            /** Format: int64 */
+            employeeId: number;
+            /**
+             * Format: int32
+             * @description 1 kundan ko'p kutib yuborilganlar
+             */
+            late: number;
+            name: string;
+            /**
+             * Format: int32
+             * @description Yuborilgan fakturalar
+             */
+            sent: number;
+        };
         AccountantWork: {
             /** Format: int32 */
             bankUnreconciled: number;
             /** Format: int32 */
             cashDaysOpen: number;
+            /** Format: int32 */
+            invoicesOverdue: number;
+            /** Format: int32 */
+            invoicesPending: number;
             /** Format: int32 */
             ytPending: number;
         };
@@ -8468,6 +8982,10 @@ export interface components {
             /** Format: int64 */
             count: number;
         };
+        CodesOwnerRequest: {
+            /** @enum {string} */
+            owner: "CUSTOMER" | "RESERVE";
+        };
         Company: {
             defaultLocale: string;
             /** Format: int64 */
@@ -9181,12 +9699,16 @@ export interface components {
         };
         Entry: {
             active: boolean;
+            /** @description Faqat birlik — soliq klassifikatori kodi (hisob-faktura) */
+            code?: string;
             /** Format: int64 */
             id: number;
             name: string;
             shortName?: string;
         };
         EntryRequest: {
+            /** @description Faqat birlik — soliq klassifikatori kodi (raqam) */
+            code?: string;
             name: string;
             /** @description Birlik — qisqa yozuvi, davlat — ISO kodi (UZ) */
             shortName?: string;
@@ -9270,6 +9792,10 @@ export interface components {
             /** Format: int64 */
             id: number;
             name: string;
+        };
+        FinishRequest: {
+            /** @description «Kodlar firmamiz nomida va takrorlanmagan — Saplayn'da tekshirdim» */
+            verified: boolean;
         };
         FinishResult: {
             /** @enum {string} */
@@ -9755,14 +10281,32 @@ export interface components {
             address?: string;
             /** Format: int64 */
             branchId: number;
+            /** @description Xaridor rekvizitlari */
+            buyer: components["schemas"]["InvoiceParty"];
             /** @description Sotuv sanasida amaldagi shartnoma */
             contract?: string;
+            /**
+             * Format: date
+             * @description Shartnoma sanasi
+             */
+            contractDate?: string;
             customer: string;
             customerTin?: string;
+            driver?: string;
             /** Format: date */
             dueDate?: string;
             invoiceNumber: string;
             lines: components["schemas"]["InvoiceLine"][];
+            /**
+             * Format: int64
+             * @description Markirovka kodlari jami
+             */
+            markCount: number;
+            /**
+             * Format: int32
+             * @description MXIK (IKPU) kodi boʻsh qatorlar soni — ogohlantirish uchun
+             */
+            missingIkpu: number;
             /** @description QQSsiz qiymat */
             netTotal: string;
             orderNumber: string;
@@ -9771,18 +10315,45 @@ export interface components {
             /** Format: date */
             saleDate: string;
             saleNumber: string;
+            /** @description Sotuvchi rekvizitlari (filial) */
+            seller: components["schemas"]["InvoiceParty"];
             /** @description POSTED yoki CANCELLED */
             status: string;
             total: string;
+            /** @description Jami summa soʻz bilan (QQS bilan) */
+            totalInWords: string;
+            /** @description Reys raqami (buyurtma reysda boʻlsa) */
+            tripNumber?: string;
             vatTotal: string;
+            vehicle?: string;
             warehouse: string;
+        };
+        InvoiceFile: {
+            contentType: string;
+            /** Format: date-time */
+            createdAt: string;
+            createdBy: string;
+            fileName: string;
+            /** Format: int64 */
+            id: number;
+            /** @enum {string} */
+            kind: "EFAKTURA" | "TTN";
+            /** Format: int32 */
+            sizeBytes: number;
         };
         InvoiceLine: {
             amount: string;
             batch: string;
             /** Format: date */
             expiryDate: string;
+            /** @description MXIK (IKPU) kodi */
+            ikpu?: string;
             manufacturer?: string;
+            /**
+             * Format: int32
+             * @description Shu qator (partiya) markirovka kodlari soni
+             */
+            markCount: number;
             /** @description QQSsiz qiymat */
             netAmount: string;
             /** @description Narx QQS bilan */
@@ -9791,9 +10362,95 @@ export interface components {
             productName: string;
             /** Format: int32 */
             qty: number;
+            /** @description Oʻlchov birligi */
+            unit?: string;
+            /** @description Oʻlchov birligi kodi */
+            unitCode?: string;
             vatAmount: string;
             /** @description QQS stavkasi, % */
             vatRate: string;
+        };
+        InvoiceParty: {
+            address?: string;
+            /** @description Hisob raqami (r/s) */
+            bankAccount?: string;
+            bankName?: string;
+            mfo?: string;
+            name: string;
+            phone?: string;
+            tin?: string;
+            /** @description QQS toʻlovchi registratsiya kodi */
+            vatCode?: string;
+        };
+        InvoiceSentRequest: {
+            /** Format: date */
+            efakturaDate: string;
+            efakturaNumber: string;
+        };
+        InvoiceTask: {
+            branch: string;
+            /**
+             * Format: int32
+             * @description Faol / sotilgan markirovka kodlari soni
+             */
+            codes: number;
+            /** @enum {string} */
+            codesOwner: "CUSTOMER" | "RESERVE";
+            customer: string;
+            /** Format: int64 */
+            customerId: number;
+            customerTin?: string;
+            /** Format: date */
+            efakturaDate?: string;
+            efakturaNumber?: string;
+            hasEfakturaFile: boolean;
+            hasTtnFile: boolean;
+            /** Format: int64 */
+            id: number;
+            /** @description Hisob-faktura raqami (sotuv o'tkazilgach) */
+            invoiceNumber?: string;
+            /**
+             * Format: date-time
+             * @description Navbatga tushgan payt («Yuklanmoqda»)
+             */
+            openedAt: string;
+            /** Format: int64 */
+            orderId: number;
+            orderNumber: string;
+            /** @enum {string} */
+            orderStatus: "DRAFT" | "PENDING_APPROVAL" | "QUEUED" | "PICKING" | "MARKING" | "CHECKING" | "DOCUMENTING" | "LOADING" | "IN_TRANSIT" | "DELIVERED" | "UNDELIVERED" | "REJECTED" | "CANCELLED";
+            /** @enum {string} */
+            paymentType: "CASH" | "TRANSFER" | "ONLINE";
+            /** Format: date-time */
+            sentAt?: string;
+            sentBy?: string;
+            /** @enum {string} */
+            status: "PENDING" | "SENT";
+            /** @description Summa (sotuv bo'lsa — sotuvdan, aks holda buyurtmadan) */
+            total: string;
+            /** @description QQS (sotuv o'tkazilgach) */
+            vat?: string;
+        };
+        /** @description Buyurtma kartochkasi «Hujjatlar»: faktura vazifasi va fayllari */
+        InvoiceTaskDetail: {
+            files: components["schemas"]["InvoiceFile"][];
+            task: components["schemas"]["InvoiceTask"];
+        };
+        InvoiceTaskPage: {
+            items: components["schemas"]["InvoiceTask"][];
+            /** Format: int32 */
+            page: number;
+            /**
+             * Format: int64
+             * @description Holat bo'yicha sonlar (boshqa filtrlar bilan)
+             */
+            pending: number;
+            /** Format: int64 */
+            sent: number;
+            /** Format: int32 */
+            size: number;
+            /** Format: int64 */
+            total: number;
         };
         IssueRequest: {
             /** @description «Boshqa» uchun majburiy */
@@ -9954,7 +10611,7 @@ export interface components {
             scannedBy: string;
             serial: string;
             /** @enum {string} */
-            status: "ACTIVE" | "REMOVED" | "RELEASED" | "SOLD";
+            status: "ACTIVE" | "REMOVED" | "RELEASED" | "SOLD" | "RETURNED";
         };
         MarkCodePage: {
             items: components["schemas"]["MarkCode"][];
@@ -10077,6 +10734,11 @@ export interface components {
             customer: string;
             /** Format: date-time */
             deadline?: string;
+            /**
+             * Format: date-time
+             * @description O10a: Saplayn tekshiruvi fayli yuklab olingan payt (yangi kod qabul qilinsa — null)
+             */
+            exportedAt?: string;
             /** Format: int64 */
             id: number;
             /** @description Markirovkali qatorlar (skanerlanadi) */
@@ -10706,6 +11368,13 @@ export interface components {
             /** Format: date-time */
             cancelledAt?: string;
             cancelledBy?: string;
+            /**
+             * @description O10b: kodlar egasi (standart — to'lov turidan: Perechisleniye → mijoz, qolgani → zaxira)
+             * @enum {string}
+             */
+            codesOwner: "CUSTOMER" | "RESERVE";
+            /** @description Kodlar egasi qo'lda tanlangan */
+            codesOwnerManual: boolean;
             /** Format: date-time */
             createdAt: string;
             createdBy: string;
@@ -12566,6 +13235,120 @@ export interface components {
         RenameZoneRequest: {
             name: string;
         };
+        ReportCode: {
+            batch?: string;
+            branch: string;
+            customer: string;
+            /** Format: int64 */
+            customerId: number;
+            /** Format: date */
+            expiryDate?: string;
+            gtin: string;
+            /** Format: int64 */
+            id: number;
+            /** @enum {string} */
+            kind: "BOX" | "UNIT";
+            /** Format: int64 */
+            orderId: number;
+            orderNumber: string;
+            /** @enum {string} */
+            owner: "CUSTOMER" | "RESERVE";
+            /** Format: int64 */
+            productId: number;
+            productName: string;
+            /**
+             * @description Zaxira kodi holati (zaxiraga tushgan bo'lsa)
+             * @enum {string}
+             */
+            reserveStatus?: "IN_RESERVE" | "USED" | "WRITTEN_OFF";
+            /** @description To'liq skanerlangan kod (kripto-qismi bilan) */
+            scanned: string;
+            /** Format: date-time */
+            scannedAt: string;
+            serial: string;
+            /** @enum {string} */
+            status: "ACTIVE" | "REMOVED" | "RELEASED" | "SOLD" | "RETURNED";
+        };
+        ReportCodePage: {
+            /**
+             * Format: int64
+             * @description Egasi bo'yicha (boshqa filtrlar bilan)
+             */
+            customerOwned: number;
+            /** Format: date */
+            from: string;
+            items: components["schemas"]["ReportCode"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int64 */
+            reserveOwned: number;
+            /** Format: int32 */
+            size: number;
+            /**
+             * Format: int64
+             * @description Sotilgan kodlar (boshqa filtrlar bilan)
+             */
+            sold: number;
+            /** Format: date */
+            to: string;
+            /** Format: int64 */
+            total: number;
+        };
+        ReserveCloseRequest: {
+            note: string;
+        };
+        ReserveCode: {
+            batch: string;
+            branch: string;
+            /** Format: date-time */
+            changedAt?: string;
+            changedBy?: string;
+            /** @description Qavsli kod */
+            code: string;
+            /**
+             * Format: date-time
+             * @description Zaxiraga tushgan payt (yetkazilgan)
+             */
+            createdAt: string;
+            customer: string;
+            /** Format: date */
+            expiryDate?: string;
+            gtin: string;
+            /** Format: int64 */
+            id: number;
+            /** @enum {string} */
+            kind: "BOX" | "UNIT";
+            note?: string;
+            /** Format: int64 */
+            orderId: number;
+            orderNumber: string;
+            /** Format: int64 */
+            productId: number;
+            productName: string;
+            /** @description To'liq skanerlangan kod (kripto-qismi bilan) */
+            scanned: string;
+            serial: string;
+            /** @enum {string} */
+            status: "IN_RESERVE" | "USED" | "WRITTEN_OFF";
+        };
+        ReserveCodePage: {
+            /**
+             * Format: int64
+             * @description Holat bo'yicha sonlar (boshqa filtrlar bilan)
+             */
+            inReserve: number;
+            items: components["schemas"]["ReserveCode"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            size: number;
+            /** Format: int64 */
+            total: number;
+            /** Format: int64 */
+            used: number;
+            /** Format: int64 */
+            writtenOff: number;
+        };
         ReservedBatch: {
             batch: string;
             /** Format: date */
@@ -13930,6 +14713,10 @@ export interface components {
             address?: string;
             name: string;
         };
+        UploadedFile: {
+            /** Format: int64 */
+            id: number;
+        };
         VatRequest: {
             rate: string;
             /** Format: date */
@@ -14769,7 +15556,7 @@ export interface operations {
             };
         };
     };
-    list_33: {
+    list_36: {
         parameters: {
             query?: {
                 view?: "ALL" | "CANCEL" | "FAIL" | "PERM" | "CTRL";
@@ -14800,7 +15587,7 @@ export interface operations {
             };
         };
     };
-    export_3: {
+    export_6: {
         parameters: {
             query?: {
                 view?: "ALL" | "CANCEL" | "FAIL" | "PERM" | "CTRL";
@@ -15394,7 +16181,7 @@ export interface operations {
             };
         };
     };
-    get_27: {
+    get_28: {
         parameters: {
             query?: never;
             header?: never;
@@ -15863,7 +16650,7 @@ export interface operations {
             };
         };
     };
-    get_26: {
+    get_27: {
         parameters: {
             query: {
                 branchId: number;
@@ -16031,7 +16818,7 @@ export interface operations {
             };
         };
     };
-    export_2: {
+    export_5: {
         parameters: {
             query?: {
                 q?: string;
@@ -16702,7 +17489,7 @@ export interface operations {
             };
         };
     };
-    get_25: {
+    get_26: {
         parameters: {
             query?: never;
             header?: never;
@@ -17179,7 +17966,7 @@ export interface operations {
             };
         };
     };
-    list_32: {
+    list_35: {
         parameters: {
             query?: never;
             header?: never;
@@ -17594,7 +18381,7 @@ export interface operations {
             };
         };
     };
-    get_24: {
+    get_25: {
         parameters: {
             query?: {
                 branchId?: number;
@@ -17616,7 +18403,7 @@ export interface operations {
             };
         };
     };
-    get_23: {
+    get_24: {
         parameters: {
             query?: {
                 branchId?: number;
@@ -17640,7 +18427,7 @@ export interface operations {
             };
         };
     };
-    get_22: {
+    get_23: {
         parameters: {
             query?: {
                 branchId?: number;
@@ -18090,6 +18877,241 @@ export interface operations {
             };
         };
     };
+    list_34: {
+        parameters: {
+            query?: {
+                branchId?: number;
+                status?: "PENDING" | "SENT";
+                from?: string;
+                to?: string;
+                q?: string;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvoiceTaskPage"];
+                };
+            };
+        };
+    };
+    byOrder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                orderId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvoiceTaskDetail"];
+                };
+            };
+        };
+    };
+    file: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                fileId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+        };
+    };
+    get_22: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvoiceTask"];
+                };
+            };
+        };
+    };
+    codes_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    upload: {
+        parameters: {
+            query: {
+                kind: "EFAKTURA" | "TTN";
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UploadedFile"];
+                };
+            };
+        };
+    };
+    invoicePdf_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
+                };
+            };
+        };
+    };
+    invoiceXlsx_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    sent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InvoiceSentRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvoiceTask"];
+                };
+            };
+        };
+    };
+    task: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
+                };
+            };
+        };
+    };
     codes: {
         parameters: {
             query?: {
@@ -18137,6 +19159,31 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    customerCodes: {
+        parameters: {
+            query: {
+                customerId: number;
+                q?: string;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarkCodePage"];
+                };
             };
         };
     };
@@ -18262,7 +19309,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["FinishRequest"];
+            };
+        };
         responses: {
             /** @description OK */
             200: {
@@ -18351,6 +19402,26 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["MarkWork"];
                 };
+            };
+        };
+    };
+    verifyExport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -18607,7 +19678,7 @@ export interface operations {
             };
         };
     };
-    list_31: {
+    list_33: {
         parameters: {
             query?: never;
             header?: never;
@@ -19219,6 +20290,28 @@ export interface operations {
             };
         };
     };
+    invoicesPdf: {
+        parameters: {
+            query: {
+                ids: number[];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
+                };
+            };
+        };
+    };
     listIssues: {
         parameters: {
             query?: {
@@ -19418,6 +20511,28 @@ export interface operations {
             };
         };
     };
+    trip: {
+        parameters: {
+            query: {
+                tripId: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
+                };
+            };
+        };
+    };
     get_9: {
         parameters: {
             query?: never;
@@ -19540,6 +20655,32 @@ export interface operations {
             };
         };
     };
+    setCodesOwner: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CodesOwnerRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderDetail"];
+                };
+            };
+        };
+    };
     history_4: {
         parameters: {
             query?: never;
@@ -19603,6 +20744,26 @@ export interface operations {
                 content: {
                     "application/pdf": string;
                 };
+            };
+        };
+    };
+    invoiceXlsx: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -19821,6 +20982,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["OrderDetail"];
+                };
+            };
+        };
+    };
+    order: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
                 };
             };
         };
@@ -20906,6 +22089,8 @@ export interface operations {
                 view?: "ALL" | "ACTIVE" | "CONTROLLED" | "MARKED" | "PRESCRIPTION" | "INACTIVE";
                 controlled?: boolean;
                 marked?: boolean;
+                /** @description Faqat MXIK (IKPU) kodi boʻsh mahsulotlar (O11) */
+                noIkpu?: boolean;
                 /** @description Qoldiq va narx filiali */
                 branchId?: number;
                 facets?: boolean;
@@ -20982,7 +22167,7 @@ export interface operations {
             };
         };
     };
-    export_1: {
+    export_4: {
         parameters: {
             query?: {
                 q?: string;
@@ -20997,6 +22182,7 @@ export interface operations {
                 view?: "ALL" | "ACTIVE" | "CONTROLLED" | "MARKED" | "PRESCRIPTION" | "INACTIVE";
                 controlled?: boolean;
                 marked?: boolean;
+                noIkpu?: boolean;
                 branchId?: number;
                 sort?: "CODE" | "NAME" | "CONTRACT_NAME" | "MANUFACTURER" | "CATEGORY" | "COUNTRY" | "VAT" | "MIN_QTY" | "MAX_QTY" | "STOCK" | "PRICE";
                 desc?: boolean;
@@ -21832,6 +23018,52 @@ export interface operations {
             };
         };
     };
+    accountants: {
+        parameters: {
+            query?: {
+                branchId?: number;
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountantReportView"];
+                };
+            };
+        };
+    };
+    export_3: {
+        parameters: {
+            query?: {
+                branchId?: number;
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     expenses: {
         parameters: {
             query?: {
@@ -21945,6 +23177,64 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["WorkerRow"];
                 };
+            };
+        };
+    };
+    list_32: {
+        parameters: {
+            query?: {
+                branchId?: number;
+                from?: string;
+                to?: string;
+                customerId?: number;
+                productId?: number;
+                owner?: "CUSTOMER" | "RESERVE";
+                status?: "ACTIVE" | "REMOVED" | "RELEASED" | "SOLD" | "RETURNED";
+                q?: string;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportCodePage"];
+                };
+            };
+        };
+    };
+    export_2: {
+        parameters: {
+            query?: {
+                branchId?: number;
+                from?: string;
+                to?: string;
+                customerId?: number;
+                productId?: number;
+                owner?: "CUSTOMER" | "RESERVE";
+                status?: "ACTIVE" | "REMOVED" | "RELEASED" | "SOLD" | "RETURNED";
+                q?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -22212,6 +23502,108 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    list_31: {
+        parameters: {
+            query?: {
+                branchId?: number;
+                productId?: number;
+                status?: "IN_RESERVE" | "USED" | "WRITTEN_OFF";
+                from?: string;
+                to?: string;
+                q?: string;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReserveCodePage"];
+                };
+            };
+        };
+    };
+    export_1: {
+        parameters: {
+            query?: {
+                branchId?: number;
+                productId?: number;
+                status?: "IN_RESERVE" | "USED" | "WRITTEN_OFF";
+                from?: string;
+                to?: string;
+                q?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    use: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReserveCloseRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    writeOff: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReserveCloseRequest"];
+            };
+        };
         responses: {
             /** @description OK */
             200: {

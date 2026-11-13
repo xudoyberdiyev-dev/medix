@@ -94,7 +94,7 @@ test("Ombor zanjiri: vaqt, yigʻish, markirovka", async ({ page }) => {
   // E1: aralash buyurtma — markirovkasiz qator «Tasdiqlash» bilan
   await page.getByRole("region", { name: "Markirovkasiz qatorlar" }).getByRole("button", { name: "Tasdiqlash", exact: true }).click();
   await expect(page.getByText("1 / 1 qator tasdiqlandi")).toBeVisible();
-  await page.getByRole("button", { name: "Markirovkani yakunlash" }).click();
+  await saplaynFinish(page);
   await expect(page.getByText("Markirovka yakunlandi").first()).toBeVisible();
 });
 
@@ -129,7 +129,7 @@ test("Ombor mudiri: faqat oddiy qatorni yigʻishga qaytaradi; qayta yigʻishda f
   const unmarked = page.getByRole("region", { name: "Markirovkasiz qatorlar" });
   await expect(unmarked).toContainText("Paracetamol E2E");
   await unmarked.getByRole("button", { name: "Tasdiqlash", exact: true }).click();
-  await page.getByRole("button", { name: "Markirovkani yakunlash" }).click();
+  await saplaynFinish(page);
   await expect(page.getByText("Markirovka yakunlandi").first()).toBeVisible();
   await login(page, "keeper.1", PASSWORD);
   await page.goto("/warehouse");
@@ -140,3 +140,15 @@ test("Ombor mudiri: faqat oddiy qatorni yigʻishga qaytaradi; qayta yigʻishda f
   await page.getByRole("button", { name: "Hisobdan oʻtkazish" }).click();
   await expect(page.getByText("Hisobdan oʻtkazildi — hujjatlashtirishga")).toBeVisible();
 });
+
+/** O10a: kodlar boʻlsa — Excelʼga chiqarish → «Saplaynʼda tekshirdim» → yakunlash. */
+async function saplaynFinish(page: Page) {
+  const finish = page.getByRole("button", { name: "Saplaynʼda tekshirildi — yakunlash" });
+  await expect(finish).toBeDisabled();
+  const download = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Excelʼga chiqarish" }).click();
+  expect((await download).suggestedFilename()).toMatch(/^saplayn-.*\.xlsx$/);
+  await expect(page.getByText(/^Yuklab olindi:/)).toBeVisible();
+  await page.getByRole("checkbox", { name: /Saplaynʼda tekshirdim/ }).check();
+  await finish.click();
+}

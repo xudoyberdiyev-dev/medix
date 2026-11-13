@@ -16,7 +16,7 @@ final class MarkingModels {
     /** Qadoq turi: Q — quti, D — dona (GS1 AI 91). */
     enum MarkKind { BOX, UNIT }
 
-    enum MarkStatus { ACTIVE, REMOVED, RELEASED, SOLD }
+    enum MarkStatus { ACTIVE, REMOVED, RELEASED, SOLD, RETURNED }
 
     record MarkQueueItem(
             long id,
@@ -97,7 +97,12 @@ final class MarkingModels {
             int unitsScanned,
             int unitsNeeded,
             @Schema(description = "Barcha kodlar skanerlangan va markirovkasiz qatorlar tasdiqlangan — yakunlash mumkin") boolean complete,
-            @Schema(description = "Buyurtmada markirovkali qator yo'q — «Markirovkasiz — tasdiqlash»") boolean unmarkedOnly) {}
+            @Schema(description = "Buyurtmada markirovkali qator yo'q — «Markirovkasiz — tasdiqlash»") boolean unmarkedOnly,
+            @Schema(nullable = true, description = "O10a: Saplayn tekshiruvi fayli yuklab olingan payt (yangi kod qabul qilinsa — null)")
+            Instant exportedAt) {}
+
+    /** O10a: «Saplayn'da tekshirildi — yakunlash». Kodlar bo'lsa verified=true majburiy. */
+    record FinishRequest(@Schema(description = "«Kodlar firmamiz nomida va takrorlanmagan — Saplayn'da tekshirdim»") boolean verified) {}
 
     record ScanRequest(@NotBlank(message = "{validation.required}") @Size(max = 300) String code) {}
 

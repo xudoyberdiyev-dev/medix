@@ -36,6 +36,18 @@ describe("mahsulot filtrlari URL'da", () => {
   });
 });
 
+describe("«MXIK yoʻq» filtri (O11)", () => {
+  it("URL, faol filtr soni, API va eksport", () => {
+    const f = { ...DEFAULT_FILTERS, noIkpu: true };
+    expect(serializeFilters(f)).toBe("noIkpu=1");
+    expect(parseFilters(new URLSearchParams("noIkpu=1")).noIkpu).toBe(true);
+    expect(activeFilterCount(f)).toBe(1);
+    expect(toQuery(f, null).noIkpu).toBe(true);
+    expect(toQuery(DEFAULT_FILTERS, null).noIkpu).toBeUndefined();
+    expect(exportQuery(f, null, [])).toContain("noIkpu=true");
+  });
+});
+
 describe("eksport havolasi", () => {
   it("sahifalashsiz; tanlanganlar ids bilan", () => {
     expect(exportQuery({ ...DEFAULT_FILTERS, q: "nimesil", page: 4 }, null)).toBe("q=nimesil&view=ALL&status=ALL&sort=NAME&desc=false");

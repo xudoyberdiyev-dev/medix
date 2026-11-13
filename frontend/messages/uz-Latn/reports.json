@@ -62,6 +62,10 @@
         "title": "Taʼminotchi korxona tovari",
         "description": "Yetkazib beruvchi boʻyicha: Olib keldi, Sotildi, Qoldi tannarxda."
       },
+      "accountants": {
+        "title": "Buxgalter natijasi",
+        "description": "Yuborilgan fakturalar, oʻrtacha vaqt «Yuklanmoqda → Yuborildi», kechikkanlar va hozirgi navbat."
+      },
       "pickers": {
         "title": "Yigʻuvchilar natijasi",
         "description": "Har yigʻuvchi boʻyicha: buyurtma, qator va dona; vaqtida / kechikkan."
@@ -69,6 +73,10 @@
       "markers": {
         "title": "Markirovkachilar natijasi",
         "description": "Har markirovkachi boʻyicha: skanerlangan va olib tashlangan kodlar; vaqtida / kechikkan."
+      },
+      "marking-codes": {
+        "title": "Markirovka kodlari",
+        "description": "Davr, mijoz, mahsulot, egasi (mijoz / zaxira) va holat boʻyicha kodlar; Excel."
       },
       "customer-debts": {
         "title": "Mijozlar qarzi",
@@ -276,5 +284,46 @@
   "crumbs": "Joylashuv",
   "columns": "Ustunlar",
   "colsHint": "Koʻrinish va tartib — sudrab oʻzgartiring",
-  "colsReset": "Standartga qaytarish"
+  "colsReset": "Standartga qaytarish",
+  "accountants": {
+    "title": "Buxgalter natijasi",
+    "person": "Buxgalter",
+    "sent": "Yuborilgan fakturalar",
+    "avgMinutes": "Oʻrtacha vaqt",
+    "late": "1 kundan kechikkan",
+    "queue": "Hozir navbatda: {n}",
+    "queueLate": "shundan 1 kundan koʻp: {n}",
+    "empty": "Davrda yuborilgan faktura yoʻq",
+    "note": "Vaqt — buyurtma «Yuklanmoqda» ga oʻtgandan faktura «Yuborildi» deb belgilangungacha.",
+    "forbidden": "«Buxgalter natijasi» faqat fakturalarni koʻrish ruxsati bilan ochiladi."
+  },
+  "markingCodes": {
+    "title": "Markirovka kodlari",
+    "forbidden": "«Markirovka kodlari» hisoboti markirovka, zaxira kodlar yoki fakturalarni koʻrish ruxsati bilan ochiladi.",
+    "col": {
+      "product": "Mahsulot va kod",
+      "batch": "Partiya / yaroqlilik",
+      "order": "Buyurtma / mijoz",
+      "branch": "Filial",
+      "owner": "Egasi",
+      "status": "Holat",
+      "scannedAt": "Skanerlangan"
+    },
+    "owner": {
+      "CUSTOMER": "Mijoz nomiga",
+      "RESERVE": "Zaxira kodlarga"
+    },
+    "reserve": {
+      "IN_RESERVE": "Zaxirada",
+      "USED": "Zaxiradan ishlatildi",
+      "WRITTEN_OFF": "Hisobdan chiqarildi"
+    },
+    "search": "Qidiruv",
+    "searchPlaceholder": "Mijoz, mahsulot, GTIN, seriya yoki buyurtma",
+    "all": "Hammasi",
+    "allActive": "Hammasi (olib tashlanganlarsiz)",
+    "summary": "Mijoz nomiga: {customer} · Zaxira kodlarga: {reserve} · Sotilgan: {sold}",
+    "empty": "Davrda skanerlangan kod yoʻq",
+    "note": "Davr — kod skanerlangan sana. Olib tashlangan kodlar faqat «Holat» filtri bilan koʻrinadi."
+  }
 }

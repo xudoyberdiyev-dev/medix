@@ -17,7 +17,8 @@ import uz.medix.shared.error.MedixException;
 @Service
 class Dictionaries {
 
-    record Entry(long id, String name, @Schema(nullable = true) String shortName, boolean active) {}
+    record Entry(long id, String name, @Schema(nullable = true) String shortName,
+            @Schema(nullable = true, description = "Faqat birlik — soliq klassifikatori kodi (hisob-faktura)") String code, boolean active) {}
 
     private final JdbcClient jdbc;
     private final AuditLog audit;
@@ -31,36 +32,41 @@ class Dictionaries {
 
     @Transactional(readOnly = true)
     List<Entry> list(DictionaryKind kind) {
-        return jdbc.sql("SELECT id, name, short_name, active FROM " + kind.table() + " ORDER BY active DESC, lower(name)")
+        return jdbc.sql("SELECT id, name, short_name, " + codeCol(kind) + " AS code, active FROM " + kind.table()
+                        + " ORDER BY active DESC, lower(name)")
                 .query(Entry.class)
                 .list();
     }
 
     @Transactional
-    Entry create(DictionaryKind kind, String name, String shortName) {
+    Entry create(DictionaryKind kind, String name, String shortName, String code) {
         String sn = normalizeShort(kind, shortName);
+        String c = normalizeCode(kind, code);
         ensureUnique(kind, name, 0L);
         long id = jdbc.sql("INSERT INTO " + kind.table() + " (name, short_name) VALUES (:n, :s) RETURNING id")
                 .param("n", name.strip())
                 .param("s", sn)
                 .query(Long.class)
                 .single();
-        audit.record(AuditEntry.of(kind.table() + ".create", kind.table(), id).change(null, snapshot(name.strip(), sn)));
+        writeCode(kind, id, c);
+        audit.record(AuditEntry.of(kind.table() + ".create", kind.table(), id).change(null, snapshot(name.strip(), sn, c)));
         return find(kind, id);
     }
 
     @Transactional
-    Entry update(DictionaryKind kind, long id, String name, String shortName) {
+    Entry update(DictionaryKind kind, long id, String name, String shortName, String code) {
         Entry before = lock(kind, id);
         String sn = normalizeShort(kind, shortName);
+        String c = normalizeCode(kind, code);
         ensureUnique(kind, name, id);
         jdbc.sql("UPDATE " + kind.table() + " SET name = :n, short_name = :s, updated_at = now(), version = version + 1 WHERE id = :id")
                 .param("n", name.strip())
                 .param("s", sn)
                 .param("id", id)
                 .update();
+        writeCode(kind, id, c);
         audit.record(AuditEntry.of(kind.table() + ".update", kind.table(), id)
-                .change(snapshot(before.name(), before.shortName()), snapshot(name.strip(), sn)));
+                .change(snapshot(before.name(), before.shortName(), before.code()), snapshot(name.strip(), sn, c)));
         if (kind == DictionaryKind.MANUFACTURER) {
             products.refreshByManufacturer(id);
         }
@@ -83,7 +89,7 @@ class Dictionaries {
     }
 
     private Entry find(DictionaryKind kind, long id) {
-        return jdbc.sql("SELECT id, name, short_name, active FROM " + kind.table() + " WHERE id = :id")
+        return jdbc.sql("SELECT id, name, short_name, " + codeCol(kind) + " AS code, active FROM " + kind.table() + " WHERE id = :id")
                 .param("id", id)
                 .query(Entry.class)
                 .optional()
@@ -124,10 +130,35 @@ class Dictionaries {
         return s;
     }
 
-    private static Map<String, Object> snapshot(String name, String shortName) {
+    private static Map<String, Object> snapshot(String name, String shortName, String code) {
         Map<String, Object> m = new HashMap<>();
         m.put("name", name);
         m.put("shortName", shortName);
+        if (code != null) {
+            m.put("code", code);
+        }
         return m;
+    }
+
+    /** Kod ustuni faqat birlikda (V91); boshqa jadvallarda — NULL. */
+    private static String codeCol(DictionaryKind kind) {
+        return kind == DictionaryKind.UNIT ? "code" : "CAST(NULL AS VARCHAR)";
+    }
+
+    private static String normalizeCode(DictionaryKind kind, String code) {
+        if (kind != DictionaryKind.UNIT || code == null || code.isBlank()) {
+            return null;
+        }
+        String c = code.strip();
+        if (!c.matches("^[0-9]{1,10}$")) {
+            throw MedixException.badRequest("dictionary.unitCode");
+        }
+        return c;
+    }
+
+    private void writeCode(DictionaryKind kind, long id, String code) {
+        if (kind == DictionaryKind.UNIT) {
+            jdbc.sql("UPDATE unit SET code = :c WHERE id = :id").param("c", code).param("id", id).update();
+        }
     }
 }

@@ -204,7 +204,9 @@
     "return": "Qaytarish",
     "exportCodes": "Kodlarni yuklash (.xlsx)",
     "printWaybill": "Nakladnoyni chop etish",
-    "printInvoice": "Hisob-fakturani chop etish"
+    "printInvoice": "Hisob-fakturani chop etish",
+    "invoiceXlsx": "Hisob-faktura — Excel",
+    "noIkpu": "MXIK (IKPU) kodi yoʻq qatorlar: {n}. Mahsulot kartochkasida MXIK kodini kiriting, keyin qayta chop eting."
   },
   "credit": {
     "priceType": "Narx turi",
@@ -415,7 +417,8 @@
       "ACTIVE": "Buyurtmada",
       "REMOVED": "Olib tashlangan",
       "RELEASED": "Boʻshatilgan",
-      "SOLD": "Sotilgan"
+      "SOLD": "Sotilgan",
+      "RETURNED": "Qaytarilgan"
     },
     "col": {
       "time": "Vaqt",
@@ -448,7 +451,16 @@
     "tm": "Markirovka: {n} daqiqa",
     "noneBadge": "Markirovkasiz",
     "noneBtn": "Markirovkasiz — tasdiqlash",
-    "oneActive": "Avval joriy markirovkani yakunlang"
+    "oneActive": "Avval joriy markirovkani yakunlang",
+    "verifyTitle": "Saplayn tekshiruvi",
+    "verifyHint": "Kodlarni Excelʼga chiqaring, Saplaynʼda firmamiz nomida va takrorlanmaganini tekshiring, keyin yakunlang.",
+    "verifyExport": "Excelʼga chiqarish",
+    "verifyExported": "Yuklab olindi: {time}",
+    "verifyNotExported": "Fayl hali yuklab olinmagan",
+    "verifyCheck": "Kodlar firmamiz nomida va takrorlanmagan — Saplaynʼda tekshirdim",
+    "verifyFinish": "Saplaynʼda tekshirildi — yakunlash",
+    "verifyExportFailed": "Faylni yuklab boʻlmadi",
+    "reasonSaplayn": "Saplayn: boshqa firma nomida / yaroqsiz"
   },
   "monitor": {
     "forbidden": "Monitor Ombor mudiri, Filial rahbari va Direktor uchun.",
@@ -628,6 +640,7 @@
     "noActive": "Faol reys yoʻq.",
     "tripMeta": "{date} · {vehicle} · {driver} · {orders} ta buyurtma · {places} joy · {amount} soʻm",
     "printSheet": "Yoʻl varaqasini chop etish",
+    "printTtn": "TTN chop etish (barcha buyurtmalar)",
     "editTrip": "Tarkibni oʻzgartirish",
     "cancelTrip": "Reysni bekor qilish",
     "cancelText": "{number}: buyurtmalar «Hujjatlashtirilmoqda»ga qaytadi, nakladnoy raqamlari saqlanadi.",
@@ -891,9 +904,12 @@
       "submit": "Yuborildi",
       "time": "Vaqt berildi",
       "undelivered": "Yetkazilmadi",
-      "update": "Tahrirlandi"
+      "update": "Tahrirlandi",
+      "markExport": "Kodlar Saplayn tekshiruviga yuklab olindi",
+      "codesOwner": "Kodlar egasi oʻzgartirildi"
     },
     "tPay": "Toʻlov",
+    "tDocs": "Hujjatlar",
     "payEmptyT": "Sotuv hali rasmiylashtirilmagan",
     "payEmpty": "Toʻlov holati buyurtma joʻnatilib, sotuv hujjati tuzilgandan keyin koʻrinadi.",
     "paySale": "Sotuv summasi",
@@ -956,6 +972,8 @@
     "saving": "Saqlanmoqda…",
     "saveErr": "Saqlanmadi — qayta urinish",
     "print": "Chop etish (marshrut varagʻi)",
+    "ttn": "TTN",
+    "invoicesPdf": "Hisob-fakturalar",
     "cancelTrip": "Reysni bekor qilish",
     "cancelCT": "Reysni bekor qilasizmi?",
     "cancelCD": "Reysdagi buyurtmalar «Tayyor» roʻyxatiga qaytadi.",
@@ -1001,5 +1019,14 @@
     "back": "Ortga",
     "done": "{n} ta kod qabul qilindi",
     "doneRest": "{n} ta qatorni qoʻlda skanerlang."
+  },
+  "codesOwner": {
+    "label": "Kodlar",
+    "CUSTOMER": "Mijoz nomiga",
+    "RESERVE": "Zaxira kodlarga",
+    "byPayment": "toʻlov turi boʻyicha",
+    "toReserve": "Zaxira kodlarga oʻtkazish",
+    "toCustomer": "Mijoz nomiga oʻtkazish",
+    "changed": "Kodlar egasi oʻzgartirildi"
   }
 }

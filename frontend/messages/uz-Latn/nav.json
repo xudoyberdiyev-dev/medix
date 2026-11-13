@@ -33,5 +33,7 @@
   "staff": "Xodimlar",
   "roles": "Rollar va ruxsatlar",
   "audit": "Audit jurnali",
-  "settings": "Sozlamalar"
+  "settings": "Sozlamalar",
+  "reserveCodes": "Zaxira kodlar",
+  "invoices": "Fakturalar"
 }
