@@ -197,5 +197,10 @@
     "fEmail": "Elektron pochta",
     "fPosition": "Lavozim",
     "fBirth": "Tugʻilgan sana"
-  }
+  },
+  "fPos": "Lavozim",
+  "fEmail": "Elektron pochta",
+  "fBirth": "Tugʻilgan sana",
+  "eEmail": "Elektron pochta notoʻgʻri. Masalan: ism@kompaniya.uz.",
+  "eBirth": "Sana notoʻgʻri. KK.OO.YYYY koʻrinishida kiriting."
 }

@@ -1,3 +1,4 @@
+import { parseUzDate } from "@/features/counterparties/api";
 import type { Employee } from "./api";
 
 /** Telefon: +998 XX XXX XX XX (prototip WizStaff). */
@@ -57,6 +58,10 @@ export interface StaffForm {
   first: string;
   mid: string;
   phone: string;
+  /** Ixtiyoriy shaxsiy maydonlar (egasi 13.11, O0) */
+  pos?: string;
+  email?: string;
+  birth?: string;
   role: string;
   branch: string;
   whs: number[];
@@ -65,7 +70,7 @@ export interface StaffForm {
   loginTouched: boolean;
 }
 
-export type StaffErrorKey = "last" | "first" | "phone" | "role" | "branch" | "login" | "limit";
+export type StaffErrorKey = "last" | "first" | "phone" | "email" | "birth" | "role" | "branch" | "login" | "limit";
 
 export interface CheckInput {
   form: StaffForm;
@@ -84,6 +89,8 @@ export function checkStaff(i: CheckInput): { errors: StaffErrorKey[]; dupPhone: 
   if (!f.last.trim()) errors.push("last");
   if (!f.first.trim()) errors.push("first");
   if (!PHONE_RE.test(f.phone)) errors.push("phone");
+  if (f.email?.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email.trim())) errors.push("email");
+  if (f.birth?.trim() && !parseUzDate(f.birth)) errors.push("birth");
   if (!f.role) errors.push("role");
   else if (i.scope(f.role) !== "all" && !f.branch) errors.push("branch");
   if (!f.login || i.loginBusy) errors.push("login");
