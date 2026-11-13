@@ -853,6 +853,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/cash-ops/{id}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * KO/BO tarixi
+         * @description Audit jurnalidan: yaratildi, tasdiqlandi, rad etildi, bekor qilindi.
+         */
+        get: operations["opHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/cash-ops/{id}/pdf": {
         parameters: {
             query?: never;
@@ -1000,6 +1020,70 @@ export interface paths {
         get: operations["export_2"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/counterparties/import/check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Import ustasi: qatorlarni tekshirish yoki yaratish
+         * @description role — CUSTOMER (clients.create) yoki SUPPLIER (suppliers.create). apply=false — har qator uchun holat va izohlar; apply=true — OK va ogohlantirishli qatorlar bitta tranzaksiyada yaratiladi, xato qatorlar o'tkazib yuboriladi. Limit va muddatlar branchId filial shartlariga yoziladi (clients.terms / suppliers.terms bo'lsa).
+         */
+        post: operations["importCheck_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/counterparties/import/profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Import ustasi: saqlangan moslashtirish profili
+         * @description Profil bo'lmasa — 204.
+         */
+        get: operations["importProfile_1"];
+        /**
+         * Import ustasi: moslashtirishni saqlash
+         * @description Keyingi safar avtomatik qo'llanadi.
+         */
+        put: operations["saveImportProfile_1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/counterparties/import/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Import ustasi: faylni o'qish
+         * @description .xlsx yoki .csv — varaqlar va katakchalar (matn). Hech narsa yozilmaydi; sarlavha va ustunlar brauzerda tanlanadi.
+         */
+        post: operations["importRead_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1184,7 +1268,7 @@ export interface paths {
             cookie?: never;
         };
         /** Kartochka «Tarix»: yaratish, tahrir, shartlar, holat, litsenziya va shartnoma o'zgarishlari (yangisi birinchi) */
-        get: operations["history_5"];
+        get: operations["history_6"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2845,6 +2929,26 @@ export interface paths {
          * @description Qoralama — yaratish ruxsati bilan. O'tkazilgan — faqat opening.cancel, partiyalar ishlatilmagan bo'lsa.
          */
         post: operations["cancel_8"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/opening-balances/{id}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * BQ tarixi
+         * @description Audit jurnalidan: yaratildi, tahrirlandi, import, tasdiqlandi, bekor qilindi.
+         */
+        get: operations["history_5"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -8047,6 +8151,13 @@ export interface components {
             /** Format: int64 */
             version: number;
         };
+        CashOpHistoryEvent: {
+            action: string;
+            /** Format: date-time */
+            at: string;
+            employee?: string;
+            reason?: string;
+        };
         CashOpRequest: {
             /** Format: int64 */
             accountId: number;
@@ -8346,6 +8457,51 @@ export interface components {
             at: string;
             employee?: string;
             reason?: string;
+        };
+        CounterpartyImportRequest: {
+            /**
+             * Format: int64
+             * @description Filial shartlari (limit, muddatlar) shu filialga yoziladi
+             */
+            branchId?: number;
+            /** @enum {string} */
+            role: "CUSTOMER" | "SUPPLIER" | "ALL";
+            rows: components["schemas"]["ImportRowInput"][];
+        };
+        CounterpartyImportResult: {
+            applied: boolean;
+            /** Format: int32 */
+            created: number;
+            /** Format: int32 */
+            error: number;
+            /** Format: int32 */
+            ok: number;
+            rows: components["schemas"]["CounterpartyImportRow"][];
+            /**
+             * Format: int32
+             * @description Mavjud kartalarga filial sharti qo'shilgan qatorlar
+             */
+            updated: number;
+            /** Format: int32 */
+            warn: number;
+        };
+        CounterpartyImportRow: {
+            /**
+             * Format: int64
+             * @description apply=true da yaratilgan kontragent
+             */
+            createdId?: number;
+            /**
+             * Format: int64
+             * @description STIR bo'yicha mavjud karta — unga faqat tanlangan filial sharti qo'shiladi
+             */
+            existingId?: number;
+            messages: components["schemas"]["ImportMessage"][];
+            /** Format: int32 */
+            row: number;
+            /** @enum {string} */
+            status: "OK" | "WARN" | "ERROR";
+            tin?: string;
         };
         CounterpartyOverviewPage: {
             branches: components["schemas"]["OverviewBranch"][];
@@ -10170,6 +10326,13 @@ export interface components {
             /** @enum {string} */
             status: "DRAFT" | "POSTED" | "CANCELLED";
             total: string;
+        };
+        OpeningHistoryEvent: {
+            action: string;
+            /** Format: date-time */
+            at: string;
+            employee?: string;
+            reason?: string;
         };
         OpeningImportError: {
             message: string;
@@ -15389,6 +15552,28 @@ export interface operations {
             };
         };
     };
+    opHistory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CashOpHistoryEvent"][];
+                };
+            };
+        };
+    };
     opPdf: {
         parameters: {
             query?: never;
@@ -15629,6 +15814,107 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    importCheck_1: {
+        parameters: {
+            query?: {
+                apply?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CounterpartyImportRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CounterpartyImportResult"];
+                };
+            };
+        };
+    };
+    importProfile_1: {
+        parameters: {
+            query: {
+                role: "CUSTOMER" | "SUPPLIER" | "ALL";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportProfile"];
+                };
+            };
+        };
+    };
+    saveImportProfile_1: {
+        parameters: {
+            query: {
+                role: "CUSTOMER" | "SUPPLIER" | "ALL";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportProfileRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportProfile"];
+                };
+            };
+        };
+    };
+    importRead_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportFile"];
+                };
             };
         };
     };
@@ -15904,7 +16190,7 @@ export interface operations {
             };
         };
     };
-    history_5: {
+    history_6: {
         parameters: {
             query?: {
                 role?: "CUSTOMER" | "SUPPLIER" | "ALL";
@@ -18246,6 +18532,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["OpeningDetail"];
+                };
+            };
+        };
+    };
+    history_5: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OpeningHistoryEvent"][];
                 };
             };
         };

@@ -735,26 +735,28 @@ function Editor({
           }
           actions={actions}
         />
-        {doc ? (
-          <Tabs
-            aria-label={t("pageTitle")}
-            value={tab}
-            onChange={(k) => setTab(k === "history" ? "history" : "doc")}
-            items={[
-              { key: "doc", label: t("tabDoc") },
-              { key: "history", label: t("tabHistory") },
-            ]}
-          />
+        <Tabs
+          aria-label={t("pageTitle")}
+          value={tab}
+          onChange={(k) => setTab(k === "history" ? "history" : "doc")}
+          items={[
+            { key: "doc", label: t("tabDoc") },
+            { key: "history", label: t("tabHistory") },
+          ]}
+        />
+        {tab === "history" ? (
+          doc ? (
+            <ReceiptHistory id={doc.id} />
+          ) : (
+            <HistoryTimeline query={{ data: [], error: null, refetch: () => undefined }} label={(a) => a} />
+          )
         ) : null}
-        {tab === "history" && doc ? (
-          <ReceiptHistory id={doc.id} />
-        ) : (
-          <>
-            {doc && (doc.status === "ACCEPTED" || doc.status === "POSTED") ? <ReceiptCards doc={doc} /> : null}
-            {doc ? <ReceiptPayment doc={doc} /> : null}
-            {content}
-          </>
-        )}
+        {/* Yangi hujjat shakli «Tarix»da ham saqlanib turadi (yashiriladi, oʻchirilmaydi). */}
+        <div className={tab === "history" ? "hidden" : "contents"}>
+          {doc && (doc.status === "ACCEPTED" || doc.status === "POSTED") ? <ReceiptCards doc={doc} /> : null}
+          {doc ? <ReceiptPayment doc={doc} /> : null}
+          {content}
+        </div>
         {dialogs}
       </div>
     );

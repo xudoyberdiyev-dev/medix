@@ -1,6 +1,7 @@
 "use client";
 
 import { Check, CircleAlert, Download, FileSpreadsheet, Trash2, Upload, X } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
@@ -9,11 +10,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DocumentHeader } from "@/components/ui/document-header";
 import { Drawer } from "@/components/ui/drawer";
+import { HistoryTimeline } from "@/components/ui/history-timeline";
 import { Modal } from "@/components/ui/modal";
 import { RowMenu } from "@/components/ui/row-menu";
 import { Select } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/selection-controls";
 import { ErrorState, ForbiddenState, Skeleton } from "@/components/ui/system-states";
+import { Tabs } from "@/components/ui/tabs";
 import { TextField } from "@/components/ui/text-field";
 import { toast } from "@/components/ui/toast";
 import { can, canAny } from "@/features/auth/can";
@@ -25,6 +28,7 @@ import { Steps } from "@/features/payments/payment-doc-page";
 import { InfoRow } from "@/features/warehouse-transfers/transfer-doc-page";
 import { searchProducts } from "@/features/prices/api";
 import { describeError } from "@/features/setup/form-error";
+import { api, unwrap } from "@/lib/api/client";
 import { formatMoney, formatQuantity } from "@/lib/format";
 import {
   OPENING_APPROVE,
@@ -152,6 +156,7 @@ function Editor({
   const [adding, setAdding] = useState(emptyAdd);
   const [local, setLocal] = useState<string | null>(null);
   const [dialog, setDialog] = useState<"cancel" | "import" | null>(null);
+  const [tab, setTab] = useState<"doc" | "hist">("doc");
   const seen = useRef(new Map<string, { code: string; name: string }>());
   const err = describeError(save.error ?? post.error);
 
@@ -584,7 +589,23 @@ function Editor({
             </>
           }
         />
-        {content}
+        <Tabs
+          items={[
+            { key: "doc", label: t("doc.tabDoc") },
+            { key: "hist", label: t("doc.tabHist") },
+          ]}
+          value={tab}
+          onChange={(k) => setTab(k === "hist" ? "hist" : "doc")}
+        />
+        {tab === "hist" ? (
+          doc ? (
+            <OpeningHistory id={doc.id} />
+          ) : (
+            <HistoryTimeline query={{ data: [], error: null, refetch: () => undefined }} label={(a) => a} />
+          )
+        ) : null}
+        {/* Yangi hujjat shakli «Tarix»da ham saqlanib turadi (yashiriladi, oʻchirilmaydi). */}
+        <div className={tab === "hist" ? "hidden" : "contents"}>{content}</div>
         {dialogs}
       </div>
     );
@@ -695,5 +716,32 @@ function ImportDialog({ id, onClose }: { id: number; onClose: () => void }) {
         ) : null}
       </div>
     </Modal>
+  );
+}
+
+const HISTORY: Record<string, "h_create" | "h_update" | "h_import" | "h_post" | "h_cancel"> = {
+  create: "h_create",
+  update: "h_update",
+  import: "h_import",
+  post: "h_post",
+  cancel: "h_cancel",
+};
+
+/** BQ «Tarix» yorligʻi (prototip `OpeningDoc` → `HistoryTimeline`): audit jurnalidan, kunlar boʻyicha. */
+function OpeningHistory({ id }: { id: number }) {
+  const t = useTranslations("opening.doc");
+  const q = useQuery({
+    queryKey: ["openings", "history", id],
+    queryFn: () => unwrap(api.GET("/api/opening-balances/{id}/history", { params: { path: { id } } })),
+  });
+  const data = q.data?.map((e) => ({ ...e, employee: e.employee ?? undefined, reason: e.reason ?? undefined }));
+  return (
+    <HistoryTimeline
+      query={{ data, error: q.error, refetch: q.refetch }}
+      label={(a) => {
+        const k = HISTORY[a.split(".").pop() ?? ""];
+        return k ? t(k) : a;
+      }}
+    />
   );
 }

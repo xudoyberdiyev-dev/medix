@@ -35,6 +35,9 @@ final class CashModels {
             @Schema(nullable = true) @Size(max = 500) String note,
             @Schema(nullable = true, description = "Asos hujjat № (ixtiyoriy)") @Size(max = 40) String baseNo) {}
 
+    /** KO/BO tarixi (prototip MoneyOpDoc «Tarix»): audit jurnalidan. */
+    record CashOpHistoryEvent(Instant at, @Schema(nullable = true) String employee, String action, @Schema(nullable = true) String reason) {}
+
     record ReasonRequest(@NotBlank(message = "{validation.required}") @Size(max = 300) String reason) {}
 
     record CashOp(long id, String number, String docType, long branchId, long accountId, String account, String accountKind, LocalDate opDate,

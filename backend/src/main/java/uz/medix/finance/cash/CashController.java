@@ -88,6 +88,13 @@ class CashController {
         return ops.find(actor(), id);
     }
 
+    @GetMapping("/api/cash-ops/{id}/history")
+    @PreAuthorize(VIEW)
+    @Operation(summary = "KO/BO tarixi", description = "Audit jurnalidan: yaratildi, tasdiqlandi, rad etildi, bekor qilindi.")
+    List<CashModels.CashOpHistoryEvent> opHistory(@PathVariable long id) {
+        return ops.history(actor(), id);
+    }
+
     @PostMapping("/api/cash-ops")
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasAuthority('cash.io')")

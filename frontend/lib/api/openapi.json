@@ -2003,6 +2003,38 @@
         "tags" : [ "cash" ]
       }
     },
+    "/api/cash-ops/{id}/history" : {
+      "get" : {
+        "description" : "Audit jurnalidan: yaratildi, tasdiqlandi, rad etildi, bekor qilindi.",
+        "operationId" : "opHistory",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/CashOpHistoryEvent"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "KO/BO tarixi",
+        "tags" : [ "cash" ]
+      }
+    },
     "/api/cash-ops/{id}/pdf" : {
       "get" : {
         "operationId" : "opPdf",
@@ -2427,6 +2459,147 @@
         "tags" : [ "counterparties" ]
       }
     },
+    "/api/counterparties/import/check" : {
+      "post" : {
+        "description" : "role — CUSTOMER (clients.create) yoki SUPPLIER (suppliers.create). apply=false — har qator uchun holat va izohlar; apply=true — OK va ogohlantirishli qatorlar bitta tranzaksiyada yaratiladi, xato qatorlar o'tkazib yuboriladi. Limit va muddatlar branchId filial shartlariga yoziladi (clients.terms / suppliers.terms bo'lsa).",
+        "operationId" : "importCheck_1",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "apply",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CounterpartyImportRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CounterpartyImportResult"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Import ustasi: qatorlarni tekshirish yoki yaratish",
+        "tags" : [ "counterparties" ]
+      }
+    },
+    "/api/counterparties/import/profile" : {
+      "get" : {
+        "description" : "Profil bo'lmasa — 204.",
+        "operationId" : "importProfile_1",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "role",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "CUSTOMER", "SUPPLIER", "ALL" ]
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ImportProfile"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Import ustasi: saqlangan moslashtirish profili",
+        "tags" : [ "counterparties" ]
+      },
+      "put" : {
+        "description" : "Keyingi safar avtomatik qo'llanadi.",
+        "operationId" : "saveImportProfile_1",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "role",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "CUSTOMER", "SUPPLIER", "ALL" ]
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ImportProfileRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ImportProfile"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Import ustasi: moslashtirishni saqlash",
+        "tags" : [ "counterparties" ]
+      }
+    },
+    "/api/counterparties/import/read" : {
+      "post" : {
+        "description" : ".xlsx yoki .csv — varaqlar va katakchalar (matn). Hech narsa yozilmaydi; sarlavha va ustunlar brauzerda tanlanadi.",
+        "operationId" : "importRead_1",
+        "requestBody" : {
+          "content" : {
+            "multipart/form-data" : {
+              "schema" : {
+                "type" : "object",
+                "properties" : {
+                  "file" : {
+                    "type" : "string",
+                    "format" : "binary"
+                  }
+                },
+                "required" : [ "file" ]
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ImportFile"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Import ustasi: faylni o'qish",
+        "tags" : [ "counterparties" ]
+      }
+    },
     "/api/counterparties/overview" : {
       "get" : {
         "description" : "To'liq ro'yxat: filial shartlari, litsenziya, qarz, oxirgi sotuv/kirim. branchId — faqat barcha filiallarni ko'radiganlar uchun.",
@@ -2847,7 +3020,7 @@
     },
     "/api/counterparties/{id}/history" : {
       "get" : {
-        "operationId" : "history_5",
+        "operationId" : "history_6",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -6290,6 +6463,38 @@
           }
         },
         "summary" : "Bekor qilish",
+        "tags" : [ "opening" ]
+      }
+    },
+    "/api/opening-balances/{id}/history" : {
+      "get" : {
+        "description" : "Audit jurnalidan: yaratildi, tahrirlandi, import, tasdiqlandi, bekor qilindi.",
+        "operationId" : "history_5",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/OpeningHistoryEvent"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "BQ tarixi",
         "tags" : [ "opening" ]
       }
     },
@@ -18817,6 +19022,25 @@
         },
         "required" : [ "account", "accountId", "accountKind", "amount", "branchId", "createdAt", "createdBy", "direction", "docType", "id", "item", "itemId", "number", "opDate", "source", "status", "version" ]
       },
+      "CashOpHistoryEvent" : {
+        "type" : "object",
+        "properties" : {
+          "action" : {
+            "type" : "string"
+          },
+          "at" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "employee" : {
+            "type" : "string"
+          },
+          "reason" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "action", "at" ]
+      },
       "CashOpRequest" : {
         "type" : "object",
         "properties" : {
@@ -19625,6 +19849,98 @@
           }
         },
         "required" : [ "action", "at" ]
+      },
+      "CounterpartyImportRequest" : {
+        "type" : "object",
+        "properties" : {
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Filial shartlari (limit, muddatlar) shu filialga yoziladi"
+          },
+          "role" : {
+            "type" : "string",
+            "enum" : [ "CUSTOMER", "SUPPLIER", "ALL" ]
+          },
+          "rows" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ImportRowInput"
+            },
+            "maxItems" : 5000,
+            "minItems" : 0
+          }
+        },
+        "required" : [ "role", "rows" ]
+      },
+      "CounterpartyImportResult" : {
+        "type" : "object",
+        "properties" : {
+          "applied" : {
+            "type" : "boolean"
+          },
+          "created" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "error" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "ok" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "rows" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/CounterpartyImportRow"
+            }
+          },
+          "updated" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Mavjud kartalarga filial sharti qo'shilgan qatorlar"
+          },
+          "warn" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "applied", "created", "error", "ok", "rows", "updated", "warn" ]
+      },
+      "CounterpartyImportRow" : {
+        "type" : "object",
+        "properties" : {
+          "createdId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "apply=true da yaratilgan kontragent"
+          },
+          "existingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "STIR bo'yicha mavjud karta — unga faqat tanlangan filial sharti qo'shiladi"
+          },
+          "messages" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ImportMessage"
+            }
+          },
+          "row" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "OK", "WARN", "ERROR" ]
+          },
+          "tin" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "messages", "row", "status" ]
       },
       "CounterpartyOverviewPage" : {
         "type" : "object",
@@ -24307,6 +24623,25 @@
           }
         },
         "required" : [ "branch", "branchId", "createdAt", "createdBy", "cutoffDate", "id", "kind", "lines", "number", "status", "total" ]
+      },
+      "OpeningHistoryEvent" : {
+        "type" : "object",
+        "properties" : {
+          "action" : {
+            "type" : "string"
+          },
+          "at" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "employee" : {
+            "type" : "string"
+          },
+          "reason" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "action", "at" ]
       },
       "OpeningImportError" : {
         "type" : "object",

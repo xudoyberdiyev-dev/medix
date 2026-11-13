@@ -104,6 +104,8 @@ const pages: [string, string][] = [
   ["/products/1/edit", "98-mahsulot-tahrir"],
   ["/customers/1/edit", "99-mijoz-tahrir"],
   ["/orders?q=yoqmahsulotxyz", "a0-bosh-holat"],
+  ["/customers/import", "a1-mijoz-import"],
+  ["/suppliers/import", "a2-yb-import"],
 ];
 
 async function shot(page: Page, name: string) {

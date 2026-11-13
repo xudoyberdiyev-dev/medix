@@ -401,7 +401,13 @@
     "iType": "Turi",
     "iBy": "Kim yaratdi",
     "iApproved": "Kim tasdiqladi",
-    "iCancelled": "Kim bekor qildi / rad etdi"
+    "iCancelled": "Kim bekor qildi / rad etdi",
+    "tabDoc": "Hujjat",
+    "tabHist": "Tarix",
+    "h_create": "hujjatni yaratdi",
+    "h_approve": "tasdiqladi",
+    "h_reject": "rad etdi",
+    "h_cancel": "bekor qildi"
   },
   "closePage": {
     "title": "Kassa kunini yopish",

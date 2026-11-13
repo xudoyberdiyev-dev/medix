@@ -23,8 +23,8 @@ export type FieldKey =
   | "controlled"
   | "prescription";
 
-export interface ImportField {
-  key: FieldKey;
+export interface ImportField<K extends string = FieldKey> {
+  key: K;
   req: boolean;
   /** Sarlavha sinonimlari (normallangan: lotin, kirill, rus). */
   syn: string[];
@@ -110,11 +110,11 @@ export function normHeader(s: string): string {
     .replace(/[^a-z0-9]/g, "");
 }
 
-export type Mapping = Partial<Record<FieldKey, number>>;
+export type Mapping<K extends string = FieldKey> = Partial<Record<K, number>>;
 
 /** Nom boʻyicha avtomatik moslashtirish (prototip `bqAutoMap`): har ustun bitta maydonga. */
-export function autoMap(fields: ImportField[], headers: string[]): Mapping {
-  const m: Mapping = {};
+export function autoMap<K extends string>(fields: ImportField<K>[], headers: string[]): Mapping<K> {
+  const m: Mapping<K> = {};
   const used = new Set<number>();
   for (const f of fields) {
     headers.forEach((h, i) => {
@@ -130,18 +130,23 @@ export function autoMap(fields: ImportField[], headers: string[]): Mapping {
 }
 
 /** Saqlangan profil (maydon → sarlavha nomi) ni joriy sarlavhalarga qoʻllash. */
-export function mapFromProfile(profile: Record<string, string>, headers: string[]): Mapping {
-  const m: Mapping = {};
+export function mapFromProfile<K extends string = FieldKey>(
+  profile: Record<string, string>,
+  headers: string[],
+  fields: ImportField<K>[] = PRODUCT_FIELDS as unknown as ImportField<K>[],
+): Mapping<K> {
+  const m: Mapping<K> = {};
   for (const [k, title] of Object.entries(profile)) {
     const i = headers.findIndex((h) => h.trim() === title.trim());
-    if (i >= 0 && PRODUCT_FIELDS.some((f) => f.key === k)) m[k as FieldKey] = i;
+    const f = fields.find((x) => x.key === k);
+    if (i >= 0 && f) m[f.key] = i;
   }
   return m;
 }
 
-export function profileFromMap(map: Mapping, headers: string[]): Record<string, string> {
+export function profileFromMap<K extends string>(map: Mapping<K>, headers: string[]): Record<string, string> {
   const out: Record<string, string> = {};
-  for (const [k, i] of Object.entries(map)) {
+  for (const [k, i] of Object.entries(map) as [string, number | undefined][]) {
     if (i != null && i >= 0 && headers[i]?.trim()) out[k] = headers[i].trim();
   }
   return out;
@@ -155,12 +160,17 @@ export function dataRows(grid: string[][], hdr: number): { i: number; cells: str
     .map((cells, k) => ({ i: k + 1, cells }));
 }
 
-export type Fix = Record<number, Partial<Record<FieldKey, string>>>;
+export type Fix<K extends string = FieldKey> = Record<number, Partial<Record<K, string>>>;
 
-export function records(grid: string[][], hdr: number, map: Mapping, fix: Fix): { row: number; values: Record<string, string> }[] {
+export function records<K extends string>(
+  grid: string[][],
+  hdr: number,
+  map: Mapping<K>,
+  fix: Fix<K>,
+): { row: number; values: Record<string, string> }[] {
   return dataRows(grid, hdr).map(({ i, cells }) => {
     const values: Record<string, string> = {};
-    for (const [k, ix] of Object.entries(map)) {
+    for (const [k, ix] of Object.entries(map) as [string, number | undefined][]) {
       if (ix != null && ix >= 0) values[k] = String(cells[ix] ?? "");
     }
     return { row: i, values: { ...values, ...(fix[i] ?? {}) } };
@@ -168,10 +178,10 @@ export function records(grid: string[][], hdr: number, map: Mapping, fix: Fix): 
 }
 
 /** Moslashtirish xatosi: majburiy maydon yoʻq yoki bitta ustun ikki maydonga. */
-export function mappingProblems(fields: ImportField[], map: Mapping): { missing: FieldKey[]; dup: FieldKey[] } {
+export function mappingProblems<K extends string>(fields: ImportField<K>[], map: Mapping<K>): { missing: K[]; dup: K[] } {
   const missing = fields.filter((f) => f.req && !((map[f.key] ?? -1) >= 0)).map((f) => f.key);
-  const used = new Map<number, FieldKey>();
-  const dup: FieldKey[] = [];
+  const used = new Map<number, K>();
+  const dup: K[] = [];
   for (const f of fields) {
     const ix = map[f.key];
     if (ix == null || ix < 0) continue;

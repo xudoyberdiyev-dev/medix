@@ -7,12 +7,15 @@ import { useState, type ReactNode } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { DocumentHeader } from "@/components/ui/document-header";
+import { HistoryTimeline } from "@/components/ui/history-timeline";
 import { ErrorState, ForbiddenState, Skeleton } from "@/components/ui/system-states";
+import { Tabs } from "@/components/ui/tabs";
 import { toast } from "@/components/ui/toast";
 import { can } from "@/features/auth/can";
 import { ensureCsrf, useMe } from "@/features/auth/session";
 import { formatIsoDate } from "@/features/counterparties/api";
 import { api, ApiError, unwrap } from "@/lib/api/client";
+import { cn } from "@/lib/cn";
 import { formatDateTime, formatMoney } from "@/lib/format";
 import { CASH_APPROVE, CASH_CANCEL } from "./api";
 import { OpStatusBadge } from "./cash-sections";
@@ -32,6 +35,7 @@ export function MoneyOpView({ id }: { id: number }) {
   });
   const [dialog, setDialog] = useState<"reject" | "cancel" | null>(null);
   const [busy, setBusy] = useState(false);
+  const [tab, setTab] = useState<"doc" | "hist">("doc");
 
   if (me.data && !allowed) return <ForbiddenState description={t("forbidden")} />;
   if (q.error) {
@@ -125,7 +129,16 @@ export function MoneyOpView({ id }: { id: number }) {
       />
       {o.status === "PENDING" ? <Alert tone="warning" title={tc("pending.atManager")} /> : null}
       {o.cancelReason ? <Alert tone={o.status === "REJECTED" ? "danger" : "info"} title={`${tc("reason")}: ${o.cancelReason}`} /> : null}
-      <div className="grid min-w-0 items-start gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+      <Tabs
+        items={[
+          { key: "doc", label: t("tabDoc") },
+          { key: "hist", label: t("tabHist") },
+        ]}
+        value={tab}
+        onChange={(k) => setTab(k === "hist" ? "hist" : "doc")}
+      />
+      {tab === "hist" ? <CashOpHistory id={o.id} /> : null}
+      <div className={cn("grid min-w-0 items-start gap-5 lg:grid-cols-[minmax(0,1fr)_320px]", tab === "hist" && "hidden")}>
         <section className="rounded-card border border-border bg-surface p-5 shadow-[0_1px_2px_rgba(18,60,58,0.04)]">
           <h2 className="mb-4 text-subtitle">{t("iHead")}</h2>
           <dl className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
@@ -162,5 +175,31 @@ export function MoneyOpView({ id }: { id: number }) {
         />
       ) : null}
     </div>
+  );
+}
+
+const HISTORY: Record<string, "h_create" | "h_approve" | "h_reject" | "h_cancel"> = {
+  create: "h_create",
+  approve: "h_approve",
+  reject: "h_reject",
+  cancel: "h_cancel",
+};
+
+/** «Tarix» yorligʻi (prototip `MoneyOpDoc` → `HistoryTimeline`): audit jurnalidan, kunlar boʻyicha. */
+function CashOpHistory({ id }: { id: number }) {
+  const t = useTranslations("cash.doc");
+  const q = useQuery({
+    queryKey: ["cash-ops", "history", id],
+    queryFn: () => unwrap(api.GET("/api/cash-ops/{id}/history", { params: { path: { id } } })),
+  });
+  const data = q.data?.map((e) => ({ ...e, employee: e.employee ?? undefined, reason: e.reason ?? undefined }));
+  return (
+    <HistoryTimeline
+      query={{ data, error: q.error, refetch: q.refetch }}
+      label={(a) => {
+        const k = HISTORY[a.split(".").pop() ?? ""];
+        return k ? t(k) : a;
+      }}
+    />
   );
 }

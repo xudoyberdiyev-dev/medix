@@ -203,6 +203,14 @@ class CashIT {
         send(post("/api/cash-ops/" + small + "/cancel"), cashier, "{\"reason\":\"Xato\"}").andExpect(status().isForbidden());
         send(post("/api/cash-ops/" + small + "/cancel"), manager, "{\"reason\":\"Xato summa\"}").andExpect(jsonPath("$.status").value("CANCELLED"));
         assertThat(balance(k)).isEqualTo("2500000.00");
+        // Tarix (prototip MoneyOpDoc «Tarix»): yaratildi → bekor qilindi (sabab bilan); rad etilgan — sabab bilan
+        mvc.perform(get("/api/cash-ops/" + small + "/history").cookie(cashier))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].action").value("cash.op.create"))
+                .andExpect(jsonPath("$[1].action").value("cash.op.cancel"))
+                .andExpect(jsonPath("$[1].reason").value("Xato summa"));
+        mvc.perform(get("/api/cash-ops/" + big1 + "/history").cookie(manager))
+                .andExpect(jsonPath("$[*].action", hasItem("cash.op.reject")));
         assertThatThrownBy(() -> jdbc.sql("UPDATE cash_op SET amount = 1 WHERE id = :i").param("i", big2).update()).hasMessageContaining("oʻzgarmaydi");
 
         // Kassa orderi — server PDF: summa so'z bilan, bekor qilingan belgisi

@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -81,6 +82,14 @@ class OpeningController {
     @Operation(summary = "BQ hujjati")
     OpeningDetail get(@PathVariable long id, Authentication auth) {
         return detail(id, auth);
+    }
+
+    @GetMapping("/{id}/history")
+    @PreAuthorize("hasAnyAuthority('opening.list', 'opening.view')")
+    @Operation(summary = "BQ tarixi", description = "Audit jurnalidan: yaratildi, tahrirlandi, import, tasdiqlandi, bekor qilindi.")
+    List<OpeningModels.OpeningHistoryEvent> history(@PathVariable long id, Authentication auth) {
+        detail(id, auth);
+        return openings.history(id);
     }
 
     @PostMapping

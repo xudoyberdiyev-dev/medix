@@ -909,3 +909,30 @@ test("Ombor mudiri: QM ni qabul qiladi — tovar Karantinga, mijoz qarzi kamayad
   // Qaytarish turlari yorligʻi: QM birinchi
   await expect(page.getByRole("link", { name: "Mijozdan qaytarish (QM)", exact: true })).toHaveAttribute("aria-current", "page");
 });
+
+test("CEO: Mijozlar — Excelʼdan yuklash (faylda takror STIR oʻtkazib yuboriladi)", async ({ page }) => {
+  await login(page, CEO_LOGIN, CEO_PASSWORD);
+  await expect(page).toHaveURL(/\/$/);
+  await page.goto("/customers");
+  await page.getByRole("button", { name: "Excelʼdan yuklash" }).click();
+  await expect(page).toHaveURL(/\/customers\/import$/);
+  const csv = [
+    "ИНН;Наименование;Тип;Телефон;Лимит;Отсрочка (дней)",
+    "301234567;Import E2E Dorixona;Аптека;+998901112233;5 000 000;10",
+    "301 234 567;Import E2E Takror;;;;",
+  ].join("\r\n");
+  if (await page.getByRole("combobox", { name: "Filial", exact: true }).count()) await choose(page, "Filial", /./);
+  await page.getByTestId("import-file").setInputFiles({ name: "mijozlar.csv", mimeType: "text/csv", buffer: Buffer.from(csv, "utf8") });
+  await expect(page.locator("section").getByText("mijozlar.csv")).toBeVisible();
+  await page.getByRole("button", { name: "Keyingi qadam" }).click();
+  await page.getByRole("button", { name: "Keyingi qadam" }).click();
+  await expect(page.getByText("Nom boʻyicha avtomatik moslashtirildi: 6 / 8 maydon")).toBeVisible();
+  await page.getByRole("button", { name: "Keyingi qadam" }).click();
+  await expect(page.locator("tr[data-row='2']")).toContainText("Faylda takror STIR — 1-qator bilan bir xil");
+  await expect(page.locator("tr[data-row='1']")).toContainText("Yangi mijoz");
+  await page.getByRole("button", { name: "Keyingi qadam" }).click();
+  await expect(page.getByText("1 ta mijoz yaratiladi, 1 ta xato qator oʻtkazib yuboriladi")).toBeVisible();
+  await page.getByRole("button", { name: "1 ta mijozni yaratish" }).click();
+  await expect(page.getByText("1 ta mijoz yaratildi, 1 ta qator oʻtkazib yuborildi").first()).toBeVisible();
+  await expect(page).toHaveURL(/\/customers$/);
+});
