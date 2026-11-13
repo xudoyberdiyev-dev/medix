@@ -378,12 +378,10 @@ function ActiveMarking({ work }: { work: MarkWork }) {
   const [confirmError, setConfirmError] = useState<unknown>(null);
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
-  const [verified, setVerified] = useState(false);
   const exportedAt = work.exportedAt ?? null;
-  // O10a: yangi kod qabul qilinsa server faylni «yuklab olinmagan» qiladi — tasdiq belgisi ham qaytadan
-  useEffect(() => {
-    if (!exportedAt) setVerified(false);
-  }, [exportedAt]);
+  // O10a: tasdiq aynan shu yuklab olingan faylga tegishli — yangi kod qabul qilinsa (fayl qayta kerak) belgi oʻzi tushadi
+  const [verifiedFor, setVerifiedFor] = useState<string | null>(null);
+  const verified = exportedAt !== null && verifiedFor === exportedAt;
   const hasMarked = work.lines.length > 0;
   const hasCodes = work.codes.length > 0;
   const unconfirmed = work.unmarkedLines.filter((l) => !l.confirmed);
@@ -686,7 +684,9 @@ function ActiveMarking({ work }: { work: MarkWork }) {
                 </Button>
                 <span className={cn("inline-flex items-center gap-1 text-caption", exportedAt ? "text-success" : "text-text-secondary")}>
                   <Icon icon={exportedAt ? CheckCircle2 : Info} size="sm" />
-                  {exportedAt ? tr("marking.verifyExported", { time: formatDateTime(exportedAt) }) : tr("marking.verifyNotExported")}
+                  {exportedAt
+                    ? tr("marking.verifyExported", { time: formatDateTime(new Date(exportedAt)) })
+                    : tr("marking.verifyNotExported")}
                 </span>
               </div>
               {exportError ? <Alert tone="danger" title={exportError} className="mt-2" /> : null}
@@ -695,7 +695,7 @@ function ActiveMarking({ work }: { work: MarkWork }) {
                 label={tr("marking.verifyCheck")}
                 checked={verified}
                 disabled={!exportedAt}
-                onChange={setVerified}
+                onChange={(v) => setVerifiedFor(v ? exportedAt : null)}
               />
             </section>
           ) : null}

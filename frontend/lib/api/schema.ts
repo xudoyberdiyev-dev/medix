@@ -2586,7 +2586,7 @@ export interface paths {
         put?: never;
         /**
          * Markirovkani yakunlash
-         * @description Barcha kodlar skanerlangan va markirovkasiz qatorlar tasdiqlangan bo'lsa → «Hisobdan o'tkazilmoqda».
+         * @description Barcha kodlar skanerlangan va markirovkasiz qatorlar tasdiqlangan bo'lsa → «Hisobdan o'tkazilmoqda». O10a: kodlar bo'lsa — avval tekshiruv fayli (verify-export) yuklab olinadi va verified=true («Saplayn'da tekshirildi»).
          */
         post: operations["finish_1"];
         delete?: never;
@@ -2649,6 +2649,23 @@ export interface paths {
          * @description Bir markirovkachida bitta faol buyurtma.
          */
         post: operations["start_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/marking/orders/{id}/verify-export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Saplayn tekshiruvi uchun kodlar .xlsx */
+        get: operations["verifyExport"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -9271,6 +9288,10 @@ export interface components {
             id: number;
             name: string;
         };
+        FinishRequest: {
+            /** @description «Kodlar firmamiz nomida va takrorlanmagan — Saplayn'da tekshirdim» */
+            verified: boolean;
+        };
         FinishResult: {
             /** @enum {string} */
             status: "PLANNED" | "IN_TRANSIT" | "RETURN_WAIT" | "DONE" | "CANCELLED";
@@ -10077,6 +10098,11 @@ export interface components {
             customer: string;
             /** Format: date-time */
             deadline?: string;
+            /**
+             * Format: date-time
+             * @description O10a: Saplayn tekshiruvi fayli yuklab olingan payt (yangi kod qabul qilinsa — null)
+             */
+            exportedAt?: string;
             /** Format: int64 */
             id: number;
             /** @description Markirovkali qatorlar (skanerlanadi) */
@@ -18262,7 +18288,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["FinishRequest"];
+            };
+        };
         responses: {
             /** @description OK */
             200: {
@@ -18351,6 +18381,26 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["MarkWork"];
                 };
+            };
+        };
+    };
+    verifyExport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

@@ -5774,7 +5774,7 @@
     },
     "/api/marking/orders/{id}/finish" : {
       "post" : {
-        "description" : "Barcha kodlar skanerlangan va markirovkasiz qatorlar tasdiqlangan bo'lsa → «Hisobdan o'tkazilmoqda».",
+        "description" : "Barcha kodlar skanerlangan va markirovkasiz qatorlar tasdiqlangan bo'lsa → «Hisobdan o'tkazilmoqda». O10a: kodlar bo'lsa — avval tekshiruv fayli (verify-export) yuklab olinadi va verified=true («Saplayn'da tekshirildi»).",
         "operationId" : "finish_1",
         "parameters" : [ {
           "in" : "path",
@@ -5785,6 +5785,15 @@
             "format" : "int64"
           }
         } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/FinishRequest"
+              }
+            }
+          }
+        },
         "responses" : {
           "200" : {
             "content" : {
@@ -5919,6 +5928,27 @@
           }
         },
         "summary" : "Markirovkani boshlash",
+        "tags" : [ "marking" ]
+      }
+    },
+    "/api/marking/orders/{id}/verify-export" : {
+      "get" : {
+        "operationId" : "verifyExport",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        },
+        "summary" : "Saplayn tekshiruvi uchun kodlar .xlsx",
         "tags" : [ "marking" ]
       }
     },
@@ -21958,6 +21988,16 @@
         },
         "required" : [ "count", "id", "name" ]
       },
+      "FinishRequest" : {
+        "type" : "object",
+        "properties" : {
+          "verified" : {
+            "type" : "boolean",
+            "description" : "«Kodlar firmamiz nomida va takrorlanmagan — Saplayn'da tekshirdim»"
+          }
+        },
+        "required" : [ "verified" ]
+      },
       "FinishResult" : {
         "type" : "object",
         "properties" : {
@@ -23977,6 +24017,11 @@
           "deadline" : {
             "type" : "string",
             "format" : "date-time"
+          },
+          "exportedAt" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "O10a: Saplayn tekshiruvi fayli yuklab olingan payt (yangi kod qabul qilinsa — null)"
           },
           "id" : {
             "type" : "integer",

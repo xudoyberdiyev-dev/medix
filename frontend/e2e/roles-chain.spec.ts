@@ -308,12 +308,12 @@ test("Markirovkachi: birinchi kirish, kodlarni skanerlaydi (xato kod rad etiladi
   await expect(page.getByText(/shu buyurtmada allaqachon skanerlangan/).first()).toBeVisible();
   await expect(page.getByText("2 / 2").first()).toBeVisible();
   // E1: aralash buyurtma — kodlar toʻliq, lekin markirovkasiz qator (Paracetamol) tasdiqlanmaguncha yakunlab boʻlmaydi
-  await expect(page.getByRole("button", { name: "Markirovkani yakunlash" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Saplaynʼda tekshirildi — yakunlash" })).toBeDisabled();
   const unmarked = page.getByRole("region", { name: "Markirovkasiz qatorlar" });
   await expect(unmarked).toContainText("Paracetamol E2E");
   await unmarked.getByRole("button", { name: "Tasdiqlash", exact: true }).click();
   await expect(unmarked.getByText("Tasdiqlandi")).toBeVisible();
-  await page.getByRole("button", { name: "Markirovkani yakunlash" }).click();
+  await saplaynFinish(page);
   await expect(page.getByText("Markirovka yakunlandi").first()).toBeVisible();
 });
 
@@ -936,3 +936,15 @@ test("CEO: Mijozlar — Excelʼdan yuklash (faylda takror STIR oʻtkazib yuboril
   await expect(page.getByText("1 ta mijoz yaratildi, 1 ta qator oʻtkazib yuborildi").first()).toBeVisible();
   await expect(page).toHaveURL(/\/customers$/);
 });
+
+/** O10a: kodlar boʻlsa — Excelʼga chiqarish → «Saplaynʼda tekshirdim» → yakunlash. */
+async function saplaynFinish(page: Page) {
+  const finish = page.getByRole("button", { name: "Saplaynʼda tekshirildi — yakunlash" });
+  await expect(finish).toBeDisabled();
+  const download = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Excelʼga chiqarish" }).click();
+  expect((await download).suggestedFilename()).toMatch(/^saplayn-.*\.xlsx$/);
+  await expect(page.getByText(/^Yuklab olindi:/)).toBeVisible();
+  await page.getByRole("checkbox", { name: /Saplaynʼda tekshirdim/ }).check();
+  await finish.click();
+}
