@@ -152,6 +152,7 @@ export function BankReconTab(props: { accounts: MoneyAccount[]; canEdit: boolean
         </div>
         <div className="w-40">
           <TextField
+            variant="date"
             label={t("statementDate")}
             value={date}
             onChange={(v) => {

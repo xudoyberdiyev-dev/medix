@@ -32,6 +32,7 @@ import { formatIsoDate, parseUzDate } from "@/features/counterparties/api";
 import { describeError } from "@/features/setup/form-error";
 import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
+import { maskUzDate } from "@/lib/date-mask";
 import { cn } from "@/lib/cn";
 import { formatDate } from "@/lib/format";
 import { displaySetting, settingChanges, settingError, vatRateValid, type SettingKind } from "./settings-form";
@@ -432,7 +433,8 @@ function VatSection({ view, onSaved, onFail }: { view: View; onSaved: (d: View, 
               <input
                 value={from}
                 placeholder="01.01.2027"
-                onChange={(e) => setFrom(e.target.value)}
+                inputMode="numeric"
+                onChange={(e) => setFrom(maskUzDate(e.target.value, from))}
                 className={cn(
                   "h-[34px] w-[140px] rounded-lg border px-2.5 font-mono text-[13px] outline-none",
                   err ? "border-danger" : "border-border",

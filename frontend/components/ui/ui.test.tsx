@@ -52,6 +52,26 @@ describe("TextField", () => {
     expect(parseAmount("1,234")).toBeNull();
   });
 
+  it("sana maydoni: raqamlar yozilsa nuqtalar oʻzi qoʻyiladi, oʻchirishda nuqta ham oʻchadi (O1)", async () => {
+    function Wrapper() {
+      const [v, setV] = useState("");
+      return <TextField label="Sana" variant="date" value={v} onChange={setV} />;
+    }
+    render(<Wrapper />);
+    const input = screen.getByLabelText("Sana");
+    await userEvent.type(input, "11112026");
+    expect(input).toHaveValue("11.11.2026");
+    await userEvent.type(input, "{backspace}{backspace}{backspace}{backspace}");
+    expect(input).toHaveValue("11.11");
+    await userEvent.type(input, "{backspace}");
+    expect(input).toHaveValue("11.1");
+    await userEvent.type(input, "{backspace}");
+    expect(input).toHaveValue("11");
+    await userEvent.clear(input);
+    await userEvent.paste("2026-03-21");
+    expect(input).toHaveValue("21.03.2026");
+  });
+
   it("summa maydoni fokusdan chiqqanda formatlanadi", async () => {
     function Wrapper() {
       const [v, setV] = useState("");

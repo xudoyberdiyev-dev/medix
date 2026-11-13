@@ -398,6 +398,7 @@ function FormBody({
                   </div>
                   <div data-f="pharmUntil">
                     <TextField
+                      variant="date"
                       label={t("until")}
                       value={f.pharmUntil}
                       onChange={set("pharmUntil")}
@@ -433,6 +434,7 @@ function FormBody({
                     </div>
                     <div data-f="ctrlUntil">
                       <TextField
+                        variant="date"
                         label={t("until")}
                         value={f.ctrlUntil}
                         onChange={set("ctrlUntil")}

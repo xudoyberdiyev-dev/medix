@@ -171,6 +171,7 @@ function InfoDrawer({ profile, onClose }: { profile: Profile; onClose: () => voi
         />
         <TextField label={t("position")} value={form.position} onChange={set("position")} error={server.fields.position} />
         <TextField
+          variant="date"
           label={t("birthDate")}
           value={form.birth}
           onChange={set("birth")}

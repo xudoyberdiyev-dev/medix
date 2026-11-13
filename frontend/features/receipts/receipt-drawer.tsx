@@ -464,7 +464,7 @@ function Editor({
           hint={editable && lines.length > 0 ? t("field.warehouseHint") : undefined}
           required
         />
-        <TextField label={t("field.date")} value={date} onChange={setDate} placeholder={dp} disabled={!editable} required />
+        <TextField variant="date" label={t("field.date")} value={date} onChange={setDate} placeholder={dp} disabled={!editable} required />
         <Select
           label={t("field.supplier")}
           value={supplier}
@@ -480,7 +480,14 @@ function Editor({
           required
         />
         <TextField label={t("field.invoiceNumber")} value={invoice} onChange={setInvoice} placeholder="NB-24871" disabled={!editable} />
-        <TextField label={t("field.invoiceDate")} value={invoiceDate} onChange={setInvoiceDate} placeholder={dp} disabled={!editable} />
+        <TextField
+          variant="date"
+          label={t("field.invoiceDate")}
+          value={invoiceDate}
+          onChange={setInvoiceDate}
+          placeholder={dp}
+          disabled={!editable}
+        />
         <TextField label={t("field.factura")} value={factura} onChange={setFactura} disabled={!editable} />
         <Select
           label={t("field.paymentType")}
@@ -500,6 +507,7 @@ function Editor({
         />
         {prepaid || fromBonus ? null : (
           <TextField
+            variant="date"
             label={t("field.due")}
             value={due}
             onChange={setDue}
@@ -553,6 +561,7 @@ function Editor({
                 required
               />
               <TextField
+                variant="date"
                 label={t("field.discountDate")}
                 value={discountDate}
                 onChange={setDiscountDate}
@@ -589,12 +598,14 @@ function Editor({
           />
           <TextField label={t("field.batch")} value={adding.batch} onChange={(v) => setAdding((a) => ({ ...a, batch: v }))} />
           <TextField
+            variant="date"
             label={t("field.produced")}
             value={adding.produced}
             onChange={(v) => setAdding((a) => ({ ...a, produced: v }))}
             placeholder={dp}
           />
           <TextField
+            variant="date"
             label={t("field.expiry")}
             value={adding.expiry}
             onChange={(v) => setAdding((a) => ({ ...a, expiry: v }))}

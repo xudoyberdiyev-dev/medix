@@ -310,6 +310,7 @@ function MoneyOpForm({ onDone }: { onDone: () => void }) {
                 {kind !== "io" ? (
                   <div data-f="date" className="md:col-start-1">
                     <TextField
+                      variant="date"
                       label={t("hDate")}
                       value={date}
                       onChange={setDate}

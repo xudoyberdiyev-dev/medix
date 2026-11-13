@@ -27,6 +27,7 @@ export function DayField({
   return (
     <div className="w-36">
       <TextField
+        variant="date"
         label={label}
         size="sm"
         value={text}

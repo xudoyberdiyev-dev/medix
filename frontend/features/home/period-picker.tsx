@@ -57,6 +57,7 @@ export function PeriodPicker({ state }: { state: PeriodState }) {
         <>
           <div className="w-36">
             <TextField
+              variant="date"
               label={t("from")}
               size="sm"
               value={state.customFrom}
@@ -67,6 +68,7 @@ export function PeriodPicker({ state }: { state: PeriodState }) {
           </div>
           <div className="w-36">
             <TextField
+              variant="date"
               label={t("to")}
               size="sm"
               value={state.customTo}

@@ -63,6 +63,7 @@ export function BankRefFields({
           disabled={disabled}
         />
         <TextField
+          variant="date"
           label={t("bankDate")}
           value={value.bankDate}
           onChange={(bankDate) => onChange({ ...value, bankDate })}

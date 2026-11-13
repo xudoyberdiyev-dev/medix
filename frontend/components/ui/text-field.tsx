@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { Eye, EyeOff, Search, X } from "lucide-react";
 import { useEffect, useId, useState, type InputHTMLAttributes } from "react";
 import { cn } from "@/lib/cn";
+import { maskUzDate } from "@/lib/date-mask";
 import { formatMoney } from "@/lib/format";
 import { Field, controlClass, hintId, type ControlSize } from "./field";
 import { Icon } from "./icon";
@@ -12,7 +13,8 @@ export interface TextFieldProps extends Omit<InputHTMLAttributes<HTMLInputElemen
   label: string;
   value: string;
   onChange: (value: string) => void;
-  variant?: "text" | "search" | "password" | "amount";
+  /** `date` — KK.OO.YYYY maskasi: faqat raqam yoziladi, nuqtalar oʻzi qoʻyiladi (O1). */
+  variant?: "text" | "search" | "password" | "amount" | "date";
   suffix?: string;
   hint?: string;
   error?: string;
@@ -97,13 +99,17 @@ export function TextField({
           id={id}
           data-slash-focus={slash ? "" : undefined}
           type={variant === "password" && !showPassword ? "password" : variant === "search" ? "search" : "text"}
-          inputMode={isAmount ? "decimal" : undefined}
+          inputMode={isAmount ? "decimal" : variant === "date" ? "numeric" : undefined}
+          maxLength={variant === "date" ? 10 : undefined}
+          autoComplete={variant === "date" ? "off" : undefined}
           value={shown}
           required={required}
           disabled={disabled}
           aria-invalid={error ? true : undefined}
           aria-describedby={error || hint ? hintId(id) : undefined}
-          onChange={(e) => (isAmount ? setDraft(e.target.value) : onChange(e.target.value))}
+          onChange={(e) =>
+            isAmount ? setDraft(e.target.value) : onChange(variant === "date" ? maskUzDate(e.target.value, value) : e.target.value)
+          }
           onFocus={(e) => {
             if (isAmount) setDraft(value === "" ? "" : formatMoney(value));
             onFocus?.(e);

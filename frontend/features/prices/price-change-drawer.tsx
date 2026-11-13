@@ -300,6 +300,7 @@ function Editor({
         ) : null}
         <div className="grid grid-cols-2 gap-4">
           <TextField
+            variant="date"
             label={t("effectiveFrom")}
             value={date}
             onChange={setDate}

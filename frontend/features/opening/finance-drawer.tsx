@@ -191,6 +191,7 @@ function Editor(props: {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <TextField label={t("fin.branch")} value={doc?.branch ?? props.branchName} onChange={() => undefined} disabled />
           <TextField
+            variant="date"
             label={t("fin.cutoff")}
             value={date}
             onChange={setDate}
@@ -254,6 +255,7 @@ function Editor(props: {
                 {debt ? (
                   <>
                     <TextField
+                      variant="date"
                       label={t("fin.due")}
                       size="sm"
                       value={l.dueDate ?? ""}

@@ -10,6 +10,7 @@ import { todayTashkent } from "@/features/counterparties/api";
 import type { Zone } from "@/features/organization/api";
 import { useThresholds } from "@/features/settings/thresholds";
 import { ZONE_ICON } from "@/features/stock/zone-icon";
+import { maskUzDate } from "@/lib/date-mask";
 import { cn } from "@/lib/cn";
 import { formatMoney, formatQuantity } from "@/lib/format";
 import type { ReceiptDetail } from "./api";
@@ -236,9 +237,9 @@ export function ReceiptLinesGrid({
           data-cell={`${i}|${key}`}
           aria-label={t("cell", { col: t(`col.${key}`), n: i + 1 })}
           value={key === "price" ? value.replace(/^(\d+)\.(\d+)$/, "$1,$2") : value}
-          inputMode={key === "batch" ? "text" : "decimal"}
+          inputMode={key === "batch" ? "text" : key === "exp" ? "numeric" : "decimal"}
           placeholder={key === "exp" ? t("datePh") : key === "price" ? "0,00" : key === "batch" ? "" : "0"}
-          onChange={(e) => onChange(i, { [field]: e.target.value })}
+          onChange={(e) => onChange(i, { [field]: key === "exp" ? maskUzDate(e.target.value, value) : e.target.value })}
           onKeyDown={(e) => onKey(e, i, key)}
           className={cn(
             "h-full w-full bg-transparent px-3 outline-none focus:bg-surface focus:shadow-[inset_0_0_0_2px_var(--color-primary)]",

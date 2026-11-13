@@ -337,6 +337,7 @@ export function PriceSetPage() {
           options={activeBranches.map((b) => ({ value: String(b.id), label: b.name, sub: b.code }))}
         />
         <TextField
+          variant="date"
           label={t("eff")}
           value={eff}
           onChange={(v) => (setEff(v), setEffErr(undefined))}
