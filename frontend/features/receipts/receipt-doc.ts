@@ -41,3 +41,15 @@ export function receiptSteps(
   const at = order.indexOf(status);
   return order.map((k, i) => ({ key: k, state: i < at || status === "POSTED" ? "done" : i === at ? "cur" : "next" }));
 }
+
+/** Toʻlov kuni hisoblanadigan sana: hisob-faktura sanasi, yoʻq boʻlsa kirim sanasi (O7, egasi qarori 13.11.2026). */
+export function dueBase(receiptIso: string, invoiceIso: string | undefined): string {
+  return invoiceIso || receiptIso;
+}
+
+/** Standart toʻlov kuni = asos sana + YB sharti (kun). ISO `YYYY-MM-DD`. */
+export function standardDue(receiptIso: string, invoiceIso: string | undefined, days: number): string {
+  const [y, m, d] = dueBase(receiptIso, invoiceIso).split("-").map(Number);
+  const at = new Date(Date.UTC(y, m - 1, d + days));
+  return at.toISOString().slice(0, 10);
+}

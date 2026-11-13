@@ -146,8 +146,10 @@ class Counterparties {
         List<Terms> terms = jdbc.sql("""
                 SELECT t.branch_id, t.credit_limit, t.payment_days, t.price_type_id, pt.name AS price_type, t.min_shelf_life_days,
                        t.operator_employee_id, op.full_name AS operator, t.supplier_payment_days, t.default_payment_type,
-                       t.supply_employee_id, se.full_name AS supply_employee, t.discount_pct, t.supplier_delivery_days
+                       t.supply_employee_id, se.full_name AS supply_employee, t.discount_pct, t.supplier_delivery_days,
+                       t.sales_zone_id, sz.name AS sales_zone
                 FROM counterparty_branch_terms t
+                LEFT JOIN sales_zone sz ON sz.id = t.sales_zone_id
                 LEFT JOIN price_type pt ON pt.id = t.price_type_id
                 LEFT JOIN employee op ON op.id = t.operator_employee_id
                 LEFT JOIN employee se ON se.id = t.supply_employee_id
@@ -162,7 +164,7 @@ class Counterparties {
                         ref(rs, "supply_employee_id", "supply_employee"),
                         Optional.ofNullable(rs.getBigDecimal("discount_pct")).map(v -> v.setScale(2, java.math.RoundingMode.HALF_UP).toPlainString())
                                 .orElse(null),
-                        (Integer) rs.getObject("supplier_delivery_days")))
+                        (Integer) rs.getObject("supplier_delivery_days"), ref(rs, "sales_zone_id", "sales_zone")))
                 .list()
                 .stream()
                 .filter(t -> actor.canAccessBranch(t.branchId()))
@@ -335,6 +337,12 @@ class Counterparties {
 
     @Transactional
     void saveTerms(long counterpartyId, long branchId, TermsRequest r, boolean customerSide, boolean supplierSide) {
+        saveTerms(counterpartyId, branchId, r, customerSide, supplierSide, false);
+    }
+
+    /** {@code requireZone} — shakldan saqlashda: filialda faol savdo zonasi bo'lsa, mijoz uchun zona majburiy (O6). */
+    @Transactional
+    void saveTerms(long counterpartyId, long branchId, TermsRequest r, boolean customerSide, boolean supplierSide, boolean requireZone) {
         lockCard(counterpartyId);
         if (!branchExists(branchId)) {
             throw MedixException.badRequest("employee.branchUnknown");
@@ -356,9 +364,10 @@ class Counterparties {
         p.put("supply", r.supplyEmployeeId());
         p.put("disc", r.discountPct());
         p.put("ddays", r.supplierDeliveryDays());
+        p.put("zone", r.salesZoneId());
         Map<String, Object> before = jdbc.sql("""
                 SELECT credit_limit, payment_days, price_type_id, min_shelf_life_days, operator_employee_id, supplier_payment_days,
-                       default_payment_type, supply_employee_id, discount_pct, supplier_delivery_days
+                       default_payment_type, supply_employee_id, discount_pct, supplier_delivery_days, sales_zone_id
                 FROM counterparty_branch_terms WHERE counterparty_id = :cp AND branch_id = :branch FOR UPDATE""")
                 .param("cp", counterpartyId)
                 .param("branch", branchId)
@@ -376,6 +385,7 @@ class Counterparties {
                 p.put("shelf", before.get("min_shelf_life_days"));
                 p.put("operator", before.get("operator_employee_id"));
                 p.put("disc", before.get("discount_pct"));
+                p.put("zone", before.get("sales_zone_id"));
             }
             if (!supplierSide) {
                 p.put("sdays", before.get("supplier_payment_days"));
@@ -385,7 +395,7 @@ class Counterparties {
             }
         } else {
             if (!customerSide) {
-                for (String k : List.of("limit", "days", "price", "shelf", "operator", "disc")) {
+                for (String k : List.of("limit", "days", "price", "shelf", "operator", "disc", "zone")) {
                     p.put(k, null);
                 }
             }
@@ -395,17 +405,20 @@ class Counterparties {
                 }
             }
         }
+        if (customerSide) {
+            checkSalesZone(counterpartyId, branchId, r.salesZoneId(), before == null ? null : (Number) before.get("sales_zone_id"), requireZone);
+        }
         jdbc.sql("""
                 INSERT INTO counterparty_branch_terms (counterparty_id, branch_id, credit_limit, payment_days, price_type_id,
                        min_shelf_life_days, operator_employee_id, supplier_payment_days, default_payment_type, supply_employee_id,
-                       discount_pct, supplier_delivery_days)
-                VALUES (:cp, :branch, :limit, :days, :price, :shelf, :operator, :sdays, :ptype, :supply, :disc, :ddays)
+                       discount_pct, supplier_delivery_days, sales_zone_id)
+                VALUES (:cp, :branch, :limit, :days, :price, :shelf, :operator, :sdays, :ptype, :supply, :disc, :ddays, :zone)
                 ON CONFLICT (counterparty_id, branch_id) DO UPDATE SET credit_limit = excluded.credit_limit,
                        payment_days = excluded.payment_days, price_type_id = excluded.price_type_id,
                        min_shelf_life_days = excluded.min_shelf_life_days, operator_employee_id = excluded.operator_employee_id,
                        supplier_payment_days = excluded.supplier_payment_days, default_payment_type = excluded.default_payment_type,
                        supply_employee_id = excluded.supply_employee_id, discount_pct = excluded.discount_pct,
-                       supplier_delivery_days = excluded.supplier_delivery_days, updated_at = now(),
+                       supplier_delivery_days = excluded.supplier_delivery_days, sales_zone_id = excluded.sales_zone_id, updated_at = now(),
                        version = counterparty_branch_terms.version + 1""")
                 .params(p)
                 .update();
@@ -414,6 +427,32 @@ class Counterparties {
         after.put("limit", p.get("limit") == null ? null : p.get("limit").toString());
         after.put("disc", p.get("disc") == null ? null : p.get("disc").toString());
         audit.record(AuditEntry.of("counterparty.terms", "counterparty", counterpartyId).change(before, after));
+    }
+
+    /**
+     * Savdo zonasi (O6): shu filialniki bo'lishi va faol bo'lishi kerak (avval biriktirilgan nofaol zona saqlanaveradi).
+     * Shakldan saqlashda filialda faol zona bo'lsa — mijoz uchun majburiy; zonasiz eski mijozlar faqat tahrirda talab qilinadi.
+     */
+    private void checkSalesZone(long counterpartyId, long branchId, Long zoneId, Number current, boolean requireZone) {
+        if (zoneId == null) {
+            boolean customer = jdbc.sql("SELECT is_customer FROM counterparty WHERE id = :c").param("c", counterpartyId)
+                    .query(Boolean.class).optional().orElse(false);
+            boolean zonesExist = jdbc.sql("SELECT EXISTS (SELECT 1 FROM sales_zone WHERE branch_id = :b AND active)")
+                    .param("b", branchId).query(Boolean.class).single();
+            if (requireZone && customer && zonesExist) {
+                throw MedixException.badRequest("salesZone.required");
+            }
+            return;
+        }
+        boolean ok = jdbc.sql("SELECT EXISTS (SELECT 1 FROM sales_zone WHERE id = :z AND branch_id = :b AND (active OR id = :cur))")
+                .param("z", zoneId)
+                .param("b", branchId)
+                .param("cur", current == null ? -1L : current.longValue())
+                .query(Boolean.class)
+                .single();
+        if (!ok) {
+            throw MedixException.badRequest("salesZone.invalid");
+        }
     }
 
     /**

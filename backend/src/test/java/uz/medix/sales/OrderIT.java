@@ -1959,4 +1959,40 @@ class OrderIT {
                 .query(Integer.class)
                 .single();
     }
+
+    /** O8 (egasi 13.11.2026): qaytarish muddati — Operator muddati o'tgan sotuvni qaytara olmaydi, qm.late (Filial rahbari) bilan «Muddatdan keyin». */
+    @Test
+    void customerReturnAfterDeadlineNeedsLatePermission() throws Exception {
+        Place p = place();
+        long c = customer(p.branchId(), null);
+        Cookie operator = loginAs("OPERATOR", p.branchId());
+        Cookie keeper = loginAs("WAREHOUSE_MANAGER", p.branchId());
+        Cookie picker = loginAs("PICKER", p.branchId());
+        Cookie manager = loginAs("BRANCH_MANAGER", p.branchId());
+        long prod = product(p, "BY Qaytarish muddati", "1000", 20, null, null);
+        long o = delivered(p, c, prod, 4, operator, keeper, picker);
+        long sale = jdbc.sql("SELECT id FROM sale WHERE order_id = :o").param("o", o).query(Long.class).single();
+
+        // Bugun yetkazilgan — muddat ichida
+        mvc.perform(get("/api/customer-returns/sales").param("customerId", "" + c).cookie(operator))
+                .andExpect(jsonPath("$[0].daysAgo").value(0))
+                .andExpect(jsonPath("$[0].late").value(false));
+
+        // Yetkazilgan sana 15 kun oldin (yakunlangan buyurtma triggeri faqat shu sinov uchun chetlab o'tiladi)
+        jdbc.sql("DO $$ BEGIN SET LOCAL session_replication_role = replica; "
+                + "UPDATE sales_order SET status_changed_at = now() - interval '15 days' WHERE id = " + o + "; END $$").update();
+        mvc.perform(get("/api/customer-returns/sales").param("customerId", "" + c).cookie(operator))
+                .andExpect(jsonPath("$[0].daysAgo").value(15))
+                .andExpect(jsonPath("$[0].late").value(true));
+        MvcResult ls = mvc.perform(get("/api/customer-returns/sales/" + sale + "/lines").cookie(operator)).andReturn();
+        long saleLine = ((Number) JsonPath.read(ls.getResponse().getContentAsString(), "$[0].saleLineId")).longValue();
+        String body = "{\"saleId\":" + sale + ",\"lines\":[{\"saleLineId\":" + saleLine + ",\"qty\":1,\"reason\":\"DAMAGED\"}]}";
+
+        send(post("/api/customer-returns"), operator, body)
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("qm.lateReturn"));
+        send(post("/api/customer-returns"), manager, body)
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.late").value(true));
+    }
 }

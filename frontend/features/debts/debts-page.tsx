@@ -77,6 +77,7 @@ export function DebtsPage({ side }: { side: Side }) {
   const [statuses, setStatuses] = useState<DebtStatus[]>([]);
   const [regions, setRegions] = useState<string[]>([]);
   const [operators, setOperators] = useState<string[]>([]);
+  const [zones, setZones] = useState<string[]>([]);
   const all = useMemo(() => report.data?.rows ?? [], [report.data]);
   const rows = useMemo(
     () =>
@@ -88,13 +89,14 @@ export function DebtsPage({ side }: { side: Side }) {
               inAges(r, ages) &&
               (statuses.length === 0 || statuses.includes(statusOf(r))) &&
               (regions.length === 0 || regions.includes(r.region ?? "")) &&
-              (operators.length === 0 || (r.operator ?? "").split(", ").some((o) => operators.includes(o)))
+              (operators.length === 0 || (r.operator ?? "").split(", ").some((o) => operators.includes(o))) &&
+              (zones.length === 0 || (r.salesZone ?? "").split(", ").some((z) => zones.includes(z)))
             : !overdueOnly || r.buckets.overdue !== "0.00"),
       ),
-    [all, q, overdueOnly, isCustomer, tab, ages, statuses, regions, operators],
+    [all, q, overdueOnly, isCustomer, tab, ages, statuses, regions, operators, zones],
   );
   const filtered = isCustomer
-    ? q !== "" || tab !== "all" || ages.length > 0 || statuses.length > 0 || regions.length > 0 || operators.length > 0
+    ? q !== "" || tab !== "all" || ages.length > 0 || statuses.length > 0 || regions.length > 0 || operators.length > 0 || zones.length > 0
     : q !== "" || overdueOnly;
   const clearFilters = () => {
     setQ("");
@@ -103,6 +105,7 @@ export function DebtsPage({ side }: { side: Side }) {
     setAges([]);
     setStatuses([]);
     setRegions([]);
+    setZones([]);
     setOperators([]);
   };
   const tr = useTranslations("debts.recv");
@@ -138,6 +141,7 @@ export function DebtsPage({ side }: { side: Side }) {
   };
   const regionOptions = valuesOf((r) => [r.region ?? ""]);
   const operatorOptions = valuesOf((r) => (r.operator ? r.operator.split(", ") : [""]));
+  const zoneOptions = valuesOf((r) => (r.salesZone ? r.salesZone.split(", ") : [""]));
 
   if (me.data && !allowed) return <ForbiddenState description={t("forbidden", { title })} />;
 
@@ -375,6 +379,7 @@ export function DebtsPage({ side }: { side: Side }) {
                 <>
                   <MultiFilter label={tr("regionFilter")} options={regionOptions} selected={regions} onChange={setRegions} />
                   <MultiFilter label={tr("operatorFilter")} options={operatorOptions} selected={operators} onChange={setOperators} />
+                  <MultiFilter label={tr("zoneFilter")} options={zoneOptions} selected={zones} onChange={setZones} />
                   <MultiFilter
                     label={tr("statusFilter")}
                     options={(["ok", "overdue", "limit", "adv"] as const).map((v) => ({

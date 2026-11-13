@@ -19,7 +19,14 @@ import { TextField } from "@/components/ui/text-field";
 import { toast } from "@/components/ui/toast";
 import { can } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
-import { PAYMENT_TYPE_VALUES, formatIsoDate, parseMoneyInput, parseUzDate, todayTashkent } from "@/features/counterparties/api";
+import {
+  PAYMENT_TYPE_VALUES,
+  formatIsoDate,
+  parseMoneyInput,
+  parseUzDate,
+  todayTashkent,
+  useCounterparty,
+} from "@/features/counterparties/api";
 import { DeactivateDialog } from "@/features/organization/deactivate-dialog";
 import { useBranchList, useWarehouses, zoneLabel, type Zone } from "@/features/organization/api";
 import { useBranchStore } from "@/lib/stores/branch";
@@ -52,7 +59,7 @@ import {
 } from "./api";
 import { ReceiptCatalogDialog } from "./receipt-catalog-dialog";
 import { ReceiptLinesGrid } from "./receipt-lines-grid";
-import { centsToMoney, expectedBonus, receiptSteps, toCentsBig } from "./receipt-doc";
+import { centsToMoney, dueBase, expectedBonus, receiptSteps, standardDue, toCentsBig } from "./receipt-doc";
 import { ReceiptStatusBadge, day } from "./receipts-page";
 
 /** Kirim qatori manzili boʻla oladigan zonalar (Qabul va Joʻnatish — yoʻq). */
@@ -241,6 +248,13 @@ function Editor({
   const branchName = branches.data?.find((b) => b.id === branchIdShown)?.name ?? "";
   const zones: Zone[] = (warehouse?.zones ?? []).filter((z) => TARGET_ZONES.has(z.type));
   const zoneName = (id: number) => warehouse?.zones.find((z) => z.id === id)?.name ?? doc?.lines.find((l) => l.zoneId === id)?.zone ?? "";
+  // O7: standart toʻlov kuni = hisob-faktura sanasi (yoʻq boʻlsa kirim sanasi) + YB sharti — jonli hisoblanadi.
+  const supplierDoc = useCounterparty(supplier ? Number(supplier) : null);
+  const termDays = supplierDoc.data?.terms.find((x) => x.branchId === branchIdShown)?.supplierPaymentDays ?? 0;
+  const receiptIsoLive = parseUzDate(date) || undefined;
+  const invoiceIsoLive = parseUzDate(invoiceDate) || undefined;
+  const autoDue = receiptIsoLive ? standardDue(receiptIsoLive, invoiceIsoLive, termDays) : null;
+  const dueAutoHint = supplier ? t(invoiceIsoLive ? "field.dueFromInvoice" : "field.dueFromReceipt", { n: termDays }) : t("field.dueHint");
   const canCancel =
     doc !== null &&
     ((doc.status === "POSTED" && can(me.data, RECEIPT_CANCEL_POSTED)) ||
@@ -253,8 +267,10 @@ function Editor({
     if (!iso) return (setLocal(t("errors.date")), null);
     const invIso = parseUzDate(invoiceDate);
     if (invIso === null) return (setLocal(t("errors.invoiceDate")), null);
+    if (invIso && invIso > iso) return (setLocal(t("errors.invoiceAfterReceipt")), null);
     const dueIso = parseUzDate(due);
     if (dueIso === null) return (setLocal(t("errors.dueDate")), null);
+    if (dueIso && !prepaid && !fromBonus && dueIso < dueBase(iso, invIso)) return (setLocal(t("errors.dueBeforeBase")), null);
     const discIso = parseUzDate(discountDate);
     if (discIso === null) return (setLocal(t("errors.discountDate")), null);
     const disc = discountKind ? parseMoneyInput(discountValue) : undefined;
@@ -486,6 +502,7 @@ function Editor({
           value={invoiceDate}
           onChange={setInvoiceDate}
           placeholder={dp}
+          hint={editable && !prepaid && !fromBonus && !invoiceIsoLive ? t("field.invoiceDateMissing") : undefined}
           disabled={!editable}
         />
         <TextField label={t("field.factura")} value={factura} onChange={setFactura} disabled={!editable} />
@@ -512,8 +529,8 @@ function Editor({
             label={t("field.due")}
             value={due}
             onChange={setDue}
-            placeholder={doc?.dueDate && !doc.dueManual ? formatIsoDate(doc.dueDate) : dp}
-            hint={t("field.dueHint")}
+            placeholder={editable && autoDue ? formatIsoDate(autoDue) : doc?.dueDate && !doc.dueManual ? formatIsoDate(doc.dueDate) : dp}
+            hint={due ? t("field.dueHint") : dueAutoHint}
             disabled={!editable}
           />
         )}

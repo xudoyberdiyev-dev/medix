@@ -1,7 +1,7 @@
 import type { ImportField } from "@/features/products/import-model";
 
 /** Import ustasi maydonlari (prototip `BQ_FIELDS.cust` / `BQ_FIELDS.sup`; chegirma — egasi qarori kutilmoqda). */
-export type CpFieldKey = "stir" | "cname" | "ctype" | "region" | "address" | "phone" | "limit" | "days" | "lead";
+export type CpFieldKey = "stir" | "cname" | "ctype" | "region" | "address" | "phone" | "limit" | "days" | "lead" | "zone";
 
 export type CpImportRole = "CUSTOMER" | "SUPPLIER";
 
@@ -14,6 +14,7 @@ export const CUSTOMER_FIELDS: ImportField<CpFieldKey>[] = [
   { key: "phone", req: false, syn: ["telefon", "tel", "phone"] },
   { key: "limit", req: false, syn: ["limit", "kreditlimit"] },
   { key: "days", req: false, syn: ["ocrochka", "otsrochka", "tolovmuddati", "srokoplati"] },
+  { key: "zone", req: false, syn: ["savdozonasi", "zona", "torgovayazona", "zone"] },
 ];
 
 export const SUPPLIER_FIELDS: ImportField<CpFieldKey>[] = [

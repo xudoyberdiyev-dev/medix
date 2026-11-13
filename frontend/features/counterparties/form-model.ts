@@ -42,10 +42,12 @@ export interface CpForm {
   lead: string;
   priceTypeId: string | null;
   mainPay: PaymentType | null;
+  /** Mijoz: savdo zonasi (O6) — filialda faol zona boʻlsa majburiy */
+  salesZoneId: string | null;
 }
 
 export type FormErr =
-  "required" | "tin" | "email" | "mfo" | "account" | "vat" | "date" | "dateOrder" | "money" | "days" | "pct" | "contactName";
+  "required" | "tin" | "email" | "mfo" | "account" | "vat" | "date" | "dateOrder" | "money" | "days" | "pct" | "contactName" | "zone";
 export type ErrKey = keyof CpForm | `contact${number}`;
 
 const blankContact = (): ContactForm => ({ name: "", position: "", phone: "" });
@@ -78,6 +80,7 @@ export function emptyForm(branchId: string | null): CpForm {
     lead: "",
     priceTypeId: null,
     mainPay: null,
+    salesZoneId: null,
   };
 }
 
@@ -111,7 +114,10 @@ export const sameForm = (a: CpForm, b: CpForm) => JSON.stringify(a) === JSON.str
 const filled = (k: ContactForm) => !!(k.name.trim() || k.position.trim() || k.phone.trim());
 
 /** Mahalliy tekshiruv; `isNew` — litsenziya va shartlar ham, `supplier` — asosiy toʻlov turi. */
-export function validateForm(f: CpForm, o: { isNew: boolean; supplier: boolean; terms: boolean }): Partial<Record<ErrKey, FormErr>> {
+export function validateForm(
+  f: CpForm,
+  o: { isNew: boolean; supplier: boolean; terms: boolean; zoneRequired?: boolean },
+): Partial<Record<ErrKey, FormErr>> {
   const e: Partial<Record<ErrKey, FormErr>> = {};
   const tin = f.tin.replace(/\s/g, "");
   if (!tin) e.tin = "required";
@@ -143,6 +149,7 @@ export function validateForm(f: CpForm, o: { isNew: boolean; supplier: boolean; 
     if (!o.supplier && parseMoneyInput(f.limit) === null) e.limit = "money";
     if (!/^\d{1,3}$/.test(f.days.trim()) || Number(f.days) > 365) e.days = "days";
     if (!o.supplier && f.disc.trim() && !/^\d{1,2}([.,]\d{1,2})?$/.test(f.disc.trim())) e.disc = "pct";
+    if (!o.supplier && o.zoneRequired && !f.salesZoneId) e.salesZoneId = "zone";
     if (o.supplier && f.lead.trim() && (!/^\d{1,3}$/.test(f.lead.trim()) || Number(f.lead) > 365)) e.lead = "days";
   }
   return e;
@@ -208,5 +215,6 @@ export function termsRequest(f: CpForm, supplier: boolean): components["schemas"
         paymentDays: days,
         priceTypeId: f.priceTypeId ? Number(f.priceTypeId) : undefined,
         discountPct: f.disc.trim() ? Number(f.disc.trim().replace(",", ".")) : undefined,
+        salesZoneId: f.salesZoneId ? Number(f.salesZoneId) : undefined,
       };
 }

@@ -52,10 +52,14 @@ final class CustomerReturnModels {
             String total, long totalQty, String createdBy, Instant createdAt, @Schema(nullable = true) String postedBy,
             @Schema(nullable = true) Instant postedAt, @Schema(nullable = true) String rejectedBy, @Schema(nullable = true) Instant rejectedAt,
             @Schema(nullable = true) String rejectReason, @Schema(nullable = true) String cancelledBy,
-            @Schema(nullable = true) Instant cancelledAt, @Schema(nullable = true) String cancelReason, List<CustomerReturnLine> lines) {}
+            @Schema(nullable = true) Instant cancelledAt, @Schema(nullable = true) String cancelReason,
+            @Schema(description = "Qaytarish muddatidan keyin yaratilgan (O8, qm.late)") boolean late, List<CustomerReturnLine> lines) {}
 
     /** Mijozning qaytarish mumkin bo'lgan sotuvlari (prototip `custSales`): qaytarsa bo'ladigan qatorlar soni. */
-    record ReturnableSale(long id, String number, LocalDate saleDate, String total, long warehouseId, String warehouse, int returnableLines) {}
+    record ReturnableSale(long id, String number, LocalDate saleDate, String total, long warehouseId, String warehouse, int returnableLines,
+            @Schema(description = "Yetkazilgan sana (Toshkent)") LocalDate deliveredOn,
+            @Schema(description = "Yetkazilganidan beri kun") int daysAgo,
+            @Schema(description = "Qaytarish muddati o'tgan (O8): faqat qm.late bilan") boolean late) {}
 
     /** Sotuv qatori: sotilgan / avval qaytarilgan (o'tkazilgan + kutilayotgan) / qoldi; narx — sotuv narxi. */
     record ReturnableLine(long saleLineId, long productId, String productCode, String productName, boolean marked, long batchId,

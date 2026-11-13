@@ -926,7 +926,7 @@ test("CEO: Mijozlar — Excelʼdan yuklash (faylda takror STIR oʻtkazib yuboril
   await expect(page.locator("section").getByText("mijozlar.csv")).toBeVisible();
   await page.getByRole("button", { name: "Keyingi qadam" }).click();
   await page.getByRole("button", { name: "Keyingi qadam" }).click();
-  await expect(page.getByText("Nom boʻyicha avtomatik moslashtirildi: 6 / 8 maydon")).toBeVisible();
+  await expect(page.getByText("Nom boʻyicha avtomatik moslashtirildi: 6 / 9 maydon")).toBeVisible();
   await page.getByRole("button", { name: "Keyingi qadam" }).click();
   await expect(page.locator("tr[data-row='2']")).toContainText("Faylda takror STIR — 1-qator bilan bir xil");
   await expect(page.locator("tr[data-row='1']")).toContainText("Yangi mijoz");

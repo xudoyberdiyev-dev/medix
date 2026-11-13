@@ -683,4 +683,47 @@ class ReceiptIT {
         reminders.run(today().plusDays(60));
         assertThat(ownerCount.get()).isEqualTo(2);
     }
+
+    /** O7 (egasi qarori 13.11.2026): standart to'lov kuni = hisob-faktura sanasi + YB sharti; yo'q bo'lsa — kirim sanasi. */
+    @Test
+    void dueDateCountsFromInvoiceDate() throws Exception {
+        Place p = place();
+        long sup = supplier(p.branchId(), 30);
+        long a = product("KR Sitramon O7", false);
+        Cookie purchaser = loginAs("PURCHASER", p.branchId());
+        String l = line(a, "O7-1", p.main(), 2, 0, "1000");
+        LocalDate inv = today().minusDays(10);
+
+        String withInv = doc(p, sup, false, l).replace("\"paymentType\"", "\"invoiceDate\":\"" + inv + "\",\"paymentType\"");
+        send(post("/api/receipts"), purchaser, withInv)
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.invoiceDate").value(inv.toString()))
+                .andExpect(jsonPath("$.dueDate").value(inv.plusDays(30).toString()))
+                .andExpect(jsonPath("$.dueManual").value(false));
+
+        // Hisob-faktura sanasi yo'q — eski usul (kirim sanasi + shart)
+        send(post("/api/receipts"), purchaser, doc(p, sup, false, l))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.dueDate").value(today().plusDays(30).toString()));
+
+        // Qo'lda: kirim sanasidan oldin, lekin hisob-faktura sanasidan keyin — mumkin
+        String manual = withInv.replace("\"paymentType\"", "\"dueDate\":\"" + inv.plusDays(2) + "\",\"paymentType\"");
+        send(post("/api/receipts"), purchaser, manual)
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.dueDate").value(inv.plusDays(2).toString()))
+                .andExpect(jsonPath("$.dueManual").value(true));
+
+        // Hisob-faktura sanasidan oldin — xato
+        String early = withInv.replace("\"paymentType\"", "\"dueDate\":\"" + inv.minusDays(1) + "\",\"paymentType\"");
+        send(post("/api/receipts"), purchaser, early)
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("receipt.dueBeforeDate"));
+
+        // Hisob-faktura sanasi kirim sanasidan keyin — xato
+        String later = doc(p, sup, false, l).replace("\"receiptDate\":\"" + today(), "\"receiptDate\":\"" + today().minusDays(3))
+                .replace("\"paymentType\"", "\"invoiceDate\":\"" + today().minusDays(1) + "\",\"paymentType\"");
+        send(post("/api/receipts"), purchaser, later)
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("receipt.invoiceAfterReceipt"));
+    }
 }

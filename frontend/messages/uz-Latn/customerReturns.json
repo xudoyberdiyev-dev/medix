@@ -136,5 +136,9 @@
     "POSTED": "Tasdiqlangan",
     "REJECTED": "Rad etilgan",
     "CANCELLED": "Bekor qilingan"
-  }
+  },
+  "deliveredAgo": "{n} kun oldin yetkazilgan",
+  "lateMark": "Muddatdan keyin",
+  "lateBlocked": "Qaytarish muddati oʻtgan ({n} kun oldin yetkazilgan) — Filial rahbari yoki Direktor ruxsati kerak",
+  "lateAllowed": "Qaytarish muddati oʻtgan ({n} kun oldin yetkazilgan) — hujjat «Muddatdan keyin» deb belgilanadi"
 }

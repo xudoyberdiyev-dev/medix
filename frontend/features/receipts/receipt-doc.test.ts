@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { dueTone } from "./list-state";
 import { groupByDay } from "@/lib/history";
-import { centsToMoney, expectedBonus, toCentsBig } from "./receipt-doc";
+import { centsToMoney, dueBase, expectedBonus, standardDue, toCentsBig } from "./receipt-doc";
 
 const base = { amount: "1000.00", actualAmount: undefined, debtAmount: undefined };
 
@@ -44,5 +44,20 @@ describe("receiptSteps", () => {
       { key: "DRAFT", state: "done" },
       { key: "CANCELLED", state: "fail" },
     ]);
+  });
+});
+
+describe("standardDue (O7)", () => {
+  it("hisob-faktura sanasidan hisoblaydi", () => {
+    expect(standardDue("2026-11-13", "2026-11-03", 30)).toBe("2026-12-03");
+  });
+  it("hisob-faktura boʻlmasa — kirim sanasidan", () => {
+    expect(standardDue("2026-11-13", undefined, 30)).toBe("2026-12-13");
+    expect(dueBase("2026-11-13", "")).toBe("2026-11-13");
+  });
+  it("oy/yil chegarasi va 0 kun", () => {
+    expect(standardDue("2026-12-20", "2026-12-15", 20)).toBe("2027-01-04");
+    expect(standardDue("2028-02-28", undefined, 1)).toBe("2028-02-29");
+    expect(standardDue("2026-11-13", "2026-11-10", 0)).toBe("2026-11-10");
   });
 });

@@ -74,7 +74,21 @@ import {
   type View,
 } from "./overview-model";
 
-const C_COLS = ["name", "tin", "kind", "region", "branches", "lic", "debt", "overdue", "limit", "price", "lastSale", "status"] as const;
+const C_COLS = [
+  "name",
+  "tin",
+  "kind",
+  "region",
+  "zone",
+  "branches",
+  "lic",
+  "debt",
+  "overdue",
+  "limit",
+  "price",
+  "lastSale",
+  "status",
+] as const;
 const S_COLS = ["name", "tin", "lic", "branches", "ourDebt", "terms", "buyer", "lastIn", "status"] as const;
 type Col = (typeof C_COLS)[number] | (typeof S_COLS)[number];
 
@@ -83,6 +97,7 @@ const WIDTH: Record<Col, number> = {
   tin: 116,
   kind: 112,
   region: 120,
+  zone: 140,
   branches: 130,
   lic: 170,
   debt: 150,
@@ -210,6 +225,7 @@ export function OverviewPage({ role }: { role: CounterpartyRole }) {
     f.operators.length ? t("f.operator") : "",
     f.buyers.length ? t("f.buyer") : "",
     f.regions.length ? t("f.region") : "",
+    f.zones.length ? t("f.zone") : "",
     f.kinds.length ? t("f.kind") : "",
     f.lic.length ? t("f.lic") : "",
     f.priceTypes.length ? t("f.price") : "",
@@ -306,6 +322,8 @@ export function OverviewPage({ role }: { role: CounterpartyRole }) {
         return r.kind ? <span className="text-text-secondary">{t(`kind.${r.kind}`)}</span> : <Dash />;
       case "region":
         return r.region ? <span className="text-text-secondary">{r.region}</span> : <Dash />;
+      case "zone":
+        return r.salesZones?.length ? <span className="text-text-secondary">{r.salesZones.join(", ")}</span> : <Dash />;
       case "branches":
         return r.branches.length ? brChips(r) : <Dash />;
       case "lic":
@@ -586,6 +604,15 @@ export function OverviewPage({ role }: { role: CounterpartyRole }) {
               selected={f.regions}
               onChange={(v) => set({ regions: v })}
             />
+            {customers ? (
+              <MultiFilter
+                label={t("f.zone")}
+                searchable
+                options={facetOpts((r) => r.salesZones ?? [])}
+                selected={f.zones}
+                onChange={(v) => set({ zones: v })}
+              />
+            ) : null}
             <MultiFilter
               label={t("f.kind")}
               options={opts(

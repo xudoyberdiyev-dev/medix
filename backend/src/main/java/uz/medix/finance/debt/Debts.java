@@ -41,7 +41,8 @@ class Debts {
             @Schema(nullable = true) LocalDate lastPayment, @Schema(nullable = true, description = "Hudud (mijoz kartochkasidan)") String region,
             @Schema(nullable = true, description = "Masʼul operator (filial shartidan; filial tanlanmasa — barcha filiallardagilar)")
             String operator,
-            @Schema(nullable = true, description = "To'lov sharti, kun (faqat bitta filial tanlanganda)") Integer paymentDays) {}
+            @Schema(nullable = true, description = "To'lov sharti, kun (faqat bitta filial tanlanganda)") Integer paymentDays,
+            @Schema(nullable = true, description = "Mijoz: savdo zonasi (O6; filial tanlanmasa — barcha filiallardagilar)") String salesZone) {}
 
     record DebtReport(@Schema(nullable = true) Long branchId, LocalDate today, Buckets totals, List<DebtRow> rows,
             @Schema(description = "Guruh ichidagi (filiallararo, FS) ochiq qarz — jamiga kirmaydi") String groupDebt,
@@ -122,7 +123,8 @@ class Debts {
             List<GroupDebtRow> group = groupRows(side, branchId);
             return new DebtReport(branchId, today, Buckets.of(Aging.Result.EMPTY), List.of(), groupSum(group), group);
         }
-        record Info(String name, String tin, String phone, BigDecimal limit, LocalDate lastPayment, String region, String operator, Integer days) {}
+        record Info(String name, String tin, String phone, BigDecimal limit, LocalDate lastPayment, String region, String operator, Integer days,
+                String zone) {}
         String payDoc = side == Side.CUSTOMER ? "MT" : "YT";
         Map<Long, Info> info = new LinkedHashMap<>();
         jdbc.sql("""
@@ -131,7 +133,9 @@ class Debts {
                         WHERE p.counterparty_id = c.id AND p.side = :s AND p.doc_type = :pd AND (CAST(:b AS BIGINT) IS NULL OR p.branch_id = :b)) AS last_pay,
                        rg.name AS region,
                        (SELECT string_agg(DISTINCT e.full_name, ', ') FROM counterparty_branch_terms ot JOIN employee e ON e.id = ot.operator_employee_id
-                        WHERE ot.counterparty_id = c.id AND (CAST(:b AS BIGINT) IS NULL OR ot.branch_id = :b)) AS operator
+                        WHERE ot.counterparty_id = c.id AND (CAST(:b AS BIGINT) IS NULL OR ot.branch_id = :b)) AS operator,
+                       (SELECT string_agg(DISTINCT sz.name, ', ') FROM counterparty_branch_terms zt JOIN sales_zone sz ON sz.id = zt.sales_zone_id
+                        WHERE zt.counterparty_id = c.id AND (CAST(:b AS BIGINT) IS NULL OR zt.branch_id = :b)) AS zone
                 FROM counterparty c LEFT JOIN counterparty_branch_terms t ON t.counterparty_id = c.id AND t.branch_id = :b
                 LEFT JOIN region rg ON rg.id = c.region_id
                 WHERE c.id IN (:ids)""".formatted(side == Side.CUSTOMER ? "payment_days" : "supplier_payment_days"))
@@ -143,7 +147,8 @@ class Debts {
                     info.put(rs.getLong("id"), new Info(rs.getString("name"), rs.getString("tin"), rs.getString("phone"),
                             side == Side.CUSTOMER ? rs.getBigDecimal("credit_limit") : null,
                             rs.getDate("last_pay") == null ? null : rs.getDate("last_pay").toLocalDate(), rs.getString("region"),
-                            side == Side.CUSTOMER ? rs.getString("operator") : null, rs.getObject("pay_days", Integer.class)));
+                            side == Side.CUSTOMER ? rs.getString("operator") : null, rs.getObject("pay_days", Integer.class),
+                            side == Side.CUSTOMER ? rs.getString("zone") : null));
                     return 0;
                 })
                 .list();
@@ -154,7 +159,7 @@ class Debts {
             total = total.plus(r);
             Info c = info.get(e.getKey());
             rows.add(new DebtRow(e.getKey(), c.name(), c.tin(), c.phone(), Buckets.of(r), r.maxOverdueDays(),
-                    c.limit() == null ? null : new Money(c.limit()).toString(), c.lastPayment(), c.region(), c.operator(), c.days()));
+                    c.limit() == null ? null : new Money(c.limit()).toString(), c.lastPayment(), c.region(), c.operator(), c.days(), c.zone()));
         }
         // Eng ko'p muddati o'tgan qarz birinchi, keyin umumiy qarz
         rows.sort(Comparator.comparing((DebtRow r) -> Money.of(r.buckets().overdue())).reversed()
@@ -202,7 +207,8 @@ class Debts {
                      app AS (SELECT applies_doc_id AS i, sum(amount) AS amt FROM party_ledger
                              WHERE side = 'SUPPLIER' AND applies_doc_type = 'KR' AND (CAST(:b AS BIGINT) IS NULL OR branch_id = :b)
                              GROUP BY applies_doc_id)
-                SELECT r.id, r.number, r.branch_id, b.name AS bname, c.id AS cid, c.name AS cname, r.receipt_date, r.payment_type, e.full_name,
+                SELECT r.id, r.number, r.branch_id, b.name AS bname, c.id AS cid, c.name AS cname,
+                       coalesce(r.invoice_date, r.receipt_date) AS doc_date, r.payment_type, e.full_name,
                        r.due_date, r.prepaid, own.amt AS total, -coalesce(app.amt, 0) AS paid, own.amt + coalesce(app.amt, 0) AS left_amt
                 FROM own JOIN receipt r ON r.id = own.doc_id JOIN branch b ON b.id = r.branch_id JOIN counterparty c ON c.id = r.supplier_id
                      LEFT JOIN employee e ON e.id = r.owner_id LEFT JOIN app ON app.i = own.doc_id
@@ -216,7 +222,7 @@ class Debts {
                     LocalDate due = rs.getDate("due_date") == null ? null : rs.getDate("due_date").toLocalDate();
                     Integer days = due == null || !left.isPositive() ? null : (int) java.time.temporal.ChronoUnit.DAYS.between(today, due);
                     return new SupplierInvoice(rs.getLong("id"), rs.getString("number"), rs.getLong("branch_id"), rs.getString("bname"),
-                            rs.getLong("cid"), rs.getString("cname"), rs.getDate("receipt_date").toLocalDate(), rs.getString("payment_type"),
+                            rs.getLong("cid"), rs.getString("cname"), rs.getDate("doc_date").toLocalDate(), rs.getString("payment_type"),
                             rs.getString("full_name"), due, rs.getBoolean("prepaid"), new Money(rs.getBigDecimal("total")).toString(),
                             new Money(rs.getBigDecimal("paid")).toString(), left.isPositive() ? left.toString() : "0.00", days);
                 })
@@ -278,10 +284,13 @@ class Debts {
                 .single());
         record Raw(java.time.Instant at, LocalDate date, String type, long id, String number, String note, Money amount) {}
         List<Raw> raw = jdbc.sql("""
-                SELECT occurred_at, (occurred_at AT TIME ZONE 'Asia/Tashkent')::date AS d, doc_type, doc_id, doc_number, note, amount
-                FROM party_ledger WHERE branch_id = :b AND counterparty_id = :c AND side = :s
-                  AND (occurred_at AT TIME ZONE 'Asia/Tashkent')::date BETWEEN :f AND :t
-                ORDER BY occurred_at, id LIMIT 5000""")
+                SELECT pl.occurred_at, coalesce(rc.invoice_date, (pl.occurred_at AT TIME ZONE 'Asia/Tashkent')::date) AS d, pl.doc_type,
+                       pl.doc_id, pl.doc_number, pl.note, pl.amount
+                FROM party_ledger pl
+                     LEFT JOIN receipt rc ON pl.side = 'SUPPLIER' AND pl.doc_type = 'KR' AND rc.id = pl.doc_id
+                WHERE pl.branch_id = :b AND pl.counterparty_id = :c AND pl.side = :s
+                  AND (pl.occurred_at AT TIME ZONE 'Asia/Tashkent')::date BETWEEN :f AND :t
+                ORDER BY pl.occurred_at, pl.id LIMIT 5000""")
                 .param("b", branchId)
                 .param("c", counterpartyId)
                 .param("s", side.name())

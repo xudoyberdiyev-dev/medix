@@ -29,6 +29,7 @@
     "suppliers": "Yetkazib beruvchilar",
     "prices": "Narxlar",
     "lookups": "Maʼlumotnomalar",
+    "salesZones": "Savdo zonalari",
     "reports": "Hisobotlar",
     "company": "Kompaniya",
     "branches": "Filiallar",
@@ -223,10 +224,10 @@
     "orders_cancelPick": "Yigʻish boshlangan buyurtmani bekor qilish (sabab bilan)",
     "orders_check": "Buyurtmalar: tekshiruv (hisobdan oʻtkazish)",
     "orders_create": "Buyurtmalar: yaratish",
+    "orders_discount": "Buyurtmada chegirma berish (5% gacha — oʻzi, undan koʻp — tasdiq bilan)",
     "orders_docs": "Buyurtmalar: hujjatlashtirish",
     "orders_manage": "Buyurtmalar: boshqa xodim buyurtmasini qaytarish va bekor qilish",
     "orders_price": "Buyurtmada narxni qoʻlda oʻzgartirish",
-    "orders_discount": "Buyurtmada chegirma berish (5% gacha — oʻzi, undan koʻp — tasdiq bilan)",
     "orders_queue": "Buyurtmalar: navbat va vaqt berish",
     "orders_view": "Buyurtmalar: koʻrish",
     "payments_cancel": "Toʻlovni bekor qilish",
@@ -267,10 +268,12 @@
     "reports_pickers": "Hisobotlar: yigʻuvchilar hisoboti",
     "reports_view": "Hisobotlar: koʻrish",
     "roles_view": "Rollar va ruxsatlar: boshqarish",
+    "salesZones_edit": "Savdo zonalari: yaratish va tahrirlash",
+    "salesZones_view": "Savdo zonalari: koʻrish",
     "sdebt_view": "Yetkazib beruvchilar qarzi: koʻrish",
-    "settings_view": "Sozlamalar",
     "settings_edit": "Sozlamalar: tahrirlash (chegaralar, soliq, chop etish)",
     "settings_security": "Sozlamalar: xavfsizlik",
+    "settings_view": "Sozlamalar",
     "shipments_ship": "Reysni joʻnatish (yuklash)",
     "shipments_trip": "Reys rejalashtirish: mashina va haydovchi biriktirish",
     "shipments_view": "Joʻnatish va reyslar: koʻrish",
@@ -299,6 +302,7 @@
     "transfer_view": "Koʻchirish: koʻrish",
     "transfer_zk": "Zona koʻchirish (ZK): yaratish",
     "trip_driver": "Reys: haydovchi",
-    "warehouses_view": "Omborlar va zonalar"
+    "warehouses_view": "Omborlar va zonalar",
+    "qm_late": "Mijozdan qaytarish: muddati oʻtgan sotuvni qaytarish"
   }
 }

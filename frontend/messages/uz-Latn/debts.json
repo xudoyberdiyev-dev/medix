@@ -139,7 +139,8 @@
     "groupDebtor": "Qarzdor filial",
     "groupCreditor": "Kreditor filial",
     "groupAmount": "Qarz",
-    "groupBadge": "Guruh ichida"
+    "groupBadge": "Guruh ichida",
+    "zoneFilter": "Savdo zonasi"
   },
   "pay": {
     "title": "Yetkazib beruvchilar qarzi",

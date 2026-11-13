@@ -332,8 +332,9 @@ class Orders {
     /** Ro'yxat filtrlari: mijoz, kiritgan xodim, sotuv/qaytarish davri (hisobotdan o'tish), buyurtma sanasi (SPEC 120). */
     record OrderFilter(List<Long> customerIds, List<Long> operatorIds, LocalDate soldFrom, LocalDate soldTo, LocalDate orderFrom,
             LocalDate orderTo, List<OrderStatus> statuses, List<DeliveryType> deliveryTypes, List<PaymentType> paymentTypes,
-            List<Long> regionIds) {
+            List<Long> regionIds, List<Long> salesZoneIds) {
         OrderFilter {
+            salesZoneIds = salesZoneIds == null ? List.of() : List.copyOf(salesZoneIds);
             customerIds = customerIds == null ? List.of() : List.copyOf(customerIds);
             operatorIds = operatorIds == null ? List.of() : List.copyOf(operatorIds);
             statuses = statuses == null ? List.of() : List.copyOf(statuses);
@@ -401,6 +402,12 @@ class Orders {
         if (!filter.regionIds().isEmpty()) {
             where.append(" AND c.region_id IN (:rg)");
             params.put("rg", filter.regionIds());
+        }
+        if (!filter.salesZoneIds().isEmpty()) {
+            // O6: mijozning shu filialdagi savdo zonasi
+            where.append(" AND EXISTS (SELECT 1 FROM counterparty_branch_terms zt WHERE zt.counterparty_id = o.customer_id"
+                    + " AND zt.branch_id = o.branch_id AND zt.sales_zone_id IN (:sz))");
+            params.put("sz", filter.salesZoneIds());
         }
         if (filter.soldFrom() != null || filter.soldTo() != null) {
             // Savdo hisoboti bilan bir xil: o'tkazilgan sotuv (sale_date) yoki qaytarish (return_date) shu davrda.

@@ -54,7 +54,7 @@ final class ReceiptModels {
             @Schema(nullable = true) @Size(max = 64) String invoiceNumber,
             @Schema(nullable = true) LocalDate invoiceDate,
             @NotNull(message = "{validation.required}") PaymentType paymentType,
-            @Schema(nullable = true, description = "Bo'sh — kirim sanasi + YB sharti (filial)") LocalDate dueDate,
+            @Schema(nullable = true, description = "Bo'sh — hisob-faktura sanasi (yo'q bo'lsa kirim sanasi) + YB sharti (filial)") LocalDate dueDate,
             @Schema(nullable = true, description = "«Kim nomiga» xodim") Long ownerId,
             boolean prepaid,
             @Schema(nullable = true, description = "YB bonus balansi hisobidan: qarz yo'q, tannarx 0") Boolean fromBonus,

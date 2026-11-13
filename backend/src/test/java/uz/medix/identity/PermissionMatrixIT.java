@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import uz.medix.TestcontainersConfig;
 
-/** 1.3: 136 ta ruxsat kaliti (132 + E7 orders.discount + settings.edit, settings.security + qm.cancelPosted) va 11 rolning standart matritsasi (T12-topshirish §7). */
+/** 1.3: 136 ta ruxsat kaliti (132 + E7 orders.discount + settings.edit, settings.security + qm.cancelPosted; O6 salesZones.view, salesZones.edit; O8 qm.late = 139) va 11 rolning standart matritsasi (T12-topshirish §7). */
 @SpringBootTest
 @Import(TestcontainersConfig.class)
 class PermissionMatrixIT {
@@ -29,7 +29,7 @@ class PermissionMatrixIT {
 
     @Test
     void catalogAndDefaults() {
-        assertThat(jdbc.sql("SELECT count(*) FROM permission").query(Long.class).single()).isEqualTo(136);
+        assertThat(jdbc.sql("SELECT count(*) FROM permission").query(Long.class).single()).isEqualTo(139);
         assertThat(of("DIRECTOR")).contains("prices.below", "approvals.director", "staff.edit").doesNotContain("marking.scan");
         assertThat(of("ADMIN")).contains("staff.edit", "roles.view").doesNotContain("prices.below", "approvals.director");
         assertThat(of("BRANCH_MANAGER")).contains("staff.view", "clients.terms", "approvals.branch").doesNotContain("staff.edit", "warehouses.view");

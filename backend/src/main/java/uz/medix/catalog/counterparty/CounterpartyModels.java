@@ -63,7 +63,8 @@ final class CounterpartyModels {
             @Schema(nullable = true) PaymentType defaultPaymentType,
             @Schema(nullable = true) Ref supplyEmployee,
             @Schema(nullable = true, description = "Mijozning standart chegirmasi, % (buyurtma qatoriga avtomatik)") String discountPct,
-            @Schema(nullable = true, description = "Yetkazib beruvchining yetkazish muddati, kun") Integer supplierDeliveryDays) {}
+            @Schema(nullable = true, description = "Yetkazib beruvchining yetkazish muddati, kun") Integer supplierDeliveryDays,
+            @Schema(nullable = true, description = "Mijozning shu filialdagi savdo zonasi (O6)") Ref salesZone) {}
 
     record CounterpartyDetail(
             long id,
@@ -147,7 +148,9 @@ final class CounterpartyModels {
             @Schema(nullable = true, description = "Standart chegirma, % (0–99.99)")
                     @jakarta.validation.constraints.DecimalMin("0") @jakarta.validation.constraints.DecimalMax("99.99")
                     @jakarta.validation.constraints.Digits(integer = 2, fraction = 2) java.math.BigDecimal discountPct,
-            @Schema(nullable = true) @Min(0) @Max(365) Integer supplierDeliveryDays) {}
+            @Schema(nullable = true) @Min(0) @Max(365) Integer supplierDeliveryDays,
+            @Schema(nullable = true, description = "Savdo zonasi (O6): shu filialning faol zonasi; filialda zona bo'lsa mijoz uchun majburiy")
+                    Long salesZoneId) {}
 
     /** «Mijozlarga biriktirish» (prototip Prices → Narx turlari): mijoz va shu filialdagi joriy narx turi (NULL — bazaviy). */
     record PriceTypeCustomer(long id, String name, String tin, @Schema(nullable = true) Long priceTypeId,

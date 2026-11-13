@@ -73,7 +73,7 @@ class RoleMatrixIT {
         Cookie admin = login(employee("ADMIN"));
         mvc.perform(get("/api/roles/matrix").cookie(admin))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.permissions", hasSize(136)))
+                .andExpect(jsonPath("$.permissions", hasSize(139)))
                 .andExpect(jsonPath("$.grants.DRIVER", hasSize(1)));
 
         String name = "Katta operator " + UUID.randomUUID().toString().substring(0, 4);

@@ -139,7 +139,8 @@
     "groupDebtor": "Филиал-должник",
     "groupCreditor": "Филиал-кредитор",
     "groupAmount": "Долг",
-    "groupBadge": "Внутри группы"
+    "groupBadge": "Внутри группы",
+    "zoneFilter": "Торговая зона"
   },
   "pay": {
     "title": "Долги поставщикам",

@@ -4,7 +4,7 @@ import { CUSTOMER_FIELDS, SUPPLIER_FIELDS, checkColumns, importFields, messageFi
 
 describe("kontragent import maydonlari", () => {
   it("mijoz va YB maydonlari prototip boʻyicha, chegirmasiz", () => {
-    expect(CUSTOMER_FIELDS.map((f) => f.key)).toEqual(["stir", "cname", "ctype", "region", "address", "phone", "limit", "days"]);
+    expect(CUSTOMER_FIELDS.map((f) => f.key)).toEqual(["stir", "cname", "ctype", "region", "address", "phone", "limit", "days", "zone"]);
     expect(SUPPLIER_FIELDS.map((f) => f.key)).toEqual(["stir", "cname", "region", "address", "phone", "days", "lead"]);
     expect(importFields("SUPPLIER")).toBe(SUPPLIER_FIELDS);
     expect(checkColumns("CUSTOMER").slice(-2)).toEqual(["match", "msg"]);
@@ -29,6 +29,7 @@ describe("kontragent import maydonlari", () => {
         limit: "Kredit limiti",
         days: "Toʻlov muddati (kun)",
         lead: "Yetkazish muddati (kun)",
+        zone: "Savdo zonasi",
       },
       {
         stir: "СТИР",
@@ -40,6 +41,7 @@ describe("kontragent import maydonlari", () => {
         limit: "Кредит лимити",
         days: "Тўлов муддати (кун)",
         lead: "Етказиш муддати (кун)",
+        zone: "Савдо зонаси",
       },
       {
         stir: "ИНН",
@@ -51,6 +53,7 @@ describe("kontragent import maydonlari", () => {
         limit: "Лимит",
         days: "Отсрочка (дней)",
         lead: "Срок поставки (дней)",
+        zone: "Торговая зона",
       },
     ];
     for (const labels of sets) {

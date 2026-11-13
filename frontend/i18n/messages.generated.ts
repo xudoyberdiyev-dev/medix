@@ -33,6 +33,7 @@ import uzLatn_receipts from "@/messages/uz-Latn/receipts.json";
 import uzLatn_reconciliations from "@/messages/uz-Latn/reconciliations.json";
 import uzLatn_reports from "@/messages/uz-Latn/reports.json";
 import uzLatn_roles from "@/messages/uz-Latn/roles.json";
+import uzLatn_salesZones from "@/messages/uz-Latn/salesZones.json";
 import uzLatn_search from "@/messages/uz-Latn/search.json";
 import uzLatn_settings from "@/messages/uz-Latn/settings.json";
 import uzLatn_setup from "@/messages/uz-Latn/setup.json";
@@ -80,6 +81,7 @@ import uzCyrl_receipts from "@/messages/uz-Cyrl/receipts.json";
 import uzCyrl_reconciliations from "@/messages/uz-Cyrl/reconciliations.json";
 import uzCyrl_reports from "@/messages/uz-Cyrl/reports.json";
 import uzCyrl_roles from "@/messages/uz-Cyrl/roles.json";
+import uzCyrl_salesZones from "@/messages/uz-Cyrl/salesZones.json";
 import uzCyrl_search from "@/messages/uz-Cyrl/search.json";
 import uzCyrl_settings from "@/messages/uz-Cyrl/settings.json";
 import uzCyrl_setup from "@/messages/uz-Cyrl/setup.json";
@@ -127,6 +129,7 @@ import ru_receipts from "@/messages/ru/receipts.json";
 import ru_reconciliations from "@/messages/ru/reconciliations.json";
 import ru_reports from "@/messages/ru/reports.json";
 import ru_roles from "@/messages/ru/roles.json";
+import ru_salesZones from "@/messages/ru/salesZones.json";
 import ru_search from "@/messages/ru/search.json";
 import ru_settings from "@/messages/ru/settings.json";
 import ru_setup from "@/messages/ru/setup.json";
@@ -176,6 +179,7 @@ export const uzLatn = {
   "reconciliations": uzLatn_reconciliations,
   "reports": uzLatn_reports,
   "roles": uzLatn_roles,
+  "salesZones": uzLatn_salesZones,
   "search": uzLatn_search,
   "settings": uzLatn_settings,
   "setup": uzLatn_setup,
@@ -226,6 +230,7 @@ export const uzCyrl = {
   "reconciliations": uzCyrl_reconciliations,
   "reports": uzCyrl_reports,
   "roles": uzCyrl_roles,
+  "salesZones": uzCyrl_salesZones,
   "search": uzCyrl_search,
   "settings": uzCyrl_settings,
   "setup": uzCyrl_setup,
@@ -276,6 +281,7 @@ export const ru = {
   "reconciliations": ru_reconciliations,
   "reports": ru_reports,
   "roles": ru_roles,
+  "salesZones": ru_salesZones,
   "search": ru_search,
   "settings": ru_settings,
   "setup": ru_setup,

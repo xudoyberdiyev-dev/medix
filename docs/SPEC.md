@@ -136,7 +136,7 @@ Eslatma: oldingi «Omborchi» va «Ombor nazoratchisi» («Ombor menejeri») rol
 1. **Qoralama.** Xarid, Operator yoki Ombor mudiri kiritadi. Sarlavha maydonlari:
    - yetkazib beruvchi, yuk xati;
    - **to'lov turi** (Naqd / Perechisleniye / Online);
-   - **to'lov kuni** (standart: kirim sanasi + yetkazib beruvchi sharti; qo'lda o'zgartirilsa belgi qo'yiladi);
+   - **to'lov kuni** (standart: **hisob-faktura sanasi** + yetkazib beruvchi sharti — egasi qarori 13.11.2026; hisob-faktura sanasi yo'q bo'lsa — kirim sanasi; to'lov kuni hisob-faktura sanasidan oldin, hisob-faktura sanasi kirim sanasidan keyin bo'lmaydi; qo'lda o'zgartirilsa belgi qo'yiladi);
    - **Kim nomiga** (xodim, ixtiyoriy);
    - **100% oldindan to'langan** belgisi;
    - **Chegirma (bonus)** — summa yoki foiz va olish sanasi.

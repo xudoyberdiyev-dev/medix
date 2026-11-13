@@ -98,7 +98,8 @@
       "region": "Ҳудуд",
       "operator": "Оператор",
       "payment": "Тўлов тури",
-      "date": "Сана"
+      "date": "Сана",
+      "zone": "Савдо зонаси"
     },
     "count": "{count} та",
     "selected": "{count} та танланди",

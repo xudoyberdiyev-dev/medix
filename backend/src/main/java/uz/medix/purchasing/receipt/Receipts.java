@@ -365,7 +365,7 @@ class Receipts {
                 .param("pt", r.paymentType().name())
                 .param("pp", r.prepaid())
                 .param("fb", fromBonus(r))
-                .param("due", r.prepaid() || fromBonus(r) ? null : Date.valueOf(r.dueDate() == null ? r.receiptDate() : r.dueDate()))
+                .param("due", r.prepaid() || fromBonus(r) ? null : Date.valueOf(r.dueDate() == null ? dueBase(r) : r.dueDate()))
                 .param("by", actor.employeeId())
                 .query(Long.class)
                 .single();
@@ -427,14 +427,22 @@ class Receipts {
         if (fromBonus(r) && (r.prepaid() || r.discountKind() != null)) {
             throw MedixException.badRequest("receipt.bonusConflict");
         }
-        if (r.dueDate() != null && r.dueDate().isBefore(r.receiptDate())) {
+        if (r.invoiceDate() != null && r.invoiceDate().isAfter(r.receiptDate())) {
+            throw MedixException.badRequest("receipt.invoiceAfterReceipt");
+        }
+        if (r.dueDate() != null && r.dueDate().isBefore(dueBase(r))) {
             throw MedixException.badRequest("receipt.dueBeforeDate");
         }
     }
 
-    /** To'lov kuni: 100% oldindan to'langan — yo'q; aks holda kiritilgani yoki kirim sanasi + YB sharti (SPEC 5.1). */
+    /** To'lov kuni hisoblanadigan sana: hisob-faktura sanasi, yo'q bo'lsa kirim sanasi (egasi qarori 13.11.2026, SPEC 5.1). */
+    static LocalDate dueBase(ReceiptRequest r) {
+        return r.invoiceDate() != null ? r.invoiceDate() : r.receiptDate();
+    }
+
+    /** To'lov kuni: 100% oldindan to'langan — yo'q; aks holda kiritilgani yoki hisob-faktura sanasi + YB sharti (SPEC 5.1). */
     private void writeHeader(long id, long branchId, ReceiptRequest r) {
-        LocalDate standard = r.receiptDate().plusDays(supplierDays(r.supplierId(), branchId));
+        LocalDate standard = dueBase(r).plusDays(supplierDays(r.supplierId(), branchId));
         boolean noDebt = r.prepaid() || fromBonus(r);
         LocalDate due = noDebt ? null : (r.dueDate() == null ? standard : r.dueDate());
         boolean manual = !noDebt && r.dueDate() != null && !r.dueDate().equals(standard);

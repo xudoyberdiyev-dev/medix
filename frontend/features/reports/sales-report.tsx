@@ -40,6 +40,7 @@ export const GROUP_LABELS: Record<GroupBy, string> = {
   BRANCH: "Filial",
   DAY: "Kun",
   REGION: "Hudud",
+  SALES_ZONE: "Savdo zonasi",
   PAYMENT_TYPE: "Toʻlov turi",
   WEEK: "Hafta",
   MONTH: "Oy",

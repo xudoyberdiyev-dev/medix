@@ -16,6 +16,7 @@ import { useMe } from "@/features/auth/session";
 import { useBranchList } from "@/features/organization/api";
 import { useEmployeeOptions } from "@/features/products/api";
 import { describeError } from "@/features/setup/form-error";
+import { useSalesZones, zoneOptions } from "@/features/sales-zones/api";
 import { formatMoney } from "@/lib/format";
 import {
   PAYMENT_TYPE_VALUES,
@@ -289,8 +290,10 @@ function TermsCard({
 }) {
   const tt = useTranslations("counterparties.terms");
   const tcp = useTranslations("counterparties");
+  const tz = useTranslations("salesZones");
   const canEdit = customerSide || supplierSide;
   const save = useSaveTerms();
+  const zones = useSalesZones(branchId, false, cp.customer);
   const priceTypes = usePriceTypes();
   const employees = useEmployeeOptions();
   const [f, setF] = useState({
@@ -304,6 +307,7 @@ function TermsCard({
     supplyEmployeeId: terms?.supplyEmployee ? String(terms.supplyEmployee.id) : null,
     discountPct: terms?.discountPct ? terms.discountPct.replace(/\.?0+$/, "").replace(".", ",") : "",
     supplierDeliveryDays: terms?.supplierDeliveryDays != null ? String(terms.supplierDeliveryDays) : "",
+    salesZoneId: terms?.salesZone ? String(terms.salesZone.id) : null,
   });
   const [local, setLocal] = useState<Record<string, string>>({});
   const err = describeError(save.error);
@@ -312,9 +316,15 @@ function TermsCard({
     (v: (typeof f)[K]) =>
       setF((s) => ({ ...s, [k]: v }));
   const empOptions = (employees.data ?? []).map((e) => ({ value: String(e.id), label: e.fullName, sub: e.roleName }));
+  // O6: filialda faol savdo zonasi boʻlsa — mijoz uchun majburiy
+  const zoneOpts = zoneOptions(
+    zones.data?.filter((z) => z.branchId === branchId),
+    terms?.salesZone,
+  );
 
   function submit() {
     const e: Record<string, string> = {};
+    if (cp.customer && customerSide && !f.salesZoneId && zoneOpts.length > 0) e.salesZoneId = tz("fieldError");
     const limit = parseMoneyInput(f.creditLimit);
     if (limit === null) e.creditLimit = tt("limitError");
     const int = (raw: string, key: string, max: number) => {
@@ -339,6 +349,7 @@ function TermsCard({
       supplierPaymentDays: int(f.supplierPaymentDays, "supplierPaymentDays", 365),
       defaultPaymentType: (f.defaultPaymentType as "CASH" | "TRANSFER" | "ONLINE" | null) ?? undefined,
       supplyEmployeeId: f.supplyEmployeeId ? Number(f.supplyEmployeeId) : undefined,
+      salesZoneId: f.salesZoneId ? Number(f.salesZoneId) : undefined,
     };
     setLocal(e);
     if (Object.keys(e).length > 0) return;
@@ -364,6 +375,20 @@ function TermsCard({
         {cp.customer ? (
           <fieldset disabled={!customerSide} className="contents">
             <div className="col-span-2 text-label text-text-secondary">{tt("asCustomer")}</div>
+            <Select
+              loading={zones.isLoading}
+              label={tz("field")}
+              required={zoneOpts.length > 0}
+              searchable
+              disabled={!customerSide}
+              value={f.salesZoneId}
+              onChange={set("salesZoneId")}
+              placeholder={tz("fieldPlaceholder")}
+              error={fe("salesZoneId")}
+              hint={!zones.isLoading && zoneOpts.length === 0 ? tz("fieldNone") : undefined}
+              options={zoneOpts}
+              className="col-span-2"
+            />
             <TextField
               label={tt("creditLimit")}
               value={f.creditLimit}

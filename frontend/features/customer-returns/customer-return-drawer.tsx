@@ -1,10 +1,11 @@
 "use client";
 
-import { Ban, Check, HandCoins, Link2, Lock, Printer, Send, ShieldAlert, X } from "lucide-react";
+import { Ban, Check, Clock3, HandCoins, Link2, Lock, Printer, Send, ShieldAlert, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { Alert } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DocumentHeader } from "@/components/ui/document-header";
 import { NewDocFrame } from "@/components/shell/new-doc-frame";
@@ -179,6 +180,11 @@ function View({ doc, onClose, page = false }: { doc: CustomerReturnDetail; onClo
           <dt className="text-caption text-text-secondary">{t("head.sale")}</dt>
           <dd>
             <span className="font-mono">{doc.saleNumber}</span> · {day(doc.saleDate)}
+            {doc.late ? (
+              <Badge tone="warning" icon={Clock3} className="ml-2">
+                {t("lateMark")}
+              </Badge>
+            ) : null}
           </dd>
         </div>
         <div>
@@ -381,6 +387,7 @@ export function CreateForm({
   const sales = useReturnableSales(customer ? Number(customer) : null, branchId);
   const lines = useReturnableLines(saleId ? Number(saleId) : null);
   const canApprove = can(me.data, QM_APPROVE);
+  const canLate = can(me.data, "qm.late");
 
   const sale = (sales.data ?? []).find((s) => String(s.id) === saleId);
   const rows = lines.data ?? [];
@@ -511,16 +518,22 @@ export function CreateForm({
             options={(sales.data ?? []).map((s) => ({
               value: String(s.id),
               label: `${s.number} · ${day(s.saleDate)} · ${formatMoney(s.total)}`,
-              sub: t("canReturn", { n: s.returnableLines }),
+              sub: [t("deliveredAgo", { n: s.daysAgo }), t("canReturn", { n: s.returnableLines }), s.late ? t("lateMark") : ""]
+                .filter(Boolean)
+                .join(" · "),
             }))}
             placeholder={customer ? t("choose") : t("pickCustomer")}
             disabled={!customer}
             hint={
               customer && sales.data && sales.data.length === 0
                 ? t("noSales")
-                : sale
-                  ? t("saleHint", { n: sale.returnableLines })
-                  : undefined
+                : sale?.late && !canLate
+                  ? t("lateBlocked", { n: sale.daysAgo })
+                  : sale?.late
+                    ? t("lateAllowed", { n: sale.daysAgo })
+                    : sale
+                      ? t("saleHint", { n: sale.returnableLines })
+                      : undefined
             }
             required
           />

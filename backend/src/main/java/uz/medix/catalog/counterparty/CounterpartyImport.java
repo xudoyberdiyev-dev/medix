@@ -39,7 +39,7 @@ class CounterpartyImport {
     static final int MAX_ROWS = 5000;
 
     /** Prototip `BQ_FIELDS.cust` (chegirmasiz). */
-    static final List<String> CUSTOMER_FIELDS = List.of("stir", "cname", "ctype", "region", "address", "phone", "limit", "days");
+    static final List<String> CUSTOMER_FIELDS = List.of("stir", "cname", "ctype", "region", "address", "phone", "limit", "days", "zone");
 
     /** Prototip `BQ_FIELDS.sup`. */
     static final List<String> SUPPLIER_FIELDS = List.of("stir", "cname", "region", "address", "phone", "days", "lead");
@@ -92,6 +92,12 @@ class CounterpartyImport {
         List<String> fields = fields(req.role());
         Map<String, Long> regions = new HashMap<>();
         jdbc.sql("SELECT id, name FROM region WHERE active").query((rs, n) -> regions.put(key(rs.getString("name")), rs.getLong("id"))).list();
+        // O6: savdo zonasi — tanlangan filialning faol zonalari, nom bo'yicha
+        Map<String, Long> zones = new HashMap<>();
+        if (customer && req.branchId() != null) {
+            jdbc.sql("SELECT id, name FROM sales_zone WHERE active AND branch_id = :b").param("b", req.branchId())
+                    .query((rs, n) -> zones.put(key(rs.getString("name")), rs.getLong("id"))).list();
+        }
         Map<String, Integer> seenTins = new HashMap<>();
         List<CounterpartyImportRow> out = new ArrayList<>();
         int ok = 0;
@@ -165,7 +171,15 @@ class CounterpartyImport {
             }
             Integer days = days(v.get("days"), "days", msgs);
             Integer lead = customer ? null : days(v.get("lead"), "lead", msgs);
-            boolean hasTerms = limit != null || days != null || lead != null;
+            Long zoneId = null;
+            if (customer && !v.getOrDefault("zone", "").isEmpty() && req.branchId() != null) {
+                zoneId = zones.get(key(v.get("zone")));
+                if (zoneId == null) {
+                    msgs.add(err("cZoneUnknown", "t", v.get("zone")));
+                }
+            }
+            boolean hasTerms = limit != null || days != null || lead != null || zoneId != null
+                    || (customer && !v.getOrDefault("zone", "").isEmpty());
             if (hasTerms && req.branchId() == null) {
                 msgs.add(err("cBranchReq"));
             } else if (hasTerms && !termsAllowed) {
@@ -192,8 +206,8 @@ class CounterpartyImport {
             Long existingId = existing != null && !hasErr ? existing.id() : null;
             if (!hasErr && apply && existingId != null) {
                 TermsRequest terms = customer
-                        ? new TermsRequest(limit, days, null, null, null, null, null, null, null, null)
-                        : new TermsRequest(null, null, null, null, null, days, null, null, null, lead);
+                        ? new TermsRequest(limit, days, null, null, null, null, null, null, null, null, zoneId)
+                        : new TermsRequest(null, null, null, null, null, days, null, null, null, lead, null);
                 counterparties.saveTerms(existingId, req.branchId(), terms, customer, !customer);
                 updated++;
             } else if (!hasErr && apply) {
@@ -202,8 +216,8 @@ class CounterpartyImport {
                 createdId = counterparties.create(r);
                 if (hasTerms && termsAllowed) {
                     TermsRequest terms = customer
-                            ? new TermsRequest(limit, days, null, null, null, null, null, null, null, null)
-                            : new TermsRequest(null, null, null, null, null, days, null, null, null, lead);
+                            ? new TermsRequest(limit, days, null, null, null, null, null, null, null, null, zoneId)
+                            : new TermsRequest(null, null, null, null, null, days, null, null, null, lead, null);
                     counterparties.saveTerms(createdId, req.branchId(), terms, customer, !customer);
                 }
                 created++;

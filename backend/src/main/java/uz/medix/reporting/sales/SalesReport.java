@@ -36,6 +36,8 @@ class SalesReport {
         DAY("x.d::text", "to_char(x.d, 'DD.MM.YYYY')", "", "k"),
         /** Mijoz hududi; ko'rsatilmagan — bo'sh kalit. */
         REGION("coalesce(x.region_id::text, '')", "coalesce(rg.name, '')", "LEFT JOIN region rg ON rg.id = x.region_id", "net DESC, name"),
+        /** Mijozning savdo zonasi (O6, sotuv filialidagi shartlardan); ko'rsatilmagan — bo'sh kalit. */
+        SALES_ZONE("coalesce(x.zone_id::text, '')", "coalesce(sz.name, '')", "LEFT JOIN sales_zone sz ON sz.id = x.zone_id", "net DESC, name"),
         /** Buyurtmaning to'lov turi: kalit va nom — CASH / TRANSFER / ONLINE (UI tarjima qiladi). */
         PAYMENT_TYPE("x.payment_type", "x.payment_type", "", "net DESC, name"),
         /** Hafta (dushanbadan): kalit — dushanba sanasi YYYY-MM-DD. */
@@ -159,16 +161,18 @@ class SalesReport {
         return jdbc.sql("""
                 WITH x AS (
                     SELECT s.branch_id, s.customer_id, o.created_by, s.sale_date AS d, s.order_id, s.total AS sales, 0 AS returns,
-                           s.vat_total AS svat, 0 AS rvat, s.cost_total AS cost, o.payment_type, cp.region_id,
+                           s.vat_total AS svat, 0 AS rvat, s.cost_total AS cost, o.payment_type, cp.region_id, zt.sales_zone_id AS zone_id,
                            (SELECT coalesce(sum(sl.qty * greatest(coalesce(ol.list_price, sl.price) - sl.price, 0)), 0)
                             FROM sale_line sl JOIN sales_order_line ol ON ol.id = sl.order_line_id WHERE sl.sale_id = s.id) AS discount
                     FROM sale s JOIN sales_order o ON o.id = s.order_id JOIN counterparty cp ON cp.id = s.customer_id
+                         LEFT JOIN counterparty_branch_terms zt ON zt.counterparty_id = s.customer_id AND zt.branch_id = s.branch_id
                     WHERE s.status = 'POSTED' AND s.sale_date BETWEEN :f AND :t
                       AND (CAST(:b AS BIGINT) IS NULL OR s.branch_id = :b) AND (CAST(:e AS BIGINT) IS NULL OR o.created_by = :e)
                     UNION ALL
                     SELECT r.branch_id, r.customer_id, o.created_by, r.return_date, NULL, 0, r.total, 0, r.vat_total, -r.cost_total,
-                           o.payment_type, cp.region_id, 0
+                           o.payment_type, cp.region_id, zt.sales_zone_id, 0
                     FROM sales_return r JOIN sales_order o ON o.id = r.order_id JOIN counterparty cp ON cp.id = r.customer_id
+                         LEFT JOIN counterparty_branch_terms zt ON zt.counterparty_id = r.customer_id AND zt.branch_id = r.branch_id
                     WHERE r.cancelled_at IS NULL AND r.return_date BETWEEN :f AND :t
                       AND (CAST(:b AS BIGINT) IS NULL OR r.branch_id = :b) AND (CAST(:e AS BIGINT) IS NULL OR o.created_by = :e)
                 )
