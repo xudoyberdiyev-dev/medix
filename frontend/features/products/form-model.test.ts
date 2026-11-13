@@ -49,6 +49,12 @@ describe("validatePageForm", () => {
     expect(e.code).toBe("codeFmt");
     expect(e.maxQty).toBe("maxMin");
   });
+  it("«Cheksiz» maksimal miqdor (O2): min > max tekshirilmaydi, soʻrovda maxQty yuborilmaydi", () => {
+    const f = { ...filled, minQty: "10", maxQty: "5", maxUnlimited: true };
+    expect(validatePageForm(f).maxQty).toBeUndefined();
+    expect(toPageRequest(f).maxQty).toBeUndefined();
+    expect(toPageRequest({ ...f, maxUnlimited: false, maxQty: "50" }).maxQty).toBe(50);
+  });
   it("IKPU — 17 raqam", () => {
     expect(validatePageForm({ ...filled, ikpu: "123" }).ikpu).toBe("ikpu");
   });

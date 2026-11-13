@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Modal } from "@/components/ui/modal";
 import { Select } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/selection-controls";
 import { ErrorState, Skeleton } from "@/components/ui/system-states";
 import { TextField } from "@/components/ui/text-field";
 import { toast } from "@/components/ui/toast";
@@ -354,11 +355,19 @@ function FormBody({ product, initial }: { product: ProductDetail | null; initial
             <div data-f="maxQty">
               <TextField
                 label={t("fields.maxQty")}
-                value={f.maxQty}
+                value={f.maxUnlimited ? "" : f.maxQty}
                 onChange={(v) => set("maxQty")(v.replace(/\D/g, "").slice(0, 6))}
                 inputMode="numeric"
-                placeholder="300"
-                error={errText("maxQty")}
+                placeholder={f.maxUnlimited ? t("unlimited") : "300"}
+                disabled={f.maxUnlimited}
+                error={f.maxUnlimited ? undefined : errText("maxQty")}
+              />
+              <Checkbox
+                className="mt-2"
+                label={t("unlimited")}
+                description={t("unlimitedHelp")}
+                checked={f.maxUnlimited}
+                onChange={(on) => setF((s) => ({ ...s, maxUnlimited: on, maxQty: on ? "" : s.maxQty }))}
               />
             </div>
           </div>
