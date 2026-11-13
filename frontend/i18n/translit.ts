@@ -44,6 +44,10 @@ const ABBR: Record<string, string> = { YB: "ЕБ" };
 const KEEP = new Set([
   "MEDIX",
   "PDF",
+  "JPG",
+  "PNG",
+  "MB",
+  "SVG",
   "PIN",
   "Ctrl",
   "K",

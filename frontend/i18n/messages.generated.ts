@@ -15,6 +15,7 @@ import uzLatn_dictionaries from "@/messages/uz-Latn/dictionaries.json";
 import uzLatn_employees from "@/messages/uz-Latn/employees.json";
 import uzLatn_home from "@/messages/uz-Latn/home.json";
 import uzLatn_inventoryCounts from "@/messages/uz-Latn/inventoryCounts.json";
+import uzLatn_invoices from "@/messages/uz-Latn/invoices.json";
 import uzLatn_language from "@/messages/uz-Latn/language.json";
 import uzLatn_login from "@/messages/uz-Latn/login.json";
 import uzLatn_nav from "@/messages/uz-Latn/nav.json";
@@ -64,6 +65,7 @@ import uzCyrl_dictionaries from "@/messages/uz-Cyrl/dictionaries.json";
 import uzCyrl_employees from "@/messages/uz-Cyrl/employees.json";
 import uzCyrl_home from "@/messages/uz-Cyrl/home.json";
 import uzCyrl_inventoryCounts from "@/messages/uz-Cyrl/inventoryCounts.json";
+import uzCyrl_invoices from "@/messages/uz-Cyrl/invoices.json";
 import uzCyrl_language from "@/messages/uz-Cyrl/language.json";
 import uzCyrl_login from "@/messages/uz-Cyrl/login.json";
 import uzCyrl_nav from "@/messages/uz-Cyrl/nav.json";
@@ -113,6 +115,7 @@ import ru_dictionaries from "@/messages/ru/dictionaries.json";
 import ru_employees from "@/messages/ru/employees.json";
 import ru_home from "@/messages/ru/home.json";
 import ru_inventoryCounts from "@/messages/ru/inventoryCounts.json";
+import ru_invoices from "@/messages/ru/invoices.json";
 import ru_language from "@/messages/ru/language.json";
 import ru_login from "@/messages/ru/login.json";
 import ru_nav from "@/messages/ru/nav.json";
@@ -164,6 +167,7 @@ export const uzLatn = {
   "employees": uzLatn_employees,
   "home": uzLatn_home,
   "inventoryCounts": uzLatn_inventoryCounts,
+  "invoices": uzLatn_invoices,
   "language": uzLatn_language,
   "login": uzLatn_login,
   "nav": uzLatn_nav,
@@ -216,6 +220,7 @@ export const uzCyrl = {
   "employees": uzCyrl_employees,
   "home": uzCyrl_home,
   "inventoryCounts": uzCyrl_inventoryCounts,
+  "invoices": uzCyrl_invoices,
   "language": uzCyrl_language,
   "login": uzCyrl_login,
   "nav": uzCyrl_nav,
@@ -268,6 +273,7 @@ export const ru = {
   "employees": ru_employees,
   "home": ru_home,
   "inventoryCounts": ru_inventoryCounts,
+  "invoices": ru_invoices,
   "language": ru_language,
   "login": ru_login,
   "nav": ru_nav,

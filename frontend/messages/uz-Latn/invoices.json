@@ -1,0 +1,68 @@
+{
+  "title": "Fakturalar",
+  "subtitle": "Yuklanayotgan buyurtmalar boʻyicha e-faktura navbati — buyurtma zanjirini toʻxtatmaydi",
+  "banner": "Integratsiya hali ulanmagan — Soliq e-faktura / 1C. Fakturani tizimda yarating, fayllarni shu yerga yuklang.",
+  "tabsAria": "Holat boʻyicha",
+  "all": "Hammasi",
+  "status": {
+    "PENDING": "Yuborilishi kerak",
+    "SENT": "Yuborildi"
+  },
+  "col": {
+    "order": "Buyurtma",
+    "invoice": "HF №",
+    "customer": "Mijoz / STIR",
+    "branch": "Filial",
+    "total": "Summa",
+    "vat": "QQS",
+    "codes": "Kodlar",
+    "wait": "Kutish",
+    "status": "Holat"
+  },
+  "noInvoice": "Sotuvdan keyin",
+  "owner": {
+    "CUSTOMER": "Mijoz nomiga",
+    "RESERVE": "Zaxira kodlarga"
+  },
+  "waitFor": "{h} soat",
+  "waitDays": "{d} kun {h} soat",
+  "late": "1 kundan koʻp kutmoqda",
+  "sentInfo": "{number} · {date} · {by}",
+  "search": "Qidiruv",
+  "searchPlaceholder": "Buyurtma, mijoz, STIR, HF yoki e-faktura №",
+  "branch": "Filial",
+  "allBranches": "Barcha filiallar",
+  "from": "Dan",
+  "to": "Gacha",
+  "dateInvalid": "Sana notoʻgʻri",
+  "pdf": "HF PDF",
+  "codesXlsx": "Kodlar .xlsx",
+  "markSent": "Yuborildi deb belgilash",
+  "sentTitle": "Fakturani yuborildi deb belgilash",
+  "efNumber": "E-faktura raqami",
+  "efDate": "E-faktura sanasi",
+  "efFile": "E-faktura fayli",
+  "ttnFile": "Imzolangan TTN",
+  "fileHint": "PDF, JPG yoki PNG, 10 MB gacha",
+  "chooseFile": "Faylni tanlash",
+  "uploaded": "Yuklandi: {name}",
+  "uploading": "Yuklanmoqda…",
+  "numberError": "E-faktura raqamini kiriting",
+  "dateError": "Sanani kk.oo.yyyy koʻrinishida kiriting",
+  "efFileError": "E-faktura faylini yuklang",
+  "ttnFileError": "Imzolangan TTN faylini yuklang",
+  "fileTypeError": "Fayl turi notoʻgʻri — PDF, JPG yoki PNG yuklang",
+  "fileSizeError": "Fayl 10 MB dan katta — kichraytirib qayta yuklang",
+  "sent": "Faktura yuborildi deb belgilandi",
+  "emptyTitle": "Navbatda faktura yoʻq",
+  "emptyDescription": "Perechisleniye yoki kodlari mijoz nomiga boʻlgan buyurtma «Yuklanmoqda» ga oʻtganda shu yerda paydo boʻladi.",
+  "docs": {
+    "title": "Faktura",
+    "files": "Yuklangan fayllar",
+    "noFiles": "Fayl yuklanmagan",
+    "kind": {
+      "EFAKTURA": "E-faktura",
+      "TTN": "TTN"
+    }
+  }
+}

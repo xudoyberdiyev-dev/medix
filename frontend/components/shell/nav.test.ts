@@ -30,7 +30,7 @@ describe("ruxsatga qarab menyu", () => {
     expect(groups).toEqual([
       ["sales", ["orders", "approvals", "shipments"]],
       ["warehouse", ["receipts", "stock", "expiry", "transfers", "inventory-counts", "returns", "reserveCodes", "opening"]],
-      ["money", ["payments", "cash", "bank", "customer-debts", "supplier-debts", "reconciliations"]],
+      ["money", ["payments", "cash", "bank", "invoices", "customer-debts", "supplier-debts", "reconciliations"]],
       ["references", ["products", "customers", "suppliers", "prices", "salesZones", "dictionaries"]],
       ["admin", ["company", "branches", "warehouses", "staff", "roles", "audit", "settings"]],
     ]);

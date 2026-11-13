@@ -1829,6 +1829,7 @@ class OrderIT {
         Cookie keeper = loginAs("WAREHOUSE_MANAGER", p.branchId());
         Cookie picker = loginAs("PICKER", p.branchId());
         Cookie accountant = loginAs("ACCOUNTANT", p.branchId());
+        loginAs("DRIVER", p.branchId());
         long driver = jdbc.sql("SELECT max(id) FROM employee WHERE full_name = 'Sinov DRIVER' AND branch_id = :b").param("b", p.branchId())
                 .query(Long.class).single();
         long prod = product(p, "BY Faktura navbat", "1000", 20, null, null);

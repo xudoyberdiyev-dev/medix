@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { Banknote, ChevronRight, CircleCheck, Landmark, type LucideIcon, Wallet } from "lucide-react";
+import { Banknote, ChevronRight, CircleCheck, FileText, FileWarning, Landmark, type LucideIcon, Wallet } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
@@ -167,7 +167,9 @@ function Calendar({ days }: { days: Day[] }) {
 
 function Work({ work }: { work: View["work"] }) {
   const t = useTranslations("home.acc");
-  const rows: Array<{ key: "wYt" | "wBank" | "wCash"; n: number; icon: LucideIcon; href: string }> = [
+  const rows: Array<{ key: "wInv" | "wInvLate" | "wYt" | "wBank" | "wCash"; n: number; icon: LucideIcon; href: string }> = [
+    { key: "wInvLate", n: work.invoicesOverdue, icon: FileWarning, href: "/invoices" },
+    { key: "wInv", n: work.invoicesPending - work.invoicesOverdue, icon: FileText, href: "/invoices" },
     { key: "wYt", n: work.ytPending, icon: Wallet, href: "/payments?tab=yt" },
     { key: "wBank", n: work.bankUnreconciled, icon: Landmark, href: "/cash?tab=statement" },
     { key: "wCash", n: work.cashDaysOpen, icon: Banknote, href: "/cash" },

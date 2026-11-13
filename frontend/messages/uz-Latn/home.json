@@ -290,6 +290,8 @@
     "workT": "Ish roʻyxati",
     "tasksNone": "Hozircha vazifa yoʻq",
     "tasksNoneHint": "Tasdiq, solishtirish yoki kassa yopish kerak boʻlsa, shu yerda koʻrinadi.",
+    "wInv": "Yuborilishi kerak boʻlgan fakturalar: {n}",
+    "wInvLate": "1 kundan koʻp kutayotgan fakturalar: {n}",
     "wYt": "Tasdiq kutayotgan YT: {n}",
     "wBank": "Koʻchirma bilan solishtirilmagan bank operatsiyalari: {n}",
     "wCash": "Yopilmagan kassa kunlari: {n}",

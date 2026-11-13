@@ -19,6 +19,7 @@ import { useOrderHistory, type OrderDetail } from "./api";
 import { formatPct } from "./discount";
 import { pickPhase, pickRows } from "./order-pick";
 import { day } from "./orders-page";
+import { OrderInvoiceDocs } from "@/features/invoices/order-docs";
 
 type Status = OrderDetail["status"];
 
@@ -395,6 +396,9 @@ function OrderPayment({ doc }: { doc: OrderDetail }) {
   );
 }
 
+/** «Hujjatlar» (O10d faktura) — buyurtma «Yuklanmoqda» dan keyin. */
+const DOCS_STATUSES = new Set<OrderDetail["status"]>(["LOADING", "IN_TRANSIT", "DELIVERED", "UNDELIVERED"]);
+
 export function OrderCardBody({ doc, shipping }: { doc: OrderDetail; shipping?: ReactNode }) {
   const t = useTranslations("orders");
   const [tab, setTab] = useState("order");
@@ -412,6 +416,7 @@ export function OrderCardBody({ doc, shipping }: { doc: OrderDetail; shipping?: 
           { key: "pick", label: t("card.tPick") },
           { key: "ship", label: t("card.tShip") },
           { key: "pay", label: t("card.tPay") },
+          ...(DOCS_STATUSES.has(doc.status) ? [{ key: "docs", label: t("card.tDocs") }] : []),
           { key: "history", label: t("card.tHistory") },
         ]}
       />
@@ -419,6 +424,8 @@ export function OrderCardBody({ doc, shipping }: { doc: OrderDetail; shipping?: 
         <OrderHistory id={doc.id} />
       ) : tab === "pay" ? (
         <OrderPayment doc={doc} />
+      ) : tab === "docs" ? (
+        <OrderInvoiceDocs orderId={doc.id} />
       ) : tab === "pick" ? (
         <OrderPicking doc={doc} />
       ) : tab === "ship" ? (

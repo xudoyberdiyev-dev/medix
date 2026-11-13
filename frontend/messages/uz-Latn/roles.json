@@ -39,7 +39,8 @@
     "audit": "Audit",
     "settings": "Sozlamalar",
     "special": "Maxsus",
-    "zcodes": "Zaxira kodlar"
+    "zcodes": "Zaxira kodlar",
+    "invoices": "Fakturalar"
   },
   "forbidden": "Rollar va ruxsatlarni Direktor va Bosh administrator boshqaradi.",
   "title": "Rollar va ruxsatlar",
@@ -307,6 +308,8 @@
     "qm_late": "Mijozdan qaytarish: muddati oʻtgan sotuvni qaytarish",
     "marking_owner": "Markirovka: kodlar egasini oʻzgartirish (mijoz / zaxira)",
     "zcodes_view": "Zaxira kodlar: koʻrish",
-    "zcodes_edit": "Zaxira kodlar: ishlatildi / hisobdan chiqarish"
+    "zcodes_edit": "Zaxira kodlar: ishlatildi / hisobdan chiqarish",
+    "invoices_view": "Fakturalar: navbatni koʻrish, HF va kodlarni yuklab olish",
+    "invoices_send": "Fakturalar: fayl yuklash, «Yuborildi» deb belgilash"
   }
 }

@@ -12,6 +12,7 @@ import {
   Database,
   Factory,
   FileCheck2,
+  FileText,
   HandCoins,
   House,
   LayoutGrid,
@@ -207,6 +208,7 @@ export const navigation: NavGroup[] = [
       { key: "payments", label: "Toʻlovlar", href: "/payments", icon: Wallet, anyOf: ["payments.view"] },
       { key: "cash", label: "Kassa", href: "/cash", icon: Banknote, anyOf: ["cash.view"] },
       { key: "bank", label: "Bank", href: "/bank", icon: Landmark, anyOf: ["bank.view"] },
+      { key: "invoices", label: "Fakturalar", href: "/invoices", icon: FileText, anyOf: ["invoices.view"] },
       { key: "customer-debts", label: "Mijozlar qarzi", href: "/debts/customers", icon: HandCoins, anyOf: ["cdebt.view"] },
       {
         key: "supplier-debts",

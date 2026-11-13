@@ -48,5 +48,6 @@
   "warehouseTransfers": "Перемещения между складами",
   "writeOffs": "Списание",
   "zoneTransfers": "Перемещения по зонам",
-  "reserveCodes": "Резервные коды"
+  "reserveCodes": "Резервные коды",
+  "invoices": "Фактуры"
 }
