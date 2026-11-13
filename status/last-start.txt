@@ -1,1 +1,1 @@
-▶️ MEDIX: 00:10 sessiya boshlandi — reja: UI 100% qoldiqlari (HC roʻyxatida «Kim tasdiqladi», mayda farqlar), barqarorlik va testlar
+▶️ MEDIX: 06:06 sessiya boshlandi — reja: develop CI tekshiruvi (28 soat navbatda turgan ish), qizil CI tuzatish, keyin OK/ZK «Zona» maydoni
