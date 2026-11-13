@@ -1817,6 +1817,131 @@ class OrderIT {
                 .hasMessageContaining("oʻzgarmaydi");
     }
 
+    /**
+     * O10d: «Yuklanmoqda» da faktura vazifasi (Perechisleniye yoki kodlar «Mijoz nomiga»); naqd + zaxira — yo'q, egasi «Mijoz nomiga» ga
+     * o'zgarsa — ochiladi. Fayl turi/hajmi, «Yuborildi» uchun e-faktura + TTN fayllari va raqam/sana majburiy, yakuniy holat, ruxsatlar, filial.
+     */
+    @Test
+    void invoiceQueueOpensOnLoadingNeedsFilesAndIsFinal() throws Exception {
+        Place p = place();
+        long c = customer(p.branchId(), null);
+        Cookie operator = loginAs("OPERATOR", p.branchId());
+        Cookie keeper = loginAs("WAREHOUSE_MANAGER", p.branchId());
+        Cookie picker = loginAs("PICKER", p.branchId());
+        Cookie accountant = loginAs("ACCOUNTANT", p.branchId());
+        long driver = jdbc.sql("SELECT max(id) FROM employee WHERE full_name = 'Sinov DRIVER' AND branch_id = :b").param("b", p.branchId())
+                .query(Long.class).single();
+        long prod = product(p, "BY Faktura navbat", "1000", 20, null, null);
+        long transfer = documenting(p, c, prod, 2, 1, "DELIVERY", operator, keeper, picker);
+        // Naqd buyurtma — kodlar standart «Zaxira kodlarga»
+        long cash = draft(operator, order(p, c, new long[][] {{prod, 1}}).replace("\"TRANSFER\"", "\"CASH\""));
+        send(post("/api/orders/" + cash + "/submit"), operator, "").andExpect(jsonPath("$.status").value("QUEUED"));
+        send(post("/api/orders/" + cash + "/time"), keeper, "{\"pickMinutes\":10}").andExpect(status().isOk());
+        send(post("/api/orders/" + cash + "/pick/start"), picker, "").andExpect(status().isOk());
+        send(post("/api/orders/" + cash + "/pick/finish"), picker, "{}").andExpect(jsonPath("$.status").value("MARKING"));
+        passMarking(p.branchId(), cash);
+        long cashLine = jdbc.sql("SELECT id FROM sales_order_line WHERE order_id = :o").param("o", cash).query(Long.class).single();
+        send(post("/api/orders/" + cash + "/check"), keeper, "{\"checkedLines\":[" + cashLine + "],\"places\":1}")
+                .andExpect(jsonPath("$.status").value("DOCUMENTING"));
+        assertThat(jdbc.sql("SELECT count(*) FROM invoice_task WHERE order_id IN (:o)").param("o", List.of(transfer, cash)).query(Long.class).single())
+                .isZero();
+        long vehicle = jdbc.sql("INSERT INTO vehicle (branch_id, plate_number, model) VALUES (:b, :p, 'Labo') RETURNING id")
+                .param("b", p.branchId()).param("p", "50" + ThreadLocalRandom.current().nextInt(100_000, 999_999)).query(Long.class).single();
+        send(post("/api/trips"), keeper, "{\"vehicleId\":" + vehicle + ",\"driverId\":" + driver + ",\"tripDate\":\"" + today()
+                + "\",\"orderIds\":[" + transfer + "," + cash + "]}").andExpect(status().isCreated());
+        assertThat(statusOf(transfer)).isEqualTo("LOADING");
+        String number = jdbc.sql("SELECT number FROM sales_order WHERE id = :o").param("o", transfer).query(String.class).single();
+        String cashNumber = jdbc.sql("SELECT number FROM sales_order WHERE id = :o").param("o", cash).query(String.class).single();
+        MvcResult q = mvc.perform(get("/api/invoice-tasks").param("q", number).cookie(accountant))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(1))
+                .andExpect(jsonPath("$.pending").value(1))
+                .andExpect(jsonPath("$.items[0].status").value("PENDING"))
+                .andExpect(jsonPath("$.items[0].orderStatus").value("LOADING"))
+                .andExpect(jsonPath("$.items[0].codesOwner").value("CUSTOMER"))
+                .andExpect(jsonPath("$.items[0].invoiceNumber").doesNotExist())
+                .andExpect(jsonPath("$.items[0].hasEfakturaFile").value(false))
+                .andReturn();
+        long task = ((Number) JsonPath.read(q.getResponse().getContentAsString(), "$.items[0].id")).longValue();
+        mvc.perform(get("/api/invoice-tasks").param("q", cashNumber).cookie(accountant)).andExpect(jsonPath("$.total").value(0));
+        // Naqd buyurtma egasi «Mijoz nomiga» ga o'zgarsa — vazifa ochiladi
+        send(post("/api/orders/" + cash + "/codes-owner"), keeper, "{\"owner\":\"CUSTOMER\"}").andExpect(status().isOk());
+        mvc.perform(get("/api/invoice-tasks").param("q", cashNumber).cookie(accountant)).andExpect(jsonPath("$.total").value(1));
+        // Ruxsatlar va filial
+        mvc.perform(get("/api/invoice-tasks").cookie(operator)).andExpect(status().isForbidden());
+        Place other = place();
+        Cookie otherAccountant = loginAs("ACCOUNTANT", other.branchId());
+        mvc.perform(get("/api/invoice-tasks").param("q", number).cookie(otherAccountant)).andExpect(jsonPath("$.total").value(0));
+        mvc.perform(get("/api/invoice-tasks/" + task).cookie(otherAccountant)).andExpect(status().isNotFound());
+        // HF hali yo'q (sotuv o'tkazilmagan) — 404; kodlar .xlsx — bor
+        mvc.perform(get("/api/invoice-tasks/" + task + "/invoice/pdf").cookie(accountant)).andExpect(status().isNotFound());
+        mvc.perform(get("/api/invoice-tasks/" + task + "/codes").cookie(accountant)).andExpect(status().isOk());
+
+        byte[] pdf = "%PDF-1.4 sinov".getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        byte[] png = {(byte) 0x89, 'P', 'N', 'G', 1, 2, 3};
+        var upload = (java.util.function.BiFunction<String, org.springframework.mock.web.MockMultipartFile, org.springframework.test.web.servlet.ResultActions>) (
+                kind, file) -> {
+            try {
+                return mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart("/api/invoice-tasks/" + task + "/files")
+                        .file(file).param("kind", kind).with(csrf()).cookie(accountant));
+            } catch (Exception e) {
+                throw new IllegalStateException(e);
+            }
+        };
+        // Turi notoʻgʻri (matn; kengaytmasi .pdf, mazmuni — yo'q)
+        upload.apply("EFAKTURA", new org.springframework.mock.web.MockMultipartFile("file", "f.txt", "text/plain", new byte[] {1, 2}))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("invoiceTask.fileType"));
+        upload.apply("EFAKTURA", new org.springframework.mock.web.MockMultipartFile("file", "f.pdf", "application/pdf", new byte[] {1, 2, 3, 4}))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("invoiceTask.fileType"));
+        byte[] big = new byte[10 * 1024 * 1024 + 1];
+        big[0] = '%';
+        big[1] = 'P';
+        big[2] = 'D';
+        big[3] = 'F';
+        upload.apply("TTN", new org.springframework.mock.web.MockMultipartFile("file", "big.pdf", "application/pdf", big))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("invoiceTask.fileSize"));
+        String body = "{\"efakturaNumber\":\"EF-777\",\"efakturaDate\":\"" + today() + "\"}";
+        send(post("/api/invoice-tasks/" + task + "/sent"), accountant, body)
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("invoiceTask.efakturaFileRequired"));
+        upload.apply("EFAKTURA", new org.springframework.mock.web.MockMultipartFile("file", "e-faktura.pdf", "application/pdf", pdf))
+                .andExpect(status().isCreated());
+        send(post("/api/invoice-tasks/" + task + "/sent"), accountant, body)
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("invoiceTask.ttnFileRequired"));
+        upload.apply("TTN", new org.springframework.mock.web.MockMultipartFile("file", "ttn.png", "image/png", png)).andExpect(status().isCreated());
+        send(post("/api/invoice-tasks/" + task + "/sent"), operator, body).andExpect(status().isForbidden());
+        send(post("/api/invoice-tasks/" + task + "/sent"), accountant, "{\"efakturaNumber\":\" \",\"efakturaDate\":\"" + today() + "\"}")
+                .andExpect(status().isBadRequest());
+        send(post("/api/invoice-tasks/" + task + "/sent"), accountant, "{\"efakturaNumber\":\"EF-777\",\"efakturaDate\":\""
+                + LocalDate.now(java.time.ZoneId.of("Asia/Tashkent")).plusDays(2) + "\"}")
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("invoiceTask.futureDate"));
+        send(post("/api/invoice-tasks/" + task + "/sent"), accountant, body)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("SENT"))
+                .andExpect(jsonPath("$.efakturaNumber").value("EF-777"))
+                .andExpect(jsonPath("$.sentBy").isNotEmpty());
+        send(post("/api/invoice-tasks/" + task + "/sent"), accountant, body)
+                .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("invoiceTask.alreadySent"));
+        upload.apply("TTN", new org.springframework.mock.web.MockMultipartFile("file", "ttn2.png", "image/png", png))
+                .andExpect(status().isConflict());
+        // Buyurtma kartochkasi «Hujjatlar»: Operator (orders.view) ko'radi va yuklab oladi
+        MvcResult d = mvc.perform(get("/api/invoice-tasks/by-order/" + transfer).cookie(operator))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.task.status").value("SENT"))
+                .andExpect(jsonPath("$.files.length()").value(2))
+                .andReturn();
+        List<Number> efIds = JsonPath.read(d.getResponse().getContentAsString(), "$.files[?(@.kind == 'EFAKTURA')].id");
+        long fileId = efIds.getFirst().longValue();
+        mvc.perform(get("/api/invoice-tasks/files/" + fileId).cookie(operator))
+                .andExpect(status().isOk())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content().bytes(pdf));
+        mvc.perform(get("/api/invoice-tasks/files/" + fileId).cookie(otherAccountant)).andExpect(status().isNotFound());
+        mvc.perform(get("/api/invoice-tasks").param("q", number).param("status", "SENT").cookie(accountant))
+                .andExpect(jsonPath("$.total").value(1)).andExpect(jsonPath("$.sent").value(1));
+        assertThatThrownBy(() -> jdbc.sql("UPDATE invoice_task SET status = 'PENDING' WHERE id = :t").param("t", task).update())
+                .hasMessageContaining("oʻzgarmaydi");
+        assertThatThrownBy(() -> jdbc.sql("DELETE FROM invoice_task_file WHERE task_id = :t").param("t", task).update()).isNotNull();
+    }
+
     /** Reys orqali to'liq yetkazilgan buyurtma (DELIVERED); qaytadi — buyurtma id. */
     private long delivered(Place p, long c, long prod, int qty, Cookie operator, Cookie keeper, Cookie picker) throws Exception {
         Cookie driverSession = loginAs("DRIVER", p.branchId());

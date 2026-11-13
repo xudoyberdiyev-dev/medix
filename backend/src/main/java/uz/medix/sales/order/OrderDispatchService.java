@@ -98,6 +98,8 @@ class OrderDispatchService implements OrderDispatch {
                 .update();
         audit.record(AuditEntry.of("order.documented", "sales_order", orderId).change(Map.of("status", "DOCUMENTING"),
                 Map.of("status", "LOADING", "waybill", nk)));
+        // O10d: parallel buxgalter faktura vazifasi (kodlar «Mijoz nomiga» yoki Perechisleniye)
+        InvoiceTasks.openIfNeeded(jdbc, orderId);
         return nk;
     }
 

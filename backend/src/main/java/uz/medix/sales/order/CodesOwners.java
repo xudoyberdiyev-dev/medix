@@ -62,6 +62,8 @@ class CodesOwners {
                 .param("w", owner.name())
                 .param("id", orderId)
                 .update();
+        // O10d: «Yuklanmoqda» / «Yo'lda» da «Mijoz nomiga» ga o'tsa — faktura vazifasi ochiladi
+        InvoiceTasks.openIfNeeded(jdbc, orderId);
         if (h.current() != owner) {
             audit.record(AuditEntry.of("order.codesOwner", "sales_order", orderId)
                     .change(Map.of("codesOwner", h.current().name()), Map.of("codesOwner", owner.name())));
