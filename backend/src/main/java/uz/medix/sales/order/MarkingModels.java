@@ -16,7 +16,7 @@ final class MarkingModels {
     /** Qadoq turi: Q — quti, D — dona (GS1 AI 91). */
     enum MarkKind { BOX, UNIT }
 
-    enum MarkStatus { ACTIVE, REMOVED, RELEASED, SOLD }
+    enum MarkStatus { ACTIVE, REMOVED, RELEASED, SOLD, RETURNED }
 
     record MarkQueueItem(
             long id,

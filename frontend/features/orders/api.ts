@@ -104,6 +104,12 @@ export const useSaveOrder = () =>
     id ? unwrap(api.PUT("/api/orders/{id}", { params: { path: { id } }, body })) : unwrap(api.POST("/api/orders", { body })),
   );
 
+/** O10b: kodlar egasi — «Mijoz nomiga» / «Zaxira kodlarga» (marking.owner, buyurtma yopilguncha). */
+export const useSetCodesOwner = () =>
+  useOrderMutation(({ id, owner }: { id: number; owner: OrderDetail["codesOwner"] }) =>
+    unwrap(api.POST("/api/orders/{id}/codes-owner", { params: { path: { id } }, body: { owner } })),
+  );
+
 export const useSubmitOrder = () =>
   useOrderMutation((id: number) => unwrap(api.POST("/api/orders/{id}/submit", { params: { path: { id } } })));
 

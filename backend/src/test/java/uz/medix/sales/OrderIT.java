@@ -1733,6 +1733,86 @@ class OrderIT {
         mvc.perform(get("/api/orders/" + second).cookie(operator)).andExpect(jsonPath("$.total").value("2000.00"));
     }
 
+    /** O10b/c: kodlar egasi (standart to'lov turidan, qo'lda o'zgartirish) → yetkazilganda «Zaxira kodlar» → ishlatildi / hisobdan chiqarish. */
+    @Test
+    void codesOwnerAndReserveCodesOnDelivery() throws Exception {
+        Place p = place();
+        long c = customer(p.branchId(), null);
+        Cookie operator = loginAs("OPERATOR", p.branchId());
+        Cookie keeper = loginAs("WAREHOUSE_MANAGER", p.branchId());
+        Cookie picker = loginAs("PICKER", p.branchId());
+        Cookie accountant = loginAs("ACCOUNTANT", p.branchId());
+        Cookie driverSession = loginAs("DRIVER", p.branchId());
+        long driver = jdbc.sql("SELECT max(id) FROM employee WHERE full_name = 'Sinov DRIVER' AND branch_id = :b").param("b", p.branchId())
+                .query(Long.class).single();
+        long prod = product(p, "BY Zaxira kod", "1000", 20, null, null);
+        long o = documenting(p, c, prod, 2, 1, "DELIVERY", operator, keeper, picker);
+        // Perechisleniye → standart «Mijoz nomiga»; Operator o'zgartira olmaydi; Ombor mudiri — «Zaxira kodlarga»
+        mvc.perform(get("/api/orders/" + o).cookie(keeper))
+                .andExpect(jsonPath("$.codesOwner").value("CUSTOMER"))
+                .andExpect(jsonPath("$.codesOwnerManual").value(false));
+        send(post("/api/orders/" + o + "/codes-owner"), operator, "{\"owner\":\"RESERVE\"}").andExpect(status().isForbidden());
+        send(post("/api/orders/" + o + "/codes-owner"), keeper, "{\"owner\":\"RESERVE\"}")
+                .andExpect(jsonPath("$.codesOwner").value("RESERVE"))
+                .andExpect(jsonPath("$.codesOwnerManual").value(true));
+        long vehicle = jdbc.sql("INSERT INTO vehicle (branch_id, plate_number, model) VALUES (:b, :p, 'Labo') RETURNING id")
+                .param("b", p.branchId()).param("p", "40" + ThreadLocalRandom.current().nextInt(100_000, 999_999)).query(Long.class).single();
+        MvcResult t = send(post("/api/trips"), keeper, "{\"vehicleId\":" + vehicle + ",\"driverId\":" + driver + ",\"tripDate\":\"" + today()
+                + "\",\"orderIds\":[" + o + "]}").andExpect(status().isCreated()).andReturn();
+        long trip = id(t);
+        long stop = ((Number) JsonPath.read(t.getResponse().getContentAsString(), "$.stops[0].id")).longValue();
+        send(post("/api/trips/" + trip + "/stops/" + stop + "/load"), driverSession, "{\"places\":1}").andExpect(status().isOk());
+        send(post("/api/trips/" + trip + "/start"), driverSession, "").andExpect(status().isOk());
+        // Sotilgan kodlar (markirovka zanjiri boshqa testlarda) — to'g'ridan-to'g'ri
+        String serial = "Z" + ThreadLocalRandom.current().nextInt(100_000, 999_999);
+        jdbc.sql("""
+                INSERT INTO sales_order_mark (order_id, line_id, batch_id, gtin, serial, batch_no, kind, raw, scanned_raw, status, scanned_by,
+                                              closed_by, closed_at)
+                SELECT :o, sl.order_line_id, sl.batch_id, '04601234567893', :s || g, 'L1', 'D', '(01)04601234567893(21)' || :s || g,
+                       '0104601234567893' || '21' || :s || g || chr(29) || '93Ab1c', 'SOLD', so.created_by, so.created_by, now()
+                FROM sale_line sl JOIN sale sa ON sa.id = sl.sale_id JOIN sales_order so ON so.id = sa.order_id
+                CROSS JOIN generate_series(1, 2) g WHERE sa.order_id = :o""")
+                .param("o", o).param("s", serial).update();
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart("/api/trips/" + trip + "/stops/" + stop + "/photos")
+                        .file(new org.springframework.mock.web.MockMultipartFile("file", "a.jpg", "image/jpeg", new byte[] {1, 2, 3}))
+                        .with(csrf()).cookie(driverSession))
+                .andExpect(status().isCreated());
+        send(post("/api/trips/" + trip + "/stops/" + stop + "/deliver"), driverSession, "{}").andExpect(status().isOk());
+        assertThat(statusOf(o)).isEqualTo("DELIVERED");
+        // Yopilgan buyurtmada egasi o'zgarmaydi
+        send(post("/api/orders/" + o + "/codes-owner"), keeper, "{\"owner\":\"CUSTOMER\"}")
+                .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("order.codesOwnerClosed"));
+
+        // «Zaxira kodlar»: Buxgalter ko'radi, Operator — yo'q; boshqa filial — ko'rinmaydi
+        MvcResult list = mvc.perform(get("/api/reserve-codes").param("q", serial).cookie(accountant))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(2))
+                .andExpect(jsonPath("$.inReserve").value(2))
+                .andExpect(jsonPath("$.items[0].status").value("IN_RESERVE"))
+                .andExpect(jsonPath("$.items[0].customer").isNotEmpty())
+                .andReturn();
+        mvc.perform(get("/api/reserve-codes").cookie(operator)).andExpect(status().isForbidden());
+        Place other = place();
+        mvc.perform(get("/api/reserve-codes").param("q", serial).cookie(loginAs("WAREHOUSE_MANAGER", other.branchId())))
+                .andExpect(jsonPath("$.total").value(0));
+        long z1 = ((Number) JsonPath.read(list.getResponse().getContentAsString(), "$.items[0].id")).longValue();
+        long z2 = ((Number) JsonPath.read(list.getResponse().getContentAsString(), "$.items[1].id")).longValue();
+        send(post("/api/reserve-codes/" + z1 + "/use"), keeper, "{\"note\":\" \"}").andExpect(status().isBadRequest());
+        send(post("/api/reserve-codes/" + z1 + "/use"), keeper, "{\"note\":\"Naqd mijoz D-12 ga\"}").andExpect(status().isOk());
+        send(post("/api/reserve-codes/" + z1 + "/write-off"), keeper, "{\"note\":\"Takror\"}")
+                .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("zcodes.closed"));
+        send(post("/api/reserve-codes/" + z2 + "/write-off"), accountant, "{\"note\":\"Saplayn: yaroqsiz\"}").andExpect(status().isOk());
+        mvc.perform(get("/api/reserve-codes").param("q", serial).param("status", "USED").cookie(keeper))
+                .andExpect(jsonPath("$.total").value(1))
+                .andExpect(jsonPath("$.items[0].note").value("Naqd mijoz D-12 ga"))
+                .andExpect(jsonPath("$.used").value(1))
+                .andExpect(jsonPath("$.writtenOff").value(1));
+        mvc.perform(get("/api/reserve-codes/export").param("q", serial).cookie(keeper)).andExpect(status().isOk());
+        assertThatThrownBy(() -> jdbc.sql("DELETE FROM reserve_code WHERE id = :z").param("z", z1).update()).hasMessageContaining("oʻchirilmaydi");
+        assertThatThrownBy(() -> jdbc.sql("UPDATE reserve_code SET status = 'IN_RESERVE' WHERE id = :z").param("z", z1).update())
+                .hasMessageContaining("oʻzgarmaydi");
+    }
+
     /** Reys orqali to'liq yetkazilgan buyurtma (DELIVERED); qaytadi — buyurtma id. */
     private long delivered(Place p, long c, long prod, int qty, Cookie operator, Cookie keeper, Cookie picker) throws Exception {
         Cookie driverSession = loginAs("DRIVER", p.branchId());

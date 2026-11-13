@@ -51,12 +51,15 @@ class OrderController {
     private final OrderInvoices invoices;
     private final OrderInvoicePdf invoicePdf;
     private final CurrentActor currentActor;
+    private final CodesOwners codesOwners;
 
     record ReturnAcceptRequest(@jakarta.validation.constraints.NotNull(message = "{validation.required}") @jakarta.validation.constraints.Min(0)
             Integer receivedQty) {}
 
     OrderController(Orders orders, OrderPicking picking, OrderMonitor monitor, OrderIssues issues, OrderSales sales, OrderWaybillPdf waybill,
-            OrderPickSheetPdf pickSheet, OrderInvoices invoices, OrderInvoicePdf invoicePdf, CurrentActor currentActor) {
+            OrderPickSheetPdf pickSheet, OrderInvoices invoices, OrderInvoicePdf invoicePdf, CurrentActor currentActor,
+            CodesOwners codesOwners) {
+        this.codesOwners = codesOwners;
         this.pickSheet = pickSheet;
         this.invoices = invoices;
         this.invoicePdf = invoicePdf;
@@ -279,6 +282,15 @@ class OrderController {
     @Operation(summary = "Qoralamaga qaytarish", description = "Faqat «Tasdiqlashda» holatidan.")
     OrderDetail returnToDraft(@PathVariable long id, Authentication auth) {
         orders.returnToDraft(actor(), id, has(auth, "approvals.branch") || has(auth, "approvals.director"));
+        return detail(id);
+    }
+
+    @PostMapping("/{id}/codes-owner")
+    @PreAuthorize("hasAuthority('marking.owner')")
+    @Operation(summary = "Kodlar egasini o'zgartirish (O10b)",
+            description = "«Mijoz nomiga» yoki «Zaxira kodlarga». Buyurtma yopilguncha (Yetkazildi / Yetkazilmadi / Bekor / Rad etildi).")
+    OrderDetail setCodesOwner(@PathVariable long id, @Valid @RequestBody OrderModels.CodesOwnerRequest r) {
+        codesOwners.set(actor(), id, r.owner());
         return detail(id);
     }
 

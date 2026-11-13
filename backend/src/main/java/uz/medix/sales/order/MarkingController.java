@@ -311,6 +311,7 @@ class MarkingController {
             case REMOVED -> "Olib tashlangan";
             case RELEASED -> "Boʻshatilgan";
             case SOLD -> "Sotilgan";
+            case RETURNED -> "Qaytarilgan";
         };
     }
 }

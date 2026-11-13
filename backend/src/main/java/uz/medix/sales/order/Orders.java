@@ -611,6 +611,7 @@ class Orders {
         Money totalMoney = draft ? ev.total() : new Money(h.total());
         String total = totalMoney.toString();
         Money gross = draft ? ev.gross() : storedGross;
+        CodesOwners.Info owner = CodesOwners.info(jdbc, id);
         return Optional.of(new OrderDetail(h.id(), h.number(), h.branchId(), h.warehouseId(), h.warehouse(), h.customerId(), h.customer(),
                 h.customerTin(), h.orderDate().toLocalDate(), DeliveryType.valueOf(h.deliveryType()), localDate(h.deliveryDate()), h.address(),
                 PaymentType.valueOf(h.paymentType()), h.note(), status,
@@ -621,7 +622,8 @@ class Orders {
                 h.decisionReason(), h.cancelledBy(), instant(h.cancelledAt()), h.cancelReason(), h.pickMinutes(), h.markMinutes(), h.picker(),
                 instant(h.pickStartedAt()), instant(h.pickFinishedAt()), h.fefoDeviation(), h.places(), documents(id),
                 holder(id, status, DeliveryType.valueOf(h.deliveryType())), lines,
-                jdbc.sql("SELECT unnest(repick_line_ids) FROM sales_order WHERE id = :id").param("id", id).query(Long.class).list()));
+                jdbc.sql("SELECT unnest(repick_line_ids) FROM sales_order WHERE id = :id").param("id", id).query(Long.class).list(),
+                owner.owner(), owner.manual()));
     }
 
     /**

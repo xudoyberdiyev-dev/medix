@@ -770,6 +770,7 @@ const STATUS_TONE: Record<MarkCode["status"], "success" | "neutral" | "warning" 
   REMOVED: "warning",
   RELEASED: "neutral",
   SOLD: "success",
+  RETURNED: "warning",
 };
 
 function CodesJournal({ today, mine }: { today: boolean; mine: boolean }) {

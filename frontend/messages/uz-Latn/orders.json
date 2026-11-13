@@ -415,7 +415,8 @@
       "ACTIVE": "Buyurtmada",
       "REMOVED": "Olib tashlangan",
       "RELEASED": "Boʻshatilgan",
-      "SOLD": "Sotilgan"
+      "SOLD": "Sotilgan",
+      "RETURNED": "Qaytarilgan"
     },
     "col": {
       "time": "Vaqt",
@@ -901,7 +902,8 @@
       "time": "Vaqt berildi",
       "undelivered": "Yetkazilmadi",
       "update": "Tahrirlandi",
-      "markExport": "Kodlar Saplayn tekshiruviga yuklab olindi"
+      "markExport": "Kodlar Saplayn tekshiruviga yuklab olindi",
+      "codesOwner": "Kodlar egasi oʻzgartirildi"
     },
     "tPay": "Toʻlov",
     "payEmptyT": "Sotuv hali rasmiylashtirilmagan",
@@ -1011,5 +1013,14 @@
     "back": "Ortga",
     "done": "{n} ta kod qabul qilindi",
     "doneRest": "{n} ta qatorni qoʻlda skanerlang."
+  },
+  "codesOwner": {
+    "label": "Kodlar",
+    "CUSTOMER": "Mijoz nomiga",
+    "RESERVE": "Zaxira kodlarga",
+    "byPayment": "toʻlov turi boʻyicha",
+    "toReserve": "Zaxira kodlarga oʻtkazish",
+    "toCustomer": "Mijoz nomiga oʻtkazish",
+    "changed": "Kodlar egasi oʻzgartirildi"
   }
 }

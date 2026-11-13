@@ -28,6 +28,11 @@ final class OrderModels {
 
     enum DeliveryType { DELIVERY, PICKUP }
 
+    /** O10b: markirovka kodlari egasi — mijoz nomiga yoki zaxira kodlarga. */
+    enum CodesOwner { CUSTOMER, RESERVE }
+
+    record CodesOwnerRequest(@NotNull(message = "{validation.required}") CodesOwner owner) {}
+
     enum PaymentType { CASH, TRANSFER, ONLINE }
 
     /** Tasdiq darajasi (SPEC 6): limit ≤ 20% — Filial rahbari; > 20% yoki muddati o'tgan qarz 30+ kun — Direktor. */
@@ -201,7 +206,9 @@ final class OrderModels {
             @Schema(description = "«Hozir kimda»: buyurtma qaysi xodim yoki bosqichda (SPEC 5.2)") String holder,
             List<OrderLine> lines,
             @Schema(description = "Qator bo'yicha «Yig'ishga qaytarish»dan keyin qayta yig'iladigan qatorlar; bo'sh — barcha qatorlar (SPEC 188)")
-            List<Long> repickLineIds) {}
+            List<Long> repickLineIds,
+            @Schema(description = "O10b: kodlar egasi (standart — to'lov turidan: Perechisleniye → mijoz, qolgani → zaxira)") CodesOwner codesOwner,
+            @Schema(description = "Kodlar egasi qo'lda tanlangan") boolean codesOwnerManual) {}
 
     /** Buyurtmadan yozilgan hujjatlar (SPEC 7). */
     record OrderDocuments(

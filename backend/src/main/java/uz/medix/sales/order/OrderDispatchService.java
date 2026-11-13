@@ -136,6 +136,7 @@ class OrderDispatchService implements OrderDispatch {
         if (n == 0) {
             throw MedixException.conflict("trip.orderNotInTransit");
         }
+        CodesOwners.onDelivered(jdbc, orderId);
         audit.record(AuditEntry.of("order.delivered", "sales_order", orderId).change(Map.of("status", "IN_TRANSIT"), Map.of("status", "DELIVERED")));
     }
 

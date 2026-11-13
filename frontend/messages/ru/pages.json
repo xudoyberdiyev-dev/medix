@@ -47,5 +47,6 @@
   "warehouse": "Панель заведующего складом",
   "warehouseTransfers": "Перемещения между складами",
   "writeOffs": "Списание",
-  "zoneTransfers": "Перемещения по зонам"
+  "zoneTransfers": "Перемещения по зонам",
+  "reserveCodes": "Резервные коды"
 }

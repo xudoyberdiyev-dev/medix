@@ -1,4 +1,5 @@
 import {
+  Archive,
   ArrowLeftRight,
   Banknote,
   Boxes,
@@ -195,6 +196,7 @@ export const navigation: NavGroup[] = [
         icon: PackageMinus,
         anyOf: ["qm.view", "qm.create", "qm.approve", "hc.view", "hc.create", "hc.approve", "qy.view", "qy.create", "qy.approve"],
       },
+      { key: "reserveCodes", label: "Zaxira kodlar", href: "/reserve-codes", icon: Archive, anyOf: ["zcodes.view"] },
       { key: "opening", label: "Boshlangʻich qoldiq", href: "/opening", icon: Database, anyOf: ["opening.list", "opening.view"] },
     ],
   },

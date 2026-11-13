@@ -14,6 +14,7 @@ import { useMe } from "@/features/auth/session";
 import { api, unwrap } from "@/lib/api/client";
 import { cn } from "@/lib/cn";
 import { formatDate, formatMoney, formatQuantity, formatTime } from "@/lib/format";
+import { CodesOwnerValue } from "./codes-owner";
 import { useOrderHistory, type OrderDetail } from "./api";
 import { formatPct } from "./discount";
 import { pickPhase, pickRows } from "./order-pick";
@@ -181,12 +182,14 @@ const HISTORY_ACTIONS = new Set<string>([
   "backToDocumenting",
   "cancel",
   "check",
+  "codesOwner",
   "create",
   "delivered",
   "documented",
   "issue",
   "issueResolve",
   "markConfirm",
+  "markExport",
   "markFinish",
   "markRemove",
   "markStart",
@@ -207,12 +210,14 @@ type HistoryAction =
   | "backToDocumenting"
   | "cancel"
   | "check"
+  | "codesOwner"
   | "create"
   | "delivered"
   | "documented"
   | "issue"
   | "issueResolve"
   | "markConfirm"
+  | "markExport"
   | "markFinish"
   | "markRemove"
   | "markStart"
@@ -446,6 +451,7 @@ export function OrderCardBody({ doc, shipping }: { doc: OrderDetail; shipping?: 
                   value: doc.credit.paymentDays ? t("card.payTerm", { pay, days: doc.credit.paymentDays }) : pay,
                 },
                 { label: t("drawer.note"), value: doc.note || "—" },
+                ...(doc.lines.some((l) => l.marked) ? [{ label: t("codesOwner.label"), value: <CodesOwnerValue doc={doc} /> }] : []),
               ]}
             />
           </div>

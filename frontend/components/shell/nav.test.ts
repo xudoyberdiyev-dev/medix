@@ -29,7 +29,7 @@ describe("ruxsatga qarab menyu", () => {
     const groups = navigation.filter((g) => g.key).map((g) => [g.key, g.items.map((i) => i.key)]);
     expect(groups).toEqual([
       ["sales", ["orders", "approvals", "shipments"]],
-      ["warehouse", ["receipts", "stock", "expiry", "transfers", "inventory-counts", "returns", "opening"]],
+      ["warehouse", ["receipts", "stock", "expiry", "transfers", "inventory-counts", "returns", "reserveCodes", "opening"]],
       ["money", ["payments", "cash", "bank", "customer-debts", "supplier-debts", "reconciliations"]],
       ["references", ["products", "customers", "suppliers", "prices", "salesZones", "dictionaries"]],
       ["admin", ["company", "branches", "warehouses", "staff", "roles", "audit", "settings"]],
