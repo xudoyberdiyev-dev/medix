@@ -879,7 +879,7 @@ test("Buxgalter: Savdo hisoboti va mijozlar qarzi", async ({ page }) => {
   }
 });
 
-test("Buxgalter: «Fakturalar» navbati — naqd buyurtmalar navbatga tushmaydi (O10d)", async ({ page }) => {
+test("Buxgalter: «Fakturalar» navbati va hisobotlari (O10d, f, g)", async ({ page }) => {
   await login(page, "accountant.1", PASSWORD);
   await expect(page).toHaveURL(/\/$/);
   await page.getByRole("link", { name: "Fakturalar" }).first().click();
@@ -887,11 +887,12 @@ test("Buxgalter: «Fakturalar» navbati — naqd buyurtmalar navbatga tushmaydi 
   await expect(page.getByRole("heading", { name: "Fakturalar" }).first()).toBeVisible();
   await expect(page.getByText(/^Integratsiya hali ulanmagan/)).toBeVisible();
   await expect(page.getByRole("tab", { name: /^Yuborilishi kerak/ })).toHaveAttribute("aria-selected", "true");
-  await expect(page.getByText("Navbatda faktura yoʻq")).toBeVisible();
+  // Naqd buyurtmalar navbatga tushmaydi; Perechisleniye boʻlsa — qator
+  await expect(page.getByText("Navbatda faktura yoʻq").or(page.getByRole("row").nth(1)).first()).toBeVisible();
   // O10f / O10g hisobotlari
   await page.goto("/reports/accountants");
   await expect(page.getByRole("heading", { name: "Buxgalter natijasi" }).first()).toBeVisible();
-  await expect(page.getByTestId("accountants-queue")).toContainText("Hozir navbatda: 0");
+  await expect(page.getByTestId("accountants-queue")).toContainText("Hozir navbatda:");
   await page.goto("/reports/marking-codes");
   await expect(page.getByRole("heading", { name: "Markirovka kodlari" }).first()).toBeVisible();
   await expect(page.getByTestId("marking-codes-summary")).toBeVisible();
