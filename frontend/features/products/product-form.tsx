@@ -356,10 +356,13 @@ function FormBody({ product, initial }: { product: ProductDetail | null; initial
               <TextField
                 label={t("fields.maxQty")}
                 value={f.maxUnlimited ? "" : f.maxQty}
-                onChange={(v) => set("maxQty")(v.replace(/\D/g, "").slice(0, 6))}
+                onChange={(v) => {
+                  // Raqam yozilsa — «Cheksiz» oʻzi olinadi
+                  const n = v.replace(/\D/g, "").slice(0, 6);
+                  setF((st) => ({ ...st, maxQty: n, maxUnlimited: n ? false : st.maxUnlimited }));
+                }}
                 inputMode="numeric"
                 placeholder={f.maxUnlimited ? t("unlimited") : "300"}
-                disabled={f.maxUnlimited}
                 error={f.maxUnlimited ? undefined : errText("maxQty")}
               />
               <Checkbox
