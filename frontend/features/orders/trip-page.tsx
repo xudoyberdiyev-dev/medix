@@ -314,7 +314,7 @@ export function TripPage({ id }: { id: number }) {
 
   const sheetHref = `/api/trips/${id}/sheet/pdf`;
   /** O11: reysdagi hujjatlashtirilgan buyurtmalar HF — bitta PDF. */
-  const invoiceOrderIds = stops.filter((s) => s.waybillNumber).map((s) => s.orderId);
+  const invoiceOrderIds = st === "PLANNED" || st === "CANCELLED" ? [] : stops.filter((s) => s.waybillNumber).map((s) => s.orderId);
   return (
     <div className="flex min-w-0 flex-col gap-4">
       <DocumentHeader
