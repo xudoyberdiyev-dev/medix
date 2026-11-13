@@ -30,7 +30,7 @@ test("O6: savdo zonasi → yangi mijozga majburiy biriktirish → roʻyxatda ko�
   await expect(page).toHaveURL(/\/$/);
 
   await page.goto("/sales-zones");
-  await expect(page.getByRole("main").getByRole("heading", { name: "Savdo zonalari" })).toBeVisible();
+  await expect(page.getByRole("main").getByRole("heading", { name: "Savdo zonalari", exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Yangi savdo zonasi" }).click();
   const dlg = page.getByRole("dialog", { name: "Yangi savdo zonasi" });
   await pickIfEnabled(page, dlg, "Filial", /Toshkent/);
