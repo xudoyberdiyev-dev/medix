@@ -69,7 +69,7 @@ class InvoiceTasks {
     private static final String SELECT = """
             SELECT t.id, t.status, t.opened_at, t.sent_at, t.efaktura_number, t.efaktura_date, sb.full_name AS sent_by,
                    o.id AS order_id, o.number AS order_number, o.status AS order_status, o.payment_type, o.total AS order_total,
-                   """ + CodesOwners.EFFECTIVE + """
+            """ + CodesOwners.EFFECTIVE + """
              AS owner, c.id AS customer_id, c.name AS customer, c.tin, b.name AS branch,
                    s.invoice_number, s.total AS sale_total, s.vat_total,
                    (SELECT count(*) FROM sales_order_mark m WHERE m.order_id = o.id AND m.status IN ('ACTIVE', 'SOLD')) AS codes,
