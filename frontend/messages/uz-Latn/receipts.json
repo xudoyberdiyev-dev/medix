@@ -317,6 +317,7 @@
     "col": {
       "product": "Mahsulot",
       "batch": "Partiya",
+      "mfg": "Ishlab chiq.",
       "exp": "Yaroqlilik muddati",
       "zone": "Zona",
       "qty": "Soni",

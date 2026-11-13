@@ -3,7 +3,7 @@ import { EDIT_KEYS, expiryFlag, gridKeys, lineSum, nextCell } from "./receipt-li
 
 describe("kirim qatorlar jadvali", () => {
   it("ustunlar rejimga va narx huquqiga qarab", () => {
-    expect(gridKeys("edit", false, true)).toEqual(["product", "batch", "exp", "zone", "qty", "bonusQty", "price", "sum"]);
+    expect(gridKeys("edit", false, true)).toEqual(["product", "batch", "mfg", "exp", "zone", "qty", "bonusQty", "price", "sum"]);
     expect(gridKeys("read", true, true)).toContain("fact");
     expect(gridKeys("read", true, false)).not.toContain("price");
     expect(gridKeys("read", true, false)).not.toContain("sum");
@@ -24,7 +24,7 @@ describe("kirim qatorlar jadvali", () => {
   });
 
   it("Enter/Tab keyingi katakka oʻtadi", () => {
-    expect(nextCell(EDIT_KEYS, 2, 0, "batch", 1)).toEqual({ row: 0, key: "exp" });
+    expect(nextCell(EDIT_KEYS, 2, 0, "batch", 1)).toEqual({ row: 0, key: "mfg" });
     expect(nextCell(EDIT_KEYS, 2, 0, "price", 1)).toEqual({ row: 1, key: "batch" });
     expect(nextCell(EDIT_KEYS, 2, 1, "price", 1)).toBeNull();
     expect(nextCell(EDIT_KEYS, 2, 1, "batch", -1)).toEqual({ row: 0, key: "price" });
