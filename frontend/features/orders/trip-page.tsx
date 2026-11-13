@@ -20,6 +20,7 @@ import {
   TriangleAlert,
   X,
   type LucideIcon,
+  FileText,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
@@ -344,6 +345,13 @@ export function TripPage({ id }: { id: number }) {
           <>
             <Button variant="secondary" icon={Printer} onClick={() => window.open(sheetHref, "_blank", "noopener")}>
               {t("print")}
+            </Button>
+            <Button
+              variant="secondary"
+              icon={FileText}
+              onClick={() => window.open(`/api/orders/ttn/pdf?tripId=${id}`, "_blank", "noopener")}
+            >
+              {t("ttn")}
             </Button>
             {canTrip && st === "PLANNED" ? (
               <RowMenu

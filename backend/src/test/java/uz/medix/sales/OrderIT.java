@@ -1848,8 +1848,8 @@ class OrderIT {
                 .isZero();
         long vehicle = jdbc.sql("INSERT INTO vehicle (branch_id, plate_number, model) VALUES (:b, :p, 'Labo') RETURNING id")
                 .param("b", p.branchId()).param("p", "50" + ThreadLocalRandom.current().nextInt(100_000, 999_999)).query(Long.class).single();
-        send(post("/api/trips"), keeper, "{\"vehicleId\":" + vehicle + ",\"driverId\":" + driver + ",\"tripDate\":\"" + today()
-                + "\",\"orderIds\":[" + transfer + "," + cash + "]}").andExpect(status().isCreated());
+        long trip = id(send(post("/api/trips"), keeper, "{\"vehicleId\":" + vehicle + ",\"driverId\":" + driver + ",\"tripDate\":\"" + today()
+                + "\",\"orderIds\":[" + transfer + "," + cash + "]}").andExpect(status().isCreated()).andReturn());
         assertThat(statusOf(transfer)).isEqualTo("LOADING");
         String number = jdbc.sql("SELECT number FROM sales_order WHERE id = :o").param("o", transfer).query(String.class).single();
         String cashNumber = jdbc.sql("SELECT number FROM sales_order WHERE id = :o").param("o", cash).query(String.class).single();
@@ -1877,6 +1877,14 @@ class OrderIT {
         // HF hali yo'q (sotuv o'tkazilmagan) — 404; kodlar .xlsx — bor
         mvc.perform(get("/api/invoice-tasks/" + task + "/invoice/pdf").cookie(accountant)).andExpect(status().isNotFound());
         mvc.perform(get("/api/invoice-tasks/" + task + "/codes").cookie(accountant)).andExpect(status().isOk());
+        // O10e TTN: buyurtma, faktura vazifasi va reys bo'yicha PDF; boshqa filial — 404
+        mvc.perform(get("/api/invoice-tasks/" + task + "/ttn/pdf").cookie(accountant))
+                .andExpect(status().isOk())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header().string("Content-Type",
+                        org.hamcrest.Matchers.containsString("pdf")));
+        mvc.perform(get("/api/orders/" + transfer + "/ttn/pdf").cookie(operator)).andExpect(status().isOk());
+        mvc.perform(get("/api/orders/ttn/pdf").param("tripId", String.valueOf(trip)).cookie(keeper)).andExpect(status().isOk());
+        mvc.perform(get("/api/orders/ttn/pdf").param("tripId", String.valueOf(trip)).cookie(otherAccountant)).andExpect(status().isNotFound());
 
         byte[] pdf = "%PDF-1.4 sinov".getBytes(java.nio.charset.StandardCharsets.UTF_8);
         byte[] png = {(byte) 0x89, 'P', 'N', 'G', 1, 2, 3};

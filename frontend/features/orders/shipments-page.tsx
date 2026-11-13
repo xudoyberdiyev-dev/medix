@@ -20,6 +20,7 @@ import {
   TriangleAlert,
   Truck,
   User,
+  FileText,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -478,6 +479,12 @@ export function ShipmentsPage() {
                     label: tr("shipments.printSheet"),
                     icon: <Printer size={16} strokeWidth={1.5} />,
                     onSelect: () => printSheet(t.id),
+                  },
+                  {
+                    key: "ttn",
+                    label: tr("shipments.printTtn"),
+                    icon: <FileText size={16} strokeWidth={1.5} />,
+                    onSelect: () => window.open(`/api/orders/ttn/pdf?tripId=${t.id}`, "_blank", "noopener"),
                   },
                 ];
                 if (canTrip && t.status === "PLANNED") {

@@ -31,7 +31,18 @@ export function OrderInvoiceDocs({ orderId }: { orderId: number }) {
     <section className="rounded-card border border-border bg-surface px-5 py-4" data-testid="order-invoice-docs">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <h3 className="font-semibold">{t("docs.title")}</h3>
-        <InvoiceStatusBadge status={task.status} />
+        <div className="flex items-center gap-3">
+          <a
+            href={`/api/orders/${orderId}/ttn/pdf`}
+            target="_blank"
+            rel="noopener"
+            className="inline-flex items-center gap-1.5 text-primary hover:underline"
+          >
+            <FileText size={16} strokeWidth={1.5} aria-hidden />
+            {t("ttn")}
+          </a>
+          <InvoiceStatusBadge status={task.status} />
+        </div>
       </div>
       <dl className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-3 text-[13px]">
         <div>

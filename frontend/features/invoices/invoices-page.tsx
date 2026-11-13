@@ -153,6 +153,12 @@ export function InvoicesPage() {
         icon: <Printer size={16} strokeWidth={1.5} aria-hidden />,
         onSelect: () => open(invoicePdfUrl(x.id)),
       });
+    items.push({
+      key: "ttn",
+      label: t("ttn"),
+      icon: <FileText size={16} strokeWidth={1.5} aria-hidden />,
+      onSelect: () => open(`/api/invoice-tasks/${x.id}/ttn/pdf`),
+    });
     if (x.codes > 0)
       items.push({
         key: "codes",
