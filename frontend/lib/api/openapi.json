@@ -21273,6 +21273,11 @@
             "type" : "boolean",
             "description" : "Buxgalterga Direktor bergan «barcha filiallar» doirasi (E3)"
           },
+          "birthDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Tugʻilgan sana"
+          },
           "blockedReason" : {
             "type" : "string"
           },
@@ -21287,6 +21292,9 @@
               "type" : "integer",
               "format" : "int64"
             }
+          },
+          "email" : {
+            "type" : "string"
           },
           "firstName" : {
             "type" : "string"
@@ -28287,7 +28295,17 @@
       "Profile" : {
         "type" : "object",
         "properties" : {
+          "birthDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
           "branchName" : {
+            "type" : "string"
+          },
+          "email" : {
+            "type" : "string"
+          },
+          "firstName" : {
             "type" : "string"
           },
           "fullName" : {
@@ -28301,7 +28319,13 @@
             "type" : "string",
             "format" : "date-time"
           },
+          "lastName" : {
+            "type" : "string"
+          },
           "login" : {
+            "type" : "string"
+          },
+          "middleName" : {
             "type" : "string"
           },
           "passwordChangedAt" : {
@@ -32822,6 +32846,10 @@
       "UpdateEmployeeRequest" : {
         "type" : "object",
         "properties" : {
+          "birthDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
           "branchId" : {
             "type" : "integer",
             "format" : "int64"
@@ -32832,6 +32860,12 @@
               "type" : "integer",
               "format" : "int64"
             }
+          },
+          "email" : {
+            "type" : "string",
+            "format" : "email",
+            "maxLength" : 254,
+            "minLength" : 0
           },
           "firstName" : {
             "type" : "string",
@@ -32880,12 +32914,48 @@
       "UpdateProfileRequest" : {
         "type" : "object",
         "properties" : {
+          "birthDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "email" : {
+            "type" : "string",
+            "format" : "email",
+            "maxLength" : 254,
+            "minLength" : 0
+          },
+          "firstName" : {
+            "type" : "string",
+            "maxLength" : 100,
+            "minLength" : 0
+          },
+          "lastName" : {
+            "type" : "string",
+            "maxLength" : 100,
+            "minLength" : 0
+          },
+          "login" : {
+            "type" : "string",
+            "minLength" : 1,
+            "pattern" : "^[A-Za-z0-9._-]{3,64}$"
+          },
+          "middleName" : {
+            "type" : "string",
+            "maxLength" : 100,
+            "minLength" : 0
+          },
           "phone" : {
             "type" : "string",
             "maxLength" : 32,
             "minLength" : 0
+          },
+          "position" : {
+            "type" : "string",
+            "maxLength" : 100,
+            "minLength" : 0
           }
-        }
+        },
+        "required" : [ "firstName", "lastName", "login" ]
       },
       "UpdateWarehouseRequest" : {
         "type" : "object",

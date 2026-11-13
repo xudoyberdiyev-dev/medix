@@ -8986,11 +8986,17 @@ export interface components {
         Employee: {
             /** @description Buxgalterga Direktor bergan «barcha filiallar» doirasi (E3) */
             allBranches: boolean;
+            /**
+             * Format: date
+             * @description Tugʻilgan sana
+             */
+            birthDate?: string;
             blockedReason?: string;
             /** Format: int64 */
             branchId?: number;
             /** @description Kassir boʻlgan kassalar (special.till) */
             cashAccountIds: number[];
+            email?: string;
             firstName?: string;
             fullName: string;
             /** Format: int64 */
@@ -11820,13 +11826,19 @@ export interface components {
             unit: string;
         };
         Profile: {
+            /** Format: date */
+            birthDate?: string;
             branchName?: string;
+            email?: string;
+            firstName?: string;
             fullName: string;
             /** Format: int64 */
             id: number;
             /** Format: date-time */
             lastLoginAt?: string;
+            lastName?: string;
             login: string;
+            middleName?: string;
             /**
              * Format: date-time
              * @description Oxirgi parol almashtirish (audit jurnalidan)
@@ -13678,9 +13690,13 @@ export interface components {
             vatPayer?: boolean;
         };
         UpdateEmployeeRequest: {
+            /** Format: date */
+            birthDate?: string;
             /** Format: int64 */
             branchId?: number;
             cashAccountIds?: number[];
+            /** Format: email */
+            email?: string;
             firstName: string;
             lastName: string;
             login: string;
@@ -13691,7 +13707,16 @@ export interface components {
             warehouseIds?: number[];
         };
         UpdateProfileRequest: {
+            /** Format: date */
+            birthDate?: string;
+            /** Format: email */
+            email?: string;
+            firstName: string;
+            lastName: string;
+            login: string;
+            middleName?: string;
             phone?: string;
+            position?: string;
         };
         UpdateWarehouseRequest: {
             address?: string;

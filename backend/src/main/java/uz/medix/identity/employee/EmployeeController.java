@@ -4,10 +4,13 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Past;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import java.time.LocalDate;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -55,7 +58,9 @@ class EmployeeController {
             @NotBlank(message = "{validation.required}") String roleCode,
             @Schema(nullable = true) Long branchId,
             @Schema(nullable = true) List<Long> warehouseIds,
-            @Schema(nullable = true) List<Long> cashAccountIds) {}
+            @Schema(nullable = true) List<Long> cashAccountIds,
+            @Schema(nullable = true) @Email(message = "{validation.email}") @Size(max = 254) String email,
+            @Schema(nullable = true) @Past(message = "{validation.birthDate}") LocalDate birthDate) {}
 
     record BlockRequest(@NotBlank(message = "{validation.required}") @Size(max = 300) String reason) {}
 
@@ -104,7 +109,7 @@ class EmployeeController {
             throw MedixException.forbidden("auth.forbidden");
         }
         return employees.update(a, id, new Employees.EmployeeChange(r.login(), r.lastName(), r.firstName(), r.middleName(),
-                r.phone(), r.position(), r.roleCode(), r.branchId(), r.warehouseIds(), r.cashAccountIds()));
+                r.phone(), r.position(), r.roleCode(), r.branchId(), r.warehouseIds(), r.cashAccountIds(), r.email(), r.birthDate()));
     }
 
     @GetMapping("/login-check")

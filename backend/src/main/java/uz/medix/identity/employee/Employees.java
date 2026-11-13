@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.sql.Array;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -39,7 +40,9 @@ public class Employees {
             @Schema(nullable = true, description = "Oxirgi kirish; boʻsh — hali kirmagan («Yangi»)") OffsetDateTime lastLoginAt,
             @Schema(nullable = true) String blockedReason,
             @Schema(description = "Omborchi boʻlgan omborlar (special.whs)") List<Long> warehouseIds,
-            @Schema(description = "Kassir boʻlgan kassalar (special.till)") List<Long> cashAccountIds) {}
+            @Schema(description = "Kassir boʻlgan kassalar (special.till)") List<Long> cashAccountIds,
+            @Schema(nullable = true) String email,
+            @Schema(nullable = true, description = "Tugʻilgan sana") LocalDate birthDate) {}
 
     /** Yangi xodim. {@code fullName} boʻsh boʻlsa — «Ism Familiya» qismlardan quriladi. */
     public record NewEmployee(String login, String fullName, String lastName, String firstName, String middleName, String phone,
@@ -47,7 +50,11 @@ public class Employees {
             List<Long> cashAccountIds) {}
 
     public record EmployeeChange(String login, String lastName, String firstName, String middleName, String phone, String position,
-            String roleCode, Long branchId, List<Long> warehouseIds, List<Long> cashAccountIds) {}
+            String roleCode, Long branchId, List<Long> warehouseIds, List<Long> cashAccountIds, String email, LocalDate birthDate) {}
+
+    /** Oʻz maʼlumotlari (Profil): rol, filial va joylar bu yerda oʻzgarmaydi. */
+    public record SelfChange(String login, String lastName, String firstName, String middleName, String phone, String email,
+            String position, LocalDate birthDate) {}
 
     public record LoginCheck(@Schema(description = "Ism va familiyadan taklif (boʻsh joyi bilan raqam qoʻshiladi)") String suggested,
             @Schema(nullable = true, description = "Berilgan login boʻshmi; login berilmasa — null") Boolean available) {}
@@ -58,7 +65,7 @@ public class Employees {
     private static final String SELECT = """
             SELECT e.id, e.login, e.full_name, e.last_name, e.first_name, e.middle_name, e.phone, e.position,
                    r.code AS role_code, r.name AS role_name, e.branch_id, e.status, e.must_change_password, e.all_branches,
-                   e.last_login_at, e.blocked_reason,
+                   e.last_login_at, e.blocked_reason, e.email, e.birth_date,
                    ARRAY(SELECT w.id FROM warehouse w WHERE w.keeper_id = e.id ORDER BY w.id) AS warehouse_ids,
                    ARRAY(SELECT a.id FROM money_account a WHERE a.cashier_id = e.id ORDER BY a.id) AS cash_ids
             FROM employee e JOIN role r ON r.id = e.role_id""";
@@ -69,7 +76,7 @@ public class Employees {
                 rs.getString("role_code"), rs.getString("role_name"), (Long) rs.getObject("branch_id"), rs.getString("status"),
                 rs.getBoolean("must_change_password"), rs.getBoolean("all_branches"),
                 rs.getObject("last_login_at", OffsetDateTime.class), rs.getString("blocked_reason"), ids(rs.getArray("warehouse_ids")),
-                ids(rs.getArray("cash_ids")));
+                ids(rs.getArray("cash_ids")), rs.getString("email"), rs.getObject("birth_date", LocalDate.class));
     }
 
     private static List<Long> ids(Array a) throws SQLException {
@@ -371,8 +378,8 @@ public class Employees {
         try {
             jdbc.sql("""
                     UPDATE employee SET login = :login, full_name = :name, last_name = :last, first_name = :first, middle_name = :mid,
-                           phone = :phone, position = :position, role_id = :role, branch_id = :branch, updated_at = now(),
-                           version = version + 1
+                           phone = :phone, position = :position, role_id = :role, branch_id = :branch, email = :email,
+                           birth_date = :birth, updated_at = now(), version = version + 1
                     WHERE id = :id""")
                     .param("login", login)
                     .param("name", fullName)
@@ -381,6 +388,8 @@ public class Employees {
                     .param("mid", blankToNull(c.middleName()))
                     .param("phone", blankToNull(c.phone()))
                     .param("position", blankToNull(c.position()))
+                    .param("email", email(c.email()))
+                    .param("birth", c.birthDate())
                     .param("role", roleId)
                     .param("branch", c.branchId())
                     .param("id", id)
@@ -397,6 +406,50 @@ public class Employees {
         }
         Employee after = get(id);
         audit.record(AuditEntry.of("employee.update", "employee", id).change(snapshot(before), snapshot(after)));
+        return after;
+    }
+
+    /**
+     * Oʻz maʼlumotlarini tahrirlash (Profil, egasi 13.11 O0): F.I.Sh., login (unikal), telefon, email, lavozim, tugʻilgan sana.
+     * Rol va filial doirasi oʻzgarmaydi. Sessiyani yangilash — chaqiruvchida (login va ism darhol koʻrinsin).
+     */
+    @Transactional
+    public Employee updateSelf(long id, SelfChange c) {
+        Employee before = get(id);
+        String login = c.login().strip().toLowerCase(Locale.ROOT);
+        if (loginTaken(login, id)) {
+            throw MedixException.conflict("employee.loginTaken", login);
+        }
+        String fullName = fullName(null, c.firstName(), c.lastName());
+        try {
+            jdbc.sql("""
+                    UPDATE employee SET login = :login, full_name = :name, last_name = :last, first_name = :first, middle_name = :mid,
+                           phone = :phone, email = :email, position = :position, birth_date = :birth, updated_at = now(),
+                           version = version + 1
+                    WHERE id = :id""")
+                    .param("login", login)
+                    .param("name", fullName)
+                    .param("last", blankToNull(c.lastName()))
+                    .param("first", blankToNull(c.firstName()))
+                    .param("mid", blankToNull(c.middleName()))
+                    .param("phone", blankToNull(c.phone()))
+                    .param("email", email(c.email()))
+                    .param("position", blankToNull(c.position()))
+                    .param("birth", c.birthDate())
+                    .param("id", id)
+                    .update();
+        } catch (DuplicateKeyException e) {
+            throw MedixException.conflict("employee.loginTaken", login);
+        }
+        if (!before.login().equals(login)) {
+            // Boshqa qurilmalardagi sessiyalar ham yangi login bilan topilsin (Faol sessiyalar, «boshqalarini tugatish»)
+            jdbc.sql("UPDATE spring_session SET principal_name = :n WHERE principal_name = :o")
+                    .param("n", login)
+                    .param("o", before.login())
+                    .update();
+        }
+        Employee after = get(id);
+        audit.record(AuditEntry.of("profile.update", "employee", id).change(snapshot(before), snapshot(after)));
         return after;
     }
 
@@ -484,6 +537,9 @@ public class Employees {
         m.put("fullName", e.fullName());
         m.put("middleName", e.middleName());
         m.put("phone", e.phone());
+        m.put("email", e.email());
+        m.put("position", e.position());
+        m.put("birthDate", e.birthDate() == null ? null : e.birthDate().toString());
         m.put("role", e.roleCode());
         m.put("branchId", e.branchId());
         m.put("warehouseIds", e.warehouseIds());
@@ -510,6 +566,11 @@ public class Employees {
     @Transactional(readOnly = true)
     public long count() {
         return jdbc.sql("SELECT count(*) FROM employee").query(Long.class).single();
+    }
+
+    private static String email(String s) {
+        String v = blankToNull(s);
+        return v == null ? null : v.toLowerCase(Locale.ROOT);
     }
 
     private static String blankToNull(String s) {

@@ -193,6 +193,9 @@
     "loadErr": "Xodim maʼlumotini yuklab boʻlmadi. Sahifani yangilang yoki keyinroq urinib koʻring.",
     "notFound": "U boshqa filialga tegishli boʻlishi mumkin — roʻyxatga qayting.",
     "notFoundT": "Xodim topilmadi",
-    "emptyD": "Xodim tizimda ishlagani sari yozuvlar shu yerda paydo boʻladi."
+    "emptyD": "Xodim tizimda ishlagani sari yozuvlar shu yerda paydo boʻladi.",
+    "fEmail": "Elektron pochta",
+    "fPosition": "Lavozim",
+    "fBirth": "Tugʻilgan sana"
   }
 }

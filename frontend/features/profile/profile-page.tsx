@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowUpRight, CircleAlert, CircleCheck, Grid3x3, Info, KeyRound, Monitor, Smartphone } from "lucide-react";
+import { ArrowUpRight, CircleAlert, CircleCheck, Grid3x3, Info, KeyRound, Monitor, Pencil, Smartphone } from "lucide-react";
 import Link from "next/link";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
@@ -18,7 +18,23 @@ import { useChangePassword, useMe } from "@/features/auth/session";
 import { ACT, isObjectType } from "@/features/audit/audit-page";
 import { describeError } from "@/features/setup/form-error";
 import { formatDateTime } from "@/lib/format";
-import { describeDevice, useEndOtherSessions, useMyActions, useMySessions, useProfile, useSetPin, validatePin, type Profile } from "./api";
+import { formatIsoDate, todayTashkent } from "@/features/counterparties/api";
+import { cleanLogin, formatPhone } from "@/features/employees/staff";
+import {
+  checkProfile,
+  describeDevice,
+  profileForm,
+  useEndOtherSessions,
+  useMyActions,
+  useMySessions,
+  useProfile,
+  useSetPin,
+  useUpdateProfile,
+  validatePin,
+  type Profile,
+  type ProfileErrorKey,
+  type ProfileForm,
+} from "./api";
 
 /** Profil (prototip Profile): chapda Maʼlumotlarim, Til, Parol, PIN; oʻngda Faol sessiyalar va Mening harakatlarim. */
 export function ProfilePage() {
@@ -68,10 +84,19 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
 
 function InfoCard({ profile }: { profile: Profile }) {
   const t = useTranslations("profile.info");
+  const [open, setOpen] = useState(false);
+  const fio = [profile.lastName, profile.firstName, profile.middleName].filter(Boolean).join(" ") || profile.fullName;
   return (
-    <Card title={t("title")}>
+    <Card
+      title={t("title")}
+      actions={
+        <Button variant="secondary" size="sm" icon={Pencil} onClick={() => setOpen(true)}>
+          {t("edit")}
+        </Button>
+      }
+    >
       <dl className="divide-y divide-border">
-        <Row label={t("fullName")}>{profile.fullName}</Row>
+        <Row label={t("fullName")}>{fio}</Row>
         <Row label={t("role")}>{profile.roleName}</Row>
         <Row label={t("branch")}>{profile.branchName ?? t("allBranches")}</Row>
         <Row label={t("login")}>
@@ -80,13 +105,92 @@ function InfoCard({ profile }: { profile: Profile }) {
         <Row label={t("phone")}>
           <span className="font-mono">{profile.phone ?? "—"}</span>
         </Row>
-        {profile.position ? <Row label={t("position")}>{profile.position}</Row> : null}
+        <Row label={t("email")}>{profile.email ?? "—"}</Row>
+        <Row label={t("position")}>{profile.position ?? "—"}</Row>
+        <Row label={t("birthDate")}>{profile.birthDate ? formatIsoDate(profile.birthDate) : "—"}</Row>
         <Row label={t("lastLogin")}>{profile.lastLoginAt ? formatDateTime(new Date(profile.lastLoginAt)) : "—"}</Row>
       </dl>
       <p className="mt-2 flex items-center gap-1.5 text-caption text-text-secondary">
         <Info size={14} strokeWidth={1.5} aria-hidden /> {t("adminEdits")}
       </p>
+      {open ? <InfoDrawer profile={profile} onClose={() => setOpen(false)} /> : null}
     </Card>
+  );
+}
+
+/** Oʻz maʼlumotlarini tahrirlash (egasi 13.11, O0): rol va filial bu yerda oʻzgarmaydi. */
+function InfoDrawer({ profile, onClose }: { profile: Profile; onClose: () => void }) {
+  const t = useTranslations("profile.info");
+  const save = useUpdateProfile();
+  const [form, setForm] = useState<ProfileForm>(() => profileForm(profile));
+  const [tried, setTried] = useState(false);
+  const errs = tried ? checkProfile(form, todayTashkent()) : [];
+  const server = describeError(save.error);
+  const set = (k: keyof ProfileForm) => (v: string) => setForm((f) => ({ ...f, [k]: v }));
+  const fe = (k: ProfileErrorKey, field: string) => (errs.includes(k) ? t(`errors.${k}`) : server.fields[field]);
+
+  function submit(e: FormEvent) {
+    e.preventDefault();
+    setTried(true);
+    if (checkProfile(form, todayTashkent()).length) return;
+    save.mutate(form, { onSuccess: () => (toast({ tone: "success", title: t("saved") }), onClose()) });
+  }
+
+  return (
+    <Drawer open onClose={onClose} title={t("editTitle")}>
+      <form onSubmit={submit} noValidate className="flex flex-col gap-4">
+        {server.message ? <Alert tone="danger" title={server.message} /> : null}
+        <TextField label={t("lastName")} value={form.last} onChange={set("last")} error={fe("last", "lastName")} required />
+        <TextField label={t("firstName")} value={form.first} onChange={set("first")} error={fe("first", "firstName")} required />
+        <TextField label={t("middleName")} value={form.mid} onChange={set("mid")} error={server.fields.middleName} />
+        <TextField
+          label={t("login")}
+          value={form.login}
+          onChange={(v) => set("login")(cleanLogin(v))}
+          error={fe("login", "login")}
+          hint={t("loginHint")}
+          autoComplete="username"
+          required
+        />
+        <TextField
+          label={t("phone")}
+          value={form.phone}
+          onChange={(v) => set("phone")(v.trim() ? formatPhone(v) : "")}
+          error={fe("phone", "phone")}
+          placeholder="+998 90 123 45 67"
+          inputMode="tel"
+        />
+        <TextField
+          label={t("email")}
+          value={form.email}
+          onChange={set("email")}
+          error={fe("email", "email")}
+          placeholder="ism@kompaniya.uz"
+          inputMode="email"
+          autoComplete="email"
+        />
+        <TextField label={t("position")} value={form.position} onChange={set("position")} error={server.fields.position} />
+        <TextField
+          label={t("birthDate")}
+          value={form.birth}
+          onChange={set("birth")}
+          error={fe("birth", "birthDate")}
+          placeholder="21.03.1985"
+          inputMode="numeric"
+        />
+        <p className="flex items-center gap-1.5 text-caption text-text-secondary">
+          <Info size={14} strokeWidth={1.5} aria-hidden /> {t("roleNote")}
+        </p>
+        <div className="flex justify-end gap-2">
+          <Button type="button" variant="secondary" onClick={onClose}>
+            {t("cancel")}
+          </Button>
+          <Button type="submit" loading={save.isPending}>
+            {t("save")}
+          </Button>
+        </div>
+      </form>
+    </Drawer>
   );
 }
 

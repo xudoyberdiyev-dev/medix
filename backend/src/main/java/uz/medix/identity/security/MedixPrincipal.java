@@ -53,6 +53,11 @@ public record MedixPrincipal(
         return new Actor(id, branchId, allBranches());
     }
 
+    /** Profilda login yoki ism o'zgarganda (rol, filial va ruxsatlar o'zgarmaydi). */
+    public MedixPrincipal withIdentity(String newLogin, String newFullName) {
+        return new MedixPrincipal(id, newLogin, newFullName, roleCode, roleName, branchId, mustChangePassword, permissions, allBranchesGrant);
+    }
+
     public MedixPrincipal withPasswordChanged() {
         return new MedixPrincipal(id, login, fullName, roleCode, roleName, branchId, false, permissions, allBranchesGrant);
     }

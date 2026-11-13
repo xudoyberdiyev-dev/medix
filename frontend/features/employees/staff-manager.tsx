@@ -273,7 +273,17 @@ export function StaffManager({
         setPanel(null);
         setCreds({ emp: saved, pw });
       } else {
-        const saved = await update.mutateAsync({ id: panel.id, body: common });
+        // Panelda koʻrinmaydigan maydonlar (lavozim, email, tugʻilgan sana) oʻchib ketmasin
+        const was = emps.find((x) => x.id === panel.id);
+        const saved = await update.mutateAsync({
+          id: panel.id,
+          body: {
+            ...common,
+            position: was?.position ?? undefined,
+            email: was?.email ?? undefined,
+            birthDate: was?.birthDate ?? undefined,
+          },
+        });
         setPanel(null);
         toast({ tone: "success", title: t("empUpd", { n: displayName(saved) }) });
       }

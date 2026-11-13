@@ -82,9 +82,67 @@ class ProfilePinIT {
                 .andExpect(jsonPath("$.lastLoginAt").isNotEmpty());
         mvc.perform(put("/api/profile").with(csrf()).cookie(s.cookie())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"phone\":\" +998 90 123 45 67 \"}"))
+                        .content("{\"login\":\"" + login(s) + "\",\"lastName\":\"Sinov\",\"firstName\":\"Profil\","
+                                + "\"phone\":\" +998 90 123 45 67 \"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.phone").value("+998 90 123 45 67"));
+    }
+
+    private String login(Session s) {
+        return jdbc.sql("SELECT login FROM employee WHERE id = :id").param("id", s.id()).query(String.class).single();
+    }
+
+    /** O0: Direktor (va har kim) o'z F.I.Sh., login, email, tug'ilgan sanasini o'zgartiradi; sessiya darhol yangilanadi. */
+    @Test
+    void directorEditsOwnDataAndSessionFollows() throws Exception {
+        Session s = loginAs("DIRECTOR");
+        String newLogin = "ceo" + UUID.randomUUID().toString().substring(0, 6);
+        mvc.perform(put("/api/profile").with(csrf()).cookie(s.cookie())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"login\":\"" + newLogin.toUpperCase() + "\",\"lastName\":\"Karimov\",\"firstName\":\"Aziz\","
+                                + "\"middleName\":\"Akmalovich\",\"phone\":\"+998901112233\",\"email\":\"Ceo@Medix.uz\","
+                                + "\"position\":\"Bosh direktor\",\"birthDate\":\"1985-03-21\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.login").value(newLogin))
+                .andExpect(jsonPath("$.fullName").value("Aziz Karimov"))
+                .andExpect(jsonPath("$.lastName").value("Karimov"))
+                .andExpect(jsonPath("$.middleName").value("Akmalovich"))
+                .andExpect(jsonPath("$.email").value("ceo@medix.uz"))
+                .andExpect(jsonPath("$.birthDate").value("1985-03-21"))
+                .andExpect(jsonPath("$.position").value("Bosh direktor"))
+                .andExpect(jsonPath("$.roleCode").value("DIRECTOR"));
+        // Xuddi shu sessiya: /me yangi ism va login bilan, qayta kirish shart emas
+        mvc.perform(get("/api/auth/me").cookie(s.cookie()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.login").value(newLogin))
+                .andExpect(jsonPath("$.fullName").value("Aziz Karimov"));
+        long audits = jdbc.sql("SELECT count(*) FROM audit_log WHERE action = 'profile.update' AND entity_id = :id")
+                .param("id", String.valueOf(s.id())).query(Long.class).single();
+        assertThat(audits).isEqualTo(1);
+        // Yangi login bilan kirish ishlaydi
+        mvc.perform(post("/api/auth/login").with(csrf()).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"login\":\"" + newLogin + "\",\"password\":\"" + PASSWORD + "\"}"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void profileRejectsTakenLoginBadEmailAndFutureBirthDate() throws Exception {
+        Session other = loginAs("OPERATOR");
+        Session s = loginAs("DIRECTOR");
+        String body = "{\"login\":\"%s\",\"lastName\":\"Karimov\",\"firstName\":\"Aziz\"%s}";
+        mvc.perform(put("/api/profile").with(csrf()).cookie(s.cookie()).contentType(MediaType.APPLICATION_JSON)
+                        .content(body.formatted(login(other), "")))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("employee.loginTaken"));
+        mvc.perform(put("/api/profile").with(csrf()).cookie(s.cookie()).contentType(MediaType.APPLICATION_JSON)
+                        .content(body.formatted(login(s), ",\"email\":\"notogri\"")))
+                .andExpect(status().isBadRequest());
+        mvc.perform(put("/api/profile").with(csrf()).cookie(s.cookie()).contentType(MediaType.APPLICATION_JSON)
+                        .content(body.formatted(login(s), ",\"birthDate\":\"2999-01-01\"")))
+                .andExpect(status().isBadRequest());
+        mvc.perform(put("/api/profile").with(csrf()).cookie(s.cookie()).contentType(MediaType.APPLICATION_JSON)
+                        .content(body.formatted(login(s), ",\"firstName\":\" \"")))
+                .andExpect(status().isBadRequest());
     }
 
     @Test

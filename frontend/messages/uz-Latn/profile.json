@@ -9,10 +9,30 @@
     "allBranches": "Barcha filiallar",
     "position": "Lavozim",
     "lastLogin": "Oxirgi kirish",
-    "adminEdits": "Oʻzgartirish uchun administratorga murojaat qiling",
+    "adminEdits": "Rol va filialni oʻzgartirish uchun administratorga murojaat qiling",
     "phoneSaved": "Telefon raqami saqlandi",
     "phone": "Telefon",
-    "savePhone": "Telefonni saqlash"
+    "savePhone": "Telefonni saqlash",
+    "edit": "Tahrirlash",
+    "editTitle": "Maʼlumotlarimni tahrirlash",
+    "lastName": "Familiya",
+    "firstName": "Ism",
+    "middleName": "Otasining ismi",
+    "email": "Elektron pochta",
+    "birthDate": "Tugʻilgan sana",
+    "loginHint": "Lotin harflari, raqamlar, nuqta. Oʻzgarsa — keyingi kirishda yangi login bilan kirasiz.",
+    "roleNote": "Rol va filialni faqat administrator oʻzgartiradi.",
+    "saved": "Maʼlumotlaringiz saqlandi",
+    "save": "Saqlash",
+    "cancel": "Bekor qilish",
+    "errors": {
+      "last": "Familiya kiritilmagan. Familiyangizni yozing.",
+      "first": "Ism kiritilmagan. Ismingizni yozing.",
+      "login": "Login 3–64 belgi boʻlishi kerak: lotin harflari, raqamlar, nuqta yoki chiziqcha.",
+      "phone": "Telefon raqami toʻliq emas. +998 dan keyin 9 ta raqam yozing.",
+      "email": "Elektron pochta notoʻgʻri. Masalan: ism@kompaniya.uz.",
+      "birth": "Sana notoʻgʻri. KK.OO.YYYY koʻrinishida, bugundan oldingi sanani kiriting."
+    }
   },
   "pin": {
     "title": "Tasdiqlash PIN kodi",
