@@ -283,13 +283,11 @@ class InventoryCounts {
     List<InventoryBatchHit> findBatches(Actor actor, long id, String query) {
         head(id, actor, false);
         String q = query == null ? "" : query.strip().toLowerCase();
-        if (q.length() < 2) {
-            return List.of();
-        }
+        // O3: boʻsh soʻrov — ochilishi bilan birinchi 20 ta partiya (yozilganda filtrlanadi)
         return jdbc.sql("""
                 SELECT b.id, b.number, b.expiry_date, p.id AS product_id, p.code, p.name
                 FROM batch b JOIN product p ON p.id = b.product_id
-                WHERE lower(b.number) LIKE :q OR p.code = :exact OR p.search_text LIKE :q
+                WHERE :q = '%%' OR lower(b.number) LIKE :q OR p.code = :exact OR p.search_text LIKE :q
                 ORDER BY p.name, b.expiry_date LIMIT 20""")
                 .param("q", "%" + q.replace("%", "").replace("_", "") + "%")
                 .param("exact", q)

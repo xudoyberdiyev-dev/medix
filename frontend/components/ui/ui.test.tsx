@@ -163,6 +163,27 @@ describe("Select", () => {
     expect(screen.getByText(/Hech narsa topilmadi/)).toBeInTheDocument();
   });
 
+  it("serverdan: ochilishi bilan roʻyxat yuklanadi, yozilganda filtrlanadi (O3)", async () => {
+    const load = vi.fn(async (q: string) => warehouses.filter((o) => !q || o.label.toLowerCase().includes(q.toLowerCase())));
+    render(<Select label="Ombor" options={[]} loadOptions={load} value={null} onChange={vi.fn()} />);
+    await userEvent.click(screen.getByRole("combobox", { name: "Ombor" }));
+    expect(await screen.findByRole("option", { name: /Markaziy/ })).toBeInTheDocument();
+    expect(screen.queryByText(/Hech narsa topilmadi/)).not.toBeInTheDocument();
+    expect(load).toHaveBeenCalledWith("");
+    await userEvent.type(screen.getByRole("textbox", { name: "Qidirish" }), "samar");
+    await vi.waitFor(() => expect(screen.queryByRole("option", { name: /Markaziy/ })).not.toBeInTheDocument());
+    expect(screen.getByRole("option", { name: /Samarqand/ })).toBeInTheDocument();
+    const calls = load.mock.calls.length;
+    await new Promise((r) => setTimeout(r, 400));
+    expect(load.mock.calls.length).toBe(calls);
+  });
+
+  it("variantlar yuklanayotganda «Yuklanmoqda…» (O3)", async () => {
+    render(<Select label="Hudud" searchable loading options={[]} value={null} onChange={vi.fn()} />);
+    await userEvent.click(screen.getByRole("combobox", { name: "Hudud" }));
+    expect(screen.getByText("Yuklanmoqda…")).toBeInTheDocument();
+  });
+
   it("koʻp tanlovli", async () => {
     function Wrapper() {
       const [v, setV] = useState<string[]>([]);

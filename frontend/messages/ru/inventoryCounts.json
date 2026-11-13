@@ -113,12 +113,12 @@
     "search": "Номер партии, код или название товара",
     "searchPlaceholder": "Минимум 2 символа",
     "batch": "Партия",
-    "searchFirst": "Сначала выполните поиск",
     "searching": "Поиск…",
     "notFound": "Не найдено",
     "zone": "Зона",
     "counted": "Посчитано",
-    "qtyPlaceholder": "кол-во"
+    "qtyPlaceholder": "кол-во",
+    "pick": "Выберите партию"
   },
   "create": {
     "draftCreated": "Черновик создан",

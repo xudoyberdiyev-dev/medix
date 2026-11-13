@@ -391,6 +391,7 @@ function TermsCard({
               hint={tt("discountHint")}
             />
             <Select
+              loading={priceTypes.isLoading}
               label={tt("priceType")}
               disabled={!customerSide}
               value={f.priceTypeId}

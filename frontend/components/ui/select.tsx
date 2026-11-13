@@ -24,6 +24,8 @@ interface BaseProps {
   searchable?: boolean;
   /** Serverdan qidirish; berilsa `options` boshlangʻich roʻyxat sifatida ishlatiladi. */
   loadOptions?: (query: string) => Promise<SelectOption[]>;
+  /** Variantlar hali yuklanmoqda (masalan, maʼlumotnoma soʻrovi) — «Hech narsa topilmadi» oʻrniga «Yuklanmoqda…». */
+  loading?: boolean;
   placeholder?: string;
   hint?: string;
   error?: string;
@@ -94,29 +96,41 @@ export function Select(props: SelectProps) {
   const selected: string[] = props.multiple ? props.value : props.value ? [props.value] : [];
   const showSearch = searchable || Boolean(loadOptions);
 
-  const visible = useMemo(() => (remote && query ? remote : filterOptions(options, query)), [remote, options, query]);
+  // O3: masofaviy roʻyxat ochilishi bilan (boʻsh soʻrov) yuklanadi; yozilganda serverda filtrlanadi
+  const visible = useMemo(() => (loadOptions && remote ? remote : filterOptions(options, query)), [loadOptions, remote, options, query]);
+
+  // Chaqiruvchi har renderda yangi funksiya bersa ham soʻrov qayta-qayta ketmasin
+  const loadRef = useRef(loadOptions);
+  useEffect(() => {
+    loadRef.current = loadOptions;
+  });
+  const remoteMode = Boolean(loadOptions);
 
   useEffect(() => {
-    if (!loadOptions || !open || !query.trim()) return;
+    const load = loadRef.current;
+    if (!remoteMode || !load || !open) return;
     let cancelled = false;
-    const t = setTimeout(() => {
-      setLoading(true);
-      loadOptions(query)
-        .then((res) => {
-          if (!cancelled) setRemote(res);
-        })
-        .catch(() => {
-          if (!cancelled) setRemote([]);
-        })
-        .finally(() => {
-          if (!cancelled) setLoading(false);
-        });
-    }, SEARCH_DEBOUNCE_MS);
+    const t = setTimeout(
+      () => {
+        setLoading(true);
+        load(query)
+          .then((res) => {
+            if (!cancelled) setRemote(res);
+          })
+          .catch(() => {
+            if (!cancelled) setRemote([]);
+          })
+          .finally(() => {
+            if (!cancelled) setLoading(false);
+          });
+      },
+      query.trim() ? SEARCH_DEBOUNCE_MS : 0,
+    );
     return () => {
       cancelled = true;
       clearTimeout(t);
     };
-  }, [loadOptions, open, query]);
+  }, [remoteMode, open, query]);
 
   useEffect(() => {
     if (!open) return;
@@ -289,8 +303,8 @@ export function Select(props: SelectProps) {
               aria-labelledby={`${id}-label`}
               className="max-h-72 overflow-y-auto"
             >
-              {loading ? (
-                <li className="px-2 py-2 text-text-secondary">Qidirilmoqda…</li>
+              {loading || (remoteMode && remote === null) || (props.loading && visible.length === 0) ? (
+                <li className="px-2 py-2 text-text-secondary">{t("selectLoading")}</li>
               ) : visible.length === 0 ? (
                 <li className="px-2 py-2 text-text-secondary">{t("selectEmpty")}</li>
               ) : (

@@ -121,6 +121,7 @@ export function BranchPayDialog({ balance, onClose }: { balance: BranchBalance; 
           })}
         </p>
         <Select
+          loading={own.isLoading}
           label={t("fromAccount")}
           value={from}
           onChange={setFrom}
@@ -129,6 +130,7 @@ export function BranchPayDialog({ balance, onClose }: { balance: BranchBalance; 
             .map((a) => ({ value: String(a.id), label: a.name, sub: `${ACCOUNT_KIND[a.kind]} · ${a.code}` }))}
         />
         <Select
+          loading={payee.isLoading}
           label={t("toAccount", { name: balance.creditor.name })}
           value={to}
           onChange={setTo}

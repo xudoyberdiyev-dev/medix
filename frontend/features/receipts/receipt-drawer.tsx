@@ -498,6 +498,7 @@ function Editor({
           required
         />
         <Select
+          loading={employees.isLoading}
           label={t("field.owner")}
           value={owner}
           onChange={setOwner}

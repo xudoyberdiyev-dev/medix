@@ -113,12 +113,12 @@
     "search": "Партия рақами, маҳсулот коди ёки номи",
     "searchPlaceholder": "Камида 2 белги",
     "batch": "Партия",
-    "searchFirst": "Аввал қидиринг",
     "searching": "Қидирилмоқда…",
     "notFound": "Топилмади",
     "zone": "Зона",
     "counted": "Саналди",
-    "qtyPlaceholder": "сони"
+    "qtyPlaceholder": "сони",
+    "pick": "Партияни танланг"
   },
   "create": {
     "draftCreated": "Қоралама яратилди",

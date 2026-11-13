@@ -365,6 +365,7 @@ export function SalesReportPage() {
           </div>
           <div className="w-52">
             <Select
+              loading={regions.isLoading}
               label={t("sales.region")}
               size="sm"
               searchable

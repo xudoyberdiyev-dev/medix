@@ -504,6 +504,7 @@ export function CreateForm({
         />
         <div className="col-span-2">
           <Select
+            loading={sales.isLoading}
             label={t("head.sale")}
             value={saleId}
             onChange={(v) => (setSaleId(v), setQty({}), setReasons({}))}

@@ -353,6 +353,7 @@ function Editor({
               options={receipt && receiptLabel ? [{ value: receipt, label: receiptLabel }] : []}
             />
             <Select
+              loading={types.isLoading}
               label={t("priceType")}
               value={batchType}
               onChange={setBatchType}
@@ -379,6 +380,7 @@ function Editor({
               className="col-span-3"
             />
             <Select
+              loading={types.isLoading}
               label={t("priceType")}
               value={adding.type}
               onChange={(v) => setAdding((a) => ({ ...a, type: v }))}

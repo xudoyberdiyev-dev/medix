@@ -232,6 +232,7 @@ export function StockPage({
               </div>
               <div className="w-56">
                 <Select
+                  loading={warehouses.isLoading}
                   label={t("warehouse")}
                   size="sm"
                   value={warehouseId}

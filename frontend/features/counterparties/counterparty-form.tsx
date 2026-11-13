@@ -258,6 +258,7 @@ function FormBody({
             </div>
             <div data-f="regionId">
               <Select
+                loading={regions.isLoading}
                 label={tm("region")}
                 searchable
                 value={f.regionId}

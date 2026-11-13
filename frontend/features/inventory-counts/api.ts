@@ -95,8 +95,8 @@ export function useInventoryBatches(id: number, q: string) {
   const query = q.trim();
   return useQuery({
     queryKey: ["inventory-counts", "batches", id, query],
+    // O3: boʻsh soʻrov ham roʻyxat qaytaradi (birinchi 20 ta)
     queryFn: () => unwrap(api.GET("/api/inventory-counts/{id}/batches", { params: { path: { id }, query: { q: query } } })),
-    enabled: query.length >= 2,
   });
 }
 

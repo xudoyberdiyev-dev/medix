@@ -61,11 +61,12 @@ export function AddFound({ doc, onClose }: { doc: InventoryCountDetail; onClose:
           variant="search"
         />
         <Select
+          loading={hits.isLoading}
           label={t("addFound.batch")}
           value={batchId}
           onChange={setBatchId}
           disabled={(hits.data ?? []).length === 0}
-          placeholder={q.trim().length < 2 ? t("addFound.searchFirst") : hits.isFetching ? t("addFound.searching") : t("addFound.notFound")}
+          placeholder={hits.isFetching ? t("addFound.searching") : (hits.data ?? []).length ? t("addFound.pick") : t("addFound.notFound")}
           options={(hits.data ?? []).map((h) => ({
             value: String(h.batchId),
             label: `${h.productName} · ${h.batchNumber} · ${day(h.expiryDate)}`,
