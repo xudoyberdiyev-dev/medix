@@ -2478,6 +2478,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/marking/import-template": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Kodlar faylining namunasi (.xlsx) */
+        get: operations["importTemplate_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/marking/mine": {
         parameters: {
             query?: never;
@@ -2572,6 +2589,26 @@ export interface paths {
          * @description Barcha kodlar skanerlangan va markirovkasiz qatorlar tasdiqlangan bo'lsa → «Hisobdan o'tkazilmoqda».
          */
         post: operations["finish_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/marking/orders/{id}/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Kodlarni Excel/CSV fayldan yuklash
+         * @description Har kod qo'lda skanerlash bilan bir xil tekshiriladi (format, takror, GTIN, partiya, tur, qator to'lgani). apply=false — oldindan ko'rish (hech narsa saqlanmaydi); apply=true — mos kelganlari qabul qilinadi.
+         */
+        post: operations["importCodes"];
         delete?: never;
         options?: never;
         head?: never;
@@ -9828,6 +9865,33 @@ export interface components {
             size: number;
             /** Format: int64 */
             total: number;
+        };
+        MarkImportResult: {
+            /** Format: int32 */
+            accepted: number;
+            /** @description true — mos kelganlari saqlandi; false — faqat oldindan ko'rish */
+            applied: boolean;
+            /** Format: int32 */
+            rejected: number;
+            rows: components["schemas"]["MarkImportRow"][];
+            /** Format: int32 */
+            total: number;
+            /** @description Saqlangandan keyingi holat (faqat applied=true) */
+            work?: components["schemas"]["MarkWork"];
+        };
+        MarkImportRow: {
+            code: string;
+            /** @description Xato matni (so'rov tilida) */
+            error?: string;
+            /** @description Xato kaliti (marking.*) */
+            errorCode?: string;
+            ok: boolean;
+            productName?: string;
+            /**
+             * Format: int32
+             * @description Fayldagi qator raqami (1 dan)
+             */
+            row: number;
         };
         MarkLine: {
             batches: components["schemas"]["MarkBatch"][];
@@ -17927,6 +17991,24 @@ export interface operations {
             };
         };
     };
+    importTemplate_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     mine_1: {
         parameters: {
             query?: never;
@@ -18040,6 +18122,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MarkWork"];
+                };
+            };
+        };
+    };
+    importCodes: {
+        parameters: {
+            query?: {
+                apply?: boolean;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarkImportResult"];
                 };
             };
         };

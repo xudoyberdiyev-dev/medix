@@ -979,6 +979,68 @@ class OrderIT {
     }
 
     /** E1: markirovkasiz qatorlarni yangi Markirovkachi tasdiqlaydi va yakunlaydi → «Hisobdan o'tkazilmoqda». */
+    /** O5: markirovka tayyor fayldan — oldindan ko'rish hech narsa saqlamaydi, qabul qilishda mos kelganlari yoziladi. */
+    @Test
+    void markingImportFromFilePreviewThenApply() throws Exception {
+        Place p = place();
+        long c = customer(p.branchId(), null);
+        Cookie operator = loginAs("OPERATOR", p.branchId());
+        Cookie keeper = loginAs("WAREHOUSE_MANAGER", p.branchId());
+        Cookie picker = loginAs("PICKER", p.branchId());
+        Cookie marker = loginAs("MARKER", p.branchId());
+        long prod = product(p, "BY Fayl markirovka", "1000", 0, null, null);
+        String ean = ean13();
+        jdbc.sql("UPDATE product SET marked = true WHERE id = :p").param("p", prod).update();
+        jdbc.sql("INSERT INTO product_barcode (product_id, barcode) VALUES (:p, :b)").param("p", prod).param("b", ean).update();
+        tx.executeWithoutResult(s -> {
+            long b = ledger.createBatch(prod, "LOT-F", null, LocalDate.now().plusYears(2), Money.of("100"), false, "BQ", null);
+            ledger.post(new DocRef("BQ", prod, "BQ-MF"), List.of(Move.in(p.main(), b, 20)));
+        });
+        long o = markedOrder(p, c, prod, 3, operator, keeper, picker);
+        send(post("/api/marking/orders/" + o + "/start"), marker, "").andExpect(status().isOk());
+        String k = "(01)0" + ean + "(21)%s(17)300531(10)LOT-F(91)D";
+        // GS ajratgichli ko'rinish ham: 01…21…<GS>17…10…<GS>91D
+        String gs = "010" + ean + "21F2<GS>17300531" + "10LOT-F<GS>91D";
+        String csv = "Markirovka kodi;GTIN\n" + k.formatted("F1") + ";0" + ean + "\n" + k.formatted("F1") + ";\n"
+                + gs + ";\n" + "notogri-kod;\n" + k.formatted("F3") + ";\n" + k.formatted("F4") + ";\n";
+        var file = new org.springframework.mock.web.MockMultipartFile("file", "kodlar.csv", "text/csv",
+                csv.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart("/api/marking/orders/" + o + "/import")
+                        .file(file).with(csrf()).cookie(marker))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.applied").value(false))
+                .andExpect(jsonPath("$.total").value(6))
+                .andExpect(jsonPath("$.accepted").value(3))
+                .andExpect(jsonPath("$.rows[0].row").value(2))
+                .andExpect(jsonPath("$.rows[0].productName").value("BY Fayl markirovka"))
+                .andExpect(jsonPath("$.rows[1].errorCode").value("marking.duplicateHere"))
+                .andExpect(jsonPath("$.rows[2].ok").value(true))
+                .andExpect(jsonPath("$.rows[3].errorCode").value("marking.format"))
+                .andExpect(jsonPath("$.rows[5].errorCode").value("marking.lineFull"))
+                .andExpect(jsonPath("$.rows[5].error", containsString("toʻliq")))
+                .andExpect(jsonPath("$.work").doesNotExist());
+        assertThat(jdbc.sql("SELECT count(*) FROM sales_order_mark WHERE order_id = :o").param("o", o).query(Long.class).single()).isZero();
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart("/api/marking/orders/" + o + "/import")
+                        .file(file).param("apply", "true").with(csrf()).cookie(marker))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.applied").value(true))
+                .andExpect(jsonPath("$.accepted").value(3))
+                .andExpect(jsonPath("$.work.unitsScanned").value(3))
+                .andExpect(jsonPath("$.work.complete").value(true));
+        assertThat(jdbc.sql("SELECT count(*) FROM sales_order_mark WHERE order_id = :o AND status = 'ACTIVE'").param("o", o)
+                .query(Long.class).single()).isEqualTo(3L);
+        // Qayta yuklash — hammasi takror; boshqa markirovkachi yuklay olmaydi
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart("/api/marking/orders/" + o + "/import")
+                        .file(file).with(csrf()).cookie(loginAs("MARKER", p.branchId())))
+                .andExpect(status().isForbidden());
+        var empty = new org.springframework.mock.web.MockMultipartFile("file", "bosh.csv", "text/csv", "Markirovka kodi\n".getBytes());
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart("/api/marking/orders/" + o + "/import")
+                        .file(empty).with(csrf()).cookie(marker))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("marking.import.empty"));
+        mvc.perform(get("/api/marking/import-template").cookie(marker)).andExpect(status().isOk());
+    }
+
     private void passMarking(long branchId, long o) throws Exception {
         Cookie m = loginAs("MARKER", branchId);
         send(post("/api/marking/orders/" + o + "/start"), m, "").andExpect(status().isOk());

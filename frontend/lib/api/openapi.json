@@ -5622,6 +5622,18 @@
         "tags" : [ "marking" ]
       }
     },
+    "/api/marking/import-template" : {
+      "get" : {
+        "operationId" : "importTemplate_1",
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        },
+        "summary" : "Kodlar faylining namunasi (.xlsx)",
+        "tags" : [ "marking" ]
+      }
+    },
     "/api/marking/mine" : {
       "get" : {
         "description" : "Faol ish bo'lmasa — 204.",
@@ -5783,6 +5795,59 @@
           }
         },
         "summary" : "Markirovkani yakunlash",
+        "tags" : [ "marking" ]
+      }
+    },
+    "/api/marking/orders/{id}/import" : {
+      "post" : {
+        "description" : "Har kod qo'lda skanerlash bilan bir xil tekshiriladi (format, takror, GTIN, partiya, tur, qator to'lgani). apply=false — oldindan ko'rish (hech narsa saqlanmaydi); apply=true — mos kelganlari qabul qilinadi.",
+        "operationId" : "importCodes",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "apply",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "multipart/form-data" : {
+              "schema" : {
+                "type" : "object",
+                "properties" : {
+                  "file" : {
+                    "type" : "string",
+                    "format" : "binary"
+                  }
+                },
+                "required" : [ "file" ]
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/MarkImportResult"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Kodlarni Excel/CSV fayldan yuklash",
         "tags" : [ "marking" ]
       }
     },
@@ -23465,6 +23530,66 @@
           }
         },
         "required" : [ "items", "page", "size", "total" ]
+      },
+      "MarkImportResult" : {
+        "type" : "object",
+        "properties" : {
+          "accepted" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "applied" : {
+            "type" : "boolean",
+            "description" : "true — mos kelganlari saqlandi; false — faqat oldindan ko'rish"
+          },
+          "rejected" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "rows" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/MarkImportRow"
+            }
+          },
+          "total" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "work" : {
+            "$ref" : "#/components/schemas/MarkWork",
+            "description" : "Saqlangandan keyingi holat (faqat applied=true)"
+          }
+        },
+        "required" : [ "accepted", "applied", "rejected", "rows", "total" ]
+      },
+      "MarkImportRow" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "error" : {
+            "type" : "string",
+            "description" : "Xato matni (so'rov tilida)"
+          },
+          "errorCode" : {
+            "type" : "string",
+            "description" : "Xato kaliti (marking.*)"
+          },
+          "ok" : {
+            "type" : "boolean"
+          },
+          "productName" : {
+            "type" : "string"
+          },
+          "row" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Fayldagi qator raqami (1 dan)"
+          }
+        },
+        "required" : [ "code", "ok", "row" ]
       },
       "MarkLine" : {
         "type" : "object",

@@ -48,6 +48,7 @@ import { formatDateTime, formatQuantity } from "@/lib/format";
 import { GS, parseGs1 } from "@/lib/gs1";
 import { codesExportUrl, useOrder } from "./api";
 import { IssueButton } from "./issues";
+import { MarkImportButton } from "./mark-import";
 import { day } from "./orders-page";
 import { deliveryText, StatCards, timerText } from "./picking-page";
 import { repickLines } from "./pick-sheet";
@@ -641,6 +642,7 @@ function ActiveMarking({ work }: { work: MarkWork }) {
           {finishErr.message ? <Alert tone="danger" title={finishErr.message} className="mt-3" /> : null}
           <div className="mt-4 flex flex-wrap justify-end gap-2">
             <IssueButton orderId={work.id} />
+            {hasMarked && !work.complete ? <MarkImportButton orderId={work.id} /> : null}
             <Button icon={CheckCircle2} disabled={!work.complete} loading={finishing} onClick={() => void finish()}>
               {tr("marking.finish")}
             </Button>
