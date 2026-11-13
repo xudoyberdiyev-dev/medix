@@ -480,6 +480,36 @@ class OrderMarking {
         return new MarkCodePage(items, total, page, size);
     }
 
+    /**
+     * O10c: mijoz nomidagi kodlar (mijoz kartochkasi «Markirovka kodlari»): yetkazilgan, kodlar egasi «Mijoz nomiga» buyurtmalar.
+     * O'z filiali (barcha filiallar doirasi — hammasi); q — GTIN, seriya, partiya yoki buyurtma raqami.
+     */
+    @Transactional(readOnly = true)
+    MarkCodePage customerCodes(Actor actor, long customerId, String q, int page, int size) {
+        StringBuilder where = new StringBuilder("WHERE o.customer_id = :c AND o.status = 'DELIVERED' AND m.status = 'SOLD' AND "
+                + CodesOwners.EFFECTIVE + " = 'CUSTOMER'");
+        Map<String, Object> params = new LinkedHashMap<>();
+        params.put("c", customerId);
+        if (!actor.allBranches()) {
+            where.append(" AND o.branch_id = :branch");
+            params.put("branch", actor.branchId());
+        }
+        if (q != null && !q.isBlank()) {
+            where.append(" AND (m.gtin LIKE :q OR upper(m.serial) LIKE :q OR upper(m.batch_no) LIKE :q OR o.number LIKE :q)");
+            params.put("q", "%" + q.strip().toUpperCase(Locale.ROOT).replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%");
+        }
+        String from = " FROM sales_order_mark m JOIN sales_order o ON o.id = m.order_id JOIN sales_order_line l ON l.id = m.line_id "
+                + "JOIN product p ON p.id = l.product_id JOIN employee e ON e.id = m.scanned_by ";
+        long total = jdbc.sql("SELECT count(*)" + from + where).params(params).query(Long.class).single();
+        List<MarkCode> items = jdbc.sql(SELECT_CODE + from + where + " ORDER BY m.closed_at DESC, m.id DESC LIMIT :lim OFFSET :off")
+                .params(params)
+                .param("lim", size)
+                .param("off", (long) page * size)
+                .query((rs, n) -> code(rs))
+                .list();
+        return new MarkCodePage(items, total, page, size);
+    }
+
     // ===== Ichki =====
 
     private static final String SELECT_CODE = """

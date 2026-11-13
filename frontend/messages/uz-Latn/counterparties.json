@@ -305,7 +305,8 @@
       "general": "Umumiy",
       "licenses": "Litsenziyalar",
       "terms": "Filiallar boʻyicha shartlar",
-      "contracts": "Shartnomalar"
+      "contracts": "Shartnomalar",
+      "codes": "Markirovka kodlari"
     },
     "edit": "Tahrirlash",
     "more": "Boshqa amallar",
@@ -552,5 +553,18 @@
       "cZoneUnknown": "Savdo zonasi topilmadi: «{t}» — shu filialda shu nomli faol zona yarating yoki nomni tuzating"
     },
     "termsAdd": "Filial sharti qoʻshiladi"
+  },
+  "codes": {
+    "title": "Mijoz nomidagi markirovka kodlari",
+    "search": "Qidiruv",
+    "searchPlaceholder": "GTIN, seriya, partiya yoki buyurtma",
+    "col": {
+      "order": "Buyurtma",
+      "product": "Mahsulot",
+      "code": "Kod",
+      "date": "Skanerlangan"
+    },
+    "emptyTitle": "Mijoz nomida kod yoʻq",
+    "emptyDescription": "«Mijoz nomiga» egali buyurtmalar yetkazilgach, ularning kodlari shu yerda koʻrinadi."
   }
 }

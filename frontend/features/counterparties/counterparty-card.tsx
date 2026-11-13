@@ -39,18 +39,19 @@ import { DocumentsTab } from "./documents-tab";
 import { CardHistory } from "./card-history";
 import { docSections, sectionPermissions, type DocSection } from "./documents-model";
 import { ProductsTab, ReconTab } from "./card-extra-tabs";
+import { CustomerCodesTab } from "./codes-tab";
 import { cents } from "./overview-model";
 
 const todayIso = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Tashkent" }).format(new Date());
 
 const BASE_TABS = ["general", "licenses", "terms", "contracts"] as const;
-type Tab = (typeof BASE_TABS)[number] | DocSection | "recon" | "products" | "history";
+type Tab = (typeof BASE_TABS)[number] | DocSection | "recon" | "products" | "codes" | "history";
 /** Prototip tartibi: Umumiy, Litsenziyalar, Shartlar, Buyurtmalar/Kirimlar, … hujjat yorliqlari, Akt sverka, (YB) Mahsulotlar, Shartnomalar, Tarix. */
 const tabsFor = (customers: boolean): Tab[] => [
   ...BASE_TABS.slice(0, 3),
   ...docSections(customers),
   "recon",
-  ...(customers ? [] : (["products"] as const)),
+  ...(customers ? (["codes"] as const) : (["products"] as const)),
   "contracts",
   "history",
 ];
@@ -285,9 +286,11 @@ function Card({ c, role }: { c: CounterpartyDetail; role: CounterpartyRole }) {
                 ? td("tab.RECON")
                 : k === "products"
                   ? td("tab.PRODUCTS")
-                  : k === "general" || k === "licenses" || k === "terms" || k === "contracts"
-                    ? t(`tab.${k}`)
-                    : td(`tab.${k}`),
+                  : k === "codes"
+                    ? t("tab.codes")
+                    : k === "general" || k === "licenses" || k === "terms" || k === "contracts"
+                      ? t(`tab.${k}`)
+                      : td(`tab.${k}`),
           count: counts[k],
         }))}
         value={tab}
@@ -448,13 +451,15 @@ function Card({ c, role }: { c: CounterpartyDetail; role: CounterpartyRole }) {
         />
       ) : null}
       {tab === "products" ? <ProductsTab id={c.id} allowed={can(me.data, "receipt.view")} /> : null}
+      {tab === "codes" ? <CustomerCodesTab id={c.id} allowed={can(me.data, "clients.view") || can(me.data, "marking.view")} /> : null}
       {tab !== "general" &&
       tab !== "licenses" &&
       tab !== "terms" &&
       tab !== "contracts" &&
       tab !== "history" &&
       tab !== "recon" &&
-      tab !== "products" ? (
+      tab !== "products" &&
+      tab !== "codes" ? (
         <DocumentsTab
           key={tab}
           id={c.id}

@@ -1783,6 +1783,10 @@ class OrderIT {
         send(post("/api/orders/" + o + "/codes-owner"), keeper, "{\"owner\":\"CUSTOMER\"}")
                 .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("order.codesOwnerClosed"));
 
+        // Zaxiraga ketgan kodlar mijoz kartochkasida («Mijoz nomiga») ko'rinmaydi
+        mvc.perform(get("/api/marking/customer-codes").param("customerId", String.valueOf(c)).cookie(operator))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.total").value(0));
+        mvc.perform(get("/api/marking/customer-codes").param("customerId", String.valueOf(c)).cookie(picker)).andExpect(status().isForbidden());
         // «Zaxira kodlar»: Buxgalter ko'radi, Operator — yo'q; boshqa filial — ko'rinmaydi
         MvcResult list = mvc.perform(get("/api/reserve-codes").param("q", serial).cookie(accountant))
                 .andExpect(status().isOk())

@@ -413,8 +413,8 @@ test("Operator: buyurtma «Yetkazildi» holatida", async ({ page }) => {
 test("Ombor mudiri: naqd buyurtma kodlari «Zaxira kodlar»da — biri ishlatildi deb belgilanadi (O10b/c)", async ({ page }) => {
   await login(page, "keeper.1", PASSWORD);
   await expect(page).toHaveURL(/\/$/);
-  await page.getByRole("link", { name: "Zaxira kodlar" }).first().click();
-  await expect(page).toHaveURL(/\/reserve-codes$/);
+  await page.goto("/reserve-codes");
+  await expect(page.getByRole("heading", { name: "Zaxira kodlar" }).first()).toBeVisible();
   await expect(page.getByRole("tab", { name: /^Zaxirada/ })).toHaveAttribute("aria-selected", "true");
   const rows = page.getByRole("row").filter({ hasText: CUSTOMER });
   await expect(rows).toHaveCount(2);

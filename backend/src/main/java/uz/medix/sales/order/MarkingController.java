@@ -207,6 +207,17 @@ class MarkingController {
         return marking.codes(actor(), orderId, mine, today, q, Math.max(page, 0), Math.clamp(size, 1, 200));
     }
 
+    @GetMapping("/customer-codes")
+    @PreAuthorize("hasAnyAuthority('clients.view', 'marking.view')")
+    @Operation(summary = "Mijoz nomidagi kodlar (O10c)", description = "Yetkazilgan, kodlar egasi «Mijoz nomiga» buyurtmalarning kodlari.")
+    MarkCodePage customerCodes(
+            @RequestParam long customerId,
+            @RequestParam(required = false) String q,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "50") int size) {
+        return marking.customerCodes(actor(), customerId, q, Math.max(page, 0), Math.clamp(size, 1, 200));
+    }
+
     @PostMapping(path = "/orders/{id}/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAuthority('marking.scan')")
     @Operation(summary = "Kodlarni Excel/CSV fayldan yuklash",
