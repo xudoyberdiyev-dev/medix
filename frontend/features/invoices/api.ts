@@ -51,7 +51,7 @@ export function useOrderInvoiceTask(orderId: number, enabled: boolean) {
     queryFn: async () => {
       const r = await api.GET("/api/invoice-tasks/by-order/{orderId}", { params: { path: { orderId } } });
       if (r.response.status === 404) return null;
-      return unwrap(r);
+      return unwrap(Promise.resolve(r));
     },
   });
 }

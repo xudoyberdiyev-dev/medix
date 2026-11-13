@@ -879,6 +879,17 @@ test("Buxgalter: Savdo hisoboti va mijozlar qarzi", async ({ page }) => {
   }
 });
 
+test("Buxgalter: «Fakturalar» navbati — naqd buyurtmalar navbatga tushmaydi (O10d)", async ({ page }) => {
+  await login(page, "accountant.1", PASSWORD);
+  await expect(page).toHaveURL(/\/$/);
+  await page.getByRole("link", { name: "Fakturalar" }).first().click();
+  await expect(page).toHaveURL(/\/invoices$/);
+  await expect(page.getByRole("heading", { name: "Fakturalar" }).first()).toBeVisible();
+  await expect(page.getByText(/^Integratsiya hali ulanmagan/)).toBeVisible();
+  await expect(page.getByRole("tab", { name: /^Yuborilishi kerak/ })).toHaveAttribute("aria-selected", "true");
+  await expect(page.getByText("Navbatda faktura yoʻq")).toBeVisible();
+});
+
 test("Operator: mijozdan qaytarish (QM) — sotuv asosida, Ombor mudiriga yuboradi", async ({ page }) => {
   await login(page, "operator.1", OPERATOR_PASSWORD);
   await expect(page).toHaveURL(/\/$/);

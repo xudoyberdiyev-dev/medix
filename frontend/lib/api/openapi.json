@@ -51,6 +51,9 @@
     "description" : "Hisobotlar",
     "name" : "reports"
   }, {
+    "description" : "Buxgalter faktura navbati",
+    "name" : "invoice-tasks"
+  }, {
     "description" : "Tizimga kirish va sessiya",
     "name" : "auth"
   }, {
@@ -473,7 +476,7 @@
     },
     "/api/audit" : {
       "get" : {
-        "operationId" : "list_34",
+        "operationId" : "list_35",
         "parameters" : [ {
           "in" : "query",
           "name" : "view",
@@ -1439,7 +1442,7 @@
     "/api/branch-sales/{id}/shortage" : {
       "get" : {
         "description" : "Ochiqmi, summa (special.cost) va hal qilish tarixi.",
-        "operationId" : "get_27",
+        "operationId" : "get_28",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -2110,7 +2113,7 @@
     },
     "/api/cash-panel" : {
       "get" : {
-        "operationId" : "get_26",
+        "operationId" : "get_27",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -3477,7 +3480,7 @@
     },
     "/api/customer-returns/{id}" : {
       "get" : {
-        "operationId" : "get_25",
+        "operationId" : "get_26",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -4224,7 +4227,7 @@
     },
     "/api/employee-lookup" : {
       "get" : {
-        "operationId" : "list_33",
+        "operationId" : "list_34",
         "responses" : {
           "200" : {
             "content" : {
@@ -4773,7 +4776,7 @@
     },
     "/api/home/accountant" : {
       "get" : {
-        "operationId" : "get_24",
+        "operationId" : "get_25",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -4801,7 +4804,7 @@
     },
     "/api/home/branch" : {
       "get" : {
-        "operationId" : "get_23",
+        "operationId" : "get_24",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -4845,7 +4848,7 @@
     },
     "/api/home/director" : {
       "get" : {
-        "operationId" : "get_22",
+        "operationId" : "get_23",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -5513,6 +5516,313 @@
         },
         "summary" : "Tekshiruvga yuborish",
         "tags" : [ "inventory-count" ]
+      }
+    },
+    "/api/invoice-tasks" : {
+      "get" : {
+        "description" : "Filtrlar: filial (barcha filiallar doirasida), holat, davr (navbatga tushgan sana), qidiruv (buyurtma, mijoz, STIR, HF, e-faktura №). Kutilayotganlar — eng uzoq kutayotgani birinchi.",
+        "operationId" : "list_33",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "status",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "PENDING", "SENT" ]
+          }
+        }, {
+          "in" : "query",
+          "name" : "from",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "in" : "query",
+          "name" : "to",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "in" : "query",
+          "name" : "q",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "page",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 0
+          }
+        }, {
+          "in" : "query",
+          "name" : "size",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 50
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/InvoiceTaskPage"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Faktura navbati",
+        "tags" : [ "invoice-tasks" ]
+      }
+    },
+    "/api/invoice-tasks/by-order/{orderId}" : {
+      "get" : {
+        "description" : "Buyurtma kartochkasi «Hujjatlar». Vazifa bo'lmasa — 404.",
+        "operationId" : "byOrder",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "orderId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/InvoiceTaskDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Buyurtmaning faktura vazifasi va fayllari",
+        "tags" : [ "invoice-tasks" ]
+      }
+    },
+    "/api/invoice-tasks/files/{fileId}" : {
+      "get" : {
+        "operationId" : "file",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "fileId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "string",
+                  "format" : "byte"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Yuklangan faylni yuklab olish",
+        "tags" : [ "invoice-tasks" ]
+      }
+    },
+    "/api/invoice-tasks/{id}" : {
+      "get" : {
+        "operationId" : "get_22",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/InvoiceTask"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Faktura vazifasi",
+        "tags" : [ "invoice-tasks" ]
+      }
+    },
+    "/api/invoice-tasks/{id}/codes" : {
+      "get" : {
+        "operationId" : "codes_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        },
+        "summary" : "Kodlar .xlsx (1C uchun)",
+        "tags" : [ "invoice-tasks" ]
+      }
+    },
+    "/api/invoice-tasks/{id}/files" : {
+      "post" : {
+        "description" : "PDF, JPG, PNG; ≤ 10 MB. Faqat «Yuborilishi kerak» holatida.",
+        "operationId" : "upload",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "kind",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "EFAKTURA", "TTN" ]
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "multipart/form-data" : {
+              "schema" : {
+                "type" : "object",
+                "properties" : {
+                  "file" : {
+                    "type" : "string",
+                    "format" : "binary"
+                  }
+                },
+                "required" : [ "file" ]
+              }
+            }
+          }
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/UploadedFile"
+                }
+              }
+            },
+            "description" : "Created"
+          }
+        },
+        "summary" : "E-faktura / TTN faylini yuklash",
+        "tags" : [ "invoice-tasks" ]
+      }
+    },
+    "/api/invoice-tasks/{id}/invoice/pdf" : {
+      "get" : {
+        "description" : "Sotuv hali o'tkazilmagan bo'lsa — 404.",
+        "operationId" : "invoicePdf_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/pdf" : {
+                "schema" : {
+                  "type" : "string",
+                  "format" : "byte"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Hisob-faktura — PDF",
+        "tags" : [ "invoice-tasks" ]
+      }
+    },
+    "/api/invoice-tasks/{id}/sent" : {
+      "post" : {
+        "description" : "E-faktura raqami va sanasi; e-faktura va TTN fayllari oldin yuklangan bo'lishi shart.",
+        "operationId" : "sent",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/InvoiceSentRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/InvoiceTask"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "«Yuborildi» deb belgilash",
+        "tags" : [ "invoice-tasks" ]
       }
     },
     "/api/marking/codes" : {
@@ -17471,12 +17781,20 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "invoicesOverdue" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "invoicesPending" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
           "ytPending" : {
             "type" : "integer",
             "format" : "int32"
           }
         },
-        "required" : [ "bankUnreconciled", "cashDaysOpen", "ytPending" ]
+        "required" : [ "bankUnreconciled", "cashDaysOpen", "invoicesOverdue", "invoicesPending", "ytPending" ]
       },
       "Act" : {
         "type" : "object",
@@ -23645,6 +23963,37 @@
         },
         "required" : [ "branchId", "customer", "invoiceNumber", "lines", "netTotal", "orderNumber", "paymentType", "saleDate", "saleNumber", "status", "total", "vatTotal", "warehouse" ]
       },
+      "InvoiceFile" : {
+        "type" : "object",
+        "properties" : {
+          "contentType" : {
+            "type" : "string"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "createdBy" : {
+            "type" : "string"
+          },
+          "fileName" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "kind" : {
+            "type" : "string",
+            "enum" : [ "EFAKTURA", "TTN" ]
+          },
+          "sizeBytes" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "contentType", "createdAt", "createdBy", "fileName", "id", "kind", "sizeBytes" ]
+      },
       "InvoiceLine" : {
         "type" : "object",
         "properties" : {
@@ -23688,6 +24037,158 @@
           }
         },
         "required" : [ "amount", "batch", "expiryDate", "netAmount", "price", "productCode", "productName", "qty", "vatAmount", "vatRate" ]
+      },
+      "InvoiceSentRequest" : {
+        "type" : "object",
+        "properties" : {
+          "efakturaDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "efakturaNumber" : {
+            "type" : "string",
+            "maxLength" : 60,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "efakturaDate", "efakturaNumber" ]
+      },
+      "InvoiceTask" : {
+        "type" : "object",
+        "properties" : {
+          "branch" : {
+            "type" : "string"
+          },
+          "codes" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Faol / sotilgan markirovka kodlari soni"
+          },
+          "codesOwner" : {
+            "type" : "string",
+            "enum" : [ "CUSTOMER", "RESERVE" ]
+          },
+          "customer" : {
+            "type" : "string"
+          },
+          "customerId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "customerTin" : {
+            "type" : "string"
+          },
+          "efakturaDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "efakturaNumber" : {
+            "type" : "string"
+          },
+          "hasEfakturaFile" : {
+            "type" : "boolean"
+          },
+          "hasTtnFile" : {
+            "type" : "boolean"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "invoiceNumber" : {
+            "type" : "string",
+            "description" : "Hisob-faktura raqami (sotuv o'tkazilgach)"
+          },
+          "openedAt" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Navbatga tushgan payt («Yuklanmoqda»)"
+          },
+          "orderId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "orderNumber" : {
+            "type" : "string"
+          },
+          "orderStatus" : {
+            "type" : "string",
+            "enum" : [ "DRAFT", "PENDING_APPROVAL", "QUEUED", "PICKING", "MARKING", "CHECKING", "DOCUMENTING", "LOADING", "IN_TRANSIT", "DELIVERED", "UNDELIVERED", "REJECTED", "CANCELLED" ]
+          },
+          "paymentType" : {
+            "type" : "string",
+            "enum" : [ "CASH", "TRANSFER", "ONLINE" ]
+          },
+          "sentAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "sentBy" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "PENDING", "SENT" ]
+          },
+          "total" : {
+            "type" : "string",
+            "description" : "Summa (sotuv bo'lsa — sotuvdan, aks holda buyurtmadan)"
+          },
+          "vat" : {
+            "type" : "string",
+            "description" : "QQS (sotuv o'tkazilgach)"
+          }
+        },
+        "required" : [ "branch", "codes", "codesOwner", "customer", "customerId", "hasEfakturaFile", "hasTtnFile", "id", "openedAt", "orderId", "orderNumber", "orderStatus", "paymentType", "status", "total" ]
+      },
+      "InvoiceTaskDetail" : {
+        "type" : "object",
+        "description" : "Buyurtma kartochkasi «Hujjatlar»: faktura vazifasi va fayllari",
+        "properties" : {
+          "files" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/InvoiceFile"
+            }
+          },
+          "task" : {
+            "$ref" : "#/components/schemas/InvoiceTask"
+          }
+        },
+        "required" : [ "files", "task" ]
+      },
+      "InvoiceTaskPage" : {
+        "type" : "object",
+        "properties" : {
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/InvoiceTask"
+            }
+          },
+          "page" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "pending" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Holat bo'yicha sonlar (boshqa filtrlar bilan)"
+          },
+          "sent" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "total" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "items", "page", "pending", "sent", "size", "total" ]
       },
       "IssueRequest" : {
         "type" : "object",
@@ -33904,6 +34405,16 @@
           }
         },
         "required" : [ "name" ]
+      },
+      "UploadedFile" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "id" ]
       },
       "VatRequest" : {
         "type" : "object",

@@ -153,7 +153,7 @@ export interface paths {
             cookie?: never;
         };
         /** Audit yozuvlari (yangilari birinchi), yorliqlar soni bilan */
-        get: operations["list_34"];
+        get: operations["list_35"];
         put?: never;
         post?: never;
         delete?: never;
@@ -602,7 +602,7 @@ export interface paths {
          * FS kamomadi
          * @description Ochiqmi, summa (special.cost) va hal qilish tarixi.
          */
-        get: operations["get_27"];
+        get: operations["get_28"];
         put?: never;
         post?: never;
         delete?: never;
@@ -915,7 +915,7 @@ export interface paths {
             cookie?: never;
         };
         /** Kassir paneli: qoldiqlar, kirim/chiqim, xarajat moddalari, kutilayotganlar, hisoblar, dinamika, oxirgi operatsiyalar */
-        get: operations["get_26"];
+        get: operations["get_27"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1457,7 +1457,7 @@ export interface paths {
             cookie?: never;
         };
         /** QM hujjati */
-        get: operations["get_25"];
+        get: operations["get_26"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1802,7 +1802,7 @@ export interface paths {
             cookie?: never;
         };
         /** Faol xodimlar (tanlash uchun) */
-        get: operations["list_33"];
+        get: operations["list_34"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2085,7 +2085,7 @@ export interface paths {
             cookie?: never;
         };
         /** Buxgalter bosh sahifasi: kassa/bank, qarzlar, to'lov taqvimi (14 kun), ish ro'yxati, pul filiallar bo'yicha */
-        get: operations["get_24"];
+        get: operations["get_25"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2102,7 +2102,7 @@ export interface paths {
             cookie?: never;
         };
         /** Filial rahbari bosh sahifasi: tasdiqlarim, ko'rsatkichlar, bugungi reyslar, pul hisoblari */
-        get: operations["get_23"];
+        get: operations["get_24"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2119,7 +2119,7 @@ export interface paths {
             cookie?: never;
         };
         /** Direktor bosh sahifasi: 4 karta, filiallar kesimi, «Diqqat talab qiladi», eng katta qarzdorlar */
-        get: operations["get_22"];
+        get: operations["get_23"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2438,6 +2438,157 @@ export interface paths {
          * @description Hamma qator sanalgan bo'lishi shart. Tasdiqlovchilarga bildirishnoma.
          */
         post: operations["submit_3"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/invoice-tasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Faktura navbati
+         * @description Filtrlar: filial (barcha filiallar doirasida), holat, davr (navbatga tushgan sana), qidiruv (buyurtma, mijoz, STIR, HF, e-faktura №). Kutilayotganlar — eng uzoq kutayotgani birinchi.
+         */
+        get: operations["list_33"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/invoice-tasks/by-order/{orderId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Buyurtmaning faktura vazifasi va fayllari
+         * @description Buyurtma kartochkasi «Hujjatlar». Vazifa bo'lmasa — 404.
+         */
+        get: operations["byOrder"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/invoice-tasks/files/{fileId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Yuklangan faylni yuklab olish */
+        get: operations["file"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/invoice-tasks/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Faktura vazifasi */
+        get: operations["get_22"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/invoice-tasks/{id}/codes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Kodlar .xlsx (1C uchun) */
+        get: operations["codes_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/invoice-tasks/{id}/files": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * E-faktura / TTN faylini yuklash
+         * @description PDF, JPG, PNG; ≤ 10 MB. Faqat «Yuborilishi kerak» holatida.
+         */
+        post: operations["upload"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/invoice-tasks/{id}/invoice/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Hisob-faktura — PDF
+         * @description Sotuv hali o'tkazilmagan bo'lsa — 404.
+         */
+        get: operations["invoicePdf_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/invoice-tasks/{id}/sent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * «Yuborildi» deb belgilash
+         * @description E-faktura raqami va sanasi; e-faktura va TTN fayllari oldin yuklangan bo'lishi shart.
+         */
+        post: operations["sent"];
         delete?: never;
         options?: never;
         head?: never;
@@ -7560,6 +7711,10 @@ export interface components {
             /** Format: int32 */
             cashDaysOpen: number;
             /** Format: int32 */
+            invoicesOverdue: number;
+            /** Format: int32 */
+            invoicesPending: number;
+            /** Format: int32 */
             ytPending: number;
         };
         Act: {
@@ -9913,6 +10068,19 @@ export interface components {
             vatTotal: string;
             warehouse: string;
         };
+        InvoiceFile: {
+            contentType: string;
+            /** Format: date-time */
+            createdAt: string;
+            createdBy: string;
+            fileName: string;
+            /** Format: int64 */
+            id: number;
+            /** @enum {string} */
+            kind: "EFAKTURA" | "TTN";
+            /** Format: int32 */
+            sizeBytes: number;
+        };
         InvoiceLine: {
             amount: string;
             batch: string;
@@ -9930,6 +10098,76 @@ export interface components {
             vatAmount: string;
             /** @description QQS stavkasi, % */
             vatRate: string;
+        };
+        InvoiceSentRequest: {
+            /** Format: date */
+            efakturaDate: string;
+            efakturaNumber: string;
+        };
+        InvoiceTask: {
+            branch: string;
+            /**
+             * Format: int32
+             * @description Faol / sotilgan markirovka kodlari soni
+             */
+            codes: number;
+            /** @enum {string} */
+            codesOwner: "CUSTOMER" | "RESERVE";
+            customer: string;
+            /** Format: int64 */
+            customerId: number;
+            customerTin?: string;
+            /** Format: date */
+            efakturaDate?: string;
+            efakturaNumber?: string;
+            hasEfakturaFile: boolean;
+            hasTtnFile: boolean;
+            /** Format: int64 */
+            id: number;
+            /** @description Hisob-faktura raqami (sotuv o'tkazilgach) */
+            invoiceNumber?: string;
+            /**
+             * Format: date-time
+             * @description Navbatga tushgan payt («Yuklanmoqda»)
+             */
+            openedAt: string;
+            /** Format: int64 */
+            orderId: number;
+            orderNumber: string;
+            /** @enum {string} */
+            orderStatus: "DRAFT" | "PENDING_APPROVAL" | "QUEUED" | "PICKING" | "MARKING" | "CHECKING" | "DOCUMENTING" | "LOADING" | "IN_TRANSIT" | "DELIVERED" | "UNDELIVERED" | "REJECTED" | "CANCELLED";
+            /** @enum {string} */
+            paymentType: "CASH" | "TRANSFER" | "ONLINE";
+            /** Format: date-time */
+            sentAt?: string;
+            sentBy?: string;
+            /** @enum {string} */
+            status: "PENDING" | "SENT";
+            /** @description Summa (sotuv bo'lsa — sotuvdan, aks holda buyurtmadan) */
+            total: string;
+            /** @description QQS (sotuv o'tkazilgach) */
+            vat?: string;
+        };
+        /** @description Buyurtma kartochkasi «Hujjatlar»: faktura vazifasi va fayllari */
+        InvoiceTaskDetail: {
+            files: components["schemas"]["InvoiceFile"][];
+            task: components["schemas"]["InvoiceTask"];
+        };
+        InvoiceTaskPage: {
+            items: components["schemas"]["InvoiceTask"][];
+            /** Format: int32 */
+            page: number;
+            /**
+             * Format: int64
+             * @description Holat bo'yicha sonlar (boshqa filtrlar bilan)
+             */
+            pending: number;
+            /** Format: int64 */
+            sent: number;
+            /** Format: int32 */
+            size: number;
+            /** Format: int64 */
+            total: number;
         };
         IssueRequest: {
             /** @description «Boshqa» uchun majburiy */
@@ -14133,6 +14371,10 @@ export interface components {
             address?: string;
             name: string;
         };
+        UploadedFile: {
+            /** Format: int64 */
+            id: number;
+        };
         VatRequest: {
             rate: string;
             /** Format: date */
@@ -14972,7 +15214,7 @@ export interface operations {
             };
         };
     };
-    list_34: {
+    list_35: {
         parameters: {
             query?: {
                 view?: "ALL" | "CANCEL" | "FAIL" | "PERM" | "CTRL";
@@ -15597,7 +15839,7 @@ export interface operations {
             };
         };
     };
-    get_27: {
+    get_28: {
         parameters: {
             query?: never;
             header?: never;
@@ -16066,7 +16308,7 @@ export interface operations {
             };
         };
     };
-    get_26: {
+    get_27: {
         parameters: {
             query: {
                 branchId: number;
@@ -16905,7 +17147,7 @@ export interface operations {
             };
         };
     };
-    get_25: {
+    get_26: {
         parameters: {
             query?: never;
             header?: never;
@@ -17382,7 +17624,7 @@ export interface operations {
             };
         };
     };
-    list_33: {
+    list_34: {
         parameters: {
             query?: never;
             header?: never;
@@ -17797,7 +18039,7 @@ export interface operations {
             };
         };
     };
-    get_24: {
+    get_25: {
         parameters: {
             query?: {
                 branchId?: number;
@@ -17819,7 +18061,7 @@ export interface operations {
             };
         };
     };
-    get_23: {
+    get_24: {
         parameters: {
             query?: {
                 branchId?: number;
@@ -17843,7 +18085,7 @@ export interface operations {
             };
         };
     };
-    get_22: {
+    get_23: {
         parameters: {
             query?: {
                 branchId?: number;
@@ -18289,6 +18531,199 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["InventoryCountDetail"];
+                };
+            };
+        };
+    };
+    list_33: {
+        parameters: {
+            query?: {
+                branchId?: number;
+                status?: "PENDING" | "SENT";
+                from?: string;
+                to?: string;
+                q?: string;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvoiceTaskPage"];
+                };
+            };
+        };
+    };
+    byOrder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                orderId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvoiceTaskDetail"];
+                };
+            };
+        };
+    };
+    file: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                fileId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+        };
+    };
+    get_22: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvoiceTask"];
+                };
+            };
+        };
+    };
+    codes_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    upload: {
+        parameters: {
+            query: {
+                kind: "EFAKTURA" | "TTN";
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UploadedFile"];
+                };
+            };
+        };
+    };
+    invoicePdf_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
+                };
+            };
+        };
+    };
+    sent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InvoiceSentRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvoiceTask"];
                 };
             };
         };
