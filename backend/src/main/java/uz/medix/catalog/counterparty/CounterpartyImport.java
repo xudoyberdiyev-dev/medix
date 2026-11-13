@@ -192,8 +192,8 @@ class CounterpartyImport {
             Long existingId = existing != null && !hasErr ? existing.id() : null;
             if (!hasErr && apply && existingId != null) {
                 TermsRequest terms = customer
-                        ? new TermsRequest(limit, days, null, null, null, null, null, null, null, null)
-                        : new TermsRequest(null, null, null, null, null, days, null, null, null, lead);
+                        ? new TermsRequest(limit, days, null, null, null, null, null, null, null, null, null)
+                        : new TermsRequest(null, null, null, null, null, days, null, null, null, lead, null);
                 counterparties.saveTerms(existingId, req.branchId(), terms, customer, !customer);
                 updated++;
             } else if (!hasErr && apply) {
@@ -202,8 +202,8 @@ class CounterpartyImport {
                 createdId = counterparties.create(r);
                 if (hasTerms && termsAllowed) {
                     TermsRequest terms = customer
-                            ? new TermsRequest(limit, days, null, null, null, null, null, null, null, null)
-                            : new TermsRequest(null, null, null, null, null, days, null, null, null, lead);
+                            ? new TermsRequest(limit, days, null, null, null, null, null, null, null, null, null)
+                            : new TermsRequest(null, null, null, null, null, days, null, null, null, lead, null);
                     counterparties.saveTerms(createdId, req.branchId(), terms, customer, !customer);
                 }
                 created++;

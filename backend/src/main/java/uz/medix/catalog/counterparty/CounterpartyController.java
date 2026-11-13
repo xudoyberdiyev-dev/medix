@@ -428,7 +428,7 @@ class CounterpartyController {
         if (!customerSide && !supplierSide) {
             throw MedixException.forbidden("auth.forbidden");
         }
-        counterparties.saveTerms(id, branchId, r, customerSide, supplierSide);
+        counterparties.saveTerms(id, branchId, r, customerSide, supplierSide, true);
         return detail(id);
     }
 }
