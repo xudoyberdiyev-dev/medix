@@ -7844,6 +7844,39 @@
         "tags" : [ "orders" ]
       }
     },
+    "/api/orders/invoices/pdf" : {
+      "get" : {
+        "description" : "Bir nechta buyurtma (masalan, reys boʻyicha), 50 tagacha; sotuvi yoʻq buyurtmalar oʻtkazib yuboriladi (O11).",
+        "operationId" : "invoicesPdf",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "ids",
+          "required" : true,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/pdf" : {
+                "schema" : {
+                  "type" : "string",
+                  "format" : "byte"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Hisob-fakturalar — ommaviy PDF",
+        "tags" : [ "orders" ]
+      }
+    },
     "/api/orders/issues" : {
       "get" : {
         "description" : "Ombor mudiri paneli: ochiq (standart) yoki barchasi; buyurtma bo'yicha.",
@@ -8444,6 +8477,28 @@
           }
         },
         "summary" : "Hisob-faktura — PDF (chop etish)",
+        "tags" : [ "orders" ]
+      }
+    },
+    "/api/orders/{id}/invoice/xlsx" : {
+      "get" : {
+        "description" : "PDF bilan bir xil ustunlar (O11). Sotuv bo'lmasa — 404.",
+        "operationId" : "invoiceXlsx",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        },
+        "summary" : "Hisob-faktura — Excel (.xlsx)",
         "tags" : [ "orders" ]
       }
     },
@@ -10568,6 +10623,15 @@
             "type" : "boolean"
           }
         }, {
+          "description" : "Faqat MXIK (IKPU) kodi boʻsh mahsulotlar (O11)",
+          "in" : "query",
+          "name" : "noIkpu",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
+          }
+        }, {
           "description" : "Qoldiq va narx filiali",
           "in" : "query",
           "name" : "branchId",
@@ -10839,6 +10903,14 @@
           "required" : false,
           "schema" : {
             "type" : "boolean"
+          }
+        }, {
+          "in" : "query",
+          "name" : "noIkpu",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
           }
         }, {
           "in" : "query",
@@ -22804,6 +22876,10 @@
           "active" : {
             "type" : "boolean"
           },
+          "code" : {
+            "type" : "string",
+            "description" : "Faqat birlik — soliq klassifikatori kodi (hisob-faktura)"
+          },
           "id" : {
             "type" : "integer",
             "format" : "int64"
@@ -22820,6 +22896,12 @@
       "EntryRequest" : {
         "type" : "object",
         "properties" : {
+          "code" : {
+            "type" : "string",
+            "description" : "Faqat birlik — soliq klassifikatori kodi (raqam)",
+            "maxLength" : 10,
+            "minLength" : 0
+          },
           "name" : {
             "type" : "string",
             "maxLength" : 200,
@@ -24323,14 +24405,26 @@
             "type" : "integer",
             "format" : "int64"
           },
+          "buyer" : {
+            "$ref" : "#/components/schemas/InvoiceParty",
+            "description" : "Xaridor rekvizitlari"
+          },
           "contract" : {
             "type" : "string",
             "description" : "Sotuv sanasida amaldagi shartnoma"
+          },
+          "contractDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Shartnoma sanasi"
           },
           "customer" : {
             "type" : "string"
           },
           "customerTin" : {
+            "type" : "string"
+          },
+          "driver" : {
             "type" : "string"
           },
           "dueDate" : {
@@ -24345,6 +24439,16 @@
             "items" : {
               "$ref" : "#/components/schemas/InvoiceLine"
             }
+          },
+          "markCount" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Markirovka kodlari jami"
+          },
+          "missingIkpu" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "MXIK (IKPU) kodi boʻsh qatorlar soni — ogohlantirish uchun"
           },
           "netTotal" : {
             "type" : "string",
@@ -24364,6 +24468,10 @@
           "saleNumber" : {
             "type" : "string"
           },
+          "seller" : {
+            "$ref" : "#/components/schemas/InvoiceParty",
+            "description" : "Sotuvchi rekvizitlari (filial)"
+          },
           "status" : {
             "type" : "string",
             "description" : "POSTED yoki CANCELLED"
@@ -24371,14 +24479,25 @@
           "total" : {
             "type" : "string"
           },
+          "totalInWords" : {
+            "type" : "string",
+            "description" : "Jami summa soʻz bilan (QQS bilan)"
+          },
+          "tripNumber" : {
+            "type" : "string",
+            "description" : "Reys raqami (buyurtma reysda boʻlsa)"
+          },
           "vatTotal" : {
+            "type" : "string"
+          },
+          "vehicle" : {
             "type" : "string"
           },
           "warehouse" : {
             "type" : "string"
           }
         },
-        "required" : [ "branchId", "customer", "invoiceNumber", "lines", "netTotal", "orderNumber", "paymentType", "saleDate", "saleNumber", "status", "total", "vatTotal", "warehouse" ]
+        "required" : [ "branchId", "buyer", "customer", "invoiceNumber", "lines", "markCount", "missingIkpu", "netTotal", "orderNumber", "paymentType", "saleDate", "saleNumber", "seller", "status", "total", "totalInWords", "vatTotal", "warehouse" ]
       },
       "InvoiceFile" : {
         "type" : "object",
@@ -24424,8 +24543,17 @@
             "type" : "string",
             "format" : "date"
           },
+          "ikpu" : {
+            "type" : "string",
+            "description" : "MXIK (IKPU) kodi"
+          },
           "manufacturer" : {
             "type" : "string"
+          },
+          "markCount" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Shu qator (partiya) markirovka kodlari soni"
           },
           "netAmount" : {
             "type" : "string",
@@ -24445,6 +24573,14 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "unit" : {
+            "type" : "string",
+            "description" : "Oʻlchov birligi"
+          },
+          "unitCode" : {
+            "type" : "string",
+            "description" : "Oʻlchov birligi kodi"
+          },
           "vatAmount" : {
             "type" : "string"
           },
@@ -24453,7 +24589,39 @@
             "description" : "QQS stavkasi, %"
           }
         },
-        "required" : [ "amount", "batch", "expiryDate", "netAmount", "price", "productCode", "productName", "qty", "vatAmount", "vatRate" ]
+        "required" : [ "amount", "batch", "expiryDate", "markCount", "netAmount", "price", "productCode", "productName", "qty", "vatAmount", "vatRate" ]
+      },
+      "InvoiceParty" : {
+        "type" : "object",
+        "properties" : {
+          "address" : {
+            "type" : "string"
+          },
+          "bankAccount" : {
+            "type" : "string",
+            "description" : "Hisob raqami (r/s)"
+          },
+          "bankName" : {
+            "type" : "string"
+          },
+          "mfo" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "phone" : {
+            "type" : "string"
+          },
+          "tin" : {
+            "type" : "string"
+          },
+          "vatCode" : {
+            "type" : "string",
+            "description" : "QQS toʻlovchi registratsiya kodi"
+          }
+        },
+        "required" : [ "name" ]
       },
       "InvoiceSentRequest" : {
         "type" : "object",

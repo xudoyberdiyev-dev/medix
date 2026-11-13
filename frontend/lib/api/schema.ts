@@ -3417,6 +3417,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/orders/invoices/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Hisob-fakturalar — ommaviy PDF
+         * @description Bir nechta buyurtma (masalan, reys boʻyicha), 50 tagacha; sotuvi yoʻq buyurtmalar oʻtkazib yuboriladi (O11).
+         */
+        get: operations["invoicesPdf"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/orders/issues": {
         parameters: {
             query?: never;
@@ -3761,6 +3781,26 @@ export interface paths {
          * @description Sotuv bo'lmasa — 404.
          */
         get: operations["invoicePdf"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orders/{id}/invoice/xlsx": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Hisob-faktura — Excel (.xlsx)
+         * @description PDF bilan bir xil ustunlar (O11). Sotuv bo'lmasa — 404.
+         */
+        get: operations["invoiceXlsx"];
         put?: never;
         post?: never;
         delete?: never;
@@ -9639,12 +9679,16 @@ export interface components {
         };
         Entry: {
             active: boolean;
+            /** @description Faqat birlik — soliq klassifikatori kodi (hisob-faktura) */
+            code?: string;
             /** Format: int64 */
             id: number;
             name: string;
             shortName?: string;
         };
         EntryRequest: {
+            /** @description Faqat birlik — soliq klassifikatori kodi (raqam) */
+            code?: string;
             name: string;
             /** @description Birlik — qisqa yozuvi, davlat — ISO kodi (UZ) */
             shortName?: string;
@@ -10217,14 +10261,32 @@ export interface components {
             address?: string;
             /** Format: int64 */
             branchId: number;
+            /** @description Xaridor rekvizitlari */
+            buyer: components["schemas"]["InvoiceParty"];
             /** @description Sotuv sanasida amaldagi shartnoma */
             contract?: string;
+            /**
+             * Format: date
+             * @description Shartnoma sanasi
+             */
+            contractDate?: string;
             customer: string;
             customerTin?: string;
+            driver?: string;
             /** Format: date */
             dueDate?: string;
             invoiceNumber: string;
             lines: components["schemas"]["InvoiceLine"][];
+            /**
+             * Format: int64
+             * @description Markirovka kodlari jami
+             */
+            markCount: number;
+            /**
+             * Format: int32
+             * @description MXIK (IKPU) kodi boʻsh qatorlar soni — ogohlantirish uchun
+             */
+            missingIkpu: number;
             /** @description QQSsiz qiymat */
             netTotal: string;
             orderNumber: string;
@@ -10233,10 +10295,17 @@ export interface components {
             /** Format: date */
             saleDate: string;
             saleNumber: string;
+            /** @description Sotuvchi rekvizitlari (filial) */
+            seller: components["schemas"]["InvoiceParty"];
             /** @description POSTED yoki CANCELLED */
             status: string;
             total: string;
+            /** @description Jami summa soʻz bilan (QQS bilan) */
+            totalInWords: string;
+            /** @description Reys raqami (buyurtma reysda boʻlsa) */
+            tripNumber?: string;
             vatTotal: string;
+            vehicle?: string;
             warehouse: string;
         };
         InvoiceFile: {
@@ -10257,7 +10326,14 @@ export interface components {
             batch: string;
             /** Format: date */
             expiryDate: string;
+            /** @description MXIK (IKPU) kodi */
+            ikpu?: string;
             manufacturer?: string;
+            /**
+             * Format: int32
+             * @description Shu qator (partiya) markirovka kodlari soni
+             */
+            markCount: number;
             /** @description QQSsiz qiymat */
             netAmount: string;
             /** @description Narx QQS bilan */
@@ -10266,9 +10342,25 @@ export interface components {
             productName: string;
             /** Format: int32 */
             qty: number;
+            /** @description Oʻlchov birligi */
+            unit?: string;
+            /** @description Oʻlchov birligi kodi */
+            unitCode?: string;
             vatAmount: string;
             /** @description QQS stavkasi, % */
             vatRate: string;
+        };
+        InvoiceParty: {
+            address?: string;
+            /** @description Hisob raqami (r/s) */
+            bankAccount?: string;
+            bankName?: string;
+            mfo?: string;
+            name: string;
+            phone?: string;
+            tin?: string;
+            /** @description QQS toʻlovchi registratsiya kodi */
+            vatCode?: string;
         };
         InvoiceSentRequest: {
             /** Format: date */
@@ -20158,6 +20250,28 @@ export interface operations {
             };
         };
     };
+    invoicesPdf: {
+        parameters: {
+            query: {
+                ids: number[];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
+                };
+            };
+        };
+    };
     listIssues: {
         parameters: {
             query?: {
@@ -20590,6 +20704,26 @@ export interface operations {
                 content: {
                     "application/pdf": string;
                 };
+            };
+        };
+    };
+    invoiceXlsx: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -21915,6 +22049,8 @@ export interface operations {
                 view?: "ALL" | "ACTIVE" | "CONTROLLED" | "MARKED" | "PRESCRIPTION" | "INACTIVE";
                 controlled?: boolean;
                 marked?: boolean;
+                /** @description Faqat MXIK (IKPU) kodi boʻsh mahsulotlar (O11) */
+                noIkpu?: boolean;
                 /** @description Qoldiq va narx filiali */
                 branchId?: number;
                 facets?: boolean;
@@ -22006,6 +22142,7 @@ export interface operations {
                 view?: "ALL" | "ACTIVE" | "CONTROLLED" | "MARKED" | "PRESCRIPTION" | "INACTIVE";
                 controlled?: boolean;
                 marked?: boolean;
+                noIkpu?: boolean;
                 branchId?: number;
                 sort?: "CODE" | "NAME" | "CONTRACT_NAME" | "MANUFACTURER" | "CATEGORY" | "COUNTRY" | "VAT" | "MIN_QTY" | "MAX_QTY" | "STOCK" | "PRICE";
                 desc?: boolean;
