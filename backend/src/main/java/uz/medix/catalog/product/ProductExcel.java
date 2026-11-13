@@ -74,7 +74,7 @@ class ProductExcel {
     void export(Filter filter, OutputStream out) throws IOException {
         List<ProductRow> rows = products.search(new Filter(filter.q(), filter.ids(), filter.manufacturerIds(), filter.categoryIds(),
                 filter.countryIds(), filter.supplyEmployeeIds(), filter.status(), filter.view(), filter.controlled(), filter.marked(),
-                filter.branchId(), filter.sort(), filter.desc(), 0, MAX_EXPORT_ROWS)).items();
+                filter.branchId(), filter.sort(), filter.desc(), 0, MAX_EXPORT_ROWS, filter.noIkpu())).items();
         try (SXSSFWorkbook wb = new SXSSFWorkbook(200)) {
             Sheet sheet = wb.createSheet("Mahsulotlar");
             CellStyle header = headerStyle(wb);

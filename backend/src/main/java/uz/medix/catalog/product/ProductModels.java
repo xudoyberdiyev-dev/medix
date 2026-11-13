@@ -147,7 +147,8 @@ final class ProductModels {
      * {@code ids} — tanlanganlar (eksport). {@code branchId} — qoldiq va narx filiali (null — xodim doirasi; narx — o'z filiali yoki birinchi filial).
      */
     record Filter(String q, List<Long> ids, List<Long> manufacturerIds, List<Long> categoryIds, List<Long> countryIds, List<Long> supplyEmployeeIds,
-            Status status, View view, Boolean controlled, Boolean marked, Long branchId, SortField sort, boolean desc, int page, int size) {
+            Status status, View view, Boolean controlled, Boolean marked, Long branchId, SortField sort, boolean desc, int page, int size,
+            boolean noIkpu) {
 
         Filter {
             ids = ids == null ? List.of() : List.copyOf(ids);

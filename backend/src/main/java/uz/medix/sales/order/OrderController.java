@@ -50,6 +50,7 @@ class OrderController {
     private final OrderPickSheetPdf pickSheet;
     private final OrderInvoices invoices;
     private final OrderInvoicePdf invoicePdf;
+    private final OrderInvoiceExcel invoiceExcel;
     private final CurrentActor currentActor;
     private final CodesOwners codesOwners;
 
@@ -57,12 +58,13 @@ class OrderController {
             Integer receivedQty) {}
 
     OrderController(Orders orders, OrderPicking picking, OrderMonitor monitor, OrderIssues issues, OrderSales sales, OrderWaybillPdf waybill,
-            OrderPickSheetPdf pickSheet, OrderInvoices invoices, OrderInvoicePdf invoicePdf, CurrentActor currentActor,
+            OrderPickSheetPdf pickSheet, OrderInvoices invoices, OrderInvoicePdf invoicePdf, OrderInvoiceExcel invoiceExcel, CurrentActor currentActor,
             CodesOwners codesOwners) {
         this.codesOwners = codesOwners;
         this.pickSheet = pickSheet;
         this.invoices = invoices;
         this.invoicePdf = invoicePdf;
+        this.invoiceExcel = invoiceExcel;
         this.sales = sales;
         this.waybill = waybill;
         this.issues = issues;
@@ -178,6 +180,25 @@ class OrderController {
     @Operation(summary = "Hisob-faktura — PDF (chop etish)", description = "Sotuv bo'lmasa — 404.")
     ResponseEntity<byte[]> invoicePdf(@PathVariable long id) {
         return invoicePdf.render(actor(), id).response();
+    }
+
+    @GetMapping(value = "/{id}/invoice/xlsx")
+    @PreAuthorize("hasAuthority('orders.view')")
+    @Operation(summary = "Hisob-faktura — Excel (.xlsx)", description = "PDF bilan bir xil ustunlar (O11). Sotuv bo'lmasa — 404.")
+    void invoiceXlsx(@PathVariable long id, jakarta.servlet.http.HttpServletResponse response) throws java.io.IOException {
+        java.io.ByteArrayOutputStream buf = new java.io.ByteArrayOutputStream();
+        String number = invoiceExcel.write(actor(), id, buf);
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        response.setHeader("Content-Disposition", "attachment; filename=\"" + number + ".xlsx\"");
+        buf.writeTo(response.getOutputStream());
+    }
+
+    @GetMapping(value = "/invoices/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
+    @PreAuthorize("hasAuthority('orders.view')")
+    @Operation(summary = "Hisob-fakturalar — ommaviy PDF", description = "Bir nechta buyurtma (masalan, reys boʻyicha), 50 tagacha; "
+            + "sotuvi yoʻq buyurtmalar oʻtkazib yuboriladi (O11).")
+    ResponseEntity<byte[]> invoicesPdf(@RequestParam List<Long> ids) {
+        return invoicePdf.renderMany(actor(), ids).response();
     }
 
     @GetMapping(value = "/{id}/waybill/pdf", produces = MediaType.APPLICATION_PDF_VALUE)

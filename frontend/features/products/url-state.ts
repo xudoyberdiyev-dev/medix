@@ -29,6 +29,8 @@ export interface ProductFilters {
   countries: number[];
   supply: number[];
   statuses: ProductStatusFilter[];
+  /** Faqat MXIK (IKPU) kodi boʻsh mahsulotlar (O11 — hisob-faktura uchun). */
+  noIkpu: boolean;
   sort: ProductSort;
   desc: boolean;
   /** 1 dan boshlanadi. */
@@ -44,6 +46,7 @@ export const DEFAULT_FILTERS: ProductFilters = {
   countries: [],
   supply: [],
   statuses: [],
+  noIkpu: false,
   sort: "NAME",
   desc: false,
   page: 1,
@@ -66,6 +69,7 @@ export function parseFilters(params: URLSearchParams): ProductFilters {
     countries: ids(params.get("country")),
     supply: ids(params.get("supply")),
     statuses: [...new Set(statuses)],
+    noIkpu: params.get("noIkpu") === "1",
     sort: oneOf(PRODUCT_SORTS, params.get("sort"), "NAME"),
     desc: params.get("desc") === "1",
     page: positiveInt(params.get("page")) ?? 1,
@@ -83,6 +87,7 @@ export function serializeFilters(f: ProductFilters): string {
   if (f.countries.length) p.set("country", f.countries.join(","));
   if (f.supply.length) p.set("supply", f.supply.join(","));
   if (f.statuses.length) p.set("status", f.statuses.join(","));
+  if (f.noIkpu) p.set("noIkpu", "1");
   if (f.sort !== "NAME") p.set("sort", f.sort);
   if (f.desc) p.set("desc", "1");
   if (f.page > 1) p.set("page", String(f.page));
@@ -92,7 +97,7 @@ export function serializeFilters(f: ProductFilters): string {
 
 /** Faol filtrlar soni (qidiruv, yorliq va saralashsiz) — «Filtrlarni tozalash» uchun. */
 export function activeFilterCount(f: ProductFilters): number {
-  return [f.manufacturers, f.categories, f.countries, f.supply, f.statuses].filter((v) => v.length > 0).length;
+  return [f.manufacturers, f.categories, f.countries, f.supply, f.statuses].filter((v) => v.length > 0).length + (f.noIkpu ? 1 : 0);
 }
 
 /** «Holat» filtri → API `status`: ikkalasi yoki hech biri — hammasi. */
@@ -110,6 +115,7 @@ export function toQuery(f: ProductFilters, branchId: number | null) {
     countryIds: f.countries.length ? f.countries : undefined,
     supplyEmployeeIds: f.supply.length ? f.supply : undefined,
     status: apiStatus(f.statuses),
+    noIkpu: f.noIkpu || undefined,
     branchId: branchId ?? undefined,
     facets: true,
     sort: f.sort,

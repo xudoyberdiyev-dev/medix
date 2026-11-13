@@ -69,6 +69,7 @@ class ProductController {
             @RequestParam(defaultValue = "ALL") View view,
             @RequestParam(required = false) Boolean controlled,
             @RequestParam(required = false) Boolean marked,
+            @Parameter(description = "Faqat MXIK (IKPU) kodi boʻsh mahsulotlar (O11)") @RequestParam(defaultValue = "false") boolean noIkpu,
             @Parameter(description = "Qoldiq va narx filiali") @RequestParam(required = false) Long branchId,
             @RequestParam(defaultValue = "false") boolean facets,
             @RequestParam(defaultValue = "NAME") SortField sort,
@@ -77,7 +78,7 @@ class ProductController {
             @RequestParam(defaultValue = "50") int size) {
         int safeSize = Math.clamp(size, 1, MAX_PAGE_SIZE);
         Filter f = new Filter(q, List.of(), merge(manufacturerIds, manufacturerId), merge(categoryIds, categoryId), countryIds,
-                supplyEmployeeIds, status, view, controlled, marked, branchId, sort, desc, Math.max(page, 0), safeSize);
+                supplyEmployeeIds, status, view, controlled, marked, branchId, sort, desc, Math.max(page, 0), safeSize, noIkpu);
         return products.search(f, facets);
     }
 
@@ -96,13 +97,14 @@ class ProductController {
             @RequestParam(defaultValue = "ALL") View view,
             @RequestParam(required = false) Boolean controlled,
             @RequestParam(required = false) Boolean marked,
+            @RequestParam(defaultValue = "false") boolean noIkpu,
             @RequestParam(required = false) Long branchId,
             @RequestParam(defaultValue = "NAME") SortField sort,
             @RequestParam(defaultValue = "false") boolean desc,
             HttpServletResponse response) throws IOException {
         xlsx(response, "mahsulotlar.xlsx");
         excel.export(new Filter(q, ids, merge(manufacturerIds, manufacturerId), merge(categoryIds, categoryId), countryIds, supplyEmployeeIds,
-                status, view, controlled, marked, branchId, sort, desc, 0, 1), response.getOutputStream());
+                status, view, controlled, marked, branchId, sort, desc, 0, 1, noIkpu), response.getOutputStream());
     }
 
     private static List<Long> merge(List<Long> many, Long one) {

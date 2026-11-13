@@ -127,5 +127,9 @@
       "FLEET": "Haydovchilar va mashinalar",
       "EXPENSE_ITEM": "Xarajat moddalari"
     }
+  },
+  "unitCode": {
+    "label": "Soliq kodi",
+    "hint": "Hisob-faktura uchun oʻlchov birligi kodi, faqat raqam (masalan 796)"
   }
 }

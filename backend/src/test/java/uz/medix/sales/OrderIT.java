@@ -1631,6 +1631,21 @@ class OrderIT {
                         "Rahbar", "Bosh buxgalter", "MXIK", "Xaridor", "summa (QQS bilan)", "tiyin")
                 .doesNotContain("Takroriy nusxa");
         assertThat(pdfText("/api/orders/" + o + "/invoice/pdf", keeper)).contains("Takroriy nusxa · 2");
+        // O11: ommaviy chop etish (reys boʻyicha) va Excel
+        assertThat(pdfText("/api/orders/invoices/pdf?ids=" + o + "," + o + ",999999999", keeper)).contains("HISOB-FAKTURA",
+                (String) sv.get("invoice_number"));
+        mvc.perform(get("/api/orders/invoices/pdf").param("ids", java.util.stream.LongStream.rangeClosed(1, 51).mapToObj(String::valueOf)
+                        .collect(java.util.stream.Collectors.joining(","))).cookie(keeper))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("order.invoiceBulkSize"));
+        byte[] xlsx = mvc.perform(get("/api/orders/" + o + "/invoice/xlsx").cookie(keeper))
+                .andExpect(status().isOk())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header().string("Content-Disposition",
+                        containsString((String) sv.get("invoice_number"))))
+                .andReturn().getResponse().getContentAsByteArray();
+        try (var wb = new org.apache.poi.xssf.usermodel.XSSFWorkbook(new java.io.ByteArrayInputStream(xlsx))) {
+            assertThat(wb.getSheetAt(0).getRow(0).getCell(0).getStringCellValue()).contains("HISOB-FAKTURA");
+        }
         var qm = jdbc.sql("SELECT total::text AS total, vat_total::text AS vat, cost_total::text AS cost FROM sales_return WHERE order_id = :o")
                 .param("o", o).query().singleRow();
         assertThat(qm.get("total")).isEqualTo("2000.00");

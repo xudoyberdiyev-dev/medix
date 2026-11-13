@@ -26,6 +26,8 @@ class OrderInvoicePdf {
             PaymentType.CASH, "Naqd",
             PaymentType.ONLINE, "Online");
 
+    static final int MAX_BULK = 50;
+
     private final OrderInvoices invoices;
     private final PdfRenderer pdf;
     private final PrintSettings print;
@@ -39,7 +41,23 @@ class OrderInvoicePdf {
     @Transactional(readOnly = true)
     PdfDocument render(Actor actor, long orderId) {
         InvoiceDoc d = invoices.find(actor, orderId).orElseThrow(() -> MedixException.notFound("error.notFound"));
-        return new PdfDocument(d.invoiceNumber(), pdf.render("invoice", vars(actor, d)));
+        return new PdfDocument(d.invoiceNumber(), pdf.render("invoice", Map.of("title", d.invoiceNumber(), "docs", List.of(vars(actor, d)))));
+    }
+
+    /** Ommaviy chop etish (O11): bir nechta buyurtma HF — bitta PDF, har biri yangi sahifadan; sotuvi yoʻqlari oʻtkazib yuboriladi. */
+    @Transactional(readOnly = true)
+    PdfDocument renderMany(Actor actor, List<Long> orderIds) {
+        List<Long> unique = orderIds == null ? List.of() : orderIds.stream().distinct().toList();
+        if (unique.isEmpty() || unique.size() > MAX_BULK) {
+            throw MedixException.badRequest("order.invoiceBulkSize", MAX_BULK);
+        }
+        List<InvoiceDoc> found = unique.stream().map(id -> invoices.find(actor, id)).flatMap(java.util.Optional::stream).toList();
+        if (found.isEmpty()) {
+            throw MedixException.notFound("error.notFound");
+        }
+        List<Map<String, Object>> docs = found.stream().map(d -> vars(actor, d)).toList();
+        String name = found.size() == 1 ? found.getFirst().invoiceNumber() : "HF-" + found.size();
+        return new PdfDocument(name, pdf.render("invoice", Map.of("title", name, "docs", docs)));
     }
 
     /** Shablon oʻzgaruvchilari (O11 rasmiy shakl); takroriy chop etish shu yerda qayd etiladi. */

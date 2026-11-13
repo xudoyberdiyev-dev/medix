@@ -2,6 +2,7 @@
 
 import {
   ArrowUpRight,
+  Check,
   CircleCheck,
   CircleSlash,
   Copy,
@@ -181,7 +182,7 @@ export function ProductsPage() {
     const qs = serializeFilters(next);
     router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
   };
-  const clearFilters = () => apply({ manufacturers: [], categories: [], countries: [], supply: [], statuses: [] });
+  const clearFilters = () => apply({ manufacturers: [], categories: [], countries: [], supply: [], statuses: [], noIkpu: false });
   const clearAll = () => (setSearch(""), apply({ ...DEFAULT_FILTERS, size: filters.size }));
 
   const labels = Object.fromEntries(COLUMN_KEYS.map((k) => [k, t(`col.${k}`)])) as Record<ColumnKey, string>;
@@ -292,6 +293,7 @@ export function ProductsPage() {
     filters.countries.length ? t("f.country") : "",
     filters.supply.length ? t("f.supply") : "",
     filters.statuses.length ? t("f.status") : "",
+    filters.noIkpu ? t("f.noIkpu") : "",
   ].filter(Boolean);
   const filtered = activeNames.length > 0 || filters.view !== "ALL";
 
@@ -419,6 +421,21 @@ export function ProductsPage() {
             onChange={(v) => apply({ supply: v })}
           />
           <MultiFilter label={t("f.status")} options={statusOptions} selected={filters.statuses} onChange={(v) => apply({ statuses: v })} />
+          <button
+            type="button"
+            aria-pressed={filters.noIkpu}
+            data-testid="filter-no-ikpu"
+            onClick={() => apply({ noIkpu: !filters.noIkpu })}
+            className={cn(
+              "inline-flex h-control-sm items-center gap-1.5 rounded-card border px-2.5 text-[13px] font-medium",
+              filters.noIkpu
+                ? "border-primary bg-primary-soft text-primary-button"
+                : "border-dashed border-border bg-surface whitespace-nowrap text-text-secondary hover:bg-table-header hover:text-text-primary",
+            )}
+          >
+            {filters.noIkpu ? <Check className="size-3.5" strokeWidth={1.5} aria-hidden /> : null}
+            {t("f.noIkpu")}
+          </button>
           {hasFilters ? (
             <button
               type="button"

@@ -142,6 +142,9 @@ public class Products {
             where.append(" AND p.marked = :marked");
             params.put("marked", f.marked());
         }
+        if (f.noIkpu()) {
+            where.append(" AND (p.ikpu IS NULL OR btrim(p.ikpu) = '')");
+        }
         Map<String, String> filters = new java.util.LinkedHashMap<>();
         if (!f.manufacturerIds().isEmpty()) {
             filters.put("m", " AND p.manufacturer_id IN (:fm)");

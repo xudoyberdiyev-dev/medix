@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="uz">
 <head>
     <meta charset="UTF-8"/>
-    <title th:text="${number}">HF</title>
+    <title th:text="${title}">HF</title>
     <style th:replace="~{_base :: css}"></style>
     <style>
         /* O11: rasmiy HF shakli — 12 ustun, albom (A4 landscape). */
@@ -27,45 +27,49 @@
         table.signs { margin-top: 18px; }
         table.signs td { border: none; width: 50%; padding: 8px 24px 8px 0; }
         .line { display: inline-block; width: 160px; border-bottom: 1px solid #1f2933; height: 10px; margin: 0 6px; }
+        .page-break { page-break-before: always; }
+        .reprint { position: static; float: right; }
     </style>
 </head>
 <body>
-<div class="reprint" th:if="${reprint != null}" th:text="${reprint}">Takroriy nusxa · 2</div>
+<th:block th:each="inv, st : ${docs}">
+<div class="page-break" th:if="${!st.first}"></div>
+<div class="reprint" th:if="${inv.reprint != null}" th:text="${inv.reprint}">Takroriy nusxa · 2</div>
 <table class="top"><tr>
-    <td>MEDIX · Sotuv <span th:text="${saleNumber}">SV</span> · Buyurtma <span th:text="${orderNumber}">BY</span></td>
-    <td class="r" th:text="'Chop etildi: ' + ${printedAt}">Chop etildi</td>
+    <td>MEDIX · Sotuv <span th:text="${inv.saleNumber}">SV</span> · Buyurtma <span th:text="${inv.orderNumber}">BY</span></td>
+    <td class="r" th:text="'Chop etildi: ' + ${inv.printedAt}">Chop etildi</td>
 </tr></table>
-<h1>HISOB-FAKTURA № <span th:text="${number}">HF-TSH-000001</span></h1>
-<p class="sub"><b th:text="${date}">06.11.2026</b> yildagi</p>
-<p class="sub" th:if="${contract != null}">Yetkazib berish shartnomasi № <b th:text="${contract}">45/2026</b><span th:if="${contractDate != null}">,
-    <b th:text="${contractDate}">02.01.2026</b> yildagi</span></p>
-<p class="sub" th:if="${contract == null}">Yetkazib berish shartnomasi № ________ , «___» __________ yildagi</p>
-<p class="sub b" th:if="${cancelled}">BEKOR QILINGAN</p>
+<h1>HISOB-FAKTURA № <span th:text="${inv.number}">HF-TSH-000001</span></h1>
+<p class="sub"><b th:text="${inv.date}">06.11.2026</b> yildagi</p>
+<p class="sub" th:if="${inv.contract != null}">Yetkazib berish shartnomasi № <b th:text="${inv.contract}">45/2026</b><span th:if="${inv.contractDate != null}">,
+    <b th:text="${inv.contractDate}">02.01.2026</b> yildagi</span></p>
+<p class="sub" th:if="${inv.contract == null}">Yetkazib berish shartnomasi № ________ , «___» __________ yildagi</p>
+<p class="sub b" th:if="${inv.cancelled}">BEKOR QILINGAN</p>
 <table class="parties"><tr>
     <td class="side">
         <div class="side-title">Yetkazib beruvchi (sotuvchi)</div>
         <table class="req">
-            <tr><td class="k">Nomi</td><td class="b" th:text="${seller.name}">MChJ</td></tr>
-            <tr><td class="k">Manzil</td><td th:text="${seller.address}">—</td></tr>
-            <tr><td class="k">STIR</td><td th:text="${seller.tin}">—</td></tr>
-            <tr><td class="k">QQS toʻlovchi reg. kodi</td><td th:text="${seller.vatCode}">—</td></tr>
-            <tr><td class="k">Hisob raqami</td><td th:text="${seller.bankAccount}">—</td></tr>
-            <tr><td class="k">Bank, MFO</td><td th:text="${seller.bank}">—</td></tr>
-            <tr><td class="k">Telefon</td><td th:text="${seller.phone}">—</td></tr>
-            <tr><td class="k">Ombor</td><td th:text="${warehouse}">Ombor</td></tr>
+            <tr><td class="k">Nomi</td><td class="b" th:text="${inv.seller.name}">MChJ</td></tr>
+            <tr><td class="k">Manzil</td><td th:text="${inv.seller.address}">—</td></tr>
+            <tr><td class="k">STIR</td><td th:text="${inv.seller.tin}">—</td></tr>
+            <tr><td class="k">QQS toʻlovchi reg. kodi</td><td th:text="${inv.seller.vatCode}">—</td></tr>
+            <tr><td class="k">Hisob raqami</td><td th:text="${inv.seller.bankAccount}">—</td></tr>
+            <tr><td class="k">Bank, MFO</td><td th:text="${inv.seller.bank}">—</td></tr>
+            <tr><td class="k">Telefon</td><td th:text="${inv.seller.phone}">—</td></tr>
+            <tr><td class="k">Ombor</td><td th:text="${inv.warehouse}">Ombor</td></tr>
         </table>
     </td>
     <td class="side">
         <div class="side-title">Xaridor</div>
         <table class="req">
-            <tr><td class="k">Nomi</td><td class="b" th:text="${buyer.name}">Mijoz</td></tr>
-            <tr><td class="k">Manzil</td><td th:text="${buyer.address}">—</td></tr>
-            <tr><td class="k">STIR</td><td th:text="${buyer.tin}">—</td></tr>
-            <tr><td class="k">QQS toʻlovchi reg. kodi</td><td th:text="${buyer.vatCode}">—</td></tr>
-            <tr><td class="k">Hisob raqami</td><td th:text="${buyer.bankAccount}">—</td></tr>
-            <tr><td class="k">Bank, MFO</td><td th:text="${buyer.bank}">—</td></tr>
-            <tr><td class="k">Yetkazish manzili</td><td th:text="${address}">—</td></tr>
-            <tr><td class="k">Toʻlov</td><td th:text="${payment} + ' · muddati ' + ${dueDate}">Toʻlov</td></tr>
+            <tr><td class="k">Nomi</td><td class="b" th:text="${inv.buyer.name}">Mijoz</td></tr>
+            <tr><td class="k">Manzil</td><td th:text="${inv.buyer.address}">—</td></tr>
+            <tr><td class="k">STIR</td><td th:text="${inv.buyer.tin}">—</td></tr>
+            <tr><td class="k">QQS toʻlovchi reg. kodi</td><td th:text="${inv.buyer.vatCode}">—</td></tr>
+            <tr><td class="k">Hisob raqami</td><td th:text="${inv.buyer.bankAccount}">—</td></tr>
+            <tr><td class="k">Bank, MFO</td><td th:text="${inv.buyer.bank}">—</td></tr>
+            <tr><td class="k">Yetkazish manzili</td><td th:text="${inv.address}">—</td></tr>
+            <tr><td class="k">Toʻlov</td><td th:text="${inv.payment} + ' · muddati ' + ${inv.dueDate}">Toʻlov</td></tr>
         </table>
     </td>
 </tr></table>
@@ -87,7 +91,7 @@
     </tr>
     </thead>
     <tbody>
-    <tr th:each="l, it : ${lines}">
+    <tr th:each="l, it : ${inv.lines}">
         <td class="c" th:text="${it.count}">1</td>
         <td><span th:text="${l.name}">Mahsulot</span>
             <div class="s" th:if="${l.manufacturer != null}" th:text="${l.manufacturer}">Ishlab chiqaruvchi</div></td>
@@ -105,30 +109,31 @@
     <tr class="tot">
         <td></td>
         <td colspan="4">Jami</td>
-        <td class="r" th:text="${totalQty}">0</td>
+        <td class="r" th:text="${inv.totalQty}">0</td>
         <td></td>
-        <td class="r" th:text="${net}">0,00</td>
+        <td class="r" th:text="${inv.net}">0,00</td>
         <td></td>
-        <td class="r" th:text="${vat}">0,00</td>
-        <td class="r" th:text="${total}">0,00</td>
-        <td class="c" th:text="${marks}">—</td>
+        <td class="r" th:text="${inv.vat}">0,00</td>
+        <td class="r" th:text="${inv.total}">0,00</td>
+        <td class="c" th:text="${inv.marks}">—</td>
     </tr>
     </tbody>
 </table>
-<div class="words"><b>Jami toʻlanadigan summa (QQS bilan):</b> <span th:text="${totalInWords}">…</span></div>
-<div class="note"><span th:text="'Shu jumladan QQS: ' + ${vat} + ' soʻm.'">QQS</span>
-    <span th:if="${marksNote != null}" th:text="${marksNote}">Markirovka kodlari roʻyxati — ilova (Excel).</span></div>
+<div class="words"><b>Jami toʻlanadigan summa (QQS bilan):</b> <span th:text="${inv.totalInWords}">…</span></div>
+<div class="note"><span th:text="'Shu jumladan QQS: ' + ${inv.vat} + ' soʻm.'">QQS</span>
+    <span th:if="${inv.marksNote != null}" th:text="${inv.marksNote}">Markirovka kodlari roʻyxati — ilova (Excel).</span></div>
 <table class="signs">
     <tr>
-        <td>Rahbar:<span class="line"></span><span th:text="${head}">F.I.Sh.</span></td>
-        <td>Topshirdi:<span class="line"></span><span th:text="${handedBy}">F.I.Sh.</span></td>
+        <td>Rahbar:<span class="line"></span><span th:text="${inv.head}">F.I.Sh.</span></td>
+        <td>Topshirdi:<span class="line"></span><span th:text="${inv.handedBy}">F.I.Sh.</span></td>
     </tr>
     <tr>
-        <td>Bosh buxgalter:<span class="line"></span><span th:text="${accountant}">F.I.Sh.</span></td>
+        <td>Bosh buxgalter:<span class="line"></span><span th:text="${inv.accountant}">F.I.Sh.</span></td>
         <td>Qabul qildi:<span class="line"></span>Ishonchnoma № ______ «___» ____________ y.</td>
     </tr>
 </table>
 <div class="note">M.O. (muhr oʻrni)</div>
-<div class="note" th:if="${tripInfo != null}" th:text="${tripInfo}" style="margin-top: 8px">Reys</div>
+<div class="note" th:if="${inv.tripInfo != null}" th:text="${inv.tripInfo}" style="margin-top: 8px">Reys</div>
+</th:block>
 </body>
 </html>

@@ -133,6 +133,26 @@ class CatalogDictionariesIT {
     }
 
     @Test
+    void unitTaxCodeForInvoice() throws Exception {
+        // O11: oʻlchov birligi kodi (HF) — faqat birlikda, faqat raqam
+        Cookie admin = loginAs("ADMIN", branch());
+        String name = "Flakon " + UUID.randomUUID().toString().substring(0, 4);
+        long id = id(mvc.perform(json(post("/api/dictionaries/UNIT"), admin, "{\"name\":\"" + name + "\",\"shortName\":\"fl\",\"code\":\" 796 \"}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.code").value("796"))
+                .andReturn());
+        mvc.perform(json(put("/api/dictionaries/UNIT/" + id), admin, "{\"name\":\"" + name + "\",\"code\":\"7A\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("dictionary.unitCode"));
+        mvc.perform(json(put("/api/dictionaries/UNIT/" + id), admin, "{\"name\":\"" + name + "\",\"code\":\"\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").doesNotExist());
+        mvc.perform(json(post("/api/dictionaries/CATEGORY"), admin, "{\"name\":\"Kat " + name + "\",\"code\":\"796\"}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.code").doesNotExist());
+    }
+
+    @Test
     void vehiclesAreBranchScoped() throws Exception {
         long own = branch();
         long other = branch();
