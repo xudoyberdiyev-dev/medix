@@ -74,6 +74,10 @@
         "title": "Markirovkachilar natijasi",
         "description": "Har markirovkachi boʻyicha: skanerlangan va olib tashlangan kodlar; vaqtida / kechikkan."
       },
+      "marking-codes": {
+        "title": "Markirovka kodlari",
+        "description": "Davr, mijoz, mahsulot, egasi (mijoz / zaxira) va holat boʻyicha kodlar; Excel."
+      },
       "customer-debts": {
         "title": "Mijozlar qarzi",
         "description": "Qarz qoldigʻi, muddatlar va toʻlov taqvimi."
@@ -292,5 +296,34 @@
     "empty": "Davrda yuborilgan faktura yoʻq",
     "note": "Vaqt — buyurtma «Yuklanmoqda» ga oʻtgandan faktura «Yuborildi» deb belgilangungacha.",
     "forbidden": "«Buxgalter natijasi» faqat fakturalarni koʻrish ruxsati bilan ochiladi."
+  },
+  "markingCodes": {
+    "title": "Markirovka kodlari",
+    "forbidden": "«Markirovka kodlari» hisoboti markirovka, zaxira kodlar yoki fakturalarni koʻrish ruxsati bilan ochiladi.",
+    "col": {
+      "product": "Mahsulot va kod",
+      "batch": "Partiya / yaroqlilik",
+      "order": "Buyurtma / mijoz",
+      "branch": "Filial",
+      "owner": "Egasi",
+      "status": "Holat",
+      "scannedAt": "Skanerlangan"
+    },
+    "owner": {
+      "CUSTOMER": "Mijoz nomiga",
+      "RESERVE": "Zaxira kodlarga"
+    },
+    "reserve": {
+      "IN_RESERVE": "Zaxirada",
+      "USED": "Zaxiradan ishlatildi",
+      "WRITTEN_OFF": "Hisobdan chiqarildi"
+    },
+    "search": "Qidiruv",
+    "searchPlaceholder": "Mijoz, mahsulot, GTIN, seriya yoki buyurtma",
+    "all": "Hammasi",
+    "allActive": "Hammasi (olib tashlanganlarsiz)",
+    "summary": "Mijoz nomiga: {customer} · Zaxira kodlarga: {reserve} · Sotilgan: {sold}",
+    "empty": "Davrda skanerlangan kod yoʻq",
+    "note": "Davr — kod skanerlangan sana. Olib tashlangan kodlar faqat «Holat» filtri bilan koʻrinadi."
   }
 }

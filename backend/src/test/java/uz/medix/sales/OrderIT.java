@@ -1812,6 +1812,22 @@ class OrderIT {
                 .andExpect(jsonPath("$.used").value(1))
                 .andExpect(jsonPath("$.writtenOff").value(1));
         mvc.perform(get("/api/reserve-codes/export").param("q", serial).cookie(keeper)).andExpect(status().isOk());
+        // O10g «Markirovka kodlari» hisoboti: egasi va zaxira holati bilan; egasi filtri; Excel; Operator — ruxsat yo'q
+        mvc.perform(get("/api/reports/marking-codes").param("q", serial).cookie(keeper))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(2))
+                .andExpect(jsonPath("$.reserveOwned").value(2))
+                .andExpect(jsonPath("$.customerOwned").value(0))
+                .andExpect(jsonPath("$.sold").value(2))
+                .andExpect(jsonPath("$.items[0].owner").value("RESERVE"))
+                .andExpect(jsonPath("$.items[0].status").value("SOLD"))
+                .andExpect(jsonPath("$.items[0].reserveStatus").isNotEmpty());
+        mvc.perform(get("/api/reports/marking-codes").param("q", serial).param("owner", "CUSTOMER").cookie(accountant))
+                .andExpect(jsonPath("$.total").value(0));
+        mvc.perform(get("/api/reports/marking-codes").param("q", serial).cookie(loginAs("WAREHOUSE_MANAGER", other.branchId())))
+                .andExpect(jsonPath("$.total").value(0));
+        mvc.perform(get("/api/reports/marking-codes/export").param("q", serial).cookie(accountant)).andExpect(status().isOk());
+        mvc.perform(get("/api/reports/marking-codes").cookie(operator)).andExpect(status().isForbidden());
         assertThatThrownBy(() -> jdbc.sql("DELETE FROM reserve_code WHERE id = :z").param("z", z1).update()).hasMessageContaining("oʻchirilmaydi");
         assertThatThrownBy(() -> jdbc.sql("UPDATE reserve_code SET status = 'IN_RESERVE' WHERE id = :z").param("z", z1).update())
                 .hasMessageContaining("oʻzgarmaydi");

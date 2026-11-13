@@ -40,6 +40,7 @@ export type ReportKey =
   | "accountants"
   | "pickers"
   | "markers"
+  | "marking-codes"
   | "customer-debts"
   | "supplier-debts"
   | "reconciliations"
@@ -184,6 +185,16 @@ export const REPORTS: ReportEntry[] = [
     description: "Har markirovkachi boʻyicha: skanerlangan va olib tashlangan kodlar; vaqtida / kechikkan.",
     href: "/reports/markers",
     anyOf: ["reports.markers"],
+    section: "wh",
+  },
+  {
+    key: "marking-codes",
+    group: "other",
+    icon: ScanBarcode,
+    title: "Markirovka kodlari",
+    description: "Davr, mijoz, mahsulot, egasi (mijoz / zaxira) va holat boʻyicha kodlar; Excel.",
+    href: "/reports/marking-codes",
+    anyOf: ["marking.view", "zcodes.view", "invoices.view"],
     section: "wh",
   },
   {
