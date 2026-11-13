@@ -104,7 +104,8 @@ class OrderTtnPdf {
                 .orElse(pickup ? "Mijoz transporti" : PdfFormat.DASH));
         v.put("driver", t.map(x -> x.driver() + (x.driverPhone() == null ? "" : " · " + x.driverPhone())).orElse(PdfFormat.DASH));
         v.put("places", o.places() == null ? PdfFormat.DASH : PdfFormat.qty(o.places()));
-        v.put("lines", o.lines().stream().map(OrderWaybillPdf::row).toList());
+        Map<Long, String> sold = OrderWaybillPdf.soldBatches(jdbc, orderId);
+        v.put("lines", o.lines().stream().map(l -> OrderWaybillPdf.row(l, sold)).toList());
         v.put("totalQty", PdfFormat.qty(qty));
         v.put("total", PdfFormat.money(o.total()));
         v.put("vat", PdfFormat.money(o.vatTotal()));

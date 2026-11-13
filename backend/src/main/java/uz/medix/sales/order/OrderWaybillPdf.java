@@ -61,7 +61,8 @@ class OrderWaybillPdf {
         vars.put("address", PdfFormat.orDash(o.address()));
         vars.put("payment", PAYMENT.get(o.paymentType()) + (o.documents().tripNumber() == null ? "" : " · Reys " + o.documents().tripNumber()));
         vars.put("withPrice", withPrice);
-        vars.put("lines", o.lines().stream().map(OrderWaybillPdf::row).toList());
+        Map<Long, String> sold = soldBatches(jdbc, o.id());
+        vars.put("lines", o.lines().stream().map(l -> row(l, sold)).toList());
         vars.put("totalQty", PdfFormat.qty(qty));
         vars.put("total", PdfFormat.money(o.total()));
         vars.put("note", o.note());
@@ -81,8 +82,27 @@ class OrderWaybillPdf {
         return n;
     }
 
-    static Map<String, Object> row(OrderLine l) {
-        String batches = l.reserved().isEmpty() ? PdfFormat.DASH
+    /**
+     * Sotuv yozilgandan keyin zahira yechiladi — partiyalar sotuv qatorlaridan (buyurtma qatori → «partiya · muddat — soni»).
+     * Bekor qilingan sotuv hisobga olinmaydi.
+     */
+    static Map<Long, String> soldBatches(JdbcClient jdbc, long orderId) {
+        record Sold(long lineId, String batch, java.time.LocalDate expiry, int qty) {}
+        return jdbc.sql("""
+                SELECT sl.order_line_id, b.number, b.expiry_date, sl.qty
+                FROM sale_line sl JOIN sale s ON s.id = sl.sale_id JOIN batch b ON b.id = sl.batch_id
+                WHERE s.order_id = :o AND s.status = 'POSTED' ORDER BY b.expiry_date, sl.id""")
+                .param("o", orderId)
+                .query((rs, n) -> new Sold(rs.getLong(1), rs.getString(2), rs.getDate(3).toLocalDate(), rs.getInt(4)))
+                .list()
+                .stream()
+                .collect(Collectors.groupingBy(Sold::lineId, java.util.LinkedHashMap::new,
+                        Collectors.mapping(x -> x.batch() + " · " + PdfFormat.date(x.expiry()) + " — " + PdfFormat.qty(x.qty()),
+                                Collectors.joining("; "))));
+    }
+
+    static Map<String, Object> row(OrderLine l, Map<Long, String> sold) {
+        String batches = l.reserved().isEmpty() ? sold.getOrDefault(l.id(), PdfFormat.DASH)
                 : l.reserved().stream()
                         .map(r -> r.batch() + " · " + PdfFormat.date(r.expiryDate()) + " — " + PdfFormat.qty(r.qty()))
                         .collect(Collectors.joining("; "));

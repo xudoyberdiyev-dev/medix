@@ -1631,6 +1631,11 @@ class OrderIT {
                         "Rahbar", "Bosh buxgalter", "MXIK", "XARIDOR", "summa (QQS bilan)", "tiyin")
                 .doesNotContain("Takroriy nusxa");
         assertThat(pdfText("/api/orders/" + o + "/invoice/pdf", keeper)).contains("Takroriy nusxa · 2");
+        // Yetkazilgandan keyin (zahira yechilgan) nakladnoy va TTN partiyalari sotuv qatorlaridan
+        String soldBatch = jdbc.sql("SELECT b.number FROM sale_line sl JOIN sale s ON s.id = sl.sale_id JOIN batch b ON b.id = sl.batch_id "
+                + "WHERE s.order_id = :o ORDER BY sl.id LIMIT 1").param("o", o).query(String.class).single();
+        assertThat(pdfText("/api/orders/" + o + "/ttn/pdf", keeper)).contains("TTN", soldBatch);
+        assertThat(pdfText("/api/orders/" + o + "/waybill/pdf", keeper)).contains(soldBatch);
         // O11: ommaviy chop etish (reys boʻyicha) va Excel
         assertThat(pdfText("/api/orders/invoices/pdf?ids=" + o + "," + o + ",999999999", keeper)).contains("HISOB-FAKTURA",
                 (String) sv.get("invoice_number"));
