@@ -153,7 +153,7 @@ export interface paths {
             cookie?: never;
         };
         /** Audit yozuvlari (yangilari birinchi), yorliqlar soni bilan */
-        get: operations["list_33"];
+        get: operations["list_34"];
         put?: never;
         post?: never;
         delete?: never;
@@ -170,7 +170,7 @@ export interface paths {
             cookie?: never;
         };
         /** Excel eksport uchun yozuvlar (filtr boʻyicha, koʻpi bilan 5000 ta) */
-        get: operations["export_3"];
+        get: operations["export_4"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1017,7 +1017,7 @@ export interface paths {
          * Excel'ga eksport (.xlsx)
          * @description Jadvaldagi filtrlar va saralash bilan; ko'pi bilan 50 000 qator. Mijozlar — clients.view, YB — suppliers.view; telefon va kontakt — clients.contact / suppliers.contact bilan.
          */
-        get: operations["export_2"];
+        get: operations["export_3"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1802,7 +1802,7 @@ export interface paths {
             cookie?: never;
         };
         /** Faol xodimlar (tanlash uchun) */
-        get: operations["list_32"];
+        get: operations["list_33"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2850,7 +2850,7 @@ export interface paths {
             cookie?: never;
         };
         /** Oxirgi 50 ta bildirishnoma va o'qilmaganlar soni */
-        get: operations["list_31"];
+        get: operations["list_32"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3475,6 +3475,26 @@ export interface paths {
          * @description Barcha qatorlar «Tekshirildi» va joylar soni → «Hujjatlashtirilmoqda».
          */
         post: operations["check"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orders/{id}/codes-owner": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Kodlar egasini o'zgartirish (O10b)
+         * @description «Mijoz nomiga» yoki «Zaxira kodlarga». Buyurtma yopilguncha (Yetkazildi / Yetkazilmadi / Bekor / Rad etildi).
+         */
+        post: operations["setCodesOwner"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4472,7 +4492,7 @@ export interface paths {
          * Excel'ga eksport (.xlsx)
          * @description Jadvaldagi filtrlar bilan (yoki tanlanganlar — ids); ko'pi bilan 50 000 qator.
          */
-        get: operations["export_1"];
+        get: operations["export_2"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5292,6 +5312,77 @@ export interface paths {
         get: operations["supplierGoodsExport"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reserve-codes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Zaxira kodlar
+         * @description Filtrlar: filial (barcha filiallar doirasida), mahsulot, holat, davr (zaxiraga tushgan sana), qidiruv.
+         */
+        get: operations["list_31"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reserve-codes/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Zaxira kodlar .xlsx */
+        get: operations["export_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reserve-codes/{id}/use": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Ishlatildi deb belgilash */
+        post: operations["use"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reserve-codes/{id}/write-off": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Hisobdan chiqarish */
+        post: operations["writeOff"];
         delete?: never;
         options?: never;
         head?: never;
@@ -8485,6 +8576,10 @@ export interface components {
             /** Format: int64 */
             count: number;
         };
+        CodesOwnerRequest: {
+            /** @enum {string} */
+            owner: "CUSTOMER" | "RESERVE";
+        };
         Company: {
             defaultLocale: string;
             /** Format: int64 */
@@ -9975,7 +10070,7 @@ export interface components {
             scannedBy: string;
             serial: string;
             /** @enum {string} */
-            status: "ACTIVE" | "REMOVED" | "RELEASED" | "SOLD";
+            status: "ACTIVE" | "REMOVED" | "RELEASED" | "SOLD" | "RETURNED";
         };
         MarkCodePage: {
             items: components["schemas"]["MarkCode"][];
@@ -10732,6 +10827,13 @@ export interface components {
             /** Format: date-time */
             cancelledAt?: string;
             cancelledBy?: string;
+            /**
+             * @description O10b: kodlar egasi (standart — to'lov turidan: Perechisleniye → mijoz, qolgani → zaxira)
+             * @enum {string}
+             */
+            codesOwner: "CUSTOMER" | "RESERVE";
+            /** @description Kodlar egasi qo'lda tanlangan */
+            codesOwnerManual: boolean;
             /** Format: date-time */
             createdAt: string;
             createdBy: string;
@@ -12591,6 +12693,61 @@ export interface components {
         };
         RenameZoneRequest: {
             name: string;
+        };
+        ReserveCloseRequest: {
+            note: string;
+        };
+        ReserveCode: {
+            batch: string;
+            branch: string;
+            /** Format: date-time */
+            changedAt?: string;
+            changedBy?: string;
+            /** @description Qavsli kod */
+            code: string;
+            /**
+             * Format: date-time
+             * @description Zaxiraga tushgan payt (yetkazilgan)
+             */
+            createdAt: string;
+            customer: string;
+            /** Format: date */
+            expiryDate?: string;
+            gtin: string;
+            /** Format: int64 */
+            id: number;
+            /** @enum {string} */
+            kind: "BOX" | "UNIT";
+            note?: string;
+            /** Format: int64 */
+            orderId: number;
+            orderNumber: string;
+            /** Format: int64 */
+            productId: number;
+            productName: string;
+            /** @description To'liq skanerlangan kod (kripto-qismi bilan) */
+            scanned: string;
+            serial: string;
+            /** @enum {string} */
+            status: "IN_RESERVE" | "USED" | "WRITTEN_OFF";
+        };
+        ReserveCodePage: {
+            /**
+             * Format: int64
+             * @description Holat bo'yicha sonlar (boshqa filtrlar bilan)
+             */
+            inReserve: number;
+            items: components["schemas"]["ReserveCode"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            size: number;
+            /** Format: int64 */
+            total: number;
+            /** Format: int64 */
+            used: number;
+            /** Format: int64 */
+            writtenOff: number;
         };
         ReservedBatch: {
             batch: string;
@@ -14795,7 +14952,7 @@ export interface operations {
             };
         };
     };
-    list_33: {
+    list_34: {
         parameters: {
             query?: {
                 view?: "ALL" | "CANCEL" | "FAIL" | "PERM" | "CTRL";
@@ -14826,7 +14983,7 @@ export interface operations {
             };
         };
     };
-    export_3: {
+    export_4: {
         parameters: {
             query?: {
                 view?: "ALL" | "CANCEL" | "FAIL" | "PERM" | "CTRL";
@@ -16057,7 +16214,7 @@ export interface operations {
             };
         };
     };
-    export_2: {
+    export_3: {
         parameters: {
             query?: {
                 q?: string;
@@ -17205,7 +17362,7 @@ export interface operations {
             };
         };
     };
-    list_32: {
+    list_33: {
         parameters: {
             query?: never;
             header?: never;
@@ -18657,7 +18814,7 @@ export interface operations {
             };
         };
     };
-    list_31: {
+    list_32: {
         parameters: {
             query?: never;
             header?: never;
@@ -19576,6 +19733,32 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["CheckRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderDetail"];
+                };
+            };
+        };
+    };
+    setCodesOwner: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CodesOwnerRequest"];
             };
         };
         responses: {
@@ -21032,7 +21215,7 @@ export interface operations {
             };
         };
     };
-    export_1: {
+    export_2: {
         parameters: {
             query?: {
                 q?: string;
@@ -22262,6 +22445,108 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    list_31: {
+        parameters: {
+            query?: {
+                branchId?: number;
+                productId?: number;
+                status?: "IN_RESERVE" | "USED" | "WRITTEN_OFF";
+                from?: string;
+                to?: string;
+                q?: string;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReserveCodePage"];
+                };
+            };
+        };
+    };
+    export_1: {
+        parameters: {
+            query?: {
+                branchId?: number;
+                productId?: number;
+                status?: "IN_RESERVE" | "USED" | "WRITTEN_OFF";
+                from?: string;
+                to?: string;
+                q?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    use: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReserveCloseRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    writeOff: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReserveCloseRequest"];
+            };
+        };
         responses: {
             /** @description OK */
             200: {

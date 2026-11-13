@@ -410,6 +410,27 @@ test("Operator: buyurtma «Yetkazildi» holatida", async ({ page }) => {
   await expect(page.getByRole("cell", { name: CUSTOMER }).first()).toBeVisible();
 });
 
+test("Ombor mudiri: naqd buyurtma kodlari «Zaxira kodlar»da — biri ishlatildi deb belgilanadi (O10b/c)", async ({ page }) => {
+  await login(page, "keeper.1", PASSWORD);
+  await expect(page).toHaveURL(/\/$/);
+  await page.getByRole("link", { name: "Zaxira kodlar" }).first().click();
+  await expect(page).toHaveURL(/\/reserve-codes$/);
+  await expect(page.getByRole("tab", { name: /^Zaxirada/ })).toHaveAttribute("aria-selected", "true");
+  const rows = page.getByRole("row").filter({ hasText: CUSTOMER });
+  await expect(rows).toHaveCount(2);
+  await rows.first().getByRole("button", { name: "Amallar" }).click();
+  await page.getByRole("menuitem", { name: "Ishlatildi deb belgilash" }).click();
+  const dialog = page.getByRole("dialog", { name: "Kodni ishlatildi deb belgilash" });
+  await dialog.getByRole("button", { name: "Ishlatildi deb belgilash" }).click();
+  await expect(dialog.getByText(/^Izoh yozing/)).toBeVisible();
+  await field(dialog, "Izoh").fill("Naqd mijozga qayta ishlatildi");
+  await dialog.getByRole("button", { name: "Ishlatildi deb belgilash" }).click();
+  await expect(page.getByText("Kod ishlatildi deb belgilandi").first()).toBeVisible();
+  await expect(rows).toHaveCount(1);
+  await page.getByRole("tab", { name: /^Ishlatildi/ }).click();
+  await expect(page.getByText("Naqd mijozga qayta ishlatildi")).toBeVisible();
+});
+
 test("CEO: Paracetamol uchun maksimal miqdor — 5", async ({ page }) => {
   await login(page, CEO_LOGIN, CEO_PASSWORD);
   await expect(page).toHaveURL(/\/$/);

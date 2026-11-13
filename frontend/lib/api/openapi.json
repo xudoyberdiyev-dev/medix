@@ -153,6 +153,9 @@
     "description" : "Ko'chirish — ZK, OK, FS bitta ro'yxatda",
     "name" : "transfer-overview"
   }, {
+    "description" : "Zaxira markirovka kodlari",
+    "name" : "reserve-codes"
+  }, {
     "description" : "Kassa, Terminal va bank hisoblari",
     "name" : "money-accounts"
   } ],
@@ -470,7 +473,7 @@
     },
     "/api/audit" : {
       "get" : {
-        "operationId" : "list_33",
+        "operationId" : "list_34",
         "parameters" : [ {
           "in" : "query",
           "name" : "view",
@@ -582,7 +585,7 @@
     },
     "/api/audit/export" : {
       "get" : {
-        "operationId" : "export_3",
+        "operationId" : "export_4",
         "parameters" : [ {
           "in" : "query",
           "name" : "view",
@@ -2390,7 +2393,7 @@
     "/api/counterparties/export" : {
       "get" : {
         "description" : "Jadvaldagi filtrlar va saralash bilan; ko'pi bilan 50 000 qator. Mijozlar — clients.view, YB — suppliers.view; telefon va kontakt — clients.contact / suppliers.contact bilan.",
-        "operationId" : "export_2",
+        "operationId" : "export_3",
         "parameters" : [ {
           "in" : "query",
           "name" : "q",
@@ -4221,7 +4224,7 @@
     },
     "/api/employee-lookup" : {
       "get" : {
-        "operationId" : "list_32",
+        "operationId" : "list_33",
         "responses" : {
           "200" : {
             "content" : {
@@ -6298,7 +6301,7 @@
     },
     "/api/notifications" : {
       "get" : {
-        "operationId" : "list_31",
+        "operationId" : "list_32",
         "responses" : {
           "200" : {
             "content" : {
@@ -7885,6 +7888,45 @@
           }
         },
         "summary" : "Hisobdan o'tkazish",
+        "tags" : [ "orders" ]
+      }
+    },
+    "/api/orders/{id}/codes-owner" : {
+      "post" : {
+        "description" : "«Mijoz nomiga» yoki «Zaxira kodlarga». Buyurtma yopilguncha (Yetkazildi / Yetkazilmadi / Bekor / Rad etildi).",
+        "operationId" : "setCodesOwner",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CodesOwnerRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OrderDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Kodlar egasini o'zgartirish (O10b)",
         "tags" : [ "orders" ]
       }
     },
@@ -10231,7 +10273,7 @@
     "/api/products/export" : {
       "get" : {
         "description" : "Jadvaldagi filtrlar bilan (yoki tanlanganlar — ids); ko'pi bilan 50 000 qator.",
-        "operationId" : "export_1",
+        "operationId" : "export_2",
         "parameters" : [ {
           "in" : "query",
           "name" : "q",
@@ -12435,6 +12477,214 @@
         },
         "summary" : "Ta'minotchi xodim / korxona tovari .xlsx",
         "tags" : [ "reports" ]
+      }
+    },
+    "/api/reserve-codes" : {
+      "get" : {
+        "description" : "Filtrlar: filial (barcha filiallar doirasida), mahsulot, holat, davr (zaxiraga tushgan sana), qidiruv.",
+        "operationId" : "list_31",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "productId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "status",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "IN_RESERVE", "USED", "WRITTEN_OFF" ]
+          }
+        }, {
+          "in" : "query",
+          "name" : "from",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "in" : "query",
+          "name" : "to",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "in" : "query",
+          "name" : "q",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "page",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 0
+          }
+        }, {
+          "in" : "query",
+          "name" : "size",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 50
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ReserveCodePage"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Zaxira kodlar",
+        "tags" : [ "reserve-codes" ]
+      }
+    },
+    "/api/reserve-codes/export" : {
+      "get" : {
+        "operationId" : "export_1",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "productId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "status",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "IN_RESERVE", "USED", "WRITTEN_OFF" ]
+          }
+        }, {
+          "in" : "query",
+          "name" : "from",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "in" : "query",
+          "name" : "to",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "in" : "query",
+          "name" : "q",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        },
+        "summary" : "Zaxira kodlar .xlsx",
+        "tags" : [ "reserve-codes" ]
+      }
+    },
+    "/api/reserve-codes/{id}/use" : {
+      "post" : {
+        "operationId" : "use",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ReserveCloseRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        },
+        "summary" : "Ishlatildi deb belgilash",
+        "tags" : [ "reserve-codes" ]
+      }
+    },
+    "/api/reserve-codes/{id}/write-off" : {
+      "post" : {
+        "operationId" : "writeOff",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ReserveCloseRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        },
+        "summary" : "Hisobdan chiqarish",
+        "tags" : [ "reserve-codes" ]
       }
     },
     "/api/roles" : {
@@ -19818,6 +20068,16 @@
         },
         "required" : [ "code", "count" ]
       },
+      "CodesOwnerRequest" : {
+        "type" : "object",
+        "properties" : {
+          "owner" : {
+            "type" : "string",
+            "enum" : [ "CUSTOMER", "RESERVE" ]
+          }
+        },
+        "required" : [ "owner" ]
+      },
       "Company" : {
         "type" : "object",
         "properties" : {
@@ -23776,7 +24036,7 @@
           },
           "status" : {
             "type" : "string",
-            "enum" : [ "ACTIVE", "REMOVED", "RELEASED", "SOLD" ]
+            "enum" : [ "ACTIVE", "REMOVED", "RELEASED", "SOLD", "RETURNED" ]
           }
         },
         "required" : [ "batch", "code", "gtin", "id", "kind", "lineId", "orderId", "orderNumber", "productName", "scannedAt", "scannedBy", "serial", "status" ]
@@ -25570,6 +25830,15 @@
           "cancelledBy" : {
             "type" : "string"
           },
+          "codesOwner" : {
+            "type" : "string",
+            "description" : "O10b: kodlar egasi (standart — to'lov turidan: Perechisleniye → mijoz, qolgani → zaxira)",
+            "enum" : [ "CUSTOMER", "RESERVE" ]
+          },
+          "codesOwnerManual" : {
+            "type" : "boolean",
+            "description" : "Kodlar egasi qo'lda tanlangan"
+          },
           "createdAt" : {
             "type" : "string",
             "format" : "date-time"
@@ -25721,7 +25990,7 @@
             "format" : "int64"
           }
         },
-        "required" : [ "approvalReasons", "branchId", "createdAt", "createdBy", "createdById", "credit", "customer", "customerId", "deliveryType", "discountTotal", "documents", "fefoDeviation", "grossTotal", "holder", "id", "issues", "lines", "number", "orderDate", "paymentType", "priceChanged", "repickLineIds", "status", "total", "vatTotal", "warehouse", "warehouseId" ]
+        "required" : [ "approvalReasons", "branchId", "codesOwner", "codesOwnerManual", "createdAt", "createdBy", "createdById", "credit", "customer", "customerId", "deliveryType", "discountTotal", "documents", "fefoDeviation", "grossTotal", "holder", "id", "issues", "lines", "number", "orderDate", "paymentType", "priceChanged", "repickLineIds", "status", "total", "vatTotal", "warehouse", "warehouseId" ]
       },
       "OrderDocuments" : {
         "type" : "object",
@@ -30086,6 +30355,128 @@
           }
         },
         "required" : [ "name" ]
+      },
+      "ReserveCloseRequest" : {
+        "type" : "object",
+        "properties" : {
+          "note" : {
+            "type" : "string",
+            "maxLength" : 300,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "note" ]
+      },
+      "ReserveCode" : {
+        "type" : "object",
+        "properties" : {
+          "batch" : {
+            "type" : "string"
+          },
+          "branch" : {
+            "type" : "string"
+          },
+          "changedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "changedBy" : {
+            "type" : "string"
+          },
+          "code" : {
+            "type" : "string",
+            "description" : "Qavsli kod"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Zaxiraga tushgan payt (yetkazilgan)"
+          },
+          "customer" : {
+            "type" : "string"
+          },
+          "expiryDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "gtin" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "kind" : {
+            "type" : "string",
+            "enum" : [ "BOX", "UNIT" ]
+          },
+          "note" : {
+            "type" : "string"
+          },
+          "orderId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "orderNumber" : {
+            "type" : "string"
+          },
+          "productId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "productName" : {
+            "type" : "string"
+          },
+          "scanned" : {
+            "type" : "string",
+            "description" : "To'liq skanerlangan kod (kripto-qismi bilan)"
+          },
+          "serial" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "IN_RESERVE", "USED", "WRITTEN_OFF" ]
+          }
+        },
+        "required" : [ "batch", "branch", "code", "createdAt", "customer", "gtin", "id", "kind", "orderId", "orderNumber", "productId", "productName", "scanned", "serial", "status" ]
+      },
+      "ReserveCodePage" : {
+        "type" : "object",
+        "properties" : {
+          "inReserve" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Holat bo'yicha sonlar (boshqa filtrlar bilan)"
+          },
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ReserveCode"
+            }
+          },
+          "page" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "total" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "used" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "writtenOff" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "inReserve", "items", "page", "size", "total", "used", "writtenOff" ]
       },
       "ReservedBatch" : {
         "type" : "object",
