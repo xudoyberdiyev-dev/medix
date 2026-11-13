@@ -1628,7 +1628,7 @@ class OrderIT {
                 .andExpect(jsonPath("$.driver").value("Sinov DRIVER"));
         mvc.perform(get("/api/orders/" + o + "/invoice").cookie(driverSession)).andExpect(status().isForbidden());
         assertThat(pdfText("/api/orders/" + o + "/invoice/pdf", keeper)).contains("HISOB-FAKTURA", (String) sv.get("invoice_number"), "QQS", "Jami",
-                        "Rahbar", "Bosh buxgalter", "MXIK", "Xaridor", "summa (QQS bilan)", "tiyin")
+                        "Rahbar", "Bosh buxgalter", "MXIK", "XARIDOR", "summa (QQS bilan)", "tiyin")
                 .doesNotContain("Takroriy nusxa");
         assertThat(pdfText("/api/orders/" + o + "/invoice/pdf", keeper)).contains("Takroriy nusxa · 2");
         // O11: ommaviy chop etish (reys boʻyicha) va Excel

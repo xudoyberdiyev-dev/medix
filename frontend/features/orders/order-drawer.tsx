@@ -19,7 +19,7 @@ import {
   Truck,
   X,
 } from "lucide-react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -1128,6 +1128,33 @@ function DocumentsRow({ doc }: { doc: OrderDetail }) {
           {t("docs.printInvoice")}
         </Button>
       ) : null}
+      {d.invoiceNumber && canPrintInvoice ? (
+        <a
+          href={`/api/orders/${doc.id}/invoice/xlsx`}
+          className="mt-2 inline-flex items-center gap-1.5 text-[13px] font-medium text-primary-button hover:underline"
+        >
+          <FileDown size={16} strokeWidth={1.5} aria-hidden />
+          {t("docs.invoiceXlsx")}
+        </a>
+      ) : null}
+      {d.invoiceNumber && canPrintInvoice ? <InvoiceIkpuWarning orderId={doc.id} /> : null}
+    </div>
+  );
+}
+
+/** O11: HF da MXIK (IKPU) kodi boʻsh qatorlar boʻlsa — ogohlantirish (chop etishdan oldin kartochkada toʻldirish uchun). */
+function InvoiceIkpuWarning({ orderId }: { orderId: number }) {
+  const t = useTranslations("orders");
+  const inv = useQuery({
+    queryKey: ["orders", "invoice", orderId],
+    queryFn: () => unwrap(api.GET("/api/orders/{id}/invoice", { params: { path: { id: orderId } } })),
+    staleTime: 60_000,
+  });
+  const n = inv.data?.missingIkpu ?? 0;
+  if (n === 0) return null;
+  return (
+    <div className="mt-2" data-testid="invoice-no-ikpu">
+      <Alert tone="warning" title={t("docs.noIkpu", { n })} />
     </div>
   );
 }

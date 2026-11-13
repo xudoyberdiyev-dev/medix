@@ -204,7 +204,9 @@
     "return": "Qaytarish",
     "exportCodes": "Kodlarni yuklash (.xlsx)",
     "printWaybill": "Nakladnoyni chop etish",
-    "printInvoice": "Hisob-fakturani chop etish"
+    "printInvoice": "Hisob-fakturani chop etish",
+    "invoiceXlsx": "Hisob-faktura — Excel",
+    "noIkpu": "MXIK (IKPU) kodi yoʻq qatorlar: {n}. Mahsulot kartochkasida MXIK kodini kiriting, keyin qayta chop eting."
   },
   "credit": {
     "priceType": "Narx turi",
@@ -971,6 +973,7 @@
     "saveErr": "Saqlanmadi — qayta urinish",
     "print": "Chop etish (marshrut varagʻi)",
     "ttn": "TTN",
+    "invoicesPdf": "Hisob-fakturalar",
     "cancelTrip": "Reysni bekor qilish",
     "cancelCT": "Reysni bekor qilasizmi?",
     "cancelCD": "Reysdagi buyurtmalar «Tayyor» roʻyxatiga qaytadi.",
