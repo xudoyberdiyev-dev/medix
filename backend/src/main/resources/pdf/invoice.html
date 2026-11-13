@@ -20,6 +20,8 @@
         table.grid th, table.grid td { border: 1px solid #5b6472; padding: 3px 3px; }
         table.grid th { color: #1f2933; background: #eef0f3; font-size: 7pt; font-weight: 700; text-align: center; vertical-align: middle; }
         .c { text-align: center; }
+        .ikpu { font-size: 7pt; white-space: nowrap; }
+        th.name { width: 18%; }
         .s { font-size: 7pt; color: #5b6472; }
         tr.tot td { font-weight: 700; background: #f7f7f7; }
         .words { margin: 8px 0 3px 0; }
@@ -77,7 +79,7 @@
     <thead>
     <tr>
         <th>№</th>
-        <th>Tovar nomi</th>
+        <th class="name">Tovar nomi</th>
         <th>MXIK (IKPU) kodi</th>
         <th>Oʻlchov birligi (kodi)</th>
         <th>Partiya · yaroqlilik</th>
@@ -95,7 +97,7 @@
         <td class="c" th:text="${it.count}">1</td>
         <td><span th:text="${l.name}">Mahsulot</span>
             <div class="s" th:if="${l.manufacturer != null}" th:text="${l.manufacturer}">Ishlab chiqaruvchi</div></td>
-        <td class="c mono" th:text="${l.ikpu}">—</td>
+        <td class="c mono ikpu" th:text="${l.ikpu}">—</td>
         <td class="c"><span th:text="${l.unit}">dona</span><div class="s" th:if="${l.unitCode != null}" th:text="${l.unitCode}">796</div></td>
         <td class="c s" th:text="${l.batch}">B1</td>
         <td class="r" th:text="${l.qty}">1</td>
