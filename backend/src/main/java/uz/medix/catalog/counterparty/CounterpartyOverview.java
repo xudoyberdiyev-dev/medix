@@ -69,7 +69,8 @@ class CounterpartyOverview {
             @Schema(nullable = true) String lastReceiptNumber,
             @Schema(nullable = true) Long lastReceiptId,
             @Schema(nullable = true) LocalDate lastPaymentDate,
-            LocalDate createdOn) {}
+            LocalDate createdOn,
+            @Schema(description = "Mijoz: savdo zonalari (O6), filial doirasida") List<String> salesZones) {}
 
     record CounterpartyOverviewPage(List<OverviewRow> items, List<OverviewBranch> branches, LocalDate today) {}
 
@@ -135,6 +136,8 @@ class CounterpartyOverview {
                         WHERE t.counterparty_id = c.id AND (CAST(:b AS BIGINT) IS NULL OR t.branch_id = :b)) AS buyers,
                        (SELECT string_agg(DISTINCT t.supplier_payment_days::text, '|') %1$s AND t.supplier_payment_days IS NOT NULL) AS pay_days,
                        (SELECT t.default_payment_type %1$s AND t.default_payment_type IS NOT NULL ORDER BY t.branch_id LIMIT 1) AS main_pay,
+                       (SELECT string_agg(DISTINCT sz.name, '|') FROM counterparty_branch_terms t JOIN sales_zone sz ON sz.id = t.sales_zone_id
+                        WHERE t.counterparty_id = c.id AND (CAST(:b AS BIGINT) IS NULL OR t.branch_id = :b)) AS zones,
                        ls.order_id AS sale_order_id, ls.number AS sale_no, ls.sale_date,
                        lr.id AS receipt_id, lr.number AS receipt_no, lr.receipt_date,
                        (SELECT max((p.occurred_at AT TIME ZONE 'Asia/Tashkent')::date) FROM party_ledger p
@@ -251,7 +254,7 @@ class CounterpartyOverview {
                 rs.getString("sale_no"), rs.getObject("sale_order_id", Long.class),
                 split(rs.getString("pay_days"), "\\|").stream().map(Integer::valueOf).sorted().toList(), split(rs.getString("buyers"), "\\|"),
                 pay == null ? null : PaymentType.valueOf(pay), date(rs, "receipt_date"), rs.getString("receipt_no"),
-                rs.getObject("receipt_id", Long.class), date(rs, "last_pay"), date(rs, "created_on"));
+                rs.getObject("receipt_id", Long.class), date(rs, "last_pay"), date(rs, "created_on"), split(rs.getString("zones"), "\\|"));
     }
 
     private static List<String> buckets(DebtSummaries.PartyDebt d) {
