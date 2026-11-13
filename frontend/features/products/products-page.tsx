@@ -209,8 +209,9 @@ export function ProductsPage() {
         return p.dosageForm ? tp(`dosageForm.${p.dosageForm}`) : <Dash />;
       case "packQty":
       case "minQty":
-      case "maxQty":
         return p[k] ? formatQuantity(p[k]) : <Dash />;
+      case "maxQty":
+        return p.maxQty ? formatQuantity(p.maxQty) : <span className="text-text-secondary">{tp("unlimited")}</span>;
       case "stock":
         return <span className={p.stock ? "" : "text-text-disabled"}>{formatQuantity(p.stock)}</span>;
       case "price":

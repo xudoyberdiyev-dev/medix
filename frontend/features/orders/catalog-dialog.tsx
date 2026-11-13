@@ -270,7 +270,7 @@ export function CatalogView({
                       </td>
                       <td className="px-3 py-2.5 tabular-nums">{r.nearestExpiry ? day(r.nearestExpiry) : "—"}</td>
                       <td className="px-3 py-2.5 text-right tabular-nums text-text-secondary">
-                        {r.minQty ?? "—"} / {r.maxQty ?? "—"}
+                        {r.minQty ?? "—"} / {r.maxQty ?? "∞"}
                       </td>
                       <td className="px-3 py-1 text-right">
                         <TextField

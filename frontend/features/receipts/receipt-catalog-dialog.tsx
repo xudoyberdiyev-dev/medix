@@ -79,15 +79,16 @@ export function ReceiptCatalogDialog({
     field: keyof CatalogInput,
     label: string,
     width: string,
-    extra?: { numeric?: boolean; placeholder?: string },
+    extra?: { numeric?: boolean; placeholder?: string; date?: boolean },
   ) => (
     <TextField
+      variant={extra?.date ? "date" : "text"}
       label={`${r.name}: ${label}`}
       size="sm"
       value={inputs[r.productId]?.[field] ?? ""}
       onChange={(x) => set(r.productId, field, x)}
       onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), add())}
-      inputMode={extra?.numeric ? "numeric" : undefined}
+      inputMode={extra?.numeric || extra?.date ? "numeric" : undefined}
       placeholder={extra?.placeholder}
       className={`${width} [&>label]:sr-only`}
     />
@@ -182,8 +183,8 @@ export function ReceiptCatalogDialog({
                           {pricesVisible && r.lastPrice ? <div className="tabular-nums">{formatMoney(r.lastPrice)}</div> : null}
                         </td>
                         <td className="px-1 py-1">{cell(r, "batch", t("cell.batch"), "w-24")}</td>
-                        <td className="px-1 py-1">{cell(r, "produced", t("cell.produced"), "w-28", { placeholder: dp })}</td>
-                        <td className="px-1 py-1">{cell(r, "expiry", t("cell.expiry"), "w-28", { placeholder: dp })}</td>
+                        <td className="px-1 py-1">{cell(r, "produced", t("cell.produced"), "w-28", { placeholder: dp, date: true })}</td>
+                        <td className="px-1 py-1">{cell(r, "expiry", t("cell.expiry"), "w-28", { placeholder: dp, date: true })}</td>
                         <td className="px-1 py-1">{cell(r, "qty", t("cell.qty"), "w-20 [&_input]:text-right", { numeric: true })}</td>
                         <td className="px-1 py-1">{cell(r, "bonus", t("cell.bonus"), "w-16 [&_input]:text-right", { numeric: true })}</td>
                         {pricesVisible ? (

@@ -980,5 +980,25 @@
     "bShort": "{n} dona yetishmadi",
     "dateWarn": "Yetkazish sanasi: {d}",
     "more": "Boshqa amallar"
+  },
+  "markImport": {
+    "open": "Excel'dan yuklash",
+    "title": "Kodlarni fayldan yuklash",
+    "about": "Oldindan tayyorlangan Excel (.xlsx) yoki CSV fayl: har qatorda bitta markirovka kodi («Markirovka kodi» ustuni yoki birinchi ustun). GTIN koddan olinadi. Har kod qoʻlda skanerlash bilan bir xil tekshiriladi.",
+    "pick": "Faylni tanlash",
+    "pickOther": "Boshqa fayl",
+    "template": "Namuna fayl",
+    "ok": "Qabul qilinadi: {n}",
+    "bad": "Xato: {n}",
+    "total": "Jami qator: {n}",
+    "partial": "Mos kelganlari qabul qilinadi, xato qatorlarni keyin qoʻlda skanerlaysiz.",
+    "colRow": "Qator",
+    "colCode": "Kod",
+    "colResult": "Natija",
+    "accepted": "Qabul qilinadi",
+    "apply": "Qabul qilish ({n})",
+    "back": "Ortga",
+    "done": "{n} ta kod qabul qilindi",
+    "doneRest": "{n} ta qatorni qoʻlda skanerlang."
   }
 }

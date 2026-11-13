@@ -368,6 +368,7 @@ export function TripPage({ id }: { id: number }) {
         )}
       >
         <TextField
+          variant="date"
           label={t("fDate")}
           value={h.date}
           onChange={(v) => editHead({ date: v })}

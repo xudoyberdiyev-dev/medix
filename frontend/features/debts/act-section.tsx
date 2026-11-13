@@ -62,10 +62,24 @@ export function ActSection(props: { side: "CUSTOMER" | "SUPPLIER"; counterpartyI
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-end gap-4">
         <div className="w-40">
-          <TextField label={t("from")} size="sm" value={from} onChange={setFrom} error={isoFrom === null ? t("badDate") : undefined} />
+          <TextField
+            variant="date"
+            label={t("from")}
+            size="sm"
+            value={from}
+            onChange={setFrom}
+            error={isoFrom === null ? t("badDate") : undefined}
+          />
         </div>
         <div className="w-40">
-          <TextField label={t("to")} size="sm" value={to} onChange={setTo} error={isoTo === null ? t("badDate") : undefined} />
+          <TextField
+            variant="date"
+            label={t("to")}
+            size="sm"
+            value={to}
+            onChange={setTo}
+            error={isoTo === null ? t("badDate") : undefined}
+          />
         </div>
         <Button
           variant="secondary"

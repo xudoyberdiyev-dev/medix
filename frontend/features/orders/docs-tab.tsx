@@ -204,7 +204,13 @@ export function DocsTab({ branchId }: { branchId: number | null }) {
                   disabled: Boolean(d.activeTrip),
                 }))}
               />
-              <TextField label={tr("shipments.tripDate")} value={date} onChange={setDate} placeholder={tr("drawer.datePlaceholder")} />
+              <TextField
+                variant="date"
+                label={tr("shipments.tripDate")}
+                value={date}
+                onChange={setDate}
+                placeholder={tr("drawer.datePlaceholder")}
+              />
               <div className="text-subtitle tabular-nums" aria-live="polite">
                 {tr("shipments.selected", { count: formatQuantity(picked.length), places: placesText(places, tr) })}
               </div>

@@ -334,6 +334,7 @@ export function ReconNewPage() {
           <div className="flex flex-wrap items-end gap-2">
             <div className="w-36">
               <TextField
+                variant="date"
                 label={t("new.from")}
                 size="sm"
                 value={from}
@@ -342,7 +343,14 @@ export function ReconNewPage() {
               />
             </div>
             <div className="w-36">
-              <TextField label={t("new.to")} size="sm" value={to} onChange={setTo} error={isoTo === null ? t("new.badDate") : undefined} />
+              <TextField
+                variant="date"
+                label={t("new.to")}
+                size="sm"
+                value={to}
+                onChange={setTo}
+                error={isoTo === null ? t("new.badDate") : undefined}
+              />
             </div>
             {(["month", "lastMonth", "lastQ", "ytd"] as const).map((k) => {
               const on = isoFrom === quick[k][0] && isoTo === quick[k][1];

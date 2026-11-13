@@ -18,6 +18,7 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.interceptor.TransactionAspectSupport;
 import uz.medix.sales.order.MarkingModels.MarkBatch;
 import uz.medix.sales.order.MarkingModels.MarkCode;
 import uz.medix.sales.order.MarkingModels.MarkCodePage;
@@ -200,7 +201,51 @@ class OrderMarking {
     /** Bitta kodni skanerlash: tekshiruv tartibi SPEC 6 bo'yicha; birinchi xato qaytariladi (katta qizil ekran). */
     @Transactional
     ScanResult scan(Actor actor, long id, String raw) {
+        long markId = accept(actor, mineLocked(actor, id), id, raw);
+        MarkWork w = work(id, actor);
+        MarkCode accepted = w.codes().stream().filter(c -> c.id() == markId).findFirst().orElseThrow();
+        return new ScanResult(accepted, w);
+    }
+
+    /** Bitta qatorning natijasi (Excel'dan yuklash). */
+    record ImportOutcome(String code, boolean ok, String productName, String errorCode, Object[] errorArgs) {}
+
+    /**
+     * Tayyor fayldagi kodlar (egasi 13.11, O5): har biri qo'lda skanerlash bilan bir xil tekshiruvdan o'tadi, ketma-ket
+     * (fayl ichidagi takror va qator to'lishi ham hisobga olinadi). {@code apply=false} — oldindan ko'rish, hech narsa
+     * saqlanmaydi; {@code apply=true} — mos kelganlari qabul qilinadi, qolgani qo'lda skanerlanadi.
+     */
+    @Transactional
+    List<ImportOutcome> importCodes(Actor actor, long id, List<String> raws, boolean apply) {
         Head h = mineLocked(actor, id);
+        List<ImportOutcome> out = new ArrayList<>();
+        for (String raw : raws) {
+            jdbc.sql("SAVEPOINT mark_import").update();
+            try {
+                long markId = accept(actor, h, id, raw);
+                String product = jdbc.sql("""
+                        SELECT p.name FROM sales_order_mark m JOIN sales_order_line l ON l.id = m.line_id
+                        JOIN product p ON p.id = l.product_id WHERE m.id = :m""")
+                        .param("m", markId).query(String.class).single();
+                jdbc.sql("RELEASE SAVEPOINT mark_import").update();
+                out.add(new ImportOutcome(raw, true, product, null, null));
+            } catch (MedixException e) {
+                jdbc.sql("ROLLBACK TO SAVEPOINT mark_import").update();
+                out.add(new ImportOutcome(raw, false, null, e.code(), e.args()));
+            }
+        }
+        long ok = out.stream().filter(ImportOutcome::ok).count();
+        if (apply) {
+            audit.record(AuditEntry.of("order.markImport", "sales_order", id)
+                    .change(null, Map.of("accepted", ok, "rejected", out.size() - ok)));
+        } else {
+            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+        }
+        return out;
+    }
+
+    /** Tekshiruv va yozish (skaner va fayl uchun umumiy). Qaytaradi: qabul qilingan kod id. */
+    private long accept(Actor actor, Head h, long id, String raw) {
         Gs1Code code = switch (Gs1Code.parse(raw)) {
             case Gs1Code.Ok ok -> ok.code();
             case Gs1Code.Error e -> throw MedixException.badRequest(e.key());
@@ -275,9 +320,7 @@ class OrderMarking {
             // Parallel skanerlash: boshqa buyurtmada shu daqiqada qabul qilindi
             throw MedixException.conflict("marking.duplicate", "—");
         }
-        MarkWork w = work(id, actor);
-        MarkCode accepted = w.codes().stream().filter(c -> c.id() == markId).findFirst().orElseThrow();
-        return new ScanResult(accepted, w);
+        return markId;
     }
 
     /** Qabul qilingan kodni yakunlashdan oldin sabab bilan olib tashlash (SPEC 6). */

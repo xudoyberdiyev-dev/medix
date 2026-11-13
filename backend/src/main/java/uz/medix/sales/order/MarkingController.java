@@ -7,13 +7,16 @@ import jakarta.validation.Valid;
 import java.io.IOException;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,9 +25,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 import uz.medix.sales.order.MarkingModels.MarkCode;
 import uz.medix.sales.order.MarkingModels.MarkCodePage;
+import uz.medix.sales.order.MarkingModels.MarkImportResult;
+import uz.medix.sales.order.MarkingModels.MarkImportRow;
 import uz.medix.sales.order.MarkingModels.MarkKind;
 import uz.medix.sales.order.MarkingModels.MarkQueueItem;
 import uz.medix.sales.order.MarkingModels.MarkWork;
@@ -34,6 +41,7 @@ import uz.medix.sales.order.OrderModels.OrderReasonRequest;
 import uz.medix.shared.error.MedixException;
 import uz.medix.shared.security.Actor;
 import uz.medix.shared.security.CurrentActor;
+import uz.medix.shared.text.Texts;
 
 /** Markirovkachi paneli (SPEC 5.4). Ruxsatlar (T12): skanerlash — marking.scan; kodlar jurnali — marking.view yoki orders.queue. */
 @RestController
@@ -48,11 +56,13 @@ class MarkingController {
     private final OrderMarking marking;
     private final MarkScanErrors scanErrors;
     private final CurrentActor currentActor;
+    private final Texts texts;
 
-    MarkingController(OrderMarking marking, MarkScanErrors scanErrors, CurrentActor currentActor) {
+    MarkingController(OrderMarking marking, MarkScanErrors scanErrors, CurrentActor currentActor, Texts texts) {
         this.marking = marking;
         this.scanErrors = scanErrors;
         this.currentActor = currentActor;
+        this.texts = texts;
     }
 
     private Actor actor() {
@@ -138,6 +148,42 @@ class MarkingController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size) {
         return marking.codes(actor(), orderId, mine, today, q, Math.max(page, 0), Math.clamp(size, 1, 200));
+    }
+
+    @PostMapping(path = "/orders/{id}/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAuthority('marking.scan')")
+    @Operation(summary = "Kodlarni Excel/CSV fayldan yuklash",
+            description = "Har kod qo'lda skanerlash bilan bir xil tekshiriladi (format, takror, GTIN, partiya, tur, qator to'lgani). "
+                    + "apply=false — oldindan ko'rish (hech narsa saqlanmaydi); apply=true — mos kelganlari qabul qilinadi.")
+    MarkImportResult importCodes(@PathVariable long id, @RequestPart("file") MultipartFile file,
+            @RequestParam(defaultValue = "false") boolean apply) throws IOException {
+        Actor a = actor();
+        List<MarkingImport.FileCode> codes;
+        try (var in = file.getInputStream()) {
+            codes = MarkingImport.read(file.getOriginalFilename(), in);
+        }
+        if (codes.isEmpty()) {
+            throw MedixException.badRequest("marking.import.empty");
+        }
+        List<OrderMarking.ImportOutcome> out = marking.importCodes(a, id, codes.stream().map(MarkingImport.FileCode::code).toList(), apply);
+        Locale locale = Texts.requestLocale();
+        List<MarkImportRow> rows = new ArrayList<>();
+        for (int i = 0; i < out.size(); i++) {
+            OrderMarking.ImportOutcome o = out.get(i);
+            rows.add(new MarkImportRow(codes.get(i).row(), o.code(), o.ok(), o.productName(), o.errorCode(),
+                    o.ok() ? null : texts.getIn(locale, o.errorCode(), o.errorArgs())));
+        }
+        int ok = (int) out.stream().filter(OrderMarking.ImportOutcome::ok).count();
+        return new MarkImportResult(apply, out.size(), ok, out.size() - ok, rows, apply ? marking.get(a, id) : null);
+    }
+
+    @GetMapping("/import-template")
+    @PreAuthorize("hasAuthority('marking.scan')")
+    @Operation(summary = "Kodlar faylining namunasi (.xlsx)")
+    void importTemplate(HttpServletResponse response) throws IOException {
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        response.setHeader("Content-Disposition", "attachment; filename=\"markirovka-kodlari-namuna.xlsx\"");
+        MarkingImport.template(response.getOutputStream());
     }
 
     static final int MAX_EXPORT_ROWS = 20_000;

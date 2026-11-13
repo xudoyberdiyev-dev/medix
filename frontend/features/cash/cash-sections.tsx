@@ -175,6 +175,7 @@ export function StatementTab(props: { accountId: number | null }) {
       <div className="mb-4 flex flex-wrap items-end gap-4">
         <div className="w-40">
           <TextField
+            variant="date"
             label={tc("from")}
             value={from}
             onChange={setFrom}
@@ -185,6 +186,7 @@ export function StatementTab(props: { accountId: number | null }) {
         </div>
         <div className="w-40">
           <TextField
+            variant="date"
             label={tc("to")}
             value={to}
             onChange={setTo}

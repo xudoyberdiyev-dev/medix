@@ -113,12 +113,12 @@
     "search": "Partiya raqami, mahsulot kodi yoki nomi",
     "searchPlaceholder": "Kamida 2 belgi",
     "batch": "Partiya",
-    "searchFirst": "Avval qidiring",
     "searching": "Qidirilmoqda…",
     "notFound": "Topilmadi",
     "zone": "Zona",
     "counted": "Sanaldi",
-    "qtyPlaceholder": "soni"
+    "qtyPlaceholder": "soni",
+    "pick": "Partiyani tanlang"
   },
   "create": {
     "draftCreated": "Qoralama yaratildi",

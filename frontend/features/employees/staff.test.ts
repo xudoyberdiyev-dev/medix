@@ -74,6 +74,9 @@ describe("staff", () => {
     };
     expect(checkStaff({ ...base, form }).errors).toEqual([]);
     expect(checkStaff({ ...base, form: { ...form, last: " ", phone: "+998 90", branch: "" } }).errors).toEqual(["last", "phone", "branch"]);
+    // O0: ixtiyoriy email va tugʻilgan sana — faqat toʻldirilsa tekshiriladi
+    expect(checkStaff({ ...base, form: { ...form, email: "notogri", birth: "31.02.1990" } }).errors).toEqual(["email", "birth"]);
+    expect(checkStaff({ ...base, form: { ...form, email: "a@b.uz", birth: "21.03.1985" } }).errors).toEqual([]);
     expect(checkStaff({ ...base, scope: () => "all", form: { ...form, branch: "" } }).errors).toEqual([]);
     expect(checkStaff({ ...base, loginBusy: true, form }).errors).toEqual(["login"]);
     expect(checkStaff({ ...base, seats: { used: 40, limit: 40 }, form }).errors).toEqual(["limit"]);

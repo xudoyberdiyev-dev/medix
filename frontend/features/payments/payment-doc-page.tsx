@@ -555,6 +555,7 @@ function Editor({ kind, doc }: { kind: PayKind; doc: Doc | null }) {
                 </div>
                 <div data-f="date">
                   <TextField
+                    variant="date"
                     label={t("hDate")}
                     value={date}
                     onChange={(v) => (setDate(v), mark())}
@@ -645,6 +646,7 @@ function Editor({ kind, doc }: { kind: PayKind; doc: Doc | null }) {
                       />
                     </div>
                     <TextField
+                      variant="date"
                       label={t("hBankDate")}
                       value={bankDate}
                       onChange={(v) => (setBankDate(v), mark())}

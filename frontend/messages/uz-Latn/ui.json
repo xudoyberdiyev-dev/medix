@@ -77,5 +77,6 @@
     }
   },
   "notFound": "Hujjat topilmadi",
-  "notFoundHint": "U oʻchirilgan yoki havola notoʻgʻri. Roʻyxatga qaytib, qaytadan oching."
+  "notFoundHint": "U oʻchirilgan yoki havola notoʻgʻri. Roʻyxatga qaytib, qaytadan oching.",
+  "selectLoading": "Yuklanmoqda…"
 }

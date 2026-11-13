@@ -103,5 +103,22 @@ final class MarkingModels {
 
     record ScanResult(MarkCode accepted, MarkWork work) {}
 
+    /** Excel'dan yuklash natijasi (O5): har qator — qabul qilinadi yoki sababi. */
+    record MarkImportRow(
+            @Schema(description = "Fayldagi qator raqami (1 dan)") int row,
+            String code,
+            boolean ok,
+            @Schema(nullable = true) String productName,
+            @Schema(nullable = true, description = "Xato kaliti (marking.*)") String errorCode,
+            @Schema(nullable = true, description = "Xato matni (so'rov tilida)") String error) {}
+
+    record MarkImportResult(
+            @Schema(description = "true — mos kelganlari saqlandi; false — faqat oldindan ko'rish") boolean applied,
+            int total,
+            int accepted,
+            int rejected,
+            List<MarkImportRow> rows,
+            @Schema(nullable = true, description = "Saqlangandan keyingi holat (faqat applied=true)") MarkWork work) {}
+
     record MarkCodePage(List<MarkCode> items, long total, int page, int size) {}
 }

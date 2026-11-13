@@ -265,7 +265,7 @@ function Card({
                 [t("lPack"), p.packQty ? formatQuantity(p.packQty) : null],
                 [t("lPerPack"), p.perPack ? formatQuantity(p.perPack) : null],
                 [t("lMinQty"), p.minQty ? formatQuantity(p.minQty) : null],
-                [t("lMaxQty"), p.maxQty ? formatQuantity(p.maxQty) : null],
+                [t("lMaxQty"), p.maxQty ? formatQuantity(p.maxQty) : tp("unlimited")],
               ]}
             />
             <InfoGrid

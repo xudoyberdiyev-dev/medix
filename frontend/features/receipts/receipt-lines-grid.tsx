@@ -6,10 +6,11 @@ import { useRef, type KeyboardEvent } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tooltip } from "@/components/ui/tooltip";
-import { todayTashkent } from "@/features/counterparties/api";
+import { parseUzDate, todayTashkent } from "@/features/counterparties/api";
 import type { Zone } from "@/features/organization/api";
 import { useThresholds } from "@/features/settings/thresholds";
 import { ZONE_ICON } from "@/features/stock/zone-icon";
+import { maskUzDate } from "@/lib/date-mask";
 import { cn } from "@/lib/cn";
 import { formatMoney, formatQuantity } from "@/lib/format";
 import type { ReceiptDetail } from "./api";
@@ -30,10 +31,11 @@ export interface GridLine {
 }
 
 type ServerLine = ReceiptDetail["lines"][number];
-type EditableKey = "batchNumber" | "expiryDate" | "qty" | "bonusQty" | "price";
+type EditableKey = "batchNumber" | "producedOn" | "expiryDate" | "qty" | "bonusQty" | "price";
 
 const FIELD: Partial<Record<GridKey, EditableKey>> = {
   batch: "batchNumber",
+  mfg: "producedOn",
   exp: "expiryDate",
   qty: "qty",
   bonusQty: "bonusQty",
@@ -42,6 +44,7 @@ const FIELD: Partial<Record<GridKey, EditableKey>> = {
 const WIDTH: Record<GridKey, string> = {
   product: "minmax(220px,1fr)",
   batch: "120px",
+  mfg: "120px",
   exp: "150px",
   zone: "160px",
   qty: "88px",
@@ -149,6 +152,8 @@ export function ReceiptLinesGrid({
       }
       case "batch":
         return <span className="font-mono text-[12.5px]">{l.batchNumber || "—"}</span>;
+      case "mfg":
+        return <span className="tabular-nums">{l.producedOn || "—"}</span>;
       case "exp": {
         const f = expiryFlag(l.expiryDate, today, expiryWarnDays);
         return (
@@ -230,15 +235,16 @@ export function ReceiptLinesGrid({
         (key === "qty" && value !== "" && (!isInt(value) || Number(value) < 1)) ||
         (key === "bonusQty" && value !== "" && !isInt(value)) ||
         (key === "price" && value !== "" && !lineSum(value, "1")) ||
-        (key === "batch" && !value.trim());
+        (key === "batch" && !value.trim()) ||
+        (key === "mfg" && value.trim() !== "" && parseUzDate(value) == null);
       return (
         <input
           data-cell={`${i}|${key}`}
           aria-label={t("cell", { col: t(`col.${key}`), n: i + 1 })}
           value={key === "price" ? value.replace(/^(\d+)\.(\d+)$/, "$1,$2") : value}
-          inputMode={key === "batch" ? "text" : "decimal"}
-          placeholder={key === "exp" ? t("datePh") : key === "price" ? "0,00" : key === "batch" ? "" : "0"}
-          onChange={(e) => onChange(i, { [field]: e.target.value })}
+          inputMode={key === "batch" ? "text" : key === "exp" || key === "mfg" ? "numeric" : "decimal"}
+          placeholder={key === "exp" || key === "mfg" ? t("datePh") : key === "price" ? "0,00" : key === "batch" ? "" : "0"}
+          onChange={(e) => onChange(i, { [field]: key === "exp" || key === "mfg" ? maskUzDate(e.target.value, value) : e.target.value })}
           onKeyDown={(e) => onKey(e, i, key)}
           className={cn(
             "h-full w-full bg-transparent px-3 outline-none focus:bg-surface focus:shadow-[inset_0_0_0_2px_var(--color-primary)]",

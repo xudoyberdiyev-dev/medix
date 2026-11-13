@@ -122,8 +122,8 @@ class InventoryCountController {
 
     @GetMapping("/{id}/batches")
     @PreAuthorize("hasAuthority('inventory.count')")
-    @Operation(summary = "Topilgan partiyani qidirish", description = "Partiya raqami, mahsulot kodi yoki nomi bo'yicha (20 ta).")
-    List<InventoryBatchHit> batches(@PathVariable long id, @RequestParam String q) {
+    @Operation(summary = "Topilgan partiyani qidirish", description = "Partiya raqami, mahsulot kodi yoki nomi bo'yicha (20 ta); bo'sh so'rov — birinchi 20 ta.")
+    List<InventoryBatchHit> batches(@PathVariable long id, @RequestParam(required = false, defaultValue = "") String q) {
         return counts.findBatches(actor(), id, q);
     }
 

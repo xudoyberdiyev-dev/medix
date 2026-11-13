@@ -279,7 +279,8 @@
       "marked": "Markirovka majburiy",
       "prescription": "Retsept boʻyicha beriladi",
       "vat": "QQS stavkasi",
-      "note": "Izoh"
+      "note": "Izoh",
+      "maxUnlimited": "Maksimal miqdor — cheksiz"
     },
     "contractHint": "Shartnoma jarayonidagi nomi",
     "mmHelp": "Buyurtmada bundan kam boʻlmaydi; maksimaldan oshsa — buyurtma tasdiqqa ketadi",
@@ -329,7 +330,9 @@
     "leaveT": "Oʻzgarishlar saqlanmaydi",
     "leaveD": "Sahifadan chiqsangiz, kiritilgan oʻzgarishlar yoʻqoladi.",
     "leave": "Chiqish",
-    "stay": "Davom etish"
+    "stay": "Davom etish",
+    "unlimited": "Cheksiz",
+    "unlimitedHelp": "Maksimal miqdor yoʻq — buyurtma miqdori boʻyicha tasdiqqa ketmaydi"
   },
   "wizard": {
     "title": "Excelʼdan yuklash",
@@ -459,5 +462,6 @@
       "pMaxMin": "Min Max dan katta",
       "pTooLong": "{f} juda uzun"
     }
-  }
+  },
+  "unlimited": "Cheksiz"
 }

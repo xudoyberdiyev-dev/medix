@@ -576,7 +576,7 @@ function Editor({
             disabled={!editable}
             required
           />
-          <TextField label={t("entry.orderDate")} value={orderDate} onChange={() => undefined} disabled />
+          <TextField variant="date" label={t("entry.orderDate")} value={orderDate} onChange={() => undefined} disabled />
           <Select
             label={t("entry.warehouse")}
             value={warehouseId}
@@ -624,6 +624,7 @@ function Editor({
             </div>
           </div>
           <TextField
+            variant="date"
             label={t("drawer.deliveryDate")}
             value={deliveryDate}
             onChange={setDeliveryDate}

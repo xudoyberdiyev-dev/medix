@@ -2293,7 +2293,7 @@ export interface paths {
         };
         /**
          * Topilgan partiyani qidirish
-         * @description Partiya raqami, mahsulot kodi yoki nomi bo'yicha (20 ta).
+         * @description Partiya raqami, mahsulot kodi yoki nomi bo'yicha (20 ta); bo'sh so'rov — birinchi 20 ta.
          */
         get: operations["batches"];
         put?: never;
@@ -2478,6 +2478,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/marking/import-template": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Kodlar faylining namunasi (.xlsx) */
+        get: operations["importTemplate_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/marking/mine": {
         parameters: {
             query?: never;
@@ -2572,6 +2589,26 @@ export interface paths {
          * @description Barcha kodlar skanerlangan va markirovkasiz qatorlar tasdiqlangan bo'lsa → «Hisobdan o'tkazilmoqda».
          */
         post: operations["finish_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/marking/orders/{id}/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Kodlarni Excel/CSV fayldan yuklash
+         * @description Har kod qo'lda skanerlash bilan bir xil tekshiriladi (format, takror, GTIN, partiya, tur, qator to'lgani). apply=false — oldindan ko'rish (hech narsa saqlanmaydi); apply=true — mos kelganlari qabul qilinadi.
+         */
+        post: operations["importCodes"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4646,7 +4683,10 @@ export interface paths {
         };
         /** O'z profilim */
         get: operations["get_5"];
-        /** Telefon raqamini yangilash */
+        /**
+         * O'z ma'lumotlarimni yangilash
+         * @description F.I.Sh., login (unikal), telefon, email, lavozim, tug'ilgan sana. Rol va filial o'zgarmaydi. Joriy sessiya yangi login va ism bilan darhol yangilanadi.
+         */
         put: operations["update_7"];
         post?: never;
         delete?: never;
@@ -8986,11 +9026,17 @@ export interface components {
         Employee: {
             /** @description Buxgalterga Direktor bergan «barcha filiallar» doirasi (E3) */
             allBranches: boolean;
+            /**
+             * Format: date
+             * @description Tugʻilgan sana
+             */
+            birthDate?: string;
             blockedReason?: string;
             /** Format: int64 */
             branchId?: number;
             /** @description Kassir boʻlgan kassalar (special.till) */
             cashAccountIds: number[];
+            email?: string;
             firstName?: string;
             fullName: string;
             /** Format: int64 */
@@ -9819,6 +9865,33 @@ export interface components {
             size: number;
             /** Format: int64 */
             total: number;
+        };
+        MarkImportResult: {
+            /** Format: int32 */
+            accepted: number;
+            /** @description true — mos kelganlari saqlandi; false — faqat oldindan ko'rish */
+            applied: boolean;
+            /** Format: int32 */
+            rejected: number;
+            rows: components["schemas"]["MarkImportRow"][];
+            /** Format: int32 */
+            total: number;
+            /** @description Saqlangandan keyingi holat (faqat applied=true) */
+            work?: components["schemas"]["MarkWork"];
+        };
+        MarkImportRow: {
+            code: string;
+            /** @description Xato matni (so'rov tilida) */
+            error?: string;
+            /** @description Xato kaliti (marking.*) */
+            errorCode?: string;
+            ok: boolean;
+            productName?: string;
+            /**
+             * Format: int32
+             * @description Fayldagi qator raqami (1 dan)
+             */
+            row: number;
         };
         MarkLine: {
             batches: components["schemas"]["MarkBatch"][];
@@ -11820,13 +11893,19 @@ export interface components {
             unit: string;
         };
         Profile: {
+            /** Format: date */
+            birthDate?: string;
             branchName?: string;
+            email?: string;
+            firstName?: string;
             fullName: string;
             /** Format: int64 */
             id: number;
             /** Format: date-time */
             lastLoginAt?: string;
+            lastName?: string;
             login: string;
+            middleName?: string;
             /**
              * Format: date-time
              * @description Oxirgi parol almashtirish (audit jurnalidan)
@@ -13678,9 +13757,13 @@ export interface components {
             vatPayer?: boolean;
         };
         UpdateEmployeeRequest: {
+            /** Format: date */
+            birthDate?: string;
             /** Format: int64 */
             branchId?: number;
             cashAccountIds?: number[];
+            /** Format: email */
+            email?: string;
             firstName: string;
             lastName: string;
             login: string;
@@ -13691,7 +13774,16 @@ export interface components {
             warehouseIds?: number[];
         };
         UpdateProfileRequest: {
+            /** Format: date */
+            birthDate?: string;
+            /** Format: email */
+            email?: string;
+            firstName: string;
+            lastName: string;
+            login: string;
+            middleName?: string;
             phone?: string;
+            position?: string;
         };
         UpdateWarehouseRequest: {
             address?: string;
@@ -17656,8 +17748,8 @@ export interface operations {
     };
     batches: {
         parameters: {
-            query: {
-                q: string;
+            query?: {
+                q?: string;
             };
             header?: never;
             path: {
@@ -17899,6 +17991,24 @@ export interface operations {
             };
         };
     };
+    importTemplate_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     mine_1: {
         parameters: {
             query?: never;
@@ -18012,6 +18122,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MarkWork"];
+                };
+            };
+        };
+    };
+    importCodes: {
+        parameters: {
+            query?: {
+                apply?: boolean;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarkImportResult"];
                 };
             };
         };

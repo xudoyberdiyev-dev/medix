@@ -444,6 +444,7 @@ function DraftDoc({ doc }: { doc: InventoryCountDetail | null }) {
             searchable
           />
           <TextField
+            variant="date"
             label={t("doc.hDate")}
             value={f.countDate}
             onChange={(v) => (setF((x) => ({ ...x, countDate: v })), dayToIso(v) ? upd({ countDate: v }) : undefined)}

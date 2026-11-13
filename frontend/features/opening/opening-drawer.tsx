@@ -339,6 +339,7 @@ function Editor({
             required
           />
           <TextField
+            variant="date"
             label={t("drawer.cutoffDate")}
             value={date}
             onChange={setDate}
@@ -379,12 +380,14 @@ function Editor({
           />
           <TextField label={t("drawer.batch")} value={adding.batch} onChange={(v) => setAdding((a) => ({ ...a, batch: v }))} />
           <TextField
+            variant="date"
             label={t("drawer.produced")}
             value={adding.produced}
             onChange={(v) => setAdding((a) => ({ ...a, produced: v }))}
             placeholder="KK.OO.YYYY"
           />
           <TextField
+            variant="date"
             label={t("drawer.expiry")}
             value={adding.expiry}
             onChange={(v) => setAdding((a) => ({ ...a, expiry: v }))}

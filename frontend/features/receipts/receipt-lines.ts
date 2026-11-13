@@ -4,23 +4,23 @@ import { parseMoneyInput, parseUzDate } from "@/features/counterparties/api";
 
 export type GridMode = "edit" | "accept" | "read";
 
-export type GridKey = "product" | "batch" | "exp" | "zone" | "qty" | "fact" | "diff" | "bonusQty" | "price" | "sum";
+export type GridKey = "product" | "batch" | "mfg" | "exp" | "zone" | "qty" | "fact" | "diff" | "bonusQty" | "price" | "sum";
 
 const PRICE_KEYS: GridKey[] = ["price", "sum"];
 
-/** Ustunlar tartibi — prototip `KEYS` (mfg, vat, vatSum standart holatda yashirin). */
+/** Ustunlar tartibi — prototip `KEYS` (vat, vatSum yashirin; «Ishlab chiq.» ixtiyoriy ustun — egasi 13.11, O4). */
 export function gridKeys(mode: GridMode, hasFact: boolean, pricesVisible: boolean): GridKey[] {
   const keys: GridKey[] =
     mode === "edit"
-      ? ["product", "batch", "exp", "zone", "qty", "bonusQty", "price", "sum"]
+      ? ["product", "batch", "mfg", "exp", "zone", "qty", "bonusQty", "price", "sum"]
       : hasFact
-        ? ["product", "batch", "exp", "zone", "qty", "fact", "diff", "bonusQty", "price", "sum"]
-        : ["product", "batch", "exp", "zone", "qty", "bonusQty", "price", "sum"];
+        ? ["product", "batch", "mfg", "exp", "zone", "qty", "fact", "diff", "bonusQty", "price", "sum"]
+        : ["product", "batch", "mfg", "exp", "zone", "qty", "bonusQty", "price", "sum"];
   return pricesVisible ? keys : keys.filter((k) => !PRICE_KEYS.includes(k));
 }
 
 /** Tahrirlanadigan ustunlar (Enter/Tab shu tartibda yuradi). */
-export const EDIT_KEYS: GridKey[] = ["batch", "exp", "zone", "qty", "bonusQty", "price"];
+export const EDIT_KEYS: GridKey[] = ["batch", "mfg", "exp", "zone", "qty", "bonusQty", "price"];
 
 /** Pul satri × miqdor → «123.45» (tiyingacha aniq, BigInt). Narx yoki miqdor xato — null. */
 export function lineSum(price: string, qty: string): string | null {

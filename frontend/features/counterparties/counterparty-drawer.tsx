@@ -116,8 +116,9 @@ function LicenseDialog({ cpId, license, onClose }: { cpId: number; license: Lice
           autoFocus
           className="col-span-2"
         />
-        <TextField label={t("issuedOn")} value={issuedOn} onChange={setIssuedOn} error={local.issuedOn} placeholder={dp} />
+        <TextField variant="date" label={t("issuedOn")} value={issuedOn} onChange={setIssuedOn} error={local.issuedOn} placeholder={dp} />
         <TextField
+          variant="date"
           label={t("validUntil")}
           value={validUntil}
           onChange={setValidUntil}
@@ -228,8 +229,15 @@ function ContractDialog({ cpId, contract, onClose }: { cpId: number; contract: C
           options={active.map((b) => ({ value: String(b.id), label: b.name, sub: b.code }))}
         />
         <TextField label={t("number")} value={number} onChange={setNumber} error={err.fields.number} required autoFocus />
-        <TextField label={t("signedOn")} value={signedOn} onChange={setSignedOn} error={local.signedOn} placeholder={dp} />
-        <TextField label={t("validUntil")} value={validUntil} onChange={setValidUntil} error={local.validUntil} placeholder={dp} />
+        <TextField variant="date" label={t("signedOn")} value={signedOn} onChange={setSignedOn} error={local.signedOn} placeholder={dp} />
+        <TextField
+          variant="date"
+          label={t("validUntil")}
+          value={validUntil}
+          onChange={setValidUntil}
+          error={local.validUntil}
+          placeholder={dp}
+        />
         <TextField label={t("note")} value={note} onChange={setNote} error={err.fields.note} className="col-span-2" />
         {err.message ? <Alert tone="danger" title={err.message} className="col-span-2" /> : null}
       </div>
@@ -383,6 +391,7 @@ function TermsCard({
               hint={tt("discountHint")}
             />
             <Select
+              loading={priceTypes.isLoading}
               label={tt("priceType")}
               disabled={!customerSide}
               value={f.priceTypeId}

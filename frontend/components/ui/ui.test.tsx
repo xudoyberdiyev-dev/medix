@@ -52,6 +52,26 @@ describe("TextField", () => {
     expect(parseAmount("1,234")).toBeNull();
   });
 
+  it("sana maydoni: raqamlar yozilsa nuqtalar oʻzi qoʻyiladi, oʻchirishda nuqta ham oʻchadi (O1)", async () => {
+    function Wrapper() {
+      const [v, setV] = useState("");
+      return <TextField label="Sana" variant="date" value={v} onChange={setV} />;
+    }
+    render(<Wrapper />);
+    const input = screen.getByLabelText("Sana");
+    await userEvent.type(input, "11112026");
+    expect(input).toHaveValue("11.11.2026");
+    await userEvent.type(input, "{backspace}{backspace}{backspace}{backspace}");
+    expect(input).toHaveValue("11.11");
+    await userEvent.type(input, "{backspace}");
+    expect(input).toHaveValue("11.1");
+    await userEvent.type(input, "{backspace}");
+    expect(input).toHaveValue("11");
+    await userEvent.clear(input);
+    await userEvent.paste("2026-03-21");
+    expect(input).toHaveValue("21.03.2026");
+  });
+
   it("summa maydoni fokusdan chiqqanda formatlanadi", async () => {
     function Wrapper() {
       const [v, setV] = useState("");
@@ -141,6 +161,27 @@ describe("Select", () => {
     await userEvent.clear(screen.getByRole("textbox", { name: "Qidirish" }));
     await userEvent.type(screen.getByRole("textbox", { name: "Qidirish" }), "zzz");
     expect(screen.getByText(/Hech narsa topilmadi/)).toBeInTheDocument();
+  });
+
+  it("serverdan: ochilishi bilan roʻyxat yuklanadi, yozilganda filtrlanadi (O3)", async () => {
+    const load = vi.fn(async (q: string) => warehouses.filter((o) => !q || o.label.toLowerCase().includes(q.toLowerCase())));
+    render(<Select label="Ombor" options={[]} loadOptions={load} value={null} onChange={vi.fn()} />);
+    await userEvent.click(screen.getByRole("combobox", { name: "Ombor" }));
+    expect(await screen.findByRole("option", { name: /Markaziy/ })).toBeInTheDocument();
+    expect(screen.queryByText(/Hech narsa topilmadi/)).not.toBeInTheDocument();
+    expect(load).toHaveBeenCalledWith("");
+    await userEvent.type(screen.getByRole("textbox", { name: "Qidirish" }), "samar");
+    await vi.waitFor(() => expect(screen.queryByRole("option", { name: /Markaziy/ })).not.toBeInTheDocument());
+    expect(screen.getByRole("option", { name: /Samarqand/ })).toBeInTheDocument();
+    const calls = load.mock.calls.length;
+    await new Promise((r) => setTimeout(r, 400));
+    expect(load.mock.calls.length).toBe(calls);
+  });
+
+  it("variantlar yuklanayotganda «Yuklanmoqda…» (O3)", async () => {
+    render(<Select label="Hudud" searchable loading options={[]} value={null} onChange={vi.fn()} />);
+    await userEvent.click(screen.getByRole("combobox", { name: "Hudud" }));
+    expect(screen.getByText("Yuklanmoqda…")).toBeInTheDocument();
   });
 
   it("koʻp tanlovli", async () => {

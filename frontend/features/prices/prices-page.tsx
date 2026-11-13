@@ -278,6 +278,7 @@ function PricesTab({
           </div>
           <div className="w-56">
             <Select
+              loading={manufacturers.isLoading}
               label={t("manufacturer")}
               size="sm"
               searchable

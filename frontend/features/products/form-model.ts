@@ -15,6 +15,8 @@ export interface PageForm {
   packQty: string;
   minQty: string;
   maxQty: string;
+  /** «Cheksiz» — maksimal miqdor yoʻq (backendda NULL), O2 */
+  maxUnlimited: boolean;
   barcodes: string[];
   ikpu: string;
   farmId: string;
@@ -42,6 +44,7 @@ export const EMPTY_PAGE_FORM: PageForm = {
   packQty: "",
   minQty: "",
   maxQty: "",
+  maxUnlimited: false,
   barcodes: [],
   ikpu: "",
   farmId: "",
@@ -73,6 +76,7 @@ export function pageFormFromProduct(p: ProductDetail): PageForm {
     packQty: num(p.packQty),
     minQty: num(p.minQty),
     maxQty: num(p.maxQty),
+    maxUnlimited: p.maxQty == null,
     barcodes: [...p.barcodes],
     ikpu: p.ikpu ?? "",
     farmId: p.farmId ?? "",
@@ -117,7 +121,7 @@ export function validatePageForm(f: PageForm): Partial<Record<keyof PageForm, Pa
   }
   if (!e.ikpu && !/^\d{17}$/.test(f.ikpu.trim())) e.ikpu = "ikpu";
   if (!/^[1-9]\d{7}$/.test(f.code)) e.code = "codeFmt";
-  if (Number(f.maxQty) > 0 && Number(f.minQty) > Number(f.maxQty)) e.maxQty = "maxMin";
+  if (!f.maxUnlimited && Number(f.maxQty) > 0 && Number(f.minQty) > Number(f.maxQty)) e.maxQty = "maxMin";
   if (!f.unitId) e.unitId = "unit";
   return e;
 }
@@ -146,7 +150,7 @@ export function toPageRequest(f: PageForm): ProductRequest {
     vatRate: exempt ? "0" : f.vat,
     vatExempt: exempt,
     minQty: int(f.minQty),
-    maxQty: int(f.maxQty),
+    maxQty: f.maxUnlimited ? undefined : int(f.maxQty),
     dosageForm: f.dosageForm ?? undefined,
     dose: text(f.dose),
     packQty: int(f.packQty),

@@ -38,6 +38,7 @@ import { can as canMe } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
 import { formatDateTime } from "@/lib/format";
 import { useRoleMatrix } from "@/features/roles/roles-matrix";
+import { formatIsoDate, parseUzDate } from "@/features/counterparties/api";
 import { describeError } from "@/features/setup/form-error";
 import { api, unwrap } from "@/lib/api/client";
 import { cn } from "@/lib/cn";
@@ -187,7 +188,15 @@ export function StaffManager({
   const errText = (k: StaffErrorKey): string => {
     if (k === "login") return f.login ? t("eLoginBusy", { l: f.login }) : t("eLoginReq");
     if (k === "limit") return t("eLimit", { m: limit ?? 0 });
-    const m = { last: "eLast", first: "eFirst", phone: "ePhone", role: "eRole", branch: "eBranch" } as const;
+    const m = {
+      last: "eLast",
+      first: "eFirst",
+      phone: "ePhone",
+      email: "eEmail",
+      birth: "eBirth",
+      role: "eRole",
+      branch: "eBranch",
+    } as const;
     return t(m[k]);
   };
   const err = (k: StaffErrorKey) => (errs.includes(k) ? errText(k) : undefined);
@@ -223,6 +232,9 @@ export function StaffManager({
         first: e.firstName ?? e.fullName.split(/\s+/)[0] ?? "",
         mid: e.middleName ?? "",
         phone: e.phone ? formatPhone(e.phone) : "+998",
+        pos: e.position ?? "",
+        email: e.email ?? "",
+        birth: formatIsoDate(e.birthDate),
         role: e.roleCode,
         branch: e.branchId ? String(e.branchId) : "",
         whs: [...e.warehouseIds],
@@ -261,6 +273,9 @@ export function StaffManager({
       firstName: fm.first.trim(),
       middleName: fm.mid.trim() || undefined,
       phone: fm.phone,
+      position: fm.pos?.trim() || undefined,
+      email: fm.email?.trim() || undefined,
+      birthDate: (fm.birth && parseUzDate(fm.birth)) || undefined,
       roleCode: fm.role,
       branchId,
       warehouseIds: can(fm.role, "special.whs") ? fm.whs : [],
@@ -635,6 +650,28 @@ export function StaffManager({
                   onChange={(v) => setF({ phone: formatPhone(v) })}
                   error={err("phone")}
                 />
+              </div>
+              <TextField label={`${t("fPos")} (${t("opt")})`} value={f.pos ?? ""} onChange={(v) => setF({ pos: v })} />
+              <div className="grid grid-cols-2 gap-4">
+                <div data-f="email">
+                  <TextField
+                    label={`${t("fEmail")} (${t("opt")})`}
+                    inputMode="email"
+                    value={f.email ?? ""}
+                    onChange={(v) => setF({ email: v })}
+                    error={err("email")}
+                  />
+                </div>
+                <div data-f="birth">
+                  <TextField
+                    variant="date"
+                    label={`${t("fBirth")} (${t("opt")})`}
+                    placeholder="21.03.1985"
+                    value={f.birth ?? ""}
+                    onChange={(v) => setF({ birth: v })}
+                    error={err("birth")}
+                  />
+                </div>
               </div>
             </section>
 

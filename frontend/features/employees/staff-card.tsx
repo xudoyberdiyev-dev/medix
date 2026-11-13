@@ -34,6 +34,7 @@ import { Tabs } from "@/components/ui/tabs";
 import { TextField } from "@/components/ui/text-field";
 import { toast } from "@/components/ui/toast";
 import { isKnownAction } from "@/features/audit/actions";
+import { formatIsoDate } from "@/features/counterparties/api";
 import { can as canMe } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
 import { useWarehouses } from "@/features/organization/api";
@@ -197,6 +198,8 @@ export function StaffCardPage({ id }: { id: number }) {
       middleName: x.middleName ?? undefined,
       phone: x.phone ?? undefined,
       position: x.position ?? undefined,
+      email: x.email ?? undefined,
+      birthDate: x.birthDate ?? undefined,
       roleCode,
       branchId: branchId ?? undefined,
       warehouseIds: keep ? x.warehouseIds : [],
@@ -269,6 +272,9 @@ export function StaffCardPage({ id }: { id: number }) {
     [ts("cBranch"), brName(e.branchId)],
     [ts("cLogin"), e.login, true],
     [ts("cPhone"), e.phone ?? "", true],
+    ...(e.email ? ([[t("fEmail"), e.email, true]] as [string, ReactNode, boolean][]) : []),
+    ...(e.position ? ([[t("fPosition"), e.position]] as [string, ReactNode][]) : []),
+    ...(e.birthDate ? ([[t("fBirth"), formatIsoDate(e.birthDate)]] as [string, ReactNode][]) : []),
     ...(e.warehouseIds.length ? ([[t("fWhs"), whNames]] as [string, ReactNode][]) : []),
     ...(e.cashAccountIds.length ? ([[t("fCash"), cashNames]] as [string, ReactNode][]) : []),
     [t("lastLogin"), e.lastLoginAt ? dt(e.lastLoginAt) : t("never")],
