@@ -62,6 +62,10 @@
         "title": "Taʼminotchi korxona tovari",
         "description": "Yetkazib beruvchi boʻyicha: Olib keldi, Sotildi, Qoldi tannarxda."
       },
+      "accountants": {
+        "title": "Buxgalter natijasi",
+        "description": "Yuborilgan fakturalar, oʻrtacha vaqt «Yuklanmoqda → Yuborildi», kechikkanlar va hozirgi navbat."
+      },
       "pickers": {
         "title": "Yigʻuvchilar natijasi",
         "description": "Har yigʻuvchi boʻyicha: buyurtma, qator va dona; vaqtida / kechikkan."
@@ -276,5 +280,17 @@
   "crumbs": "Joylashuv",
   "columns": "Ustunlar",
   "colsHint": "Koʻrinish va tartib — sudrab oʻzgartiring",
-  "colsReset": "Standartga qaytarish"
+  "colsReset": "Standartga qaytarish",
+  "accountants": {
+    "title": "Buxgalter natijasi",
+    "person": "Buxgalter",
+    "sent": "Yuborilgan fakturalar",
+    "avgMinutes": "Oʻrtacha vaqt",
+    "late": "1 kundan kechikkan",
+    "queue": "Hozir navbatda: {n}",
+    "queueLate": "shundan 1 kundan koʻp: {n}",
+    "empty": "Davrda yuborilgan faktura yoʻq",
+    "note": "Vaqt — buyurtma «Yuklanmoqda» ga oʻtgandan faktura «Yuborildi» deb belgilangungacha.",
+    "forbidden": "«Buxgalter natijasi» faqat fakturalarni koʻrish ruxsati bilan ochiladi."
+  }
 }

@@ -37,6 +37,7 @@ export type ReportKey =
   | "operators"
   | "supplier-staff"
   | "supplier-company"
+  | "accountants"
   | "pickers"
   | "markers"
   | "customer-debts"
@@ -155,6 +156,15 @@ export const REPORTS: ReportEntry[] = [
     href: "/reports/supplier-goods?kind=COMPANY",
     anyOf: REPORT_KEYS,
     allOf: ["prices.cost"],
+  },
+  {
+    key: "accountants",
+    group: "staff",
+    icon: FileCheck2,
+    title: "Buxgalter natijasi",
+    description: "Yuborilgan fakturalar, oʻrtacha vaqt «Yuklanmoqda → Yuborildi», kechikkanlar va hozirgi navbat.",
+    href: "/reports/accountants",
+    anyOf: ["invoices.view"],
   },
   {
     key: "pickers",

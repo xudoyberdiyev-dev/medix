@@ -1946,6 +1946,15 @@ class OrderIT {
         mvc.perform(get("/api/invoice-tasks/files/" + fileId).cookie(otherAccountant)).andExpect(status().isNotFound());
         mvc.perform(get("/api/invoice-tasks").param("q", number).param("status", "SENT").cookie(accountant))
                 .andExpect(jsonPath("$.total").value(1)).andExpect(jsonPath("$.sent").value(1));
+        // O10f «Buxgalter natijasi»: yuborilgan 1 ta, navbatda — naqd buyurtmaning vazifasi
+        mvc.perform(get("/api/reports/accountants").cookie(accountant))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total.sent").value(1))
+                .andExpect(jsonPath("$.total.late").value(0))
+                .andExpect(jsonPath("$.rows[0].sent").value(1))
+                .andExpect(jsonPath("$.queue").value(1));
+        mvc.perform(get("/api/reports/accountants").cookie(operator)).andExpect(status().isForbidden());
+        mvc.perform(get("/api/reports/accountants/export").cookie(accountant)).andExpect(status().isOk());
         assertThatThrownBy(() -> jdbc.sql("UPDATE invoice_task SET status = 'PENDING' WHERE id = :t").param("t", task).update())
                 .hasMessageContaining("oʻzgarmaydi");
         assertThatThrownBy(() -> jdbc.sql("DELETE FROM invoice_task_file WHERE task_id = :t").param("t", task).update()).isNotNull();
