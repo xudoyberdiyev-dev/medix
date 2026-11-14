@@ -70,6 +70,8 @@ export function ErrorState({ title, description, onRetry, error }: ErrorStatePro
   const t = useTranslations("ui");
   if (error instanceof ApiError && error.status === 404)
     return <EmptyState icon={SearchX} title={t("notFound")} description={t("notFoundHint")} />;
+  // Server ruxsat bermadi (403) — «Yuklab boʻlmadi» emas, «Ruxsat yoʻq» holati.
+  if (error instanceof ApiError && error.status === 403) return <ForbiddenState />;
   return (
     <div className="p-4">
       <Alert
