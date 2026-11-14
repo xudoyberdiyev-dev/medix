@@ -35,7 +35,13 @@ const LETTERS: Record<string, string> = {
 
 const DIGRAPHS: Record<string, string> = { sh: "ш", ch: "ч", yo: "ё", yu: "ю", ya: "я", ye: "е" };
 /** Rus tilidan kirgan soʻzlar: -tsiya → -ция (inventarizatsiya → инвентаризация). */
-const LOAN: [RegExp, string][] = [[/^tsi(?=[ayo])/i, "ци"]];
+const LOAN: [RegExp, string][] = [
+  [/^tsi(?=[ayo])/i, "ци"],
+  // Oʻzlashma soʻzlar: litsenziya, retsept, farmatsevt (-siz qoʻshimchasi — «muddatsiz» — tegmaydi).
+  [/^tsenz/i, "ценз"],
+  [/^tsept/i, "цепт"],
+  [/^tsevt/i, "цевт"],
+];
 const TURNED = /^[ʻ‘'`]/; // oʻ, gʻ belgisi
 const VOWELS = new Set("aeiouAEIOU");
 /** Butun soʻz boʻyicha tayyor shakl: qisqartmalar (bosh harflar) va oʻzlashma soʻzlar (harfma-harf oʻgirib boʻlmaydi). */
