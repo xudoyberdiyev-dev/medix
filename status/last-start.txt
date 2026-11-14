@@ -1,1 +1,1 @@
-▶️ MEDIX: 14:07 sessiya boshlandi — reja: regressiya (O6/O10 yangi sahifalarida boʻsh/yuklanish/xato/ruxsat holatlari, frontend toʻliq tekshiruv)
+▶️ MEDIX: 00:09 sessiya boshlandi — reja: V1 da ochiq vazifa yoʻq; regressiya tekshiruvi (mahalliy frontend, TODO/FIXME), PLAN holatini yangilash
