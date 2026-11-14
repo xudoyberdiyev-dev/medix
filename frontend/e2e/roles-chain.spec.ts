@@ -317,6 +317,23 @@ test("Markirovkachi: birinchi kirish, kodlarni skanerlaydi (xato kod rad etiladi
   await expect(page.getByText("Markirovka yakunlandi").first()).toBeVisible();
 });
 
+test("Ombor mudiri: kodlar egasini oʻzgartiradi va qaytaradi (O10b)", async ({ page }) => {
+  await login(page, "keeper.1", PASSWORD);
+  await expect(page).toHaveURL(/\/$/);
+  await page.goto("/orders");
+  const tabs = page.getByRole("tablist", { name: "Buyurtma holatlari" });
+  await tabs.getByRole("tab", { name: /^Hammasi/ }).click();
+  await page.getByRole("cell", { name: CUSTOMER }).first().click();
+  await expect(page).toHaveURL(/\/orders\/\d+/);
+  // Naqd toʻlov → standart «Zaxira kodlarga» (toʻlov turi boʻyicha)
+  await expect(page.getByText("toʻlov turi boʻyicha")).toBeVisible();
+  await page.getByRole("button", { name: "Mijoz nomiga oʻtkazish" }).click();
+  await expect(page.getByText("Kodlar egasi oʻzgartirildi").first()).toBeVisible();
+  await expect(page.getByText("toʻlov turi boʻyicha")).toHaveCount(0);
+  await page.getByRole("button", { name: "Zaxira kodlarga oʻtkazish" }).click();
+  await expect(page.getByRole("button", { name: "Mijoz nomiga oʻtkazish" })).toBeVisible();
+});
+
 test("Ombor mudiri: hisobdan oʻtkazadi va reys tuzadi", async ({ page }) => {
   await login(page, "keeper.1", PASSWORD);
   await expect(page).toHaveURL(/\/$/);
