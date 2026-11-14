@@ -93,6 +93,11 @@ function plain(text: string): string {
       if (KEEP.has(word) || /[0-9]/.test(word)) {
         out += word;
         i = j;
+        // Lotincha qoldirilgan soʻzdan keyingi tutuq belgisi ʼ boʻlib qoladi («Excelʼга», «Excelъга» emas).
+        if (text[i] === "ʼ" || text[i] === "’") {
+          out += "ʼ";
+          i++;
+        }
         continue;
       }
     }
