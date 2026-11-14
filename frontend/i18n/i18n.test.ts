@@ -29,6 +29,11 @@ describe("toCyrillic", () => {
     ["YB qarzi", "ЕБ қарзи"],
     ["U oʻchirilgan", "У ўчирилган"],
     ["MEDIX tizimi, Ctrl K", "MEDIX тизими, Ctrl K"],
+    ["Excelʼga yuklash", "Excelʼга юклаш"],
+    ["Saplaynʼda", "Саплайнъда"],
+    ["Naqd, Terminal, Online", "Нақд, Терминал, Онлайн"],
+    ["Hisobdan chiqarish (HC), YB ga toʻlov (YT)", "Ҳисобдан чиқариш (HC), ЕБ га тўлов (YT)"],
+    ["Litsenziya, Retsept, Farmatsevtika, muddatsiz", "Лицензия, Рецепт, Фармацевтика, муддатсиз"],
   ])("%s → %s", (latin, cyr) => expect(toCyrillic(latin)).toBe(cyr));
 
   it("ICU argument va tanlov kalitlarini oʻzgartirmaydi", () => {

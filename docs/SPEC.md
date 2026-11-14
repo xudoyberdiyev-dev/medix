@@ -179,6 +179,8 @@ Eslatma: oldingi «Omborchi» va «Ombor nazoratchisi» («Ombor menejeri») rol
 | — | Rad etilgan | Tasdiqlovchi | «Tasdiqlashda» bosqichida, sabab bilan |
 | — | Bekor qilingan | Ruxsat bo'yicha | Sabab majburiy; zahira va kodlar bo'shaydi, yig'ilgan tovar saqlash zonasiga qaytadi. «Yo'lda» va undan keyin bekor qilinmaydi |
 
+**Parallel faktura holati (egasi 13.11.2026, O10d–e):** buyurtma «Yuklanmoqda» ga oʻtganda, kodlar «Mijoz nomiga» yoki toʻlov Perechisleniye boʻlsa, Buxgalterda «Faktura yuborilishi kerak» → «Yuborildi» (e-faktura № va sanasi; e-faktura va imzolangan TTN fayllari ≤ 10 MB) holati ochiladi — buyurtma zanjirini toʻxtatmaydi. Navbat: Pul → «Fakturalar» va Buxgalter bosh sahifasi; natija — «Buxgalter natijasi» hisoboti. TTN (yuk xati) PDF ni MEDIX oʻzi chop etadi (buyurtma, reys, faktura boʻyicha).
+
 **Qoidalar:**
 - **Qoralamaga qaytarish** faqat «Tasdiqlashda» holatidan mumkin.
 - **Bekor qilish huquqi:** Operator — faqat o'z buyurtmasini, Qoralama yoki Tasdiqlashda bosqichida. Navbatda … Yuklanmoqda bosqichlarida — Filial rahbari, Direktor, Ombor mudiri.
@@ -205,6 +207,7 @@ Eslatma: oldingi «Omborchi» va «Ombor nazoratchisi» («Ombor menejeri») rol
   - maksimaldan ko'p — yuboriladi, lekin tasdiqqa ketadi.
   - Min/max — mahsulotning ixtiyoriy maydonlari.
 - **«N ta muammo» paneli:** barcha xato va ogohlantirishlar bitta joyda, bosilsa tegishli joyga olib boradi.
+- **Savdo zonasi (egasi 13.11.2026, O6):** mijozning filial shartlarida majburiy tanlov (filialda faol zona boʻlsa); zona bitta filialga tegishli, nomi filial ichida unikal, oʻchirilmaydi — faolsizlantiriladi. Maʼlumotnomalar → «Savdo zonalari»; Mijozlar, Buyurtmalar, Mijozlar qarzi filtrlari va Savdo hisobotida guruhlash.
 - **Ochiq hujjat:** katalogga yoki boshqa sahifaga o'tib qaytganda hujjat shu holatda ochiladi; saqlanmagan o'zgarish bo'lsa ogohlantiradi.
 
 ### 5.4 Panellar (qisqa)
@@ -270,6 +273,11 @@ Eslatma: oldingi «Omborchi» va «Ombor nazoratchisi» («Ombor menejeri») rol
 - Bekor qilingan kodni qayta urish mumkin.
 - Qabul qilingan kodni yakunlashdan oldin, sababi bilan olib tashlash mumkin.
 - Kod formati GS1: (01) GTIN · (21) seriya · (17) yaroqlilik · (10) partiya · (91) Q/D.
+- **Saplayn tekshiruvi (egasi 13.11.2026, O10a):** hammasi skanerlangach yakunlash ikki qadamda — «Excelʼga chiqarish» (toʻliq kod, GTIN, seriya, partiya, yaroqlilik, Q/D, buyurtma, mijoz, STIR) → «Saplaynʼda tekshirildi — yakunlash» (tasdiq majburiy). Saplayn rad etgan kod «Saplayn: …» sababi bilan olib tashlanadi va oʻrniga boshqasi skanerlanadi.
+- **Kodlar egasi (O10b):** har buyurtmada «Mijoz nomiga» yoki «Zaxira kodlarga». Standart toʻlov turidan: Perechisleniye → Mijoz nomiga; Naqd / Terminal / Online → Zaxira kodlarga. Ombor mudiri, Filial rahbari, Direktor yetkazilguncha oʻzgartiradi (`marking.owner`). Yetkazilmagan tovar kodlari «Qaytarilgan» boʻladi.
+- **Zaxira kodlar (O10c):** «Zaxira kodlarga» buyurtmalarning kodlari Ombor → «Zaxira kodlar» sahifasida: Zaxirada → Ishlatildi / Hisobdan chiqarildi (izoh majburiy, audit). Ruxsatlar `zcodes.view` / `zcodes.edit`; filial filtri serverda.
+
+**Mijozdan qaytarish muddati (egasi 13.11.2026, O8):** Sozlamalar → Savdo: «Mijozdan qaytarish muddati (kun)», standart 10, 0 = cheksiz. Muddat sotuv yetkazilgan sanadan sanaladi. Muddat oʻtgan sotuvga QM faqat `qm.late` ruxsati bilan (Direktor, Admin, Filial rahbari) yaratiladi; hujjatda «Muddatdan keyin» belgisi va audit.
 
 **Savdo ko'rsatkichi:** «Savdo» = **sof savdo** — sotuv − qaytarishlar (QM) − yetkazilmaganlar, QQS bilan. Bosh sahifa kartasi, Operatorlar bloki va Savdo hisoboti bir xil manbadan hisoblanadi.
 

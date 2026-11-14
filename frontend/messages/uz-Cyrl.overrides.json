@@ -1,1 +1,7 @@
-{}
+{
+  "counterparties": {
+    "card": {
+      "email": "E-mail"
+    }
+  }
+}

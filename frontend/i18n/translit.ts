@@ -35,11 +35,17 @@ const LETTERS: Record<string, string> = {
 
 const DIGRAPHS: Record<string, string> = { sh: "ш", ch: "ч", yo: "ё", yu: "ю", ya: "я", ye: "е" };
 /** Rus tilidan kirgan soʻzlar: -tsiya → -ция (inventarizatsiya → инвентаризация). */
-const LOAN: [RegExp, string][] = [[/^tsi(?=[ayo])/i, "ци"]];
+const LOAN: [RegExp, string][] = [
+  [/^tsi(?=[ayo])/i, "ци"],
+  // Oʻzlashma soʻzlar: litsenziya, retsept, farmatsevt (-siz qoʻshimchasi — «muddatsiz» — tegmaydi).
+  [/^tsenz/i, "ценз"],
+  [/^tsept/i, "цепт"],
+  [/^tsevt/i, "цевт"],
+];
 const TURNED = /^[ʻ‘'`]/; // oʻ, gʻ belgisi
 const VOWELS = new Set("aeiouAEIOU");
-/** Qisqartmalar: harfma-harf emas, soʻzning kirill yozuvidagi bosh harflari. */
-const ABBR: Record<string, string> = { YB: "ЕБ" };
+/** Butun soʻz boʻyicha tayyor shakl: qisqartmalar (bosh harflar) va oʻzlashma soʻzlar (harfma-harf oʻgirib boʻlmaydi). */
+const ABBR: Record<string, string> = { YB: "ЕБ", Online: "Онлайн", online: "онлайн", ONLINE: "ОНЛАЙН" };
 /** Oʻgirilmaydigan soʻzlar (brend, qisqartma, klavish). */
 const KEEP = new Set([
   "MEDIX",
@@ -64,6 +70,8 @@ const KEEP = new Set([
   "csv",
   "EAN",
   "Farm",
+  // Hujjat turlari prefikslari — hujjat raqamida lotincha (QM-TSH-000012), matnda ham shunday qoladi.
+  ...["BY", "KR", "SV", "QM", "QY", "HC", "MT", "YT", "KO", "BO", "IO", "NO", "OK", "ZK", "BQ", "AH", "AS", "FS", "BNS", "RS", "IV"],
 ]);
 
 function isLetter(ch: string | undefined): boolean {
@@ -93,6 +101,11 @@ function plain(text: string): string {
       if (KEEP.has(word) || /[0-9]/.test(word)) {
         out += word;
         i = j;
+        // Lotincha qoldirilgan soʻzdan keyingi tutuq belgisi ʼ boʻlib qoladi («Excelʼга», «Excelъга» emas).
+        if (text[i] === "ʼ" || text[i] === "’") {
+          out += "ʼ";
+          i++;
+        }
         continue;
       }
     }

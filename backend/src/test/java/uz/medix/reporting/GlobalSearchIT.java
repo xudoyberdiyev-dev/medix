@@ -127,6 +127,53 @@ class GlobalSearchIT {
     }
 
     @Test
+    void searchesPaymentDocumentsWithinBranch() throws Exception {
+        long b = branch();
+        long other = branch();
+        var rnd = ThreadLocalRandom.current();
+        String tag = Long.toString(rnd.nextLong(100_000L, 999_999L));
+        String customer = "Dori Dunyo " + tag;
+        long customerId = jdbc.sql("INSERT INTO counterparty (tin, name, is_customer, search_text) VALUES (:t, :n, true, :s) RETURNING id")
+                .param("t", Long.toString(rnd.nextLong(200_000_000L, 299_999_999L)))
+                .param("n", customer)
+                .param("s", SearchText.of(customer))
+                .query(Long.class)
+                .single();
+        long account = jdbc.sql("INSERT INTO money_account (branch_id, kind, code, name) VALUES (:b, 'CASH', :c, 'Kassa') RETURNING id")
+                .param("b", b)
+                .param("c", "QS" + tag)
+                .query(Long.class)
+                .single();
+        Cookie cashier = login("CASHIER", b, "Kassir " + tag);
+        Cookie otherCashier = login("CASHIER", other, "Kassir2 " + tag);
+        Cookie operator = login("OPERATOR", b, "Operator2 " + tag);
+        long author = jdbc.sql("SELECT id FROM employee WHERE full_name = :n").param("n", "Kassir " + tag).query(Long.class).single();
+        String number = "MT-QSX-" + tag;
+        long paymentId = jdbc.sql("""
+                INSERT INTO customer_payment (number, branch_id, customer_id, account_id, payment_date, amount, created_by)
+                VALUES (:n, :b, :c, :a, current_date, 1000.00, :e) RETURNING id""")
+                .param("n", number)
+                .param("b", b)
+                .param("c", customerId)
+                .param("a", account)
+                .param("e", author)
+                .query(Long.class)
+                .single();
+
+        // Raqamning bir qismi (kichik harf) bo'yicha topiladi; havola — MT hujjat sahifasi, izoh — mijoz.
+        mvc.perform(get("/api/search").param("q", "mt-qsx-" + tag).cookie(cashier))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.hits[?(@.kind == 'CUSTOMER_PAYMENT')].title", hasItem(number)))
+                .andExpect(jsonPath("$.hits[?(@.kind == 'CUSTOMER_PAYMENT')].subtitle", hasItem(customer)))
+                .andExpect(jsonPath("$.hits[?(@.kind == 'CUSTOMER_PAYMENT')].link", hasItem("/payments/mt/" + paymentId)));
+        // Boshqa filial kassiri ko'rmaydi (SPEC 13), ruxsatsiz rol ham.
+        mvc.perform(get("/api/search").param("q", number).cookie(otherCashier))
+                .andExpect(jsonPath("$.hits[*].kind", not(hasItem("CUSTOMER_PAYMENT"))));
+        mvc.perform(get("/api/search").param("q", number).cookie(operator))
+                .andExpect(jsonPath("$.hits[*].kind", not(hasItem("CUSTOMER_PAYMENT"))));
+    }
+
+    @Test
     void searchRequiresLogin() throws Exception {
         mvc.perform(get("/api/search").param("q", "kordiamin")).andExpect(status().isUnauthorized());
     }
