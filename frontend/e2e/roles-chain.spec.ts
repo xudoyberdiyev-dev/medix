@@ -909,7 +909,12 @@ test("Operator: mijozdan qaytarish (QM) — sotuv asosida, Ombor mudiriga yubora
   await drawer.getByRole("combobox", { name: "Mijoz", exact: true }).click();
   await page.getByPlaceholder("Qidirish").fill("Baraka");
   await page.getByRole("option", { name: /Baraka Dorixona E2E/ }).click();
-  await pick(page, drawer, "Asos — sotuv hujjati", /SV-/);
+  // O8: sotuv roʻyxatida yetkazilganiga necha kun boʻlgani; bugun yetkazilgan — muddat ichida («Muddatdan keyin» yoʻq)
+  await drawer.getByRole("combobox", { name: "Asos — sotuv hujjati", exact: true }).click();
+  const saleOption = page.getByRole("option", { name: /SV-/ }).first();
+  await expect(saleOption).toContainText(/(^|\D)\d kun oldin yetkazilgan/);
+  await expect(saleOption).not.toContainText("Muddatdan keyin");
+  await saleOption.click();
   await expect(drawer.getByText("Sotilgan", { exact: true })).toBeVisible();
   // Sababsiz — tasdiqlab boʻlmaydi
   await drawer
