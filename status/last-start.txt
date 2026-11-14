@@ -1,1 +1,1 @@
-▶️ MEDIX: 06:06 sessiya boshlandi — reja: umumiy regressiya (O6–O11 yangi API ruxsat/filial filtri auditi, frontend toʻliq tekshiruv, O8 e2e qisman)
+▶️ MEDIX: 14:07 sessiya boshlandi — reja: regressiya (O6/O10 yangi sahifalarida boʻsh/yuklanish/xato/ruxsat holatlari, frontend toʻliq tekshiruv)
