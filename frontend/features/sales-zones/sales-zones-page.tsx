@@ -10,11 +10,11 @@ import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { RowMenu } from "@/components/ui/row-menu";
 import { Select } from "@/components/ui/select";
-import { EmptyState, ErrorState, NoResultsState } from "@/components/ui/system-states";
+import { EmptyState, ErrorState, ForbiddenState, NoResultsState } from "@/components/ui/system-states";
 import { Table, type TableColumn } from "@/components/ui/table";
 import { TextField } from "@/components/ui/text-field";
 import { toast } from "@/components/ui/toast";
-import { can } from "@/features/auth/can";
+import { can, canAny } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
 import { useBranchList } from "@/features/organization/api";
 import { describeError } from "@/features/setup/form-error";
@@ -22,6 +22,7 @@ import { formatQuantity } from "@/lib/format";
 import { matchesSearch } from "@/lib/search";
 import {
   SALES_ZONES_EDIT,
+  SALES_ZONES_VIEW,
   useSalesZones,
   useSaveSalesZone,
   useToggleSalesZone,
@@ -56,6 +57,7 @@ export function SalesZonesPage() {
   const [opened, setOpened] = useState<SalesZone | null>(null);
   const multiBranch = !!me.data?.allBranches || new Set((list.data ?? []).map((z) => z.branchId)).size > 1;
   const rows = (list.data ?? []).filter((z) => matchesSearch(query, [z.name, z.branch, z.note ?? ""]));
+  if (me.data && !canAny(me.data, [SALES_ZONES_VIEW, SALES_ZONES_EDIT])) return <ForbiddenState />;
 
   const columns: TableColumn<SalesZone>[] = [
     {

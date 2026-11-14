@@ -14,7 +14,8 @@ import { pageItems, rangeLabel } from "./pagination";
 import { TextField, isSlashShortcut, parseAmount } from "./text-field";
 import { DEFAULT_TOAST_DURATION, Toaster, toast, toastStore } from "./toast";
 import { initials } from "./avatar";
-import { NoResultsState } from "./system-states";
+import { ErrorState, NoResultsState } from "./system-states";
+import { ApiError } from "@/lib/api/errors";
 
 describe("Button", () => {
   it("yuklanishda aria-busy va bosish bloklanadi", async () => {
@@ -372,5 +373,15 @@ describe("Avatar", () => {
     expect(initials("Dilshod Aliyev")).toBe("DA");
     expect(initials("  Sardor  ")).toBe("S");
     expect(initials("ozod karimov rustamovich")).toBe("OK");
+  });
+});
+
+describe("ErrorState", () => {
+  it("403 — «Ruxsat yoʻq», 500 — «Maʼlumot yuklanmadi»", () => {
+    const { unmount } = render(<ErrorState error={new ApiError(403, undefined)} />);
+    expect(screen.getByText("Ruxsat yoʻq")).toBeInTheDocument();
+    unmount();
+    render(<ErrorState error={new ApiError(500, undefined)} />);
+    expect(screen.queryByText("Ruxsat yoʻq")).not.toBeInTheDocument();
   });
 });
