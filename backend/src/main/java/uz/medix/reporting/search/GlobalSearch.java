@@ -15,7 +15,8 @@ import uz.medix.shared.security.Actor;
 import uz.medix.shared.text.SearchText;
 
 /**
- * Ctrl+K universal qidiruv (SPEC 4 «Umumiy»): hujjatlar (raqam bo'yicha), mahsulotlar, kontragentlar, xodimlar.
+ * Ctrl+K universal qidiruv (SPEC 4 «Umumiy»): hujjatlar (raqam bo'yicha — buyurtma, kirim, NO, reys, QM, QY, HC,
+ * inventarizatsiya, ko'chirish, MT, YT; prototip cmdData), mahsulotlar, kontragentlar, xodimlar.
  * Har guruh — faqat ruxsati borlarga; hujjatlar — filial doirasida (SPEC 13). Lotin/kirill farqsiz ({@link SearchText}).
  * Har guruhdan ko'pi bilan {@value #PER_GROUP} ta. Tannarx va summalar qaytarilmaydi.
  */
@@ -25,7 +26,10 @@ public class GlobalSearch {
     static final int PER_GROUP = 5;
     static final int MIN_LENGTH = 2;
 
-    public enum Kind { ORDER, RECEIPT, PRICE_CHANGE, TRIP, PRODUCT, CUSTOMER, SUPPLIER, EMPLOYEE }
+    public enum Kind {
+        ORDER, RECEIPT, PRICE_CHANGE, TRIP, CUSTOMER_RETURN, SUPPLIER_RETURN, WRITE_OFF, INVENTORY_COUNT, TRANSFER,
+        CUSTOMER_PAYMENT, SUPPLIER_PAYMENT, PRODUCT, CUSTOMER, SUPPLIER, EMPLOYEE
+    }
 
     public record Hit(Kind kind, long id, String title, @Schema(nullable = true) String subtitle, String link) {}
 
@@ -63,6 +67,40 @@ public class GlobalSearch {
             hits.addAll(documents(actor, Kind.TRIP, """
                     SELECT t.id, t.number, d.full_name AS sub FROM trip t JOIN employee d ON d.id = t.driver_id
                     WHERE lower(t.number) LIKE :q ESCAPE '\\'""", "t", raw, id -> "/shipments"));
+        }
+        if (any(permissions, "qm.view", "qm.create", "qm.approve", "qm.cancelPosted")) {
+            hits.addAll(documents(actor, Kind.CUSTOMER_RETURN, """
+                    SELECT d.id, d.number, c.name AS sub FROM customer_return d JOIN counterparty c ON c.id = d.customer_id
+                    WHERE lower(d.number) LIKE :q ESCAPE '\\'""", "d", raw, id -> "/customer-returns/" + id));
+        }
+        if (any(permissions, "qy.view", "qy.create", "qy.approve")) {
+            hits.addAll(documents(actor, Kind.SUPPLIER_RETURN, """
+                    SELECT d.id, d.number, c.name AS sub FROM supplier_return d JOIN counterparty c ON c.id = d.supplier_id
+                    WHERE lower(d.number) LIKE :q ESCAPE '\\'""", "d", raw, id -> "/supplier-returns/" + id));
+        }
+        if (any(permissions, "hc.view", "hc.create", "hc.approve")) {
+            hits.addAll(documents(actor, Kind.WRITE_OFF, """
+                    SELECT d.id, d.number, w.name AS sub FROM write_off d JOIN warehouse w ON w.id = d.warehouse_id
+                    WHERE lower(d.number) LIKE :q ESCAPE '\\'""", "d", raw, id -> "/write-offs/" + id));
+        }
+        if (any(permissions, "inventory.view", "inventory.create", "inventory.count", "inventory.approve")) {
+            hits.addAll(documents(actor, Kind.INVENTORY_COUNT, """
+                    SELECT d.id, d.number, w.name AS sub FROM inventory_count d JOIN warehouse w ON w.id = d.warehouse_id
+                    WHERE lower(d.number) LIKE :q ESCAPE '\\'""", "d", raw, id -> "/inventory-counts/" + id));
+        }
+        if (any(permissions, "transfer.view", "transfer.ok", "transfer.send", "transfer.receive")) {
+            hits.addAll(documents(actor, Kind.TRANSFER, """
+                    SELECT d.id, d.number, wf.name || ' → ' || wt.name AS sub FROM warehouse_transfer d
+                    JOIN warehouse wf ON wf.id = d.from_warehouse_id JOIN warehouse wt ON wt.id = d.to_warehouse_id
+                    WHERE lower(d.number) LIKE :q ESCAPE '\\'""", "d", raw, id -> "/warehouse-transfers/" + id));
+        }
+        if (permissions.contains("payments.view")) {
+            hits.addAll(documents(actor, Kind.CUSTOMER_PAYMENT, """
+                    SELECT d.id, d.number, c.name AS sub FROM customer_payment d JOIN counterparty c ON c.id = d.customer_id
+                    WHERE lower(d.number) LIKE :q ESCAPE '\\'""", "d", raw, id -> "/payments/mt/" + id));
+            hits.addAll(documents(actor, Kind.SUPPLIER_PAYMENT, """
+                    SELECT d.id, d.number, c.name AS sub FROM supplier_payment d JOIN counterparty c ON c.id = d.supplier_id
+                    WHERE lower(d.number) LIKE :q ESCAPE '\\'""", "d", raw, id -> "/payments/yt/" + id));
         }
         String[] words = SearchText.normalize(q).split(" ");
         hits.addAll(products(q, words));

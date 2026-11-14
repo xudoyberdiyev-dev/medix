@@ -70,6 +70,8 @@ const KEEP = new Set([
   "csv",
   "EAN",
   "Farm",
+  // Hujjat turlari prefikslari — hujjat raqamida lotincha (QM-TSH-000012), matnda ham shunday qoladi.
+  ...["BY", "KR", "SV", "QM", "QY", "HC", "MT", "YT", "KO", "BO", "IO", "NO", "OK", "ZK", "BQ", "AH", "AS", "FS", "BNS", "RS", "IV"],
 ]);
 
 function isLetter(ch: string | undefined): boolean {

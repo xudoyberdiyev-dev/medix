@@ -9901,7 +9901,7 @@ export interface components {
             /** Format: int64 */
             id: number;
             /** @enum {string} */
-            kind: "ORDER" | "RECEIPT" | "PRICE_CHANGE" | "TRIP" | "PRODUCT" | "CUSTOMER" | "SUPPLIER" | "EMPLOYEE";
+            kind: "ORDER" | "RECEIPT" | "PRICE_CHANGE" | "TRIP" | "CUSTOMER_RETURN" | "SUPPLIER_RETURN" | "WRITE_OFF" | "INVENTORY_COUNT" | "TRANSFER" | "CUSTOMER_PAYMENT" | "SUPPLIER_PAYMENT" | "PRODUCT" | "CUSTOMER" | "SUPPLIER" | "EMPLOYEE";
             link: string;
             subtitle?: string;
             title: string;

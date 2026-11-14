@@ -32,6 +32,7 @@ describe("toCyrillic", () => {
     ["Excelʼga yuklash", "Excelʼга юклаш"],
     ["Saplaynʼda", "Саплайнъда"],
     ["Naqd, Terminal, Online", "Нақд, Терминал, Онлайн"],
+    ["Hisobdan chiqarish (HC), YB ga toʻlov (YT)", "Ҳисобдан чиқариш (HC), ЕБ га тўлов (YT)"],
     ["Litsenziya, Retsept, Farmatsevtika, muddatsiz", "Лицензия, Рецепт, Фармацевтика, муддатсиз"],
   ])("%s → %s", (latin, cyr) => expect(toCyrillic(latin)).toBe(cyr));
 

@@ -19,9 +19,9 @@
     "transfersZone": "Зона ичида",
     "transfersBranch": "Филиаллараро",
     "returns": "Қайтариш турлари",
-    "returnsCustomer": "Мижоздан қайтариш (ҚМ)",
-    "returnsWriteOffs": "Ҳисобдан чиқариш (ҲЦ)",
-    "returnsSupplier": "Етказиб берувчига қайтариш (ҚЙ)",
+    "returnsCustomer": "Мижоздан қайтариш (QM)",
+    "returnsWriteOffs": "Ҳисобдан чиқариш (HC)",
+    "returnsSupplier": "Етказиб берувчига қайтариш (QY)",
     "supplierDebts": "ЕБ қарзи бўлимлари",
     "supplierDebtsDebts": "Қарзлар",
     "supplierDebtsBonus": "Бонус баланс"
