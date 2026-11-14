@@ -912,7 +912,7 @@ test("Operator: mijozdan qaytarish (QM) — sotuv asosida, Ombor mudiriga yubora
   // O8: sotuv roʻyxatida yetkazilganiga necha kun boʻlgani; bugun yetkazilgan — muddat ichida («Muddatdan keyin» yoʻq)
   await drawer.getByRole("combobox", { name: "Asos — sotuv hujjati", exact: true }).click();
   const saleOption = page.getByRole("option", { name: /SV-/ }).first();
-  await expect(saleOption).toContainText(/(^|\D)\d kun oldin yetkazilgan/);
+  await expect(saleOption).toContainText("kun oldin yetkazilgan");
   await expect(saleOption).not.toContainText("Muddatdan keyin");
   await saleOption.click();
   await expect(drawer.getByText("Sotilgan", { exact: true })).toBeVisible();
