@@ -128,7 +128,7 @@
     "payment": {
       "CASH": "Нақд",
       "TRANSFER": "Перечисление",
-      "ONLINE": "Онлине"
+      "ONLINE": "Онлайн"
     },
     "paymentType": "Тўлов тури",
     "allPayments": "Барча тўлов турлари",

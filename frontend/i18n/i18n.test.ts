@@ -31,6 +31,7 @@ describe("toCyrillic", () => {
     ["MEDIX tizimi, Ctrl K", "MEDIX тизими, Ctrl K"],
     ["Excelʼga yuklash", "Excelʼга юклаш"],
     ["Saplaynʼda", "Саплайнъда"],
+    ["Naqd, Terminal, Online", "Нақд, Терминал, Онлайн"],
   ])("%s → %s", (latin, cyr) => expect(toCyrillic(latin)).toBe(cyr));
 
   it("ICU argument va tanlov kalitlarini oʻzgartirmaydi", () => {

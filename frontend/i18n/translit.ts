@@ -38,8 +38,8 @@ const DIGRAPHS: Record<string, string> = { sh: "ш", ch: "ч", yo: "ё", yu: "ю
 const LOAN: [RegExp, string][] = [[/^tsi(?=[ayo])/i, "ци"]];
 const TURNED = /^[ʻ‘'`]/; // oʻ, gʻ belgisi
 const VOWELS = new Set("aeiouAEIOU");
-/** Qisqartmalar: harfma-harf emas, soʻzning kirill yozuvidagi bosh harflari. */
-const ABBR: Record<string, string> = { YB: "ЕБ" };
+/** Butun soʻz boʻyicha tayyor shakl: qisqartmalar (bosh harflar) va oʻzlashma soʻzlar (harfma-harf oʻgirib boʻlmaydi). */
+const ABBR: Record<string, string> = { YB: "ЕБ", Online: "Онлайн", online: "онлайн", ONLINE: "ОНЛАЙН" };
 /** Oʻgirilmaydigan soʻzlar (brend, qisqartma, klavish). */
 const KEEP = new Set([
   "MEDIX",

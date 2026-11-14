@@ -2,7 +2,7 @@
   "paymentType": {
     "TRANSFER": "Перечисление",
     "CASH": "Нақд",
-    "ONLINE": "Онлине"
+    "ONLINE": "Онлайн"
   },
   "datePlaceholder": "КК.ОО.ЙЙЙЙ",
   "status": {
@@ -320,7 +320,7 @@
     "region": "Ҳудуд",
     "address": "Манзил",
     "phone": "Телефон",
-    "email": "Э-маил",
+    "email": "E-mail",
     "roles": "Роллар",
     "bank": "Банк",
     "mfo": "МФО",

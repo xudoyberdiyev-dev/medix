@@ -19,7 +19,7 @@
   "paymentType": {
     "TRANSFER": "Перечисление",
     "CASH": "Нақд",
-    "ONLINE": "Онлине"
+    "ONLINE": "Онлайн"
   },
   "kind": {
     "BOX": "қути",
