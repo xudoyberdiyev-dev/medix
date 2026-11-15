@@ -84,7 +84,7 @@ const pages: [string, string][] = [
   ["/branch-sales/new", "78-fs-yangi"],
   ["/branch-sales/1", "79-fs-hujjat"],
   ["/cash/ops/1", "80-kassa-op"],
-  ["/debts/advance/new", "81-avans-yangi"],
+  ["/debts/advance/new?side=CUSTOMER&party=1&branch=1", "81-avans-yangi"],
   ["/debts/customers/1", "82-mijoz-qarz-karta"],
   ["/debts/suppliers/1", "83-yb-qarz-karta"],
   ["/inventory-counts/1/count", "84-in-sanoq"],
