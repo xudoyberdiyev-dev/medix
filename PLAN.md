@@ -94,11 +94,11 @@ Bu javoblar SPEC/T12 dan ustun. Har birini kod + test + e2e bilan joriy qiling, 
 - Boshqa narsalarga chalg'imaslik. Navbat: (1) V1 qoldiqlari — Buyurtma, Ombor zanjiri, Katalog, Ombor, Kirim bandlarini 100% ga yetkazish; (2) barcha rollar bo'yicha to'liq e2e tekshiruv va xatolarni tuzatish; (3) joylashtirishga tayyorlash (Docker, env, backup); (4) FS; (5) kirill/rus; (6) to'liq hisobotlar.
 
 ## Hozirgi holat
-- **Sana:** 15.11.2026
+- **Sana:** 16.11.2026
 - **Bosqich:** 0, 1 — tugadi; 10 — Bosh sahifa va hisobotlar ~98% (№6 asosiy hisobotlar ✅ 07.11; hisob-faktura PDF ✅ 07.11); 2 — Katalog ~90%; 3 — Narxlar ~97%; 4 — Ombor ~90%; 5 — Kirim ~90%; 6 — Buyurtma ~95%; 7 — Ombor zanjiri ~95%; 8 — Yetkazish ~95% (imzo UI ✅); 9 — Pul ~98% (hammasi tayyor; bank fayli importi V1 dan chiqarilgan — egasi qarori); ustuvorlik №5 (kirill/rus) — ✅ (07.11)
 - **PR:** #1 (develop → main) — egasi merge qildi (06.11 23:17). Keyingi PR — V1 qoldiqlari tugagach.
 - **Keyingi vazifa:** V1 qoldiqlari tugadi (O0–O8, O10, O11 ✅; O9 — egasi toʻxtatgan). O8 e2e qilinmaydi: «muddatdan keyin» holati uchun yetkazilgan sana 10 kundan eski boʻlishi kerak — e2e da vaqtni surib boʻlmaydi, `OrderIT.customerReturnAfterDeadlineNeedsLatePermission` qoplaydi. Keyingi: HF PDF koʻrinishini real maʼlumot bilan tekshirish (demo stend skrinshot), SmartUp namunasi kelsa — HF/import moslash, umumiy regressiya (rollar boʻyicha e2e yashilligini kuzatish).
-- **Oxirgi sessiya:** 15.11.2026 14:06–14:20 (kunduzgi oyna, 1 sessiya): regressiya — frontend format/lint/typecheck, 531 unit test yashil; `pnpm audit --prod` — zaif joy yoʻq (dev: 1 moderate, minimatch ← eslint, faqat lint vositasi). V1 da ochiq vazifa yoʻq — oyna erta yopildi. Ochiq ish: SmartUp namunasi (HF, import) kutilmoqda.
+- **Oxirgi sessiya:** 16.11.2026 00:08–00:15 (tungi oyna, 1 sessiya): regressiya — frontend format/lint/typecheck, 531 unit test yashil; `pnpm audit --prod` toza. V1 da ochiq vazifa yoʻq — oyna erta yopildi. Ochiq ish: SmartUp namunasi (HF, import) kutilmoqda.
 - ✅ **O7 — bajarildi 13.11 kechki oyna** (backend `Receipts.dueBase`, `receipt.invoiceAfterReceipt`, kirim shaklida jonli «Hisob-faktura sanasi + N kun», YB qarzi va Akt sverkada hisob-faktura sanasi, SPEC 5.1, `ReceiptIT.dueDateCountsFromInvoiceDate`). ~~YB QARZI TOʻLOV KUNI HISOB-FAKTURA SANASIDAN (egasi qarori 13.11 17:12):~~
   - Hozir: toʻlov kuni standart = **kirim sanasi** (bizga kelgan kun) + YB sharti (`Receipts.writeHeader`, `receiptDate().plusDays(...)`). Kerak: standart = **hisob-faktura sanasi** (yetkazib beruvchi tovarni chiqargan / rasxod qilgan kun) + YB sharti. Hisob-faktura sanasi kiritilmagan boʻlsa — eski usul (kirim sanasi) va kirim shaklida ogohlantirish «Hisob-faktura sanasi kiritilmagan — toʻlov kuni kirim sanasidan hisoblandi».
   - Kirim shaklida hisob-faktura sanasi oʻzgarsa, toʻlov kuni (qoʻlda oʻzgartirilmagan boʻlsa) darhol qayta hisoblanadi; maydon yonida izoh «Hisob-faktura sanasi + N kun».
@@ -493,3 +493,4 @@ _(07.11.2026 18:12 — 6 savolga javob berildi va 20:00–20:30 da joriy qilindi
 - 14.11 14:07–14:30 (kunduzgi oyna, 1-sessiya): 403 → «Ruxsat yoʻq» (umumiy ErrorState + unit), Savdo zonalari ruxsat holati; yangi sahifalar holatlari tekshirildi; CI yashil (2d66dc1). Ochiq vazifa yoʻq — oyna erta yopildi.
 - 15.11 00:09–00:25 (tungi oyna, 1-sessiya): regressiya tekshiruvi (frontend 531 unit, format/lint/typecheck yashil; i18n:cyrl oʻzgarishsiz; CI 2d66dc1 yashil); PLAN: O6 e2e bajarilgani belgilandi. Ochiq vazifa yoʻq — oyna erta yopildi.
 - 15.11 14:06–14:20 (kunduzgi): regressiya (531 test yashil, audit toza), ochiq vazifa yoʻq — oyna erta yopildi.
+- 16.11 00:08–00:15 (tungi): regressiya (531 test yashil, audit toza), ochiq vazifa yoʻq — oyna erta yopildi.
