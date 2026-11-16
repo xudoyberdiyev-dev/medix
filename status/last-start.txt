@@ -1,1 +1,1 @@
-▶️ MEDIX: 00:08 sessiya boshlandi — reja: prototip bilan UI muvofiqligi auditi va regressiya
+▶️ MEDIX: 06:06 sessiya boshlandi — reja: CI tekshiruvi, regressiya (frontend testlari), HF PDF koʻrinishini tekshirish
