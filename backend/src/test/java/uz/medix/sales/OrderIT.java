@@ -861,7 +861,7 @@ class OrderIT {
         send(post("/api/marking/orders/" + o1 + "/start"), picker, "").andExpect(status().isForbidden());
         send(post("/api/marking/orders/" + o1 + "/start"), marker, "")
                 .andExpect(jsonPath("$.lines[0].kind").value("UNIT"))
-                .andExpect(jsonPath("$.unitsNeeded").value(3))
+                .andExpect(jsonPath("$.neededQty").value(3))
                 .andExpect(jsonPath("$.complete").value(false));
         send(post("/api/marking/orders/" + o1 + "/start"), marker2, "").andExpect(jsonPath("$.code").value("marking.taken"));
         mvc.perform(get("/api/orders/monitor").cookie(keeper))
@@ -894,8 +894,9 @@ class OrderIT {
         send(post("/api/marking/orders/" + o1 + "/scan"), marker, mark(ean, "S1", "LOT-8", "D"))
                 .andExpect(jsonPath("$.code").value("marking.batchMismatch"))
                 .andExpect(jsonPath("$.detail", containsString("LOT-7")));
-        send(post("/api/marking/orders/" + o1 + "/scan"), marker, mark(ean, "S1", "LOT-7", "Q"))
-                .andExpect(jsonPath("$.code").value("marking.kindNeedUnit"));
+        // O16: quti (SSCC) kodining nazorat raqami noto'g'ri
+        send(post("/api/marking/orders/" + o1 + "/scan"), marker, "{\"code\":\"00047800116744728761\"}")
+                .andExpect(jsonPath("$.code").value("marking.ssccInvalid"));
         // «Xato urishlar»: rad etilgan 4 skanerlash alohida tranzaksiyada yozilgan (asosiy tranzaksiya qaytsa ham)
         org.assertj.core.api.Assertions.assertThat(jdbc.sql("SELECT count(*) FROM mark_scan_error WHERE order_id = :o")
                 .param("o", o1).query(Long.class).single()).isEqualTo(4L);
@@ -914,7 +915,7 @@ class OrderIT {
         // Olib tashlash (sabab bilan) → to'liq emas → qayta urish → yakunlash
         long s3 = jdbc.sql("SELECT id FROM sales_order_mark WHERE order_id = :o AND serial = 'S3'").param("o", o1).query(Long.class).single();
         send(post("/api/marking/orders/" + o1 + "/codes/" + s3 + "/remove"), marker, "{\"reason\":\"Qadoq shikastlangan\"}")
-                .andExpect(jsonPath("$.unitsScanned").value(2));
+                .andExpect(jsonPath("$.unitCodes").value(2));
         // O10a: tekshiruv fayli oldin yuklab olingan bo'lsa ham, yangi kod qabul qilinsa — qayta yuklab olish kerak
         mvc.perform(get("/api/marking/orders/" + o1 + "/verify-export").cookie(marker)).andExpect(status().isOk());
         send(post("/api/marking/orders/" + o1 + "/finish"), marker, "").andExpect(jsonPath("$.code").value("marking.incomplete"));
@@ -927,10 +928,12 @@ class OrderIT {
         MvcResult xlsx = mvc.perform(get("/api/marking/orders/" + o1 + "/verify-export").cookie(marker)).andExpect(status().isOk()).andReturn();
         try (var wb = new org.apache.poi.xssf.usermodel.XSSFWorkbook(new java.io.ByteArrayInputStream(xlsx.getResponse().getContentAsByteArray()))) {
             var sheet = wb.getSheetAt(0);
-            assertThat(sheet.getLastRowNum()).isEqualTo(3);
-            assertThat(sheet.getRow(1).getCell(0).getStringCellValue()).startsWith("(01)0" + ean).doesNotContain("\u001D");
-            assertThat(sheet.getRow(1).getCell(2).getStringCellValue()).isEqualTo("0" + ean);
-            assertThat(sheet.getRow(1).getCell(10).getStringCellValue()).matches("\\d{9}|\\d{14}");
+            // O16 egasi formati: sarlavha, mahsulot nomi qatori, ostida kodlar | GTIN (EAN-13)
+            assertThat(sheet.getLastRowNum()).isEqualTo(4);
+            assertThat(sheet.getRow(0).getCell(0).getStringCellValue()).isEqualTo("Markirovka kodi");
+            assertThat(sheet.getRow(1).getCell(1)).isNull();
+            assertThat(sheet.getRow(2).getCell(0).getStringCellValue()).startsWith("(01)0" + ean).doesNotContain("\u001D");
+            assertThat(sheet.getRow(2).getCell(1).getStringCellValue()).isEqualTo(ean);
         }
         send(post("/api/marking/orders/" + o1 + "/finish"), marker, "")
                 .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("marking.notVerified"));
@@ -1001,6 +1004,118 @@ class OrderIT {
         mvc.perform(get("/api/marking/codes/export").cookie(keeper)).andExpect(status().isForbidden());
     }
 
+    /** GS1 nazorat raqami (GTIN/SSCC): o'ngdan nazorat raqamidan oldingisi ×3, keyingisi ×1 … */
+    private static String withCheckDigit(String body) {
+        int sum = 0;
+        for (int i = 0; i < body.length(); i++) {
+            int d = body.charAt(i) - '0';
+            sum += ((body.length() - i) % 2 == 1) ? d * 3 : d;
+        }
+        return body + ((10 - sum % 10) % 10);
+    }
+
+    private static String sscc(int n) {
+        return "00" + withCheckDigit("0478001" + String.format("%010d", n));
+    }
+
+    /**
+     * O16: haqiqiy kodlar — quti (SSCC) mahsulotning «1 qadoqdagi dona» qadar hisoblanadi, ochiq donalar alohida (partiyasiz,
+     * 13 belgili seriya); takror SSCC rad etiladi; quti qatorga sig'masa — rad; Excel egasi formatida (mahsulot sarlavhasi, GTIN).
+     */
+    @Test
+    void markingAggregateBoxesAndUnits() throws Exception {
+        Place p = place();
+        long c = customer(p.branchId(), null);
+        Cookie operator = loginAs("OPERATOR", p.branchId());
+        Cookie keeper = loginAs("WAREHOUSE_MANAGER", p.branchId());
+        Cookie picker = loginAs("PICKER", p.branchId());
+        Cookie marker = loginAs("MARKER", p.branchId());
+        long prod = product(p, "BY Agregatsiya dori", "1000", 0, null, null);
+        String ean = ean13();
+        jdbc.sql("UPDATE product SET marked = true, per_pack = 5 WHERE id = :p").param("p", prod).update();
+        jdbc.sql("INSERT INTO product_barcode (product_id, barcode) VALUES (:p, :b)").param("p", prod).param("b", ean).update();
+        tx.executeWithoutResult(s -> {
+            long b = ledger.createBatch(prod, "LOT-A", null, LocalDate.now().plusYears(2), Money.of("100"), false, "BQ", null);
+            ledger.post(new DocRef("BQ", prod, "BQ-AG"), List.of(Move.in(p.main(), b, 40)));
+        });
+        int base = (int) Math.abs(System.nanoTime() % 1_000_000_000L);
+        String box1 = sscc(base);
+        String box2 = sscc(base + 1);
+        String box3 = sscc(base + 2);
+        // 2 quti (10 dona) + 3 dona = 13
+        long o = markedOrder(p, c, prod, 13, operator, keeper, picker);
+        send(post("/api/marking/orders/" + o + "/start"), marker, "").andExpect(jsonPath("$.neededQty").value(13));
+        send(post("/api/marking/orders/" + o + "/scan"), marker, "{\"code\":\"" + box1 + "\"}")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.accepted.kind").value("AGGREGATE"))
+                .andExpect(jsonPath("$.accepted.units").value(5))
+                .andExpect(jsonPath("$.accepted.gtin").value("0" + ean))
+                .andExpect(jsonPath("$.work.scannedQty").value(5))
+                .andExpect(jsonPath("$.work.boxCodes").value(1));
+        send(post("/api/marking/orders/" + o + "/scan"), marker, "{\"code\":\"" + box1 + "\"}")
+                .andExpect(jsonPath("$.code").value("marking.duplicateHere"));
+        // Excel oldingi nollarni yo'qotgan ko'rinish ham qabul qilinadi
+        send(post("/api/marking/orders/" + o + "/scan"), marker, "{\"code\":\"" + box2.replaceFirst("^0+", "") + "\"}")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.work.scannedQty").value(10))
+                .andExpect(jsonPath("$.work.boxUnits").value(10));
+        send(post("/api/marking/orders/" + o + "/scan"), marker, "{\"code\":\"" + box3 + "\"}")
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("marking.boxTooBig"));
+        for (int i = 1; i <= 3; i++) {
+            String serial = String.format("AG%011d", (long) base * 10 + i).substring(0, 13);
+            send(post("/api/marking/orders/" + o + "/scan"), marker, "{\"code\":\"010" + ean + "21" + serial + "\"}")
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.accepted.kind").value("UNIT"))
+                    .andExpect(jsonPath("$.accepted.batch").value("LOT-A"));
+        }
+        send(post("/api/marking/orders/" + o + "/scan"), marker, "{\"code\":\"" + box3 + "\"}")
+                .andExpect(jsonPath("$.code").value("marking.lineFull"));
+        mvc.perform(get("/api/marking/orders/" + o).cookie(marker))
+                .andExpect(jsonPath("$.scannedQty").value(13))
+                .andExpect(jsonPath("$.unitCodes").value(3))
+                .andExpect(jsonPath("$.complete").value(true));
+        MvcResult xlsx = mvc.perform(get("/api/marking/orders/" + o + "/verify-export").cookie(marker)).andExpect(status().isOk()).andReturn();
+        try (var wb = new org.apache.poi.xssf.usermodel.XSSFWorkbook(new java.io.ByteArrayInputStream(xlsx.getResponse().getContentAsByteArray()))) {
+            var sheet = wb.getSheetAt(0);
+            assertThat(sheet.getRow(1).getCell(0).getStringCellValue()).isEqualTo("BY Agregatsiya dori");
+            assertThat(sheet.getRow(2).getCell(0).getStringCellValue()).startsWith("00");
+            assertThat(sheet.getRow(3).getCell(0).getStringCellValue()).startsWith("00");
+            assertThat(sheet.getRow(4).getCell(0).getStringCellValue()).startsWith("010" + ean + "21");
+            assertThat(sheet.getRow(2).getCell(1).getStringCellValue()).isEqualTo(ean);
+        }
+        send(post("/api/marking/orders/" + o + "/finish"), marker, "{\"verified\":true}").andExpect(jsonPath("$.status").value("CHECKING"));
+
+        // Ikkinchi buyurtma: SSCC boshqa buyurtmada takror — rad; Excel egasi formatida (mahsulot sarlavhasi tashlanadi)
+        long o2 = markedOrder(p, c, prod, 6, operator, keeper, picker);
+        send(post("/api/marking/orders/" + o2 + "/start"), marker, "").andExpect(status().isOk());
+        send(post("/api/marking/orders/" + o2 + "/scan"), marker, "{\"code\":\"" + box1 + "\"}")
+                .andExpect(jsonPath("$.code").value("marking.duplicate"));
+        byte[] file;
+        try (var wb = new org.apache.poi.xssf.usermodel.XSSFWorkbook(); var out = new java.io.ByteArrayOutputStream()) {
+            var sh = wb.createSheet("Kodlar");
+            String[][] rows = {{"Markirovka kodi", "GTIN (ixtiyoriy)"}, {"BY Agregatsiya dori", ""}, {box3, ean},
+                    {"010" + ean + "21" + String.format("AH%011d", (long) base).substring(0, 13), ean}};
+            for (int i = 0; i < rows.length; i++) {
+                var r = sh.createRow(i);
+                r.createCell(0).setCellValue(rows[i][0]);
+                r.createCell(1).setCellValue(rows[i][1]);
+            }
+            wb.write(out);
+            file = out.toByteArray();
+        }
+        var mf = new org.springframework.mock.web.MockMultipartFile("file", "kodlar.xlsx",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", file);
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart("/api/marking/orders/" + o2 + "/import")
+                        .file(mf).param("apply", "true").with(csrf()).cookie(marker))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(2))
+                .andExpect(jsonPath("$.accepted").value(2))
+                .andExpect(jsonPath("$.rows[0].row").value(3))
+                .andExpect(jsonPath("$.work.scannedQty").value(6))
+                .andExpect(jsonPath("$.work.complete").value(true));
+    }
+
     /** O5: markirovka tayyor fayldan — oldindan ko'rish hech narsa saqlamaydi, qabul qilishda mos kelganlari yoziladi. */
     @Test
     void markingImportFromFilePreviewThenApply() throws Exception {
@@ -1024,7 +1139,7 @@ class OrderIT {
         // GS ajratgichli ko'rinish ham: 01…21…<GS>17…10…<GS>91D
         String gs = "010" + ean + "21F2<GS>17300531" + "10LOT-F<GS>91D";
         String csv = "Markirovka kodi;GTIN\n" + k.formatted("F1") + ";0" + ean + "\n" + k.formatted("F1") + ";\n"
-                + gs + ";\n" + "notogri-kod;\n" + k.formatted("F3") + ";\n" + k.formatted("F4") + ";\n";
+                + gs + ";\n" + "(01)0" + ean + "(10)X;\n" + k.formatted("F3") + ";\n" + k.formatted("F4") + ";\n";
         var file = new org.springframework.mock.web.MockMultipartFile("file", "kodlar.csv", "text/csv",
                 csv.getBytes(java.nio.charset.StandardCharsets.UTF_8));
         mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart("/api/marking/orders/" + o + "/import")
@@ -1047,7 +1162,7 @@ class OrderIT {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.applied").value(true))
                 .andExpect(jsonPath("$.accepted").value(3))
-                .andExpect(jsonPath("$.work.unitsScanned").value(3))
+                .andExpect(jsonPath("$.work.unitCodes").value(3))
                 .andExpect(jsonPath("$.work.complete").value(true));
         assertThat(jdbc.sql("SELECT count(*) FROM sales_order_mark WHERE order_id = :o AND status = 'ACTIVE'").param("o", o)
                 .query(Long.class).single()).isEqualTo(3L);

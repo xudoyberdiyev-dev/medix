@@ -95,7 +95,7 @@ class ReserveCodes {
                 .query((rs, n) -> new ReserveCode(rs.getLong("id"), ReserveStatus.valueOf(rs.getString("status")), rs.getString("scanned"),
                         rs.getString("raw"), rs.getString("gtin"), rs.getString("serial"), rs.getLong("product_id"), rs.getString("product"),
                         rs.getString("batch_no"), rs.getDate("expiry") == null ? null : rs.getDate("expiry").toLocalDate(),
-                        "Q".equals(rs.getString("kind")) ? MarkingModels.MarkKind.BOX : MarkingModels.MarkKind.UNIT, rs.getLong("order_id"),
+                        MarkingModels.MarkKind.ofDb(rs.getString("kind")), rs.getLong("order_id"),
                         rs.getString("order_number"), rs.getString("customer"), rs.getString("branch"), instant(rs.getTimestamp("created_at")),
                         instant(rs.getTimestamp("changed_at")), rs.getString("changed_by"), rs.getString("note")))
                 .list();

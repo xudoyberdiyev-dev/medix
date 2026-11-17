@@ -194,14 +194,14 @@ class OrderMarking {
         return h;
     }
 
-    private record Target(long lineId, long productId, int lineQty, MarkKind kind) {}
+    private record Target(long lineId, long productId, int lineQty, String gtin, String productName, Integer boxSize) {}
 
     private record PickedBatch(long batchId, String number, LocalDate expiry, int qty) {}
 
     /** Bitta kodni skanerlash: tekshiruv tartibi SPEC 6 bo'yicha; birinchi xato qaytariladi (katta qizil ekran). */
     @Transactional
-    ScanResult scan(Actor actor, long id, String raw) {
-        long markId = accept(actor, mineLocked(actor, id), id, raw);
+    ScanResult scan(Actor actor, long id, String raw, Long lineId, String gtin) {
+        long markId = accept(actor, mineLocked(actor, id), id, raw, lineId, gtin);
         MarkWork w = work(id, actor);
         MarkCode accepted = w.codes().stream().filter(c -> c.id() == markId).findFirst().orElseThrow();
         return new ScanResult(accepted, w);
@@ -216,13 +216,14 @@ class OrderMarking {
      * saqlanmaydi; {@code apply=true} — mos kelganlari qabul qilinadi, qolgani qo'lda skanerlanadi.
      */
     @Transactional
-    List<ImportOutcome> importCodes(Actor actor, long id, List<String> raws, boolean apply) {
+    List<ImportOutcome> importCodes(Actor actor, long id, List<MarkingImport.FileCode> raws, boolean apply) {
         Head h = mineLocked(actor, id);
         List<ImportOutcome> out = new ArrayList<>();
-        for (String raw : raws) {
+        for (MarkingImport.FileCode fc : raws) {
+            String raw = fc.code();
             jdbc.sql("SAVEPOINT mark_import").update();
             try {
-                long markId = accept(actor, h, id, raw);
+                long markId = accept(actor, h, id, raw, null, fc.gtin());
                 String product = jdbc.sql("""
                         SELECT p.name FROM sales_order_mark m JOIN sales_order_line l ON l.id = m.line_id
                         JOIN product p ON p.id = l.product_id WHERE m.id = :m""")
@@ -244,17 +245,28 @@ class OrderMarking {
         return out;
     }
 
-    /** Tekshiruv va yozish (skaner va fayl uchun umumiy). Qaytaradi: qabul qilingan kod id. */
-    private long accept(Actor actor, Head h, long id, String raw) {
+    /**
+     * Tekshiruv va yozish (skaner va fayl uchun umumiy). Qaytaradi: qabul qilingan kod id.
+     *
+     * <p>O16: dona kodi (01+21) — 1 birlik; partiya (10) bo'lsa yig'ilgan partiya bilan mos bo'lishi shart, bo'lmasa — qatorning
+     * yig'ilgan partiyalaridan bo'sh joyi boriga bog'lanadi. Quti (SSCC) — mahsulotning «1 qadoqdagi dona» (yo'q bo'lsa «qadoqdagi
+     * soni») birlik; qaysi qatorga — GTIN (Excel ustuni), qo'lda tanlangan qator yoki yagona mos qator.
+     */
+    private long accept(Actor actor, Head h, long id, String raw, Long lineIdHint, String gtinHint) {
         Gs1Code code = switch (Gs1Code.parse(raw)) {
             case Gs1Code.Ok ok -> ok.code();
             case Gs1Code.Error e -> throw MedixException.badRequest(e.key());
         };
-        // Takror — barcha buyurtmalar bo'yicha
-        Optional<String> usedIn = jdbc.sql("""
-                SELECT o.number FROM sales_order_mark m JOIN sales_order o ON o.id = m.order_id
-                WHERE m.gtin = :g AND m.serial = :s AND m.status IN ('ACTIVE', 'SOLD') LIMIT 1""")
-                .param("g", code.gtin())
+        boolean aggregate = code.kind() == Gs1Code.Kind.AGGREGATE;
+        // Takror — barcha buyurtmalar bo'yicha (SSCC — GTIN'dan qat'i nazar)
+        Optional<String> usedIn = (aggregate
+                ? jdbc.sql("""
+                        SELECT o.number FROM sales_order_mark m JOIN sales_order o ON o.id = m.order_id
+                        WHERE m.kind = 'A' AND m.serial = :s AND m.status IN ('ACTIVE', 'SOLD') LIMIT 1""")
+                : jdbc.sql("""
+                        SELECT o.number FROM sales_order_mark m JOIN sales_order o ON o.id = m.order_id
+                        WHERE m.gtin = :g AND m.serial = :s AND m.kind <> 'A' AND m.status IN ('ACTIVE', 'SOLD') LIMIT 1""")
+                        .param("g", code.gtin()))
                 .param("s", code.serial())
                 .query(String.class)
                 .optional();
@@ -263,55 +275,88 @@ class OrderMarking {
                     ? MedixException.conflict("marking.duplicateHere")
                     : MedixException.conflict("marking.duplicate", usedIn.get());
         }
-        // Mahsulot (GTIN): buyurtmaning markirovkali qatorlaridan shtrix-kodi mos keladigani
-        Target t = null;
-        for (Target candidate : jdbc.sql("""
-                SELECT l.id, l.product_id, l.qty, u.short_name, b.barcode FROM sales_order_line l
-                JOIN product p ON p.id = l.product_id JOIN unit u ON u.id = p.unit_id
-                JOIN product_barcode b ON b.product_id = p.id
-                WHERE l.order_id = :o AND p.marked""")
+        // Buyurtmaning markirovkali qatorlari (qayta yig'ishda — faqat qaytarilgan qatorlar)
+        List<Target> targets = jdbc.sql("""
+                SELECT l.id, l.product_id, l.qty, p.name, coalesce(p.per_pack, p.pack_qty) AS box_size,
+                       array_to_string(ARRAY(SELECT b.barcode FROM product_barcode b WHERE b.product_id = p.id ORDER BY b.id), ',') AS barcodes
+                FROM sales_order_line l JOIN product p ON p.id = l.product_id JOIN sales_order so ON so.id = l.order_id
+                WHERE l.order_id = :o AND p.marked AND (so.repick_line_ids IS NULL OR l.id = ANY (so.repick_line_ids))
+                ORDER BY l.line_no""")
                 .param("o", id)
                 .query((rs, n) -> {
-                    Target row = new Target(rs.getLong("id"), rs.getLong("product_id"), rs.getInt("qty"), kindOf(rs.getString("short_name")));
-                    return Gs1Code.gtin14(rs.getString("barcode")).filter(code.gtin()::equals).map(g -> row).orElse(null);
+                    // Quti uchun GTIN — mahsulotning birinchi GTIN'ga aylanadigan shtrix-kodi
+                    String all = rs.getString("barcodes");
+                    String gtin = null;
+                    for (String bc : all == null || all.isEmpty() ? new String[0] : all.split(",")) {
+                        if (gtin == null) {
+                            gtin = Gs1Code.gtin14(bc).orElse(null);
+                        }
+                    }
+                    return new Target(rs.getLong("id"), rs.getLong("product_id"), rs.getInt("qty"), gtin == null ? "" : gtin,
+                            rs.getString("name"), (Integer) rs.getObject("box_size"));
                 })
-                .list()) {
-            if (candidate != null) {
-                t = candidate;
-                break;
-            }
+                .list();
+        Target t;
+        if (!aggregate) {
+            t = targets.stream().filter(x -> productHasGtin(x.productId(), code.gtin())).findFirst()
+                    .orElseThrow(() -> MedixException.conflict("marking.productMismatch"));
+        } else {
+            t = aggregateTarget(id, targets, lineIdHint, gtinHint);
         }
-        if (t == null) {
-            throw MedixException.conflict("marking.productMismatch");
+        int units = 1;
+        if (aggregate) {
+            if (t.boxSize() == null) {
+                throw MedixException.conflict("marking.boxSizeUnknown", t.productName());
+            }
+            units = t.boxSize();
         }
         // Partiya: yig'uvchi tasdiqlagan (sof yig'ilgan) partiyalardan biri. Bonus partiya «-B» qo'shimchasisiz ham mos.
         List<PickedBatch> picked = pickedBatches(id, t.lineId());
-        PickedBatch batch = picked.stream().filter(b -> sameBatch(b.number(), code.batch())).findFirst().orElse(null);
-        if (batch == null) {
-            throw MedixException.conflict("marking.batchMismatch", String.join(", ", picked.stream().map(PickedBatch::number).toList()));
+        Map<Long, Integer> used = new LinkedHashMap<>();
+        jdbc.sql("SELECT batch_id, sum(units)::int AS n FROM sales_order_mark WHERE order_id = :o AND line_id = :l AND status = 'ACTIVE' GROUP BY batch_id")
+                .param("o", id).param("l", t.lineId())
+                .query((rs, n) -> used.put(rs.getLong("batch_id"), rs.getInt("n")))
+                .list();
+        PickedBatch batch;
+        if (code.batch() != null) {
+            batch = picked.stream().filter(b -> sameBatch(b.number(), code.batch())).findFirst().orElse(null);
+            if (batch == null) {
+                throw MedixException.conflict("marking.batchMismatch", String.join(", ", picked.stream().map(PickedBatch::number).toList()));
+            }
+        } else {
+            final int need = units;
+            batch = picked.stream().filter(b -> b.qty() - used.getOrDefault(b.batchId(), 0) >= need).findFirst()
+                    .orElseGet(() -> picked.stream().filter(b -> b.qty() > used.getOrDefault(b.batchId(), 0)).findFirst().orElse(null));
+            if (batch == null) {
+                throw MedixException.conflict("marking.lineFull");
+            }
         }
-        MarkKind kind = code.kind() == Gs1Code.Kind.BOX ? MarkKind.BOX : MarkKind.UNIT;
-        if (kind != t.kind()) {
-            throw MedixException.conflict(t.kind() == MarkKind.BOX ? "marking.kindNeedBox" : "marking.kindNeedUnit");
-        }
-        int scannedBatch = jdbc.sql("SELECT count(*) FROM sales_order_mark WHERE order_id = :o AND line_id = :l AND batch_id = :b AND status = 'ACTIVE'")
-                .param("o", id).param("l", t.lineId()).param("b", batch.batchId()).query(Integer.class).single();
-        if (scannedBatch >= batch.qty()) {
+        int left = batch.qty() - used.getOrDefault(batch.batchId(), 0);
+        if (left <= 0) {
             throw MedixException.conflict("marking.lineFull");
+        }
+        if (units > left) {
+            throw MedixException.conflict("marking.boxTooBig", units, left);
+        }
+        String gtin = aggregate ? t.gtin() : code.gtin();
+        if (gtin == null || !gtin.matches("\\d{14}")) {
+            throw MedixException.conflict("marking.productNoGtin", t.productName());
         }
         long markId;
         try {
             markId = jdbc.sql("""
-                    INSERT INTO sales_order_mark (order_id, line_id, batch_id, gtin, serial, batch_no, expiry_date, kind, raw, scanned_raw, scanned_by)
-                    VALUES (:o, :l, :b, :g, :s, :bn, :e, :k, :raw, :sraw, :by) RETURNING id""")
+                    INSERT INTO sales_order_mark (order_id, line_id, batch_id, gtin, serial, batch_no, expiry_date, kind, units, raw, scanned_raw,
+                                                  scanned_by)
+                    VALUES (:o, :l, :b, :g, :s, :bn, :e, :k, :u, :raw, :sraw, :by) RETURNING id""")
                     .param("o", id)
                     .param("l", t.lineId())
                     .param("b", batch.batchId())
-                    .param("g", code.gtin())
+                    .param("g", gtin)
                     .param("s", code.serial())
-                    .param("bn", code.batch())
+                    .param("bn", code.batch() != null ? code.batch() : truncate(batch.number(), 20))
                     .param("e", code.expiry() == null ? null : Date.valueOf(code.expiry()))
-                    .param("k", kind == MarkKind.BOX ? "Q" : "D")
+                    .param("k", aggregate ? "A" : "D")
+                    .param("u", units)
                     .param("raw", code.humanReadable())
                     .param("sraw", Gs1Code.scanned(raw))
                     .param("by", actor.employeeId())
@@ -324,6 +369,58 @@ class OrderMarking {
         // O10a: yangi kod Saplayn'da tekshirilmagan — tekshiruv faylini qayta yuklab olish kerak
         jdbc.sql("UPDATE sales_order SET mark_exported_at = NULL WHERE id = :id AND mark_exported_at IS NOT NULL").param("id", id).update();
         return markId;
+    }
+
+    private boolean productHasGtin(long productId, String gtin) {
+        return jdbc.sql("SELECT barcode FROM product_barcode WHERE product_id = :p").param("p", productId).query(String.class).list().stream()
+                .anyMatch(bc -> Gs1Code.gtin14(bc).filter(gtin::equals).isPresent());
+    }
+
+    /**
+     * Quti (SSCC) qaysi qatorga: (1) qo'lda tanlangan qator; (2) GTIN (Excel ustuni, EAN-13 → GTIN-14); (3) yagona markirovkali qator;
+     * (4) qutisi sig'adigan yagona qator. Aks holda — «Mahsulotni tanlang» (marking.aggregateNeedProduct).
+     */
+    private Target aggregateTarget(long orderId, List<Target> targets, Long lineIdHint, String gtinHint) {
+        if (lineIdHint != null) {
+            return targets.stream().filter(x -> x.lineId() == lineIdHint).findFirst()
+                    .orElseThrow(() -> MedixException.conflict("marking.productMismatch"));
+        }
+        if (gtinHint != null && !gtinHint.isBlank()) {
+            String g = Gs1Code.gtin14(gtinHint.strip()).orElse(null);
+            if (g == null) {
+                throw MedixException.badRequest("marking.gtinInvalid");
+            }
+            List<Target> byGtin = targets.stream().filter(x -> productHasGtin(x.productId(), g)).toList();
+            if (byGtin.isEmpty()) {
+                throw MedixException.conflict("marking.productMismatch");
+            }
+            return firstWithRoom(orderId, byGtin);
+        }
+        if (targets.isEmpty()) {
+            throw MedixException.conflict("marking.productMismatch");
+        }
+        if (targets.size() == 1) {
+            return targets.getFirst();
+        }
+        List<Target> fits = targets.stream().filter(x -> x.boxSize() != null && room(orderId, x) >= x.boxSize()).toList();
+        if (fits.size() == 1) {
+            return fits.getFirst();
+        }
+        throw MedixException.conflict("marking.aggregateNeedProduct");
+    }
+
+    private Target firstWithRoom(long orderId, List<Target> list) {
+        return list.stream().filter(x -> room(orderId, x) > 0).findFirst().orElse(list.getFirst());
+    }
+
+    private int room(long orderId, Target t) {
+        int scanned = jdbc.sql("SELECT coalesce(sum(units), 0)::int FROM sales_order_mark WHERE order_id = :o AND line_id = :l AND status = 'ACTIVE'")
+                .param("o", orderId).param("l", t.lineId()).query(Integer.class).single();
+        return t.lineQty() - scanned;
+    }
+
+    private static String truncate(String s, int max) {
+        return s.length() <= max ? s : s.substring(0, max);
     }
 
     /** Qabul qilingan kodni yakunlashdan oldin sabab bilan olib tashlash (SPEC 6). */
@@ -432,7 +529,7 @@ class OrderMarking {
                 .query((rs, n) -> new VerifyRow(rs.getString("scanned"), rs.getString("raw"), rs.getString("gtin"), rs.getString("serial"),
                         rs.getString("product"), rs.getString("batch_no"),
                         rs.getDate("expiry") == null ? null : rs.getDate("expiry").toLocalDate(),
-                        "Q".equals(rs.getString("kind")) ? MarkKind.BOX : MarkKind.UNIT, rs.getString("number"), rs.getString("customer"),
+                        MarkKind.ofDb(rs.getString("kind")), rs.getString("number"), rs.getString("customer"),
                         rs.getString("tin")))
                 .list();
         if (rows.isEmpty()) {
@@ -514,12 +611,12 @@ class OrderMarking {
 
     private static final String SELECT_CODE = """
             SELECT m.id, m.order_id, o.number AS order_number, m.line_id, p.name AS product, m.raw, m.gtin, m.serial, m.batch_no, m.kind,
-                   m.status, e.full_name AS scanned_by, m.scanned_at, m.close_reason""";
+                   m.units, m.status, e.full_name AS scanned_by, m.scanned_at, m.close_reason""";
 
     private static MarkCode code(ResultSet rs) throws SQLException {
         return new MarkCode(rs.getLong("id"), rs.getLong("order_id"), rs.getString("order_number"), rs.getLong("line_id"), rs.getString("product"),
                 rs.getString("raw"), rs.getString("gtin"), rs.getString("serial"), rs.getString("batch_no"),
-                "Q".equals(rs.getString("kind")) ? MarkKind.BOX : MarkKind.UNIT, MarkStatus.valueOf(rs.getString("status")),
+                MarkKind.ofDb(rs.getString("kind")), rs.getInt("units"), MarkStatus.valueOf(rs.getString("status")),
                 rs.getString("scanned_by"), rs.getTimestamp("scanned_at").toInstant(), rs.getString("close_reason"));
     }
 
@@ -561,7 +658,7 @@ class OrderMarking {
                 .list();
         record ScanCount(long lineId, long batchId, int n) {}
         List<ScanCount> counts = jdbc.sql("""
-                SELECT line_id, batch_id, count(*)::int AS n FROM sales_order_mark WHERE order_id = :id AND status = 'ACTIVE' GROUP BY line_id, batch_id""")
+                SELECT line_id, batch_id, sum(units)::int AS n FROM sales_order_mark WHERE order_id = :id AND status = 'ACTIVE' GROUP BY line_id, batch_id""")
                 .param("id", id)
                 .query((rs, n) -> new ScanCount(rs.getLong("line_id"), rs.getLong("batch_id"), rs.getInt("n")))
                 .list();
@@ -587,10 +684,8 @@ class OrderMarking {
                         rs.getString("unit"), rs.getInt("qty"), rs.getBoolean("confirmed")))
                 .list();
         List<MarkLine> lines = new ArrayList<>();
-        int boxes = 0;
-        int boxesNeeded = 0;
-        int units = 0;
-        int unitsNeeded = 0;
+        int scannedQty = 0;
+        int neededQty = 0;
         boolean complete = true;
         for (LineRow r : rows) {
             List<MarkBatch> batches = new ArrayList<>();
@@ -599,19 +694,16 @@ class OrderMarking {
                 batches.add(new MarkBatch(b.batchId(), b.number(), b.expiry(), b.qty(), n));
             }
             int scanned = counts.stream().filter(c -> c.lineId() == r.id()).mapToInt(ScanCount::n).sum();
-            MarkKind kind = kindOf(r.unit());
-            if (kind == MarkKind.BOX) {
-                boxes += scanned;
-                boxesNeeded += r.qty();
-            } else {
-                units += scanned;
-                unitsNeeded += r.qty();
-            }
+            scannedQty += scanned;
+            neededQty += r.qty();
             complete &= scanned == r.qty();
-            lines.add(new MarkLine(r.id(), r.lineNo(), r.code(), r.name(), kind, r.qty(), scanned, batches));
+            lines.add(new MarkLine(r.id(), r.lineNo(), r.code(), r.name(), kindOf(r.unit()), r.qty(), scanned, batches));
         }
+        int boxCodes = (int) codes.stream().filter(c -> c.kind() == MarkKind.AGGREGATE).count();
+        int boxUnits = codes.stream().filter(c -> c.kind() == MarkKind.AGGREGATE).mapToInt(MarkCode::units).sum();
+        int unitCodes = codes.size() - boxCodes;
         return new MarkWork(h.id(), h.number(), h.customer(), h.status(), h.markMinutes(), h.marker(), h.markerId(), h.startedAt(),
-                deadline(h.startedAt(), h.markMinutes()), lines, unmarked, codes, boxes, boxesNeeded, units, unitsNeeded,
+                deadline(h.startedAt(), h.markMinutes()), lines, unmarked, codes, boxCodes, boxUnits, unitCodes, scannedQty, neededQty,
                 complete && unmarked.stream().allMatch(MarkingModels.UnmarkedLine::confirmed) && !(rows.isEmpty() && unmarked.isEmpty()),
                 rows.isEmpty() && !unmarked.isEmpty(), h.exportedAt());
     }

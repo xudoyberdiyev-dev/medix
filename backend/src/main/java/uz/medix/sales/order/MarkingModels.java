@@ -13,8 +13,31 @@ final class MarkingModels {
 
     private MarkingModels() {}
 
-    /** Qadoq turi: Q — quti, D — dona (GS1 AI 91). */
-    enum MarkKind { BOX, UNIT }
+    /**
+     * Kod turi: UNIT — dona kodi (01+21), AGGREGATE — agregatsiya (quti) kodi SSCC (AI 00, O16), BOX — eski «Q» kodlar (AI 91,
+     * O16 gacha qabul qilingan).
+     */
+    enum MarkKind {
+        BOX, UNIT, AGGREGATE;
+
+        /** Bazadagi {@code sales_order_mark.kind}: Q, D, A. */
+        static MarkKind ofDb(String k) {
+            return switch (k == null ? "D" : k.strip()) {
+                case "Q" -> BOX;
+                case "A" -> AGGREGATE;
+                default -> UNIT;
+            };
+        }
+
+        /** Excel'dagi qisqa belgisi. */
+        String label() {
+            return switch (this) {
+                case BOX -> "Q";
+                case UNIT -> "D";
+                case AGGREGATE -> "SSCC";
+            };
+        }
+    }
 
     enum MarkStatus { ACTIVE, REMOVED, RELEASED, SOLD, RETURNED }
 
@@ -74,6 +97,7 @@ final class MarkingModels {
             String serial,
             String batch,
             MarkKind kind,
+            @Schema(description = "Kod qamraydigan birliklar: dona kodi — 1, quti (SSCC) — qutidagi dona soni") int units,
             MarkStatus status,
             String scannedBy,
             Instant scannedAt,
@@ -92,10 +116,11 @@ final class MarkingModels {
             @Schema(description = "Markirovkali qatorlar (skanerlanadi)") List<MarkLine> lines,
             @Schema(description = "Markirovkasiz qatorlar (tasdiqlanadi, E1)") List<UnmarkedLine> unmarkedLines,
             @Schema(description = "Faol (olib tashlanmagan) kodlar") List<MarkCode> codes,
-            @Schema(description = "Skanerlangan quti / kerak") int boxesScanned,
-            int boxesNeeded,
-            int unitsScanned,
-            int unitsNeeded,
+            @Schema(description = "Skanerlangan quti (agregatsiya, SSCC) kodlari soni") int boxCodes,
+            @Schema(description = "Qutilar qamragan birliklar") int boxUnits,
+            @Schema(description = "Skanerlangan dona kodlari soni") int unitCodes,
+            @Schema(description = "Jami skanerlangan birliklar (qutilar + donalar)") int scannedQty,
+            @Schema(description = "Jami kerak birliklar") int neededQty,
             @Schema(description = "Barcha kodlar skanerlangan va markirovkasiz qatorlar tasdiqlangan — yakunlash mumkin") boolean complete,
             @Schema(description = "Buyurtmada markirovkali qator yo'q — «Markirovkasiz — tasdiqlash»") boolean unmarkedOnly,
             @Schema(nullable = true, description = "O10a: Saplayn tekshiruvi fayli yuklab olingan payt (yangi kod qabul qilinsa — null)")
@@ -104,7 +129,11 @@ final class MarkingModels {
     /** O10a: «Saplayn'da tekshirildi — yakunlash». Kodlar bo'lsa verified=true majburiy. */
     record FinishRequest(@Schema(description = "«Kodlar firmamiz nomida va takrorlanmagan — Saplayn'da tekshirdim»") boolean verified) {}
 
-    record ScanRequest(@NotBlank(message = "{validation.required}") @Size(max = 300) String code) {}
+    record ScanRequest(
+            @NotBlank(message = "{validation.required}") @Size(max = 300) String code,
+            @Schema(nullable = true, description = "O16: quti (SSCC) kodi qaysi qatorga — bir nechta markirovkali qator bo'lsa qo'lda tanlanadi")
+            Long lineId,
+            @Schema(nullable = true, description = "O16: quti (SSCC) kodi mahsulotining GTIN/shtrix-kodi (Excel ustuni)") @Size(max = 14) String gtin) {}
 
     record ScanResult(MarkCode accepted, MarkWork work) {}
 

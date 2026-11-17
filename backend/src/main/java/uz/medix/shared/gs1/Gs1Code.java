@@ -7,19 +7,25 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * Markirovka kodi (GS1 DataMatrix), SPEC 6: (01) GTIN · (21) seriya · (17) yaroqlilik · (10) partiya · (91) Q/D.
+ * Markirovka kodi (GS1 DataMatrix). Egasi 17.11 (O16) — O'zbekiston dori markirovkasining haqiqiy formati:
  *
- * <p>Skaner klaviatura rejimida kodni ikki ko'rinishda beradi: FNC1 ajratgichi (GS, {@code \u001D}) bilan yoki odam o'qiydigan
- * qavsli ko'rinishda — «(01)04601234567893(21)ABC…». Boshidagi simvologiya belgisi «]d2» va «]C1» tashlanadi. Ajratgichsiz
- * o'zgaruvchan uzunlikdagi maydonlarni ajratib bo'lmaydi — bunday kod format xatosi.
+ * <ul>
+ *   <li><b>Dona kodi</b>: (01) GTIN-14 · (21) seriya (odatda 13 belgi) [+ (91)/(92)/(93) kripto-dum]; (10) partiya va (17)
+ *       yaroqlilik ko'pincha YO'Q — bo'lsa o'qiladi. Masalan {@code 0104780011675089217HTFlJLN7jbo3}.</li>
+ *   <li><b>Agregatsiya (quti) kodi</b>: (00) SSCC — 18 raqam (nazorat raqami bilan), masalan {@code 00047800116744728760}.
+ *       Excel oldingi nollarni yo'qotgan bo'lsa ({@code 47800116744728760}) — 20 raqamgacha tiklanadi.</li>
+ * </ul>
  *
- * <p>Majburiy: 01 (nazorat raqami to'g'ri), 21, 10, 91 (Q — quti, D — dona). 17 — ixtiyoriy, bo'lsa sana to'g'ri bo'lishi shart
- * (kun «00» — oyning oxirgi kuni). Boshqa AI'lar (masalan 92, 93 — kripto-dum) o'qiladi va e'tiborsiz qoldiriladi.
+ * <p>Skaner kodni FNC1 ajratgichi (GS, {@code \u001D}) bilan, ajratgichsiz yoki qavsli ko'rinishda beradi; boshidagi
+ * simvologiya belgisi «]d2», «]C1», «]Q3» tashlanadi. Ajratgichsiz kodda (21) 13 belgi deb olinadi, qolgani kripto-dum.
  */
 public record Gs1Code(String gtin, String serial, String batch, LocalDate expiry, Kind kind) {
 
-    /** Qadoq turi (AI 91). */
-    public enum Kind { BOX, UNIT }
+    /** UNIT — dona kodi (01+21), AGGREGATE — quti (SSCC, AI 00): gtin null, serial = 18 raqamli SSCC. */
+    public enum Kind { UNIT, AGGREGATE }
+
+    /** O'zbekiston dori markirovkasida seriya uzunligi (ajratgichsiz kodni bo'lish uchun). */
+    static final int UZ_SERIAL = 13;
 
     private static final char GS = '\u001D';
 
@@ -35,40 +41,42 @@ public record Gs1Code(String gtin, String serial, String batch, LocalDate expiry
 
     public record Error(String key) implements Parsed {}
 
-    /** Kodni ajratib, tekshiradi. Xato kalitlari: marking.format, marking.gtinInvalid, marking.kindInvalid, marking.expiryInvalid. */
+    /** Kodni ajratib, tekshiradi. Xato kalitlari: marking.format, marking.gtinInvalid, marking.ssccInvalid, marking.expiryInvalid. */
     public static Parsed parse(String raw) {
         if (raw == null) {
             return new Error("marking.format");
         }
-        String s = raw.strip();
-        if (s.startsWith("]d2") || s.startsWith("]C1") || s.startsWith("]Q3")) {
-            s = s.substring(3);
-        }
+        String s = stripSymbology(raw.strip());
         if (s.isEmpty() || s.length() > 300) {
             return new Error("marking.format");
+        }
+        // Excel raqam qilib buzgan SSCC: oldingi nollar yo'qolgan (15–20 raqam) → 20 ga to'ldiriladi
+        if (s.matches("\\d{15,20}") && !s.startsWith("01")) {
+            s = "0".repeat(20 - s.length()) + s;
         }
         Optional<Map<String, String>> fields = s.charAt(0) == '(' ? bracketed(s) : separated(s);
         if (fields.isEmpty()) {
             return new Error("marking.format");
         }
         Map<String, String> f = fields.get();
+        String sscc = f.get("00");
+        if (sscc != null) {
+            if (f.containsKey("01") || f.containsKey("21")) {
+                return new Error("marking.format");
+            }
+            if (!sscc.matches("\\d{18}") || !checkDigitOk(sscc)) {
+                return new Error("marking.ssccInvalid");
+            }
+            return new Ok(new Gs1Code(null, sscc, null, null, Kind.AGGREGATE));
+        }
         String gtin = f.get("01");
         String serial = f.get("21");
         String batch = f.get("10");
-        String kind = f.get("91");
-        if (gtin == null || serial == null || batch == null || kind == null || serial.isEmpty() || batch.isEmpty()) {
+        if (gtin == null || serial == null || serial.isEmpty() || (batch != null && batch.isEmpty())) {
             return new Error("marking.format");
         }
         if (!gtin.matches("\\d{14}") || !checkDigitOk(gtin)) {
             return new Error("marking.gtinInvalid");
-        }
-        Kind k = switch (kind.toUpperCase()) {
-            case "Q" -> Kind.BOX;
-            case "D" -> Kind.UNIT;
-            default -> null;
-        };
-        if (k == null) {
-            return new Error("marking.kindInvalid");
         }
         LocalDate expiry = null;
         String e = f.get("17");
@@ -78,10 +86,14 @@ public record Gs1Code(String gtin, String serial, String batch, LocalDate expiry
                 return new Error("marking.expiryInvalid");
             }
         }
-        if (!serial.matches("[\\x21-\\x7E]{1,20}") || !batch.matches("[\\x21-\\x7E]{1,20}")) {
+        if (!serial.matches("[\\x21-\\x7E]{1,20}") || (batch != null && !batch.matches("[\\x21-\\x7E]{1,20}"))) {
             return new Error("marking.format");
         }
-        return new Ok(new Gs1Code(gtin, serial, batch, expiry, k));
+        return new Ok(new Gs1Code(gtin, serial, batch, expiry, Kind.UNIT));
+    }
+
+    private static String stripSymbology(String s) {
+        return s.startsWith("]d2") || s.startsWith("]C1") || s.startsWith("]Q3") ? s.substring(3) : s;
     }
 
     /**
@@ -89,9 +101,9 @@ public record Gs1Code(String gtin, String serial, String batch, LocalDate expiry
      * (O10a: Saplayn tekshiruvi uchun eksport).
      */
     public static String scanned(String raw) {
-        String s = raw.strip();
-        if (s.startsWith("]d2") || s.startsWith("]C1") || s.startsWith("]Q3")) {
-            s = s.substring(3);
+        String s = stripSymbology(raw.strip());
+        if (s.matches("\\d{15,19}") && !s.startsWith("01")) {
+            s = "0".repeat(20 - s.length()) + s;
         }
         return s.length() > 300 ? s.substring(0, 300) : s;
     }
@@ -103,8 +115,16 @@ public record Gs1Code(String gtin, String serial, String batch, LocalDate expiry
 
     /** Odam o'qiydigan ko'rinish (kodlar jurnali uchun). */
     public String humanReadable() {
+        if (kind == Kind.AGGREGATE) {
+            return "(00)" + serial;
+        }
         return "(01)" + gtin + "(21)" + serial + (expiry == null ? "" : "(17)" + String.format("%02d%02d%02d", expiry.getYear() % 100,
-                expiry.getMonthValue(), expiry.getDayOfMonth())) + "(10)" + batch + "(91)" + (kind == Kind.BOX ? "Q" : "D");
+                expiry.getMonthValue(), expiry.getDayOfMonth())) + (batch == null ? "" : "(10)" + batch);
+    }
+
+    /** Kod ko'rinishidagi qisqa matn (Excel «Markirovka kodi» ustuni uchun): SSCC — «00…», dona — «01…21…». */
+    public String plain() {
+        return kind == Kind.AGGREGATE ? "00" + serial : "01" + gtin + "21" + serial;
     }
 
     /** GTIN-14 bo'yicha shtrix-kod mosligi: EAN-8/UPC-A/EAN-13 chapdan nollar bilan 14 ga to'ldiriladi. */
@@ -113,6 +133,10 @@ public record Gs1Code(String gtin, String serial, String batch, LocalDate expiry
             return Optional.empty();
         }
         return Optional.of("0".repeat(14 - barcode.length()) + barcode);
+    }
+
+    private static boolean cryptoTail(String rest) {
+        return rest.length() >= 3 && (rest.startsWith("91") || rest.startsWith("92") || rest.startsWith("93"));
     }
 
     static boolean checkDigitOk(String digits) {
@@ -197,6 +221,10 @@ public record Gs1Code(String gtin, String serial, String batch, LocalDate expiry
             } else {
                 int gs = s.indexOf(GS, i);
                 int end = gs < 0 ? s.length() : gs;
+                // Ajratgichsiz dona kodi: seriya 13 belgi, keyin kripto-dum (91/92/93) — O16
+                if ("21".equals(ai) && end - i > UZ_SERIAL && cryptoTail(s.substring(i + UZ_SERIAL, end))) {
+                    end = i + UZ_SERIAL;
+                }
                 value = s.substring(i, end);
                 i = end;
             }
