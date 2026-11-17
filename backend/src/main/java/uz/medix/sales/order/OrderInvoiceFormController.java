@@ -48,7 +48,7 @@ class OrderInvoiceFormController {
     @PutMapping("/api/orders/{id}/invoice-forms")
     @PreAuthorize("hasAuthority('invoices.edit') and hasAuthority('prices.view')")
     @Operation(summary = "Tuzatilgan holatni saqlash (avtosaqlash)", description = "Faqat faylga — buyurtma, qoldiq va qarz o'zgarmaydi; audit.")
-    OrderInvoiceForms.InvoiceForms save(@PathVariable long id, @Valid @RequestBody OrderInvoiceForms.SaveRequest r, Authentication auth) {
+    OrderInvoiceForms.InvoiceForms save(@PathVariable long id, @Valid @RequestBody OrderInvoiceForms.InvoiceFormSave r, Authentication auth) {
         return forms.save(actor(), id, r.rows(), has(auth, "prices.view"));
     }
 

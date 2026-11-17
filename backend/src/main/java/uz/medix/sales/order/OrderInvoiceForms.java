@@ -103,7 +103,7 @@ class OrderInvoiceForms {
             boolean canEdit,
             boolean canSeePrices) {}
 
-    record SaveRequest(@NotNull @Size(max = 1000) List<@Valid FormRow> rows) {}
+    record InvoiceFormSave(@NotNull @Size(max = 1000) List<@Valid FormRow> rows) {}
 
     private record Head(long id, String number, LocalDate date, String customer, String tin, String warehouse, long warehouseId, long branchId) {}
 
