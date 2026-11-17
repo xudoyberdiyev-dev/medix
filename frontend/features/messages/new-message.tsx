@@ -51,7 +51,7 @@ export function NewMessage({ open, onClose, onCreated }: { open: boolean; onClos
       aria-labelledby="new-message-title"
       className="fixed inset-0 z-40 flex items-end justify-center bg-overlay md:items-center"
     >
-      <div className="flex max-h-[92vh] w-full max-w-modal-lg flex-col overflow-hidden rounded-t-modal bg-surface shadow-overlay md:rounded-modal">
+      <div className="flex w-full max-w-modal-lg flex-col rounded-t-modal bg-surface shadow-overlay md:rounded-modal">
         <div className="flex items-center justify-between border-b border-border px-5 py-4">
           <h2 id="new-message-title" className="text-section-title">
             {t("newMessage")}
@@ -65,7 +65,7 @@ export function NewMessage({ open, onClose, onCreated }: { open: boolean; onClos
             <X size={20} strokeWidth={1.5} aria-hidden />
           </button>
         </div>
-        <div className="flex flex-col gap-4 overflow-y-auto px-5 py-4">
+        <div className="flex flex-col gap-4 px-5 py-4">
           {canBroadcast ? (
             <fieldset className="flex flex-wrap gap-4">
               <legend className="mb-2 text-table text-text-secondary">{t("to")}</legend>
