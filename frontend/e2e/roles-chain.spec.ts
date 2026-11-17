@@ -215,7 +215,7 @@ test("CEO: Import ustasi — CSV dan mahsulotlar (xato qator oʻtkazib yuborilad
   // Sarlavha qatori avtomatik taxmin qilinadi (2-qator)
   await expect(page.getByRole("textbox", { name: "Sarlavha qatori" })).toHaveValue("2");
   await page.getByRole("button", { name: "Keyingi qadam" }).click();
-  await expect(page.getByText("Nom boʻyicha avtomatik moslashtirildi: 7 / 21 maydon")).toBeVisible();
+  await expect(page.getByText("Nom boʻyicha avtomatik moslashtirildi: 7 / 22 maydon")).toBeVisible();
   await page.getByRole("button", { name: "Moslashtirishni saqlash" }).click();
   await expect(page.getByText(/profili saqlandi/)).toBeVisible();
   await page.getByRole("button", { name: "Keyingi qadam" }).click();
