@@ -24,6 +24,7 @@ export const BATCH_COLUMN_KEYS = [
   "branch",
   "wh",
   "zone",
+  "location",
   "batch",
   "mfg",
   "exp",
@@ -48,6 +49,7 @@ const WIDTH: Record<BatchColumnKey, number> = {
   branch: 80,
   wh: 170,
   zone: 160,
+  location: 170,
   batch: 130,
   mfg: 130,
   exp: 190,
@@ -72,6 +74,7 @@ export function batchColumnLabels(t: (k: string) => string): Record<BatchColumnK
     branch: "branch",
     wh: "wh",
     zone: "zone",
+    location: "location",
     batch: "batch",
     mfg: "mfg",
     exp: "exp",
@@ -144,6 +147,8 @@ export function StockBatches({
             <Badge tone={r.zoneType === "QUARANTINE" ? "warning" : r.zoneType === "COLD" ? "info" : "neutral"}>{r.zone}</Badge>
           </span>
         );
+      case "location":
+        return r.location ?? dash;
       case "batch":
         return <span className="font-mono text-mono">{r.batchNumber}</span>;
       case "mfg":

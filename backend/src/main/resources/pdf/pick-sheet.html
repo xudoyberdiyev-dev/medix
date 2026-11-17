@@ -38,12 +38,13 @@
 <h2>Terish (zona boʻyicha)</h2>
 <table>
     <thead>
-    <tr><th class="num">✓</th><th>Zona</th><th>Mahsulot</th><th>Partiya</th><th>Muddati</th><th class="r">Dona</th><th>Buyurtmalarga</th></tr>
+    <tr><th class="num">✓</th><th>Zona</th><th>Hudud</th><th>Mahsulot</th><th>Partiya</th><th>Muddati</th><th class="r">Dona</th><th>Buyurtmalarga</th></tr>
     </thead>
     <tbody>
     <tr th:each="r : ${rows}">
         <td class="num"><div class="box"></div></td>
         <td class="mono" th:text="${r.zone}">A-1</td>
+        <td th:text="${r.location}">A qator</td>
         <td><span class="mono muted" th:text="${r.code}">0001</span> <span th:text="${r.name}">Mahsulot</span></td>
         <td class="mono" th:text="${r.batch}">B1</td>
         <td th:text="${r.expiry}">01.01.2027</td>

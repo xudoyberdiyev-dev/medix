@@ -18,6 +18,7 @@
     <tr>
         <th class="num">№</th>
         <th>Zona</th>
+        <th>Hudud</th>
         <th>Mahsulot</th>
         <th>Partiya</th>
         <th>Yaroqlilik</th>
@@ -31,6 +32,7 @@
     <tr th:each="l, it : ${lines}">
         <td class="num" th:text="${it.count}">1</td>
         <td th:text="${l.zone}">Asosiy</td>
+        <td th:text="${l.location}">A qator</td>
         <td><span class="mono muted" th:text="${l.code}">0001</span> <span th:text="${l.name}">Mahsulot</span></td>
         <td class="mono" th:text="${l.batch}">B1</td>
         <td th:text="${l.expiry}">01.01.2029</td>

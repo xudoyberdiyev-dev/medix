@@ -567,6 +567,7 @@ class Orders {
         Map<Long, Integer> picked = draft ? Map.of() : pickedByLine(id);
         Map<Long, Integer> shipped = draft ? Map.of() : shippedByLine(id);
         List<OrderLine> lines = new ArrayList<>();
+        Map<Long, String> locations = locations(h.warehouseId(), rows.stream().map(LineRow::productId).toList());
         Money vatTotal = Money.ZERO;
         Money storedGross = Money.ZERO;
         for (LineRow r : rows) {
@@ -594,7 +595,7 @@ class Orders {
                     pct(r.discountPct()).setScale(2, RoundingMode.HALF_UP).toPlainString(), list == null ? null : list.toString(),
                     amount == null ? null : amount.toString(), vat == null ? null : vat.toString(), r.priceType(), a == null ? 0 : a.qty(),
                     a == null ? null : a.nearestExpiry(), p.minQty(), p.maxQty(), p.controlled(), p.marked(), List.of(),
-                    picked.get(r.id()), shipped.get(r.id())));
+                    picked.get(r.id()), shipped.get(r.id()), locations.get(r.productId())));
         }
         Map<Long, List<OrderModels.ReservedBatch>> reserved = new HashMap<>();
         for (Allocation a : reservations.active(DOC_TYPE, id)) {
@@ -624,6 +625,20 @@ class Orders {
                 holder(id, status, DeliveryType.valueOf(h.deliveryType())), lines,
                 jdbc.sql("SELECT unnest(repick_line_ids) FROM sales_order WHERE id = :id").param("id", id).query(Long.class).list(),
                 owner.owner(), owner.manual()));
+    }
+
+    /** O13: mahsulotlarning ombordagi joyi (catalog moduli jadvali, faqat o'qish). */
+    private Map<Long, String> locations(long warehouseId, List<Long> productIds) {
+        if (productIds.isEmpty()) {
+            return Map.of();
+        }
+        Map<Long, String> m = new HashMap<>();
+        jdbc.sql("SELECT product_id, location FROM product_location WHERE warehouse_id = :w AND product_id IN (:p)")
+                .param("w", warehouseId)
+                .param("p", productIds)
+                .query((rs, n) -> m.put(rs.getLong("product_id"), rs.getString("location")))
+                .list();
+        return m;
     }
 
     /**

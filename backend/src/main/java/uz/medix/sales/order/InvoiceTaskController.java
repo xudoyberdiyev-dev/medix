@@ -9,12 +9,6 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.List;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellStyle;
-import org.apache.poi.ss.usermodel.Font;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -156,34 +150,10 @@ class InvoiceTaskController {
         String name = "kodlar-" + t.orderNumber().replaceAll("[^A-Za-z0-9-]", "");
         response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         response.setHeader("Content-Disposition", "attachment; filename=\"" + name + ".xlsx\"");
-        try (SXSSFWorkbook wb = new SXSSFWorkbook(200)) {
-            Sheet sheet = wb.createSheet("Kodlar");
-            CellStyle header = wb.createCellStyle();
-            Font font = wb.createFont();
-            font.setBold(true);
-            header.setFont(font);
-            List<String> titles = List.of("Toʻliq kod (GS = <GS>)", "GTIN", "Mahsulot", "Q/D", "Soni");
-            Row h = sheet.createRow(0);
-            for (int i = 0; i < titles.size(); i++) {
-                Cell c = h.createCell(i);
-                c.setCellValue(titles.get(i));
-                c.setCellStyle(header);
-            }
-            int r = 1;
-            for (InvoiceTasks.CodeRow c : rows) {
-                Row row = sheet.createRow(r++);
-                row.createCell(0).setCellValue(Gs1Code.visibleGs(c.scanned()));
-                row.createCell(1).setCellValue(c.gtin());
-                row.createCell(2).setCellValue(c.product());
-                row.createCell(3).setCellValue(c.kind() == MarkingModels.MarkKind.BOX ? "Q" : "D");
-                row.createCell(4).setCellValue(1);
-            }
-            int[] widths = {70, 16, 40, 5, 8};
-            for (int i = 0; i < titles.size(); i++) {
-                sheet.setColumnWidth(i, widths[i] * 256);
-            }
-            sheet.createFreezePane(0, 1);
-            wb.write(response.getOutputStream());
-        }
+        // O16: egasi formati — «Markirovka kodi» | «GTIN», mahsulot sarlavhasi, quti (SSCC) kodlari, keyin dona kodlari
+        MarkCodesSheet.write(response.getOutputStream(), "Kodlar", rows.stream()
+                .map(c -> new MarkCodesSheet.Entry(c.product(), c.gtin(), Gs1Code.visibleGs(c.scanned()),
+                        c.kind() == MarkingModels.MarkKind.AGGREGATE))
+                .toList());
     }
 }

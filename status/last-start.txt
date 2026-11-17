@@ -1,1 +1,1 @@
-▶️ MEDIX: 17.11 06:08 sessiya boshlandi — reja: HF PDF real maʼlumot bilan tekshiruvi (demo stend), regressiya
+▶️ MEDIX: 17.11 14:07 sessiya boshlandi — reja: O12 ichki xabarlar va topshiriqlar (backend: migratsiya, API, ruxsatlar)

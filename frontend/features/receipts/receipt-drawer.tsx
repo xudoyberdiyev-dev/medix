@@ -1,7 +1,21 @@
 "use client";
 
-import { ArrowUpRight, BadgePercent, Check, CircleCheck, ClipboardCheck, Copy, Lock, PackagePlus, Undo2, Wallet, X } from "lucide-react";
+import {
+  ArrowUpRight,
+  BadgePercent,
+  Check,
+  CircleCheck,
+  ClipboardCheck,
+  Copy,
+  Lock,
+  PackagePlus,
+  Scale,
+  Undo2,
+  Wallet,
+  X,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { Alert } from "@/components/ui/alert";
@@ -19,6 +33,7 @@ import { TextField } from "@/components/ui/text-field";
 import { toast } from "@/components/ui/toast";
 import { can } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
+import { PRICES_REFERENCE, useReceiptRefWarnings } from "@/features/reference-prices/api";
 import {
   PAYMENT_TYPE_VALUES,
   formatIsoDate,
@@ -784,6 +799,7 @@ function Editor({
         <div className={tab === "history" ? "hidden" : "contents"}>
           {doc && (doc.status === "ACCEPTED" || doc.status === "POSTED") ? <ReceiptCards doc={doc} /> : null}
           {doc ? <ReceiptPayment doc={doc} /> : null}
+          {doc && doc.pricesVisible && doc.status !== "CANCELLED" ? <ReceiptRefNote doc={doc} /> : null}
           {content}
         </div>
         {dialogs}
@@ -961,6 +977,42 @@ const HISTORY_ACTIONS = {
 const historyKey = (a: string) => (a in HISTORY_ACTIONS ? HISTORY_ACTIONS[a as keyof typeof HISTORY_ACTIONS] : null);
 
 /** «Tarix» yorligʻi: audit jurnalidan, kunlar boʻyicha guruhlangan. */
+/** O14: kirim narxi oxirgi referent narxdan qimmat boʻlsa — ogohlantirish (bloklamaydi) va solishtirishga havola. */
+function ReceiptRefNote({ doc }: { doc: ReceiptDetail }) {
+  const t = useTranslations("receipts.refPrice");
+  const me = useMe();
+  const warnings = useReceiptRefWarnings(doc.id, true);
+  const canCompare = can(me.data, PRICES_REFERENCE) && (can(me.data, "prices.cost") || can(me.data, "special.cost"));
+  const list = warnings.data ?? [];
+  const link = canCompare ? (
+    <Link
+      href={`/reference-prices?mode=PURCHASE&receiptId=${doc.id}`}
+      className="inline-flex items-center gap-1 font-medium text-primary hover:underline"
+    >
+      <Scale size={16} strokeWidth={1.5} aria-hidden />
+      {t("compare")}
+    </Link>
+  ) : null;
+  if (!list.length) return link ? <div className="flex justify-end">{link}</div> : null;
+  return (
+    <Alert tone="warning" title={t("title", { n: list.length })} action={link}>
+      <ul className="list-disc pl-5">
+        {list.slice(0, 5).map((w) => (
+          <li key={w.productId}>
+            {t("line", {
+              name: w.productName,
+              price: formatMoney(w.receiptPrice),
+              ref: formatMoney(w.refPrice),
+              pct: w.diffPct.replace(".", ","),
+            })}
+          </li>
+        ))}
+      </ul>
+      {list.length > 5 ? <p>{t("more", { n: list.length - 5 })}</p> : null}
+    </Alert>
+  );
+}
+
 function ReceiptHistory({ id }: { id: number }) {
   const t = useTranslations("receipts.history");
   const q = useReceiptHistory(id);

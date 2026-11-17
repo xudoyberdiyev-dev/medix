@@ -18,9 +18,19 @@ import { useThresholds, useThresholdsState } from "@/features/settings/threshold
 import { useDictionary, useSaveEntry, type Entry } from "@/features/dictionaries/api";
 import { describeError } from "@/features/setup/form-error";
 import { cn } from "@/lib/cn";
-import { DOSAGE_FORMS, fetchNewCode, useDuplicates, useEmployeeOptions, useProduct, useSaveProduct, type ProductDetail } from "./api";
+import {
+  DOSAGE_FORMS,
+  fetchNewCode,
+  useDuplicates,
+  useEmployeeOptions,
+  useLocationWarehouses,
+  useProduct,
+  useSaveProduct,
+  type ProductDetail,
+} from "./api";
 import {
   EMPTY_PAGE_FORM,
+  LOCATION_MAX,
   copyForm,
   eanCheck,
   pageFormFromProduct,
@@ -107,6 +117,9 @@ function FormBody({ product, initial }: { product: ProductDetail | null; initial
   const countries = useDictionary("COUNTRY");
   const units = useDictionary("UNIT");
   const employees = useEmployeeOptions();
+  const newWarehouses = useLocationWarehouses(!product);
+  const warehouses = product ? product.locations : (newWarehouses.data ?? []);
+  const manyBranches = new Set(warehouses.map((w) => w.branch)).size > 1;
   const editId = product?.id ?? null;
   const locked = !!product?.hasMovements;
   const dirty = !sameForm(f, base);
@@ -564,6 +577,31 @@ function FormBody({ product, initial }: { product: ProductDetail | null; initial
               last
               onToggle={() => set("prescription")(!f.prescription)}
             />
+          </div>
+        </Section>
+
+        <Section title={t("sec.location")} description={t("sec.locationD")}>
+          <div className="flex flex-col gap-3">
+            {warehouses.length === 0 ? (
+              <span className="text-text-secondary">{t("locationNone")}</span>
+            ) : (
+              warehouses.map((w) => (
+                <TextField
+                  key={w.warehouseId}
+                  id={`pf-location-${w.warehouseId}`}
+                  label={
+                    warehouses.length === 1
+                      ? t("fields.location")
+                      : t("fields.locationIn", { warehouse: manyBranches ? `${w.branch} · ${w.warehouse}` : w.warehouse })
+                  }
+                  value={f.locations[String(w.warehouseId)] ?? ""}
+                  maxLength={LOCATION_MAX}
+                  placeholder={t("locationPh")}
+                  hint={warehouses.length === 1 ? t("locationHint", { warehouse: w.warehouse }) : undefined}
+                  onChange={(v) => set("locations")({ ...f.locations, [String(w.warehouseId)]: v })}
+                />
+              ))
+            )}
           </div>
         </Section>
 

@@ -189,9 +189,40 @@ class DebtIT {
                 .andExpect(status().isOk())
                 .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content().contentType("application/pdf"))
                 .andReturn().getResponse().getContentAsByteArray();
+        // O17: egasi shabloni — standart rus tilida, ikki tomonlama ustunlar, qarz so'z bilan, qarzni tan olish xati (mijoz qarzdor)
         try (var pdfDoc = org.apache.pdfbox.Loader.loadPDF(actPdf)) {
             assertThat(new org.apache.pdfbox.text.PDFTextStripper().getText(pdfDoc))
-                    .contains("Davr aylanmasi", "3.700,00", "2.900,00", "qarzdor", "M.Oʻ.");
+                    .contains("Акт сверки взаимных расчетов", "Сальдо начальное", "Обороты за период", "Сальдо конечное", "3 700,00",
+                            "2 900,00", "по данным", "Две тысячи девятьсот сум 00 тийин", "расхождений не выявлено",
+                            "Письмо о признании суммы задолженности", "М.П.");
+        }
+        byte[] uzPdf = mvc.perform(get("/api/debts/customers/" + c1 + "/act/pdf").param("branchId", "" + b).param("lang", "uz-Latn")
+                        .param("letter", "false").cookie(cashier))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsByteArray();
+        try (var pdfDoc = org.apache.pdfbox.Loader.loadPDF(uzPdf)) {
+            assertThat(new org.apache.pdfbox.text.PDFTextStripper().getText(pdfDoc))
+                    .contains("Davr aylanmasi", "3.700,00", "2.900,00", "Ikki ming toʻqqiz yuz soʻm 00 tiyin", "M.Oʻ.")
+                    .doesNotContain("Qarzdorlikni tan olish xati");
+        }
+        byte[] cyrPdf = mvc.perform(get("/api/debts/customers/" + c1 + "/act/pdf").param("branchId", "" + b).param("lang", "uz-Cyrl").cookie(cashier))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsByteArray();
+        try (var pdfDoc = org.apache.pdfbox.Loader.loadPDF(cyrPdf)) {
+            assertThat(new org.apache.pdfbox.text.PDFTextStripper().getText(pdfDoc)).contains("Давр айланмаси", "Қарздорликни тан олиш хати");
+        }
+        mvc.perform(get("/api/debts/customers/" + c1 + "/act/pdf").param("branchId", "" + b).param("lang", "en").cookie(cashier))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("recon.langInvalid"));
+        byte[] actXlsx = mvc.perform(get("/api/debts/customers/" + c1 + "/act/xlsx").param("branchId", "" + b).cookie(cashier))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsByteArray();
+        try (var wb = new org.apache.poi.xssf.usermodel.XSSFWorkbook(new java.io.ByteArrayInputStream(actXlsx))) {
+            var sh = wb.getSheetAt(0);
+            assertThat(sh.getRow(0).getCell(0).getStringCellValue()).startsWith("Акт сверки взаимных расчетов");
+            StringBuilder all = new StringBuilder();
+            for (var row : sh) {
+                for (var cell : row) {
+                    all.append(cell.toString()).append('|');
+                }
+            }
+            assertThat(all.toString()).contains("Сальдо конечное", "2 900,00", "Письмо о признании суммы задолженности");
         }
         mvc.perform(get("/api/debts/customers/" + c1 + "/act/pdf").param("branchId", "" + other).cookie(cashier)).andExpect(status().isNotFound());
         mvc.perform(get("/api/debts/customers/" + c1 + "/act").param("branchId", "" + b).param("from", t.plusDays(1).toString())

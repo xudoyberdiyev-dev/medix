@@ -1,7 +1,6 @@
 package uz.medix.sales.order;
 
 import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -17,26 +16,37 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import uz.medix.shared.error.MedixException;
 
 /**
  * Markirovka kodlari fayli (egasi 13.11, O5): .xlsx yoki .csv/.txt. Kod ustuni sarlavha bo'yicha topiladi («Markirovka kodi»,
- * «KM», «DataMatrix», «Код маркировки», «Code» …); sarlavha bo'lmasa — kodga o'xshagan birinchi ustun. GTIN/mahsulot
- * ustunlari bo'lsa ham e'tiborsiz — GTIN koddan (01) olinadi. Ajratgich (GS) faylda «&lt;GS&gt;», «{GS}», «\x1d» ko'rinishida
- * bo'lishi mumkin — haqiqiy belgiga almashtiriladi.
+ * «KM», «DataMatrix», «Код маркировки», «Code» …); sarlavha bo'lmasa — kodga o'xshagan birinchi ustun. Ajratgich (GS) faylda
+ * «&lt;GS&gt;», «{GS}», «\x1d» ko'rinishida bo'lishi mumkin — haqiqiy belgiga almashtiriladi.
+ *
+ * <p>O16 (egasi namunasi): ustunlar «Markirovka kodi» | «GTIN»; har mahsulot oldidan sarlavha qatori — dori nomi (tashlab
+ * yuboriladi: kod ustunida 14+ raqamli ketma-ketlik yo'q); ostida quti (SSCC) va dona kodlari. GTIN ustuni quti kodi qaysi
+ * mahsulotniki ekanini bildiradi (EAN-13 — GTIN-14 ga «0» bilan); dona kodida GTIN koddan olinadi.
  */
 final class MarkingImport {
 
     static final int MAX_CODES = 5000;
 
     /** Fayldagi bitta kod: Excel/CSV qator raqami (1 dan) va matni. */
-    record FileCode(int row, String code) {}
+    record FileCode(int row, String code, String gtin) {
+
+        FileCode(int row, String code) {
+            this(row, code, null);
+        }
+    }
+
+    private static final Pattern HAS_CODE_DIGITS = Pattern.compile(".*\\d{14,}.*");
+
+    private static final Pattern GTIN_VALUE = Pattern.compile("\\d{8}|\\d{12,14}");
 
     private static final List<String> HEADERS = List.of("markirovka", "kod", "km", "datamatrix", "data matrix", "code", "код",
             "маркировк", "cis", "sgtin", "км");
 
-    private static final Pattern LOOKS_LIKE_CODE = Pattern.compile("^(\\]d2|\\]C1)?(\\(01\\)|01)\\d{14}.+");
+    private static final Pattern LOOKS_LIKE_CODE = Pattern.compile("^(\\]d2|\\]C1)?((\\(01\\)|01)\\d{14}.+|(\\(00\\)|00)\\d{18}|\\d{15,19})$");
 
     private static final Pattern GS_TEXT = Pattern.compile("<GS>|\\{GS}|\\[GS]|\\\\x1[dD]|\\\\u001[dD]|&#29;|␝", Pattern.CASE_INSENSITIVE);
 
@@ -67,6 +77,7 @@ final class MarkingImport {
         }
         List<String> head = rows.get(first);
         int col = -1;
+        int gtinCol = -1;
         int start = first;
         for (int j = 0; j < head.size() && col < 0; j++) {
             if (looksLikeCode(head.get(j))) {
@@ -84,13 +95,23 @@ final class MarkingImport {
             if (col < 0) {
                 col = 0;
             }
+            for (int j = 0; j < head.size() && gtinCol < 0; j++) {
+                String h = head.get(j).toLowerCase(Locale.ROOT).strip();
+                if (j != col && (h.contains("gtin") || h.contains("shtrix") || h.contains("штрих") || h.contains("ean"))) {
+                    gtinCol = j;
+                }
+            }
+        } else if (col + 1 < head.size() && GTIN_VALUE.matcher(head.get(col + 1).strip()).matches()) {
+            gtinCol = col + 1;
         }
         List<FileCode> out = new ArrayList<>();
         for (int i = start; i < rows.size(); i++) {
             List<String> r = rows.get(i);
             String v = col < r.size() ? normalize(r.get(col)) : "";
-            if (!v.isEmpty()) {
-                out.add(new FileCode(i + 1, v));
+            // O16: mahsulot sarlavha qatori (dori nomi) — kod emas, tashlab yuboriladi
+            if (!v.isEmpty() && HAS_CODE_DIGITS.matcher(v).matches()) {
+                String g = gtinCol >= 0 && gtinCol < r.size() ? r.get(gtinCol).strip() : "";
+                out.add(new FileCode(i + 1, v, GTIN_VALUE.matcher(g).matches() ? g : null));
             }
         }
         if (out.size() > MAX_CODES) {
@@ -115,7 +136,10 @@ final class MarkingImport {
                 if (row != null) {
                     for (int j = 0; j < Math.min(row.getLastCellNum(), 30); j++) {
                         Cell c = row.getCell(j);
-                        cells.add(c == null ? "" : fmt.formatCellValue(c));
+                        // Raqam bo'lib qolgan SSCC/GTIN: ilmiy ko'rinishsiz (oldingi nollar parse'da tiklanadi)
+                        cells.add(c == null ? "" : c.getCellType() == org.apache.poi.ss.usermodel.CellType.NUMERIC
+                                ? java.math.BigDecimal.valueOf(c.getNumericCellValue()).toPlainString().replaceAll("\\.0+$", "")
+                                : fmt.formatCellValue(c));
                     }
                 }
                 rows.add(cells);
@@ -146,21 +170,11 @@ final class MarkingImport {
         return rows;
     }
 
-    /** Namuna fayl: bitta ustun «Markirovka kodi» va ikkinchi (ixtiyoriy) «GTIN». */
+    /** Namuna fayl (O16, egasi formati): «Markirovka kodi» | «GTIN»; mahsulot sarlavhasi, ostida quti (SSCC) va dona kodlari. */
     static void template(OutputStream out) throws IOException {
-        try (XSSFWorkbook wb = new XSSFWorkbook()) {
-            Sheet s = wb.createSheet("Kodlar");
-            Row h = s.createRow(0);
-            h.createCell(0).setCellValue("Markirovka kodi");
-            h.createCell(1).setCellValue("GTIN (ixtiyoriy)");
-            Row r = s.createRow(1);
-            r.createCell(0).setCellValue("(01)04780069000123(21)ABC123XYZ(17)280531(10)ZN2410(91)D");
-            r.createCell(1).setCellValue("04780069000123");
-            s.setColumnWidth(0, 70 * 256);
-            s.setColumnWidth(1, 20 * 256);
-            ByteArrayOutputStream buf = new ByteArrayOutputStream();
-            wb.write(buf);
-            out.write(buf.toByteArray());
-        }
+        MarkCodesSheet.write(out, "Kodlar", List.of(
+                new MarkCodesSheet.Entry("Namuna dori 500 mg №10", "4780011675089", "00047800116744728760", true),
+                new MarkCodesSheet.Entry("Namuna dori 500 mg №10", "4780011675089", "00047800116744727275", true),
+                new MarkCodesSheet.Entry("Namuna dori 500 mg №10", "4780011675089", "0104780011675089217HTFlJLN7jbo3", false)));
     }
 }

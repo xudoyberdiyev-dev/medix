@@ -11,10 +11,12 @@ import {
   Info,
   List,
   Lock,
+  MapPin,
   MessageSquareText,
   PackageCheck,
   PackageOpen,
   Play,
+  FileSpreadsheet,
   Printer,
   ReceiptText,
   Replace,
@@ -51,7 +53,7 @@ import { batchLabel, OtherBatchModal, type PickBatch } from "./other-batch-modal
 import { useLiveConnected } from "@/lib/live";
 import { day } from "./orders-page";
 import type { OrdersT } from "./i18n";
-import { repickLines } from "./pick-sheet";
+import { repickLines, sortByLocation } from "./pick-sheet";
 
 /** Qolgan vaqt: musbat — «12:05», manfiy — «Kechikdi: N daqiqa» (SPEC 5.2). */
 export function timerText(deadline: Date, now: Date, t: OrdersT): { text: string; late: boolean } {
@@ -317,6 +319,7 @@ function QueueLines({ id }: { id: number }) {
 }
 
 type PlanLineData = {
+  location?: string | null;
   productCode: string;
   productName: string;
   qty: number;
@@ -332,6 +335,14 @@ function PlanLine({ line, t }: { line: PlanLineData; t: OrdersT }) {
         </span>
         <span className="font-semibold whitespace-nowrap tabular-nums">{t("picking.qty", { qty: formatQuantity(line.qty) })}</span>
       </div>
+      {line.location ? (
+        <div className="mt-1 flex items-center gap-1.5 text-table font-medium text-primary-button">
+          <Icon icon={MapPin} size="sm" />
+          <span>
+            {t("picking.location")}: {line.location}
+          </span>
+        </div>
+      ) : null}
       {line.reserved.map((r) => (
         <div key={`${r.batch}-${r.zone}`} className="mt-1 flex flex-wrap gap-x-3 text-caption text-text-secondary">
           <span className="font-mono">{r.batch}</span>
@@ -342,6 +353,25 @@ function PlanLine({ line, t }: { line: PlanLineData; t: OrdersT }) {
       ))}
     </>
   );
+}
+
+const BY_PLACE_KEY = "medix-pick-by-place";
+
+/** «Joy boʻyicha saralash» — yigʻuvchining shaxsiy tanlovi (brauzerda). */
+function readByPlace(): boolean {
+  try {
+    return localStorage.getItem(BY_PLACE_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function saveByPlace(v: boolean) {
+  try {
+    localStorage.setItem(BY_PLACE_KEY, v ? "1" : "0");
+  } catch {
+    /* saqlanmasa ham ishlaydi */
+  }
 }
 
 /** Terish varagʻi yangi oynada ochiladi va oʻzi chop etish oynasini chaqiradi. */
@@ -359,13 +389,16 @@ function ActivePick({ item, now }: { item: QueueItem; now: Date }) {
   const [error, setError] = useState<unknown>(null);
   const [other, setOther] = useState<Record<number, PickBatch>>({});
   const [choosing, setChoosing] = useState<{ id: number; name: string; qty: number } | null>(null);
+  const [byPlace, setByPlace] = useState(readByPlace);
   if (order.error) return <ErrorState error={order.error} onRetry={() => order.refetch()} />;
   if (!order.data) return <Skeleton className="h-40 w-full" />;
   const d = order.data;
   const deadline = item.deadline ? new Date(item.deadline) : null;
   const left = deadline ? clockLeft(deadline, now) : null;
   // Qator boʻyicha «Yigʻishga qaytarish»dan keyin — faqat shu qatorlar (SPEC 188)
-  const lines = repickLines(d);
+  const ordered = repickLines(d);
+  const hasPlaces = ordered.some((l) => l.location);
+  const lines = byPlace && hasPlaces ? sortByLocation(ordered) : ordered;
   const all = lines.every((l) => taken[l.id]);
   const err = describeError(error);
 
@@ -430,6 +463,17 @@ function ActivePick({ item, now }: { item: QueueItem; now: Date }) {
       {lines.length < d.lines.length ? (
         <Alert className="mt-3" tone="info" title={tr("picking.repickOnly", { count: lines.length })} />
       ) : null}
+      {hasPlaces ? (
+        <Checkbox
+          className="mt-3"
+          label={tr("picking.byPlace")}
+          checked={byPlace}
+          onChange={(v) => {
+            setByPlace(v);
+            saveByPlace(v);
+          }}
+        />
+      ) : null}
       <ul className="mt-4 flex flex-col">
         {lines.map((l) => (
           <li key={l.id} className="flex items-start gap-3 border-t border-border py-3">
@@ -489,6 +533,13 @@ function ActivePick({ item, now }: { item: QueueItem; now: Date }) {
       <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
         <Button variant="secondary" icon={Printer} onClick={() => openPickSheet([id])}>
           {tr("picking.printPickSheet")}
+        </Button>
+        <Button
+          variant="tertiary"
+          icon={FileSpreadsheet}
+          onClick={() => window.open(`/api/orders/${id}/invoice-forms/WAREHOUSE2/xlsx`, "_blank", "noopener")}
+        >
+          Фактура для склада №2
         </Button>
         <IssueButton orderId={id} />
         <Button icon={PackageCheck} disabled={!all} loading={pending} onClick={() => void finish()}>

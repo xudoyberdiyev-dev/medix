@@ -69,6 +69,14 @@ describe("toPageRequest", () => {
     expect(r.packQty).toBe(28);
     expect(r.code).toBe("48203315");
   });
+  it("O13: ombordagi joy — har ombor uchun, boʻsh — oʻchirish (undefined), 60 belgidan kesiladi", () => {
+    const r = toPageRequest({ ...filled, locations: { "4": "  A qator · 3-stellaj ", "7": " ", "9": "x".repeat(70) } });
+    expect(r.locations).toEqual([
+      { warehouseId: 4, location: "A qator · 3-stellaj" },
+      { warehouseId: 7, location: undefined },
+      { warehouseId: 9, location: "x".repeat(60) },
+    ]);
+  });
   it("12% — ozod emas", () => {
     expect(toPageRequest(filled)).toMatchObject({ vatRate: "12", vatExempt: false, unitId: 1, manufacturerId: 3 });
   });

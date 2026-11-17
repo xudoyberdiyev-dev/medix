@@ -123,7 +123,7 @@ class ReserveCodeController {
                 row.createCell(i++).setCellValue(z.productName());
                 row.createCell(i++).setCellValue(z.batch());
                 row.createCell(i++).setCellValue(z.expiryDate() == null ? "" : DATE.format(z.expiryDate()));
-                row.createCell(i++).setCellValue(z.kind() == MarkingModels.MarkKind.BOX ? "Q" : "D");
+                row.createCell(i++).setCellValue(z.kind().label());
                 row.createCell(i++).setCellValue(z.orderNumber());
                 row.createCell(i++).setCellValue(z.customer());
                 row.createCell(i++).setCellValue(z.branch());

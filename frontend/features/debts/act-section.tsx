@@ -2,13 +2,13 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import { Printer, ScrollText } from "lucide-react";
+import { ScrollText } from "lucide-react";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { EmptyState, ErrorState } from "@/components/ui/system-states";
 import { Table, type TableColumn } from "@/components/ui/table";
 import { TextField } from "@/components/ui/text-field";
 import { formatIsoDate, parseUzDate, todayTashkent } from "@/features/counterparties/api";
+import { ActFiles } from "@/features/debts/act-files";
 import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
 import { formatMoney } from "@/lib/format";
@@ -81,15 +81,7 @@ export function ActSection(props: { side: "CUSTOMER" | "SUPPLIER"; counterpartyI
             error={isoTo === null ? t("badDate") : undefined}
           />
         </div>
-        <Button
-          variant="secondary"
-          size="sm"
-          icon={Printer}
-          disabled={!act.data}
-          onClick={() => openActPdf(props, isoFrom ?? null, isoTo ?? null)}
-        >
-          {t("print")}
-        </Button>
+        <ActFiles base={actBase(props)} query={actQuery(props, isoFrom ?? null, isoTo ?? null)} disabled={!act.data} />
       </div>
       {act.data ? (
         <dl className="grid grid-cols-2 gap-4 md:grid-cols-4">
@@ -117,26 +109,26 @@ export function ActSection(props: { side: "CUSTOMER" | "SUPPLIER"; counterpartyI
   );
 }
 
-/** Server PDF yangi oynada: /api/debts/{customers|suppliers}/{id}/act/pdf?branchId&from&to. */
+/** Akt manzili asosi: /api/debts/{customers|suppliers}/{id}/act (+ /pdf yoki /xlsx). */
+export function actBase(props: { side: "CUSTOMER" | "SUPPLIER"; counterpartyId: number }): string {
+  return `/api/debts/${props.side === "CUSTOMER" ? "customers" : "suppliers"}/${props.counterpartyId}/act`;
+}
+
+export function actQuery(props: { branchId: number | null }, from: string | null, to: string | null): URLSearchParams {
+  const q = new URLSearchParams();
+  if (props.branchId != null) q.set("branchId", String(props.branchId));
+  if (from) q.set("from", from);
+  if (to) q.set("to", to);
+  return q;
+}
+
+/** Server PDF: /api/debts/{customers|suppliers}/{id}/act/pdf?branchId&from&to. */
 export function actPdfUrl(
   props: { side: "CUSTOMER" | "SUPPLIER"; counterpartyId: number; branchId: number | null },
   from: string | null,
   to: string | null,
 ): string {
-  const q = new URLSearchParams();
-  if (props.branchId != null) q.set("branchId", String(props.branchId));
-  if (from) q.set("from", from);
-  if (to) q.set("to", to);
-  const kind = props.side === "CUSTOMER" ? "customers" : "suppliers";
-  return `/api/debts/${kind}/${props.counterpartyId}/act/pdf?${q.toString()}`;
-}
-
-function openActPdf(
-  props: { side: "CUSTOMER" | "SUPPLIER"; counterpartyId: number; branchId: number | null },
-  from: string | null,
-  to: string | null,
-) {
-  window.open(actPdfUrl(props, from, to), "_blank", "noopener");
+  return `${actBase(props)}/pdf?${actQuery(props, from, to).toString()}`;
 }
 
 function Sum(props: { label: string; value: string; currency: string; strong?: boolean }) {

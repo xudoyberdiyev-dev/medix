@@ -281,7 +281,7 @@ class InvoiceTasks {
                 WHERE m.order_id = :o AND m.status IN ('ACTIVE', 'SOLD') ORDER BY l.line_no, m.id""")
                 .param("o", t.orderId())
                 .query((rs, n) -> new CodeRow(rs.getString("scanned"), rs.getString("gtin"), rs.getString("product"),
-                        "Q".equals(rs.getString("kind")) ? MarkingModels.MarkKind.BOX : MarkingModels.MarkKind.UNIT))
+                        MarkingModels.MarkKind.ofDb(rs.getString("kind"))))
                 .list();
     }
 

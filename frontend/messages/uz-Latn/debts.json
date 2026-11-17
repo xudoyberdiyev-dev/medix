@@ -75,6 +75,14 @@
     "legend": {
       "CUSTOMER": "Musbat qoldiq — mijoz qarzdor, manfiy — avans.",
       "SUPPLIER": "Musbat qoldiq — kompaniya yetkazib beruvchiga qarzdor, manfiy — avans."
+    },
+    "lang": "Hujjat tili",
+    "pdf": "PDF",
+    "excel": "Excel",
+    "langs": {
+      "ru": "Rus tili",
+      "uz-Latn": "Oʻzbek (lotin)",
+      "uz-Cyrl": "Oʻzbek (kirill)"
     }
   },
   "offset": {

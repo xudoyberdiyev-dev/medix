@@ -52,7 +52,8 @@ class MarkingController {
 
     /** Rad etilgan kod (skaner xatosi) kalitlari — «Xato urishlar» uchun. */
     static final java.util.Set<String> WRONG_SCAN = java.util.Set.of("marking.format", "marking.batchMismatch", "marking.duplicate",
-            "marking.duplicateHere", "marking.lineFull", "marking.productMismatch", "marking.expiryInvalid", "marking.gtinInvalid");
+            "marking.duplicateHere", "marking.lineFull", "marking.productMismatch", "marking.expiryInvalid", "marking.gtinInvalid",
+            "marking.ssccInvalid", "marking.boxTooBig");
 
     private final OrderMarking marking;
     private final MarkScanErrors scanErrors;
@@ -101,11 +102,12 @@ class MarkingController {
     @PostMapping("/orders/{id}/scan")
     @PreAuthorize("hasAuthority('marking.scan')")
     @Operation(summary = "Kodni skanerlash",
-            description = "Tekshiruv tartibi: format → takror (global) → mahsulot (GTIN) → partiya → tur (quti/dona) → qator to'lganmi.")
+            description = "Tekshiruv tartibi: format → takror (global) → mahsulot (GTIN; quti/SSCC — lineId, gtin yoki yagona qator) → partiya "
+                    + "(kodda bo'lsa) → qator to'lganmi. Quti (SSCC) mahsulotning «1 qadoqdagi dona» soni qadar birlik hisoblanadi.")
     ScanResult scan(@PathVariable long id, @Valid @RequestBody ScanRequest r) {
         Actor a = actor();
         try {
-            return marking.scan(a, id, r.code());
+            return marking.scan(a, id, r.code(), r.lineId(), r.gtin());
         } catch (MedixException e) {
             // «Xato urishlar»: faqat kodning o'zi rad etilgani (format, takror, mahsulot, partiya, tur, ortiqcha); holat/ruxsat xatolari hisoblanmaydi
             if (WRONG_SCAN.contains(e.code()) || e.code().startsWith("marking.kind")) {
@@ -140,11 +142,10 @@ class MarkingController {
         return marking.get(actor(), id);
     }
 
-    private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 
     /**
-     * O10a «Excel'ga chiqarish»: Saplayn'da tekshirish uchun buyurtma kodlari .xlsx — to'liq skanerlangan kod (kripto-qismi bilan,
-     * GS ajratgichi «&lt;GS&gt;» ko'rinishida), qavsli kod, GTIN, seriya, mahsulot, partiya, yaroqlilik, Q/D, buyurtma, mijoz, STIR.
+     * O10a «Excel'ga chiqarish»: Saplayn'da tekshirish uchun buyurtma kodlari .xlsx — egasi formati (O16): «Markirovka kodi» (to'liq
+     * skanerlangan, kripto-qismi bilan, GS — «&lt;GS&gt;») | «GTIN», mahsulot sarlavhasi bilan.
      * Yuklab olish qayd etiladi — shundan keyin yakunlash mumkin.
      */
     @GetMapping("/orders/{id}/verify-export")
@@ -155,43 +156,10 @@ class MarkingController {
         String name = "saplayn-" + rows.getFirst().orderNumber().replaceAll("[^A-Za-z0-9-]", "");
         response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         response.setHeader("Content-Disposition", "attachment; filename=\"" + name + ".xlsx\"");
-        try (SXSSFWorkbook wb = new SXSSFWorkbook(200)) {
-            Sheet sheet = wb.createSheet("Kodlar");
-            CellStyle header = wb.createCellStyle();
-            Font font = wb.createFont();
-            font.setBold(true);
-            header.setFont(font);
-            List<String> titles = List.of("Toʻliq kod (GS = <GS>)", "Kod (qavsli)", "GTIN", "Seriya", "Mahsulot", "Partiya", "Yaroqlilik",
-                    "Q/D", "Buyurtma №", "Mijoz", "STIR");
-            Row h = sheet.createRow(0);
-            for (int i = 0; i < titles.size(); i++) {
-                Cell c = h.createCell(i);
-                c.setCellValue(titles.get(i));
-                c.setCellStyle(header);
-            }
-            int r = 1;
-            for (OrderMarking.VerifyRow v : rows) {
-                Row row = sheet.createRow(r++);
-                int i = 0;
-                row.createCell(i++).setCellValue(Gs1Code.visibleGs(v.scanned()));
-                row.createCell(i++).setCellValue(v.code());
-                row.createCell(i++).setCellValue(v.gtin());
-                row.createCell(i++).setCellValue(v.serial());
-                row.createCell(i++).setCellValue(v.product());
-                row.createCell(i++).setCellValue(nz(v.batch()));
-                row.createCell(i++).setCellValue(v.expiry() == null ? "" : DATE.format(v.expiry()));
-                row.createCell(i++).setCellValue(v.kind() == MarkKind.BOX ? "Q" : "D");
-                row.createCell(i++).setCellValue(v.orderNumber());
-                row.createCell(i++).setCellValue(v.customer());
-                row.createCell(i).setCellValue(v.tin());
-            }
-            int[] widths = {70, 60, 16, 20, 40, 14, 12, 5, 16, 30, 15};
-            for (int i = 0; i < titles.size(); i++) {
-                sheet.setColumnWidth(i, widths[i] * 256);
-            }
-            sheet.createFreezePane(0, 1);
-            wb.write(response.getOutputStream());
-        }
+        // O16: egasi formati — mahsulot sarlavhasi, quti (SSCC) kodlari, keyin dona kodlari (to'liq, kripto-qismi bilan, GS = «<GS>»)
+        MarkCodesSheet.write(response.getOutputStream(), "Kodlar", rows.stream()
+                .map(v -> new MarkCodesSheet.Entry(v.product(), v.gtin(), Gs1Code.visibleGs(v.scanned()), v.kind() == MarkKind.AGGREGATE))
+                .toList());
     }
 
     @GetMapping("/codes")
@@ -233,7 +201,7 @@ class MarkingController {
         if (codes.isEmpty()) {
             throw MedixException.badRequest("marking.import.empty");
         }
-        List<OrderMarking.ImportOutcome> out = marking.importCodes(a, id, codes.stream().map(MarkingImport.FileCode::code).toList(), apply);
+        List<OrderMarking.ImportOutcome> out = marking.importCodes(a, id, codes, apply);
         Locale locale = Texts.requestLocale();
         List<MarkImportRow> rows = new ArrayList<>();
         for (int i = 0; i < out.size(); i++) {
@@ -297,7 +265,7 @@ class MarkingController {
                 row.createCell(i++).setCellValue(nz(m.gtin()));
                 row.createCell(i++).setCellValue(nz(m.serial()));
                 row.createCell(i++).setCellValue(nz(m.batch()));
-                row.createCell(i++).setCellValue(m.kind() == MarkKind.BOX ? "Quti" : "Dona");
+                row.createCell(i++).setCellValue(m.kind() == MarkKind.UNIT ? "Dona" : m.kind() == MarkKind.AGGREGATE ? "Quti (SSCC)" : "Quti");
                 row.createCell(i++).setCellValue(statusLabel(m.status()));
                 row.createCell(i++).setCellValue(m.scannedBy());
                 row.createCell(i++).setCellValue(TIME.format(m.scannedAt()));

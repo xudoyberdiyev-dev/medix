@@ -50,7 +50,9 @@ public class Products {
                    co.name AS country, p.dosage_form, p.dose, coalesce(u.short_name, u.name) AS unit, p.pack_qty,
                    (SELECT b.barcode FROM product_barcode b WHERE b.product_id = p.id ORDER BY b.id LIMIT 1) AS barcode,
                    p.ikpu, p.farm_id, e.full_name AS supply_employee, p.controlled, p.marked, p.prescription, p.vat_rate,
-                   p.min_qty, p.max_qty, coalesce(st.qty, 0) AS stock, pr.amount AS price, p.note, p.active
+                   p.min_qty, p.max_qty, coalesce(st.qty, 0) AS stock, pr.amount AS price, p.note, p.active,
+                   (SELECT string_agg(DISTINCT l.location, ', ') FROM product_location l JOIN warehouse lw ON lw.id = l.warehouse_id
+                    WHERE l.product_id = p.id AND (:allStock OR lw.branch_id = :stockBranch)) AS location
             """;
 
     /** Filtrlar uchun asosiy FROM (count va variantlar). */
@@ -110,8 +112,10 @@ public class Products {
             }
             where.append(" AND ((true").append(words).append(")")
                     .append(" OR p.code = :exact OR p.ikpu = :exact OR lower(p.farm_id) = lower(:exact)")
-                    .append(" OR EXISTS (SELECT 1 FROM product_barcode b WHERE b.product_id = p.id AND b.barcode = :exact))");
+                    .append(" OR EXISTS (SELECT 1 FROM product_barcode b WHERE b.product_id = p.id AND b.barcode = :exact)")
+                    .append(" OR EXISTS (SELECT 1 FROM product_location l WHERE l.product_id = p.id AND lower(l.location) LIKE :locLike ESCAPE '\\'))");
             params.put("exact", f.q().strip());
+            params.put("locLike", "%" + SearchText.likeEscape(f.q().strip().toLowerCase(java.util.Locale.ROOT)) + "%");
         }
         if (!f.ids().isEmpty()) {
             where.append(" AND p.id IN (:ids)");
@@ -198,6 +202,7 @@ public class Products {
             case MAX_QTY -> "p.max_qty" + dir + " NULLS LAST, lower(p.name)";
             case STOCK -> "coalesce(st.qty, 0)" + dir + ", lower(p.name)";
             case PRICE -> "pr.amount" + dir + " NULLS LAST, lower(p.name)";
+            case LOCATION -> "location" + dir + " NULLS LAST, lower(p.name)";
         };
         long total = jdbc.sql("SELECT count(*)" + FROM + where).params(params).query(Long.class).single();
         Actor actor = currentActor.current().orElse(null);
@@ -284,7 +289,7 @@ public class Products {
                 new Ref(b.unitId(), b.unit()), ref(b.supplyEmployeeId(), b.supplyEmployee()), b.ikpu(), b.farmId(), barcodes(id),
                 b.controlled(), b.marked(), b.prescription(), vat(b.vatRate()), b.minQty(), b.maxQty(),
                 b.dosageForm() == null ? null : DosageForm.valueOf(b.dosageForm()), b.dose(), b.packQty(), b.perPack(), b.note(), b.active(),
-                b.vatExempt(), b.hasMovements(), history));
+                b.vatExempt(), b.hasMovements(), history, locations(id)));
     }
 
     @Transactional(readOnly = true)
@@ -330,6 +335,7 @@ public class Products {
                 .query(Long.class)
                 .single();
         saveBarcodes(id, n.barcodes());
+        saveLocations(id, r.locations());
         refreshSearchText(id);
         ProductDetail created = find(id).orElseThrow();
         audit.record(AuditEntry.of("product.create", "product", id).change(null, snapshot(created)));
@@ -364,6 +370,7 @@ public class Products {
                 .update();
         jdbc.sql("DELETE FROM product_barcode WHERE product_id = :id").param("id", id).update();
         saveBarcodes(id, n.barcodes());
+        saveLocations(id, r.locations());
         refreshSearchText(id);
         ProductDetail after = find(id).orElseThrow();
         audit.record(AuditEntry.of("product.update", "product", id).change(snapshot(before), snapshot(after)));
@@ -512,6 +519,83 @@ public class Products {
                 .single();
         if (!ok) {
             throw MedixException.badRequest("product.refUnknown");
+        }
+    }
+
+    /** O13: yangi mahsulot shakli uchun — joysiz omborlar ro'yxati. */
+    @Transactional(readOnly = true)
+    List<ProductModels.Location> locationWarehouses() {
+        return locations(-1L);
+    }
+
+    /** O13: xodim doirasidagi faol omborlar va ulardagi joy (joy berilmagani — null). */
+    private List<ProductModels.Location> locations(long productId) {
+        Actor actor = currentActor.current().orElse(null);
+        boolean all = actor == null || actor.allBranches();
+        return jdbc.sql("""
+                SELECT w.id, w.name, b.name AS branch, l.location
+                FROM warehouse w JOIN branch b ON b.id = w.branch_id
+                LEFT JOIN product_location l ON l.warehouse_id = w.id AND l.product_id = :p
+                WHERE (w.active OR l.location IS NOT NULL) AND (:all OR w.branch_id = :b)
+                ORDER BY lower(b.name), lower(w.name), w.id""")
+                .param("p", productId)
+                .param("all", all)
+                .param("b", actor == null || actor.branchId() == null ? -1L : actor.branchId())
+                .query((rs, n) -> new ProductModels.Location(rs.getLong("id"), rs.getString("name"), rs.getString("branch"),
+                        rs.getString("location")))
+                .list();
+    }
+
+    /**
+     * O13 (import ustuni «Hudud»): joy xodim filialining asosiy (birinchi faol) omboriga yoziladi. Bo'sh yoki ombor topilmasa — null.
+     */
+    List<ProductModels.LocationInput> defaultLocation(String location) {
+        if (location == null || location.isBlank()) {
+            return null;
+        }
+        Long branch = currentActor.current().map(Actor::branchId).orElse(null);
+        return jdbc.sql("SELECT id FROM warehouse WHERE active AND (CAST(:b AS BIGINT) IS NULL OR branch_id = :b) ORDER BY id LIMIT 1")
+                .param("b", branch)
+                .query(Long.class)
+                .optional()
+                .map(w -> List.of(new ProductModels.LocationInput(w, location.strip())))
+                .orElse(null);
+    }
+
+    /** O13: joylarni saqlash ({@code null} — o'zgartirilmaydi; bo'sh joy — o'chiriladi). Faqat xodim filialidagi omborlar. */
+    private void saveLocations(long productId, List<ProductModels.LocationInput> list) {
+        if (list == null) {
+            return;
+        }
+        Actor actor = currentActor.current().orElse(null);
+        Set<Long> seen = new java.util.HashSet<>();
+        for (ProductModels.LocationInput in : list) {
+            if (in == null || in.warehouseId() == null || !seen.add(in.warehouseId())) {
+                continue;
+            }
+            Long branch = jdbc.sql("SELECT branch_id FROM warehouse WHERE id = :w")
+                    .param("w", in.warehouseId())
+                    .query(Long.class)
+                    .optional()
+                    .orElseThrow(() -> MedixException.badRequest("product.locationWarehouse"));
+            if (actor != null && !actor.canAccessBranch(branch)) {
+                throw MedixException.forbidden("auth.forbidden");
+            }
+            String loc = blankToNull(in.location());
+            if (loc == null) {
+                jdbc.sql("DELETE FROM product_location WHERE product_id = :p AND warehouse_id = :w")
+                        .param("p", productId)
+                        .param("w", in.warehouseId())
+                        .update();
+            } else {
+                jdbc.sql("""
+                        INSERT INTO product_location (product_id, warehouse_id, location) VALUES (:p, :w, :l)
+                        ON CONFLICT (product_id, warehouse_id) DO UPDATE SET location = excluded.location, updated_at = now()""")
+                        .param("p", productId)
+                        .param("w", in.warehouseId())
+                        .param("l", loc)
+                        .update();
+            }
         }
     }
 
@@ -677,7 +761,8 @@ public class Products {
                 rs.getString("barcode"), rs.getString("ikpu"), rs.getString("farm_id"), rs.getString("supply_employee"),
                 rs.getBoolean("controlled"), rs.getBoolean("marked"), rs.getBoolean("prescription"), vat(rs.getBigDecimal("vat_rate")),
                 (Integer) rs.getObject("min_qty"), (Integer) rs.getObject("max_qty"), rs.getLong("stock"),
-                price == null ? null : new uz.medix.shared.money.Money(price).toString(), rs.getString("note"), rs.getBoolean("active"), null);
+                price == null ? null : new uz.medix.shared.money.Money(price).toString(), rs.getString("note"), rs.getBoolean("active"), null,
+                rs.getString("location"));
     }
 
     private static String vat(BigDecimal v) {
@@ -718,6 +803,9 @@ public class Products {
         m.put("perPack", d.perPack());
         m.put("note", d.note());
         m.put("vatExempt", d.vatExempt());
+        Map<String, String> loc = new java.util.TreeMap<>();
+        d.locations().stream().filter(l -> l.location() != null).forEach(l -> loc.put(l.warehouse(), l.location()));
+        m.put("locations", loc);
         return m;
     }
 }

@@ -134,7 +134,7 @@ class MarkingCodeReport {
                 .query((rs, n) -> new ReportCode(rs.getLong("id"), rs.getString("scanned"), rs.getString("gtin"), rs.getString("serial"),
                         rs.getLong("product_id"), rs.getString("product"), rs.getString("batch_no"),
                         rs.getDate("expiry") == null ? null : rs.getDate("expiry").toLocalDate(),
-                        "Q".equals(rs.getString("kind")) ? MarkKind.BOX : MarkKind.UNIT, rs.getLong("order_id"), rs.getString("order_number"),
+                        MarkKind.ofDb(rs.getString("kind")), rs.getLong("order_id"), rs.getString("order_number"),
                         rs.getLong("customer_id"), rs.getString("customer"), rs.getString("branch"), CodesOwner.valueOf(rs.getString("owner")),
                         MarkStatus.valueOf(rs.getString("status")),
                         rs.getString("reserve_status") == null ? null : ReserveStatus.valueOf(rs.getString("reserve_status")),

@@ -34,7 +34,7 @@ class OrderPickSheetPdf {
     static final int MAX_ORDERS = 20;
 
     /** Jamlangan qator. */
-    record Row(String zone, String productCode, String productName, String batch, LocalDate expiryDate, int qty,
+    record Row(String zone, String location, String productCode, String productName, String batch, LocalDate expiryDate, int qty,
             Map<String, Integer> orders) {}
 
     private final Orders orders;
@@ -84,10 +84,11 @@ class OrderPickSheetPdf {
                     String zone = r.zone() == null ? "" : r.zone();
                     String batch = r.batch() == null ? "" : r.batch();
                     String key = zone + '\u0000' + l.productCode() + '\u0000' + batch;
+                    String location = l.location() == null ? "" : l.location();
                     Row prev = map.get(key);
                     Map<String, Integer> refs = prev == null ? new LinkedHashMap<>() : prev.orders();
                     refs.merge(o.number(), r.qty(), Integer::sum);
-                    map.put(key, new Row(zone, l.productCode(), l.productName(), batch, r.expiryDate(),
+                    map.put(key, new Row(zone, location, l.productCode(), l.productName(), batch, r.expiryDate(),
                             (prev == null ? 0 : prev.qty()) + r.qty(), refs));
                 }
             }
@@ -95,6 +96,8 @@ class OrderPickSheetPdf {
         Collator uz = Collator.getInstance(Locale.forLanguageTag("uz"));
         Comparator<Row> order = Comparator.<Row, Boolean>comparing(r -> r.zone().isEmpty())
                 .thenComparing(Row::zone, uz)
+                .thenComparing(r -> r.location().isEmpty())
+                .thenComparing(Row::location, uz)
                 .thenComparing(Row::productName, uz)
                 .thenComparing(Row::expiryDate, Comparator.nullsFirst(Comparator.naturalOrder()))
                 .thenComparing(Row::batch, uz);
@@ -116,6 +119,7 @@ class OrderPickSheetPdf {
     private static Map<String, Object> asMap(Row r) {
         Map<String, Object> m = new HashMap<>();
         m.put("zone", r.zone().isEmpty() ? PdfFormat.DASH : r.zone());
+        m.put("location", r.location().isEmpty() ? PdfFormat.DASH : r.location());
         m.put("code", r.productCode());
         m.put("name", r.productName());
         m.put("batch", r.batch().isEmpty() ? PdfFormat.DASH : r.batch());

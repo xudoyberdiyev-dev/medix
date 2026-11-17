@@ -180,6 +180,13 @@ class ProductController {
         return new ProductModels.NewCode(products.suggestCode());
     }
 
+    @GetMapping("/location-warehouses")
+    @PreAuthorize(MANAGE)
+    @Operation(summary = "O13: «Hudud» uchun omborlar (yangi mahsulot shakli) — xodim doirasidagi faol omborlar")
+    List<ProductModels.Location> locationWarehouses() {
+        return products.locationWarehouses();
+    }
+
     @GetMapping("/duplicates")
     @PreAuthorize(MANAGE)
     @Operation(summary = "Shakl tekshiruvi: dublikatlar", description = "Shu nom + ishlab chiqaruvchi, kod egasi (eski kodlar ham), shtrix-kod egalari.")

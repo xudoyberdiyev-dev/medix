@@ -84,6 +84,7 @@ class InventoryCountPdf {
     private static Map<String, Object> row(InventoryCountLine l, boolean sheet) {
         Map<String, Object> m = new HashMap<>();
         m.put("zone", l.zone().name());
+        m.put("location", l.location() == null ? "" : l.location());
         m.put("code", l.productCode());
         m.put("name", l.productName());
         m.put("batch", l.batchNumber());

@@ -853,6 +853,7 @@ function WorkDoc({ doc }: { doc: InventoryCountDetail }) {
       render: (l) => <span className={l.expiryDate < todayIso() ? "text-danger" : "text-text-secondary"}>{day(l.expiryDate)}</span>,
     },
     { key: "z", title: t("doc.cZone"), render: (l) => <span className="text-text-secondary">{l.zone.name}</span> },
+    { key: "loc", title: t("doc.cLocation"), render: (l) => <span className="text-text-secondary">{l.location ?? "—"}</span> },
     ...(doc.bookHidden
       ? []
       : [

@@ -14,6 +14,7 @@ import {
   ListChecks,
   Lock,
   MessageSquareText,
+  Package,
   ReceiptText,
   ScanBarcode,
   ScanLine,
@@ -23,6 +24,7 @@ import {
   Trash2,
   Truck,
   User,
+  X,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
@@ -66,14 +68,24 @@ export function confirmText(lines: Pick<UnmarkedLine, "confirmed">[], t: OrdersT
   return t("marking.confirmCounter", { done: formatQuantity(done), total: formatQuantity(lines.length) });
 }
 
-/** Hisoblagich: «10 / 10 quti · 25 / 25 dona» (SPEC 5.4). */
-export function counterText(w: Pick<MarkWork, "boxesScanned" | "boxesNeeded" | "unitsScanned" | "unitsNeeded">, t: OrdersT): string {
-  const parts: string[] = [];
-  if (w.boxesNeeded > 0)
-    parts.push(t("marking.counterBoxes", { scanned: formatQuantity(w.boxesScanned), needed: formatQuantity(w.boxesNeeded) }));
-  if (w.unitsNeeded > 0)
-    parts.push(t("marking.counterUnits", { scanned: formatQuantity(w.unitsScanned), needed: formatQuantity(w.unitsNeeded) }));
-  return parts.join(" · ");
+/** Hisoblagich (O16): «3 quti (300 dona) + 10 dona = 310 / 310»; qutisiz — «10 / 25 dona». */
+export function counterText(w: Pick<MarkWork, "boxCodes" | "boxUnits" | "unitCodes" | "scannedQty" | "neededQty">, t: OrdersT): string {
+  if (w.neededQty <= 0) return "";
+  if (w.boxCodes > 0)
+    return t("marking.counterMixed", {
+      boxes: formatQuantity(w.boxCodes),
+      boxUnits: formatQuantity(w.boxUnits),
+      units: formatQuantity(w.scannedQty - w.boxUnits),
+      scanned: formatQuantity(w.scannedQty),
+      needed: formatQuantity(w.neededQty),
+    });
+  return t("marking.counterUnits", { scanned: formatQuantity(w.scannedQty), needed: formatQuantity(w.neededQty) });
+}
+
+/** Kod qatori (ro'yxat): quti — «SSCC · quti (100 dona)», dona — «seriya · partiya · dona». */
+export function codeText(c: Pick<MarkCode, "serial" | "batch" | "kind" | "units">, t: OrdersT): string {
+  if (c.kind === "AGGREGATE") return `${c.serial} · ${c.batch} · ${t("marking.boxUnits", { n: formatQuantity(c.units) })}`;
+  return `${c.serial} · ${c.batch} · ${t(`kind.${c.kind}`)}`;
 }
 
 function useNow(): Date {
@@ -363,11 +375,14 @@ function MarkQueueLines({ id }: { id: number }) {
 
 function ActiveMarking({ work }: { work: MarkWork }) {
   const tr = useTranslations("orders");
+  const tc = useTranslations("common");
   const qc = useQueryClient();
   const now = useNow();
   const input = useRef<HTMLInputElement>(null);
   const [value, setValue] = useState("");
   const [flash, setFlash] = useState<Flash | null>(null);
+  // O16: quti (SSCC) kodi qaysi mahsulotniki — aniqlanmasa qo'lda tanlanadi
+  const [boxPending, setBoxPending] = useState<string | null>(null);
   const [finishing, setFinishing] = useState(false);
   const [finishError, setFinishError] = useState<unknown>(null);
   const [removing, setRemoving] = useState<MarkCode | null>(null);
@@ -420,22 +435,29 @@ function ActiveMarking({ work }: { work: MarkWork }) {
     queue.current = queue.current.then(() => scanOne(raw)).finally(() => setQueued((n) => n - 1));
   }
 
-  async function scanOne(raw: string) {
+  async function scanOne(raw: string, lineId?: number) {
     const parsed = parseGs1(raw);
     if (!parsed.ok) {
       show({
         ok: false,
         title: tr("marking.rejected"),
-        detail: tr(`gs1.${parsed.error.slice("marking.".length) as "format" | "gtinInvalid" | "kindInvalid" | "expiryInvalid"}`),
+        detail: tr(`gs1.${parsed.error.slice("marking.".length) as "format" | "gtinInvalid" | "ssccInvalid" | "expiryInvalid"}`),
       });
       return;
     }
     try {
       await ensureCsrf();
-      const r = await unwrap(api.POST("/api/marking/orders/{id}/scan", { params: { path: { id: work.id } }, body: { code: raw } }));
+      const r = await unwrap(
+        api.POST("/api/marking/orders/{id}/scan", {
+          params: { path: { id: work.id } },
+          body: lineId === undefined ? { code: raw } : { code: raw, lineId },
+        }),
+      );
+      setBoxPending(null);
       qc.setQueryData(["marking", "mine"], r.work);
       show({ ok: true, title: tr("marking.accepted"), detail: `${r.accepted.productName} · ${counterText(r.work, tr)}` });
     } catch (e) {
+      if (e instanceof ApiError && e.code === "marking.aggregateNeedProduct") setBoxPending(raw);
       show({ ok: false, title: tr("marking.rejected"), detail: e instanceof ApiError ? e.message : (describeError(e).message ?? "") });
     }
   }
@@ -590,7 +612,30 @@ function ActiveMarking({ work }: { work: MarkWork }) {
                 aria-label={tr("marking.codeAria")}
                 className="h-12 w-full rounded-control border border-border bg-surface px-3 font-mono focus:border-primary focus:outline-none"
               />
+              <span className="mt-1 block text-caption text-text-secondary">{tr("marking.scanHint")}</span>
             </label>
+          ) : null}
+          {boxPending ? (
+            <div
+              role="group"
+              aria-label={tr("marking.pickBoxProduct")}
+              className="mt-3 rounded-card border border-warning bg-warning-bg p-3"
+            >
+              <p className="mb-2">{tr("marking.pickBoxProduct")}</p>
+              <p className="mb-2 font-mono text-caption text-text-secondary">{boxPending}</p>
+              <div className="flex flex-wrap gap-2">
+                {work.lines
+                  .filter((l) => l.scanned < l.qty)
+                  .map((l) => (
+                    <Button key={l.lineId} size="sm" variant="secondary" icon={Package} onClick={() => void scanOne(boxPending, l.lineId)}>
+                      {l.productName}
+                    </Button>
+                  ))}
+                <Button size="sm" variant="tertiary" icon={X} onClick={() => setBoxPending(null)}>
+                  {tc("cancel")}
+                </Button>
+              </div>
+            </div>
           ) : null}
           <ul className="mt-4 flex flex-col">
             {work.lines.map((l) => (
@@ -724,9 +769,7 @@ function ActiveMarking({ work }: { work: MarkWork }) {
               <li key={c.id} className="flex items-start justify-between gap-2 rounded-card border border-border bg-surface p-2">
                 <div className="min-w-0">
                   <div className="truncate">{c.productName}</div>
-                  <div className="truncate font-mono text-caption text-text-secondary">
-                    {c.serial} · {c.batch} · {tr(`kind.${c.kind}`)}
-                  </div>
+                  <div className="truncate font-mono text-caption text-text-secondary">{codeText(c, tr)}</div>
                 </div>
                 <Button
                   size="sm"
@@ -844,7 +887,7 @@ function CodesJournal({ today, mine }: { today: boolean; mine: boolean }) {
                     <td className="px-3 py-2 font-mono">{c.orderNumber}</td>
                     <td className="px-3 py-2">{c.productName}</td>
                     <td className="px-3 py-2 font-mono" title={c.code}>
-                      {c.serial} · {c.batch} · {t(`kind.${c.kind}`)}
+                      {codeText(c, t)}
                     </td>
                     <td className="px-3 py-2">
                       <Badge tone={STATUS_TONE[c.status]}>{t(`marking.codeStatus.${c.status}`)}</Badge>

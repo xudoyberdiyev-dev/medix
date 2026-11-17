@@ -7,6 +7,7 @@ import {
   ChevronUp,
   CircleAlert,
   FileDown,
+  FileSpreadsheet,
   Info,
   ListPlus,
   Lock,
@@ -70,6 +71,7 @@ import {
   codesExportUrl,
 } from "./api";
 import { CatalogView } from "./catalog-dialog";
+import { FORM_TYPES, InvoiceFormsModal, type FormType } from "./invoice-forms";
 import { formatPct, parsePct, pctText } from "./discount";
 import { OrderCardAside, OrderCardBody, OrderStepper } from "./order-card";
 import { CustomerStateRow, RecentOrders, useCustomerCredit, type PreviousOrder } from "./customer-state";
@@ -212,6 +214,8 @@ function Editor({
   const [adding, setAdding] = useState<{ product: string | null; qty: string }>({ product: null, qty: "" });
   const [local, setLocal] = useState<string | null>(null);
   const [dialog, setDialog] = useState<"catalog" | "reject" | "cancel" | "discard" | null>(null);
+  // O18: 5 xil faktura — oldindan koʻrish va qoʻlda tuzatish oynasi
+  const [invoiceForm, setInvoiceForm] = useState<FormType | null>(null);
   const seen = useRef(new Map<string, { code: string; name: string }>());
   const credit = useCustomerCredit(warehouseId ? Number(warehouseId) : null, editable && customer ? Number(customer) : null);
   const err = describeError(save.error ?? submit.error ?? approve.error ?? back.error);
@@ -426,6 +430,14 @@ function Editor({
       icon: <Printer size={16} strokeWidth={1.5} aria-hidden />,
       onSelect: () => window.open(`/api/orders/${doc.id}/invoice/pdf`, "_blank", "noopener"),
     });
+  if (doc && !editable && doc.status !== "PENDING_APPROVAL" && doc.status !== "REJECTED" && doc.status !== "CANCELLED")
+    for (const f of FORM_TYPES.filter((x) => !x.priced || can(me.data, "prices.view")))
+      printItems.push({
+        key: `form-${f.type}`,
+        label: t("invoiceForms.menu", { title: f.title }),
+        icon: <FileSpreadsheet size={16} strokeWidth={1.5} aria-hidden />,
+        onSelect: () => setInvoiceForm(f.type),
+      });
   const actions = (
     <>
       {frame === "page" && printItems.length ? (
@@ -521,6 +533,7 @@ function Editor({
           <p>{t(doc ? "drawer.discardChanged" : "drawer.discardNew")}</p>
         </Modal>
       ) : null}
+      {invoiceForm && doc ? <InvoiceFormsModal orderId={doc.id} initial={invoiceForm} onClose={() => setInvoiceForm(null)} /> : null}
       {(dialog === "reject" || dialog === "cancel") && doc ? (
         <DeactivateDialog
           title={dialog === "reject" ? t("drawer.rejectTitle", { number: doc.number }) : t("drawer.cancelTitle", { number: doc.number })}

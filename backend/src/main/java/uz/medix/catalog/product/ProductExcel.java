@@ -45,7 +45,7 @@ class ProductExcel {
     /** Import shablonining ustunlari (sarlavha nomi bo'yicha topiladi, tartib muhim emas). */
     static final List<String> TEMPLATE = List.of("Kod", "Nomi", "Shartnomadagi nomi", "Klassifikator nomi", "Ishlab chiqaruvchi",
             "Kategoriya", "Davlat", "Birlik", "Shtrix-kod", "IKPU", "Farm ID", "QQS", "Min", "Max", "Markirovkali", "Nazoratdagi",
-            "Retsept");
+            "Retsept", "Hudud");
 
     record ImportRowError(int row, String message) {}
 
@@ -81,7 +81,7 @@ class ProductExcel {
             // Prototip `Products` ustunlari tartibida
             String[] titles = {"Kod", "Mahsulot nomi", "Shartnomadagi nomi", "Klassifikator nomi", "Ishlab chiqaruvchi", "Davlat",
                 "Kategoriya", "Dori shakli", "Doza", "Birlik", "Qadoqdagi soni", "Shtrix-kod", "IKPU", "Farm ID", "Taʼminot masʼuli",
-                "Nazoratdagi", "Markirovka", "Retsept", "QQS, %", "Min", "Max", "Qoldiq", "Sotuv narxi", "Izoh", "Holat"};
+                "Nazoratdagi", "Markirovka", "Retsept", "QQS, %", "Min", "Max", "Qoldiq", "Sotuv narxi", "Hudud", "Izoh", "Holat"};
             Row h = sheet.createRow(0);
             for (int i = 0; i < titles.length; i++) {
                 Cell c = h.createCell(i);
@@ -115,6 +115,7 @@ class ProductExcel {
                 setInt(row.createCell(i++), p.maxQty());
                 row.createCell(i++).setCellValue(p.stock());
                 row.createCell(i++).setCellValue(p.price() == null ? "" : uz.medix.shared.money.Money.of(p.price()).format());
+                row.createCell(i++).setCellValue(Optional.ofNullable(p.location()).orElse(""));
                 row.createCell(i++).setCellValue(Optional.ofNullable(p.note()).orElse(""));
                 row.createCell(i).setCellValue(p.active() ? "Faol" : "Nofaol");
             }
@@ -217,7 +218,8 @@ class ProductExcel {
                 ProductRequest req = new ProductRequest(name, blank(r.get("Shartnomadagi nomi")), blank(r.get("Klassifikator nomi")),
                         manufacturer, category, country, unit, null, blank(r.get("IKPU")), blank(r.get("Farm ID")), barcodes,
                         yes(r.get("Nazoratdagi")), yes(r.get("Markirovkali")), yes(r.get("Retsept")), vat.isEmpty() ? "12" : vat,
-                        intOrNull(r.get("Min"), "Min"), intOrNull(r.get("Max"), "Max"), null, null, null, null, null, null, false);
+                        intOrNull(r.get("Min"), "Min"), intOrNull(r.get("Max"), "Max"), null, null, null, null, null, null, false,
+                        products.defaultLocation(blank(r.get("Hudud"))));
                 checkFormats(req);
                 products.create(req, code.isEmpty() ? null : code);
                 created++;

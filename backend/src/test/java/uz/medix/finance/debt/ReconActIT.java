@@ -156,11 +156,58 @@ class ReconActIT {
                 .andExpect(jsonPath("$.head.status").value("DIFF"))
                 .andExpect(jsonPath("$.head.theirBalance").value("500.00"))
                 .andExpect(jsonPath("$.head.diffNote").value("Qaytarish hisobga olinmagan"));
+        // O17: egasi shablonida PDF — raqam, hujjat matnlari, «выявлены расхождения», summa so'z bilan
+        byte[] pdf = mvc.perform(get("/api/reconciliations/" + id + "/pdf").cookie(acc)).andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsByteArray();
+        try (var doc = org.apache.pdfbox.Loader.loadPDF(pdf)) {
+            assertThat(new org.apache.pdfbox.text.PDFTextStripper().getText(doc).replaceAll("\\s+", " "))
+                    .contains("Акт сверки взаимных расчетов № AS-", "Продажа №SV-TST-9500001", "Платежное поручение №MT-TST-9500002",
+                            "выявлены расхождения: Qaytarish hisobga olinmagan", "Шестьсот сум 00 тийин");
+        }
+        mvc.perform(get("/api/reconciliations/" + id + "/pdf").cookie(stranger)).andExpect(status().isNotFound());
         mvc.perform(post("/api/reconciliations/" + id + "/status").with(csrf()).cookie(acc).contentType(MediaType.APPLICATION_JSON)
                 .content("{\"status\":\"SIGNED\"}")).andExpect(status().isOk()).andExpect(jsonPath("$.head.status").value("SIGNED"));
         // Imzolangan akt oʻzgarmaydi
         mvc.perform(post("/api/reconciliations/" + id + "/status").with(csrf()).cookie(acc).contentType(MediaType.APPLICATION_JSON)
                 .content("{\"status\":\"DIFF\",\"theirBalance\":\"1.00\",\"note\":\"x\"}")).andExpect(status().isBadRequest());
         assertThat(jdbc.sql("SELECT status FROM reconciliation_act WHERE id = :i").param("i", id).query(String.class).single()).isEqualTo("SIGNED");
+    }
+
+    /** O17: yetkazib beruvchi bilan (biz xaridor) — bizda kirim Кредит, to'lov Дебет; kontragent ustunlari — ko'zgu. */
+    @Test
+    void supplierActMirrorsColumns() throws Exception {
+        long b = branch();
+        long sup = party(true);
+        LocalDate t = today();
+        entry(b, sup, "SUPPLIER", "KR", 9_600_001L, "1000.00", t.plusDays(5), null, null);
+        entry(b, sup, "SUPPLIER", "YT", 9_600_002L, "-400.00", null, null, null);
+        Cookie acc = loginAs("ACCOUNTANT", b).cookie();
+        byte[] x = mvc.perform(get("/api/debts/suppliers/" + sup + "/act/xlsx").param("branchId", "" + b).cookie(acc))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsByteArray();
+        try (var wb = new org.apache.poi.xssf.usermodel.XSSFWorkbook(new java.io.ByteArrayInputStream(x))) {
+            var sh = wb.getSheetAt(0);
+            org.apache.poi.ss.usermodel.Row kr = null;
+            org.apache.poi.ss.usermodel.Row yt = null;
+            org.apache.poi.ss.usermodel.Row closing = null;
+            boolean letter = false;
+            for (var row : sh) {
+                var c1 = row.getCell(1);
+                String v = c1 == null ? "" : c1.toString();
+                kr = v.startsWith("Поступление №KR-TST-9600001") ? row : kr;
+                yt = v.startsWith("Платежное поручение №YT-TST-9600002") ? row : yt;
+                closing = v.equals("Сальдо конечное") ? row : closing;
+                letter |= row.getCell(0) != null && row.getCell(0).toString().contains("Письмо о признании");
+            }
+            assertThat(kr).isNotNull();
+            assertThat(kr.getCell(4).getStringCellValue()).isEqualTo("-");
+            assertThat(kr.getCell(5).getStringCellValue()).isEqualTo("1 000,00");
+            assertThat(kr.getCell(7).getStringCellValue()).isEqualTo("1 000,00");
+            assertThat(kr.getCell(8).getStringCellValue()).isEqualTo("-");
+            assertThat(yt.getCell(4).getStringCellValue()).isEqualTo("400,00");
+            assertThat(closing.getCell(5).getStringCellValue()).isEqualTo("600,00");
+            assertThat(closing.getCell(7).getStringCellValue()).isEqualTo("600,00");
+            // Biz qarzdormiz — qarzni tan olish xati (mijozga) chiqmaydi
+            assertThat(letter).isFalse();
+        }
     }
 }

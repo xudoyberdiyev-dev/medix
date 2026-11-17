@@ -239,6 +239,7 @@ function Screen({ doc }: { doc: InventoryCountDetail }) {
                         ) : null}
                       </span>
                       <span className="flex flex-wrap items-center gap-2 text-[13px] text-text-secondary">
+                        {l.location ? <span className="font-medium text-text-primary">{l.location} ·</span> : null}
                         <span className="font-mono text-text-primary">{l.batchNumber}</span>
                         <span className={expired ? "text-danger" : undefined}>{day(l.expiryDate)}</span>
                         {expired ? <span className="text-danger">{t("doc.toQuar")}</span> : null}

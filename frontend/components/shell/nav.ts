@@ -1,4 +1,5 @@
 import {
+  MessagesSquare,
   Archive,
   ArrowLeftRight,
   Banknote,
@@ -25,6 +26,7 @@ import {
   PackagePlus,
   Pill,
   ReceiptText,
+  Scale,
   ScanLine,
   ScrollText,
   Settings,
@@ -134,7 +136,13 @@ export const RETURN_PAGES = ["/customer-returns", "/write-offs", "/supplier-retu
 
 /** Menyu tuzilmasi — prototip `Medix ERP` (NAV) bilan aynan. */
 export const navigation: NavGroup[] = [
-  { items: [{ key: "home", label: "Bosh sahifa", href: "/", icon: House }] },
+  {
+    items: [
+      { key: "home", label: "Bosh sahifa", href: "/", icon: House },
+      // O12: ichki xabarlar va topshiriqlar — barcha rollar (panel rollari ham)
+      { key: "messages", label: "Xabarlar", href: "/messages", icon: MessagesSquare, anyOf: ["messages.use"] },
+    ],
+  },
   {
     // Panel rollari (Ombor mudiri, Yigʻuvchi, Markirovkachi, Haydovchi) — faqat oʻz paneli
     items: [
@@ -230,6 +238,7 @@ export const navigation: NavGroup[] = [
       { key: "customers", label: "Mijozlar", href: "/customers", icon: Users, anyOf: ["clients.view"] },
       { key: "suppliers", label: "Yetkazib beruvchilar", href: "/suppliers", icon: Factory, anyOf: ["suppliers.view"] },
       { key: "prices", label: "Narxlar", href: "/prices", icon: Tag, anyOf: ["prices.view"] },
+      { key: "referencePrices", label: "Referent narxlar", href: "/reference-prices", icon: Scale, anyOf: ["prices.reference"] },
       { key: "salesZones", label: "Savdo zonalari", href: "/sales-zones", icon: MapPinned, anyOf: ["salesZones.view", "salesZones.edit"] },
       { key: "dictionaries", label: "Boshqa maʼlumotnomalar", href: "/dictionaries", icon: List, anyOf: ["lookups.view"] },
     ],

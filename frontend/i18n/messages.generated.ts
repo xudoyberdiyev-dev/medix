@@ -6,6 +6,7 @@ import uzLatn_bonuses from "@/messages/uz-Latn/bonuses.json";
 import uzLatn_branchPanel from "@/messages/uz-Latn/branchPanel.json";
 import uzLatn_branchSales from "@/messages/uz-Latn/branchSales.json";
 import uzLatn_cash from "@/messages/uz-Latn/cash.json";
+import uzLatn_chat from "@/messages/uz-Latn/chat.json";
 import uzLatn_common from "@/messages/uz-Latn/common.json";
 import uzLatn_company from "@/messages/uz-Latn/company.json";
 import uzLatn_counterparties from "@/messages/uz-Latn/counterparties.json";
@@ -32,6 +33,7 @@ import uzLatn_products from "@/messages/uz-Latn/products.json";
 import uzLatn_profile from "@/messages/uz-Latn/profile.json";
 import uzLatn_receipts from "@/messages/uz-Latn/receipts.json";
 import uzLatn_reconciliations from "@/messages/uz-Latn/reconciliations.json";
+import uzLatn_referencePrices from "@/messages/uz-Latn/referencePrices.json";
 import uzLatn_reports from "@/messages/uz-Latn/reports.json";
 import uzLatn_reserveCodes from "@/messages/uz-Latn/reserveCodes.json";
 import uzLatn_roles from "@/messages/uz-Latn/roles.json";
@@ -56,6 +58,7 @@ import uzCyrl_bonuses from "@/messages/uz-Cyrl/bonuses.json";
 import uzCyrl_branchPanel from "@/messages/uz-Cyrl/branchPanel.json";
 import uzCyrl_branchSales from "@/messages/uz-Cyrl/branchSales.json";
 import uzCyrl_cash from "@/messages/uz-Cyrl/cash.json";
+import uzCyrl_chat from "@/messages/uz-Cyrl/chat.json";
 import uzCyrl_common from "@/messages/uz-Cyrl/common.json";
 import uzCyrl_company from "@/messages/uz-Cyrl/company.json";
 import uzCyrl_counterparties from "@/messages/uz-Cyrl/counterparties.json";
@@ -82,6 +85,7 @@ import uzCyrl_products from "@/messages/uz-Cyrl/products.json";
 import uzCyrl_profile from "@/messages/uz-Cyrl/profile.json";
 import uzCyrl_receipts from "@/messages/uz-Cyrl/receipts.json";
 import uzCyrl_reconciliations from "@/messages/uz-Cyrl/reconciliations.json";
+import uzCyrl_referencePrices from "@/messages/uz-Cyrl/referencePrices.json";
 import uzCyrl_reports from "@/messages/uz-Cyrl/reports.json";
 import uzCyrl_reserveCodes from "@/messages/uz-Cyrl/reserveCodes.json";
 import uzCyrl_roles from "@/messages/uz-Cyrl/roles.json";
@@ -106,6 +110,7 @@ import ru_bonuses from "@/messages/ru/bonuses.json";
 import ru_branchPanel from "@/messages/ru/branchPanel.json";
 import ru_branchSales from "@/messages/ru/branchSales.json";
 import ru_cash from "@/messages/ru/cash.json";
+import ru_chat from "@/messages/ru/chat.json";
 import ru_common from "@/messages/ru/common.json";
 import ru_company from "@/messages/ru/company.json";
 import ru_counterparties from "@/messages/ru/counterparties.json";
@@ -132,6 +137,7 @@ import ru_products from "@/messages/ru/products.json";
 import ru_profile from "@/messages/ru/profile.json";
 import ru_receipts from "@/messages/ru/receipts.json";
 import ru_reconciliations from "@/messages/ru/reconciliations.json";
+import ru_referencePrices from "@/messages/ru/referencePrices.json";
 import ru_reports from "@/messages/ru/reports.json";
 import ru_reserveCodes from "@/messages/ru/reserveCodes.json";
 import ru_roles from "@/messages/ru/roles.json";
@@ -158,6 +164,7 @@ export const uzLatn = {
   "branchPanel": uzLatn_branchPanel,
   "branchSales": uzLatn_branchSales,
   "cash": uzLatn_cash,
+  "chat": uzLatn_chat,
   "common": uzLatn_common,
   "company": uzLatn_company,
   "counterparties": uzLatn_counterparties,
@@ -184,6 +191,7 @@ export const uzLatn = {
   "profile": uzLatn_profile,
   "receipts": uzLatn_receipts,
   "reconciliations": uzLatn_reconciliations,
+  "referencePrices": uzLatn_referencePrices,
   "reports": uzLatn_reports,
   "reserveCodes": uzLatn_reserveCodes,
   "roles": uzLatn_roles,
@@ -211,6 +219,7 @@ export const uzCyrl = {
   "branchPanel": uzCyrl_branchPanel,
   "branchSales": uzCyrl_branchSales,
   "cash": uzCyrl_cash,
+  "chat": uzCyrl_chat,
   "common": uzCyrl_common,
   "company": uzCyrl_company,
   "counterparties": uzCyrl_counterparties,
@@ -237,6 +246,7 @@ export const uzCyrl = {
   "profile": uzCyrl_profile,
   "receipts": uzCyrl_receipts,
   "reconciliations": uzCyrl_reconciliations,
+  "referencePrices": uzCyrl_referencePrices,
   "reports": uzCyrl_reports,
   "reserveCodes": uzCyrl_reserveCodes,
   "roles": uzCyrl_roles,
@@ -264,6 +274,7 @@ export const ru = {
   "branchPanel": ru_branchPanel,
   "branchSales": ru_branchSales,
   "cash": ru_cash,
+  "chat": ru_chat,
   "common": ru_common,
   "company": ru_company,
   "counterparties": ru_counterparties,
@@ -290,6 +301,7 @@ export const ru = {
   "profile": ru_profile,
   "receipts": ru_receipts,
   "reconciliations": ru_reconciliations,
+  "referencePrices": ru_referencePrices,
   "reports": ru_reports,
   "reserveCodes": ru_reserveCodes,
   "roles": ru_roles,

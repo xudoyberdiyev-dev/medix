@@ -77,7 +77,8 @@ class StockOverviewController {
             boolean marked,
             boolean controlled,
             boolean prescription,
-            @Schema(description = "Qoldiqda bonus partiya bor") boolean bonus) {}
+            @Schema(description = "Qoldiqda bonus partiya bor") boolean bonus,
+            @Schema(nullable = true, description = "Ombordagi joyi (O13; qoldiq bor omborlar bo'yicha, vergul bilan)") String location) {}
 
     record ProductStockPage(
             List<ProductStockRow> items,
@@ -253,7 +254,9 @@ class StockOverviewController {
                        coalesce(u.short_name, u.name) AS unit, coalesce(a.total, 0) AS total, coalesce(a.reserved, 0) AS reserved,
                        coalesce(a.available, 0) AS available, coalesce(a.closed, 0) AS closed, coalesce(a.shipping, 0) AS shipping,
                        coalesce(a.batches, 0) AS batches, a.nearest, coalesce(a.cost_sum, 0) AS cost_sum, coalesce(a.sale_sum, 0) AS sale_sum,
-                       a.last_in, se.full_name AS supply_by, p.marked, p.controlled, p.prescription, coalesce(a.bonus, false) AS bonus
+                       a.last_in, se.full_name AS supply_by, p.marked, p.controlled, p.prescription, coalesce(a.bonus, false) AS bonus,
+                       (SELECT string_agg(DISTINCT l.location, ', ') FROM product_location l WHERE l.product_id = p.id
+                          AND l.warehouse_id IN (SELECT b2.warehouse_id FROM bal b2 WHERE b2.product_id = p.id)) AS location
                 """ + from + " ORDER BY " + orderBy(sort, desc) + ", p.id LIMIT :l OFFSET :o")
                 .params(params)
                 .param("l", safeSize)
@@ -269,7 +272,7 @@ class StockOverviewController {
                             showCost ? new Money(rs.getBigDecimal("cost_sum")).toString() : null,
                             new Money(rs.getBigDecimal("sale_sum")).toString(), lastIn == null ? null : lastIn.toLocalDate(),
                             rs.getString("supply_by"), rs.getBoolean("marked"), rs.getBoolean("controlled"), rs.getBoolean("prescription"),
-                            rs.getBoolean("bonus"));
+                            rs.getBoolean("bonus"), rs.getString("location"));
                 })
                 .list();
         return new ProductStockPage(items, totals.total(), safePage, safeSize, totals.totalQty(), totals.availableQty(),
@@ -310,7 +313,8 @@ class StockOverviewController {
             boolean marked,
             boolean controlled,
             boolean prescription,
-            boolean bonus) {}
+            boolean bonus,
+            @Schema(nullable = true, description = "Mahsulotning shu ombordagi joyi (O13)") String location) {}
 
     record BatchStockPage(
             List<BatchStockRow> items,
@@ -379,7 +383,8 @@ class StockOverviewController {
                         + " br.code AS branch_code, w.id AS warehouse_id, w.name AS warehouse, z.id AS zone_id, z.name AS zone, z.type AS zone_type,"
                         + " z.sellable, bal.batch_id, bal.batch_number, bal.produced_on, bal.expiry_date, bal.qty, bal.res, " + avail + " AS available,"
                         + " bal.cost, coalesce(bal.qty * bal.sale_price, 0) AS sale_sum, bal.receipt_id, bal.receipt_number, bal.receipt_date,"
-                        + " cp.name AS supplier, p.marked, p.controlled, p.prescription, bal.bonus"
+                        + " cp.name AS supplier, p.marked, p.controlled, p.prescription, bal.bonus,"
+                        + " (SELECT l.location FROM product_location l WHERE l.product_id = p.id AND l.warehouse_id = w.id) AS location"
                         + from + " ORDER BY " + batchOrderBy(sort, desc) + ", bal.zone_id, bal.batch_id LIMIT :l OFFSET :o")
                 .params(fl.params())
                 .param("l", safeSize)
@@ -399,7 +404,7 @@ class StockOverviewController {
                             showCost ? new Money(cost.multiply(BigDecimal.valueOf(qty))).toString() : null,
                             new Money(rs.getBigDecimal("sale_sum")).toString(), rs.getObject("receipt_id", Long.class), rs.getString("receipt_number"),
                             rd == null ? null : rd.toLocalDate(), rs.getString("supplier"), rs.getBoolean("marked"), rs.getBoolean("controlled"),
-                            rs.getBoolean("prescription"), rs.getBoolean("bonus"));
+                            rs.getBoolean("prescription"), rs.getBoolean("bonus"), rs.getString("location"));
                 })
                 .list();
         return new BatchStockPage(items, t.total(), safePage, safeSize, t.totalQty(), t.reservedQty(), t.availableQty(),

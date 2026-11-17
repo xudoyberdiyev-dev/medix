@@ -28,7 +28,11 @@ export interface PageForm {
   /** "12" | "0" | "none" (QQSsiz) yoki eski boshqa stavka ("15"). */
   vat: string;
   note: string;
+  /** O13: ombordagi joy — ombor id → joy («A qator · 3-stellaj · 2-polka»), ≤ 60 belgi. */
+  locations: Record<string, string>;
 }
+
+export const LOCATION_MAX = 60;
 
 export const EMPTY_PAGE_FORM: PageForm = {
   code: "",
@@ -55,6 +59,7 @@ export const EMPTY_PAGE_FORM: PageForm = {
   prescription: false,
   vat: "12",
   note: "",
+  locations: {},
 };
 
 const num = (n: number | null | undefined) => (n ? String(n) : "");
@@ -87,6 +92,7 @@ export function pageFormFromProduct(p: ProductDetail): PageForm {
     prescription: p.prescription,
     vat: p.vatExempt ? "none" : rate,
     note: p.note ?? "",
+    locations: Object.fromEntries(p.locations.map((l) => [String(l.warehouseId), l.location ?? ""])),
   };
 }
 
@@ -156,6 +162,10 @@ export function toPageRequest(f: PageForm): ProductRequest {
     packQty: int(f.packQty),
     perPack: int(f.perPack),
     note: text(f.note),
+    locations: Object.entries(f.locations).map(([w, v]) => ({
+      warehouseId: Number(w),
+      location: v.trim().slice(0, LOCATION_MAX) || undefined,
+    })),
   };
 }
 

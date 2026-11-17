@@ -7,6 +7,7 @@
   "customers": "Мижозлар",
   "debtsCustomers": "Мижозлар қарзи",
   "debtsSuppliers": "Етказиб берувчилар қарзи",
+  "referencePrices": "Референт нархлар",
   "salesZones": "Савдо зоналари",
   "dictionaries": "Маълумотномалар",
   "driver": "Рейсим",
@@ -51,5 +52,6 @@
   "writeOffs": "Ҳисобдан чиқариш",
   "zoneTransfers": "Зона кўчиришлари",
   "reserveCodes": "Захира кодлар",
-  "invoices": "Фактуралар"
+  "invoices": "Фактуралар",
+  "messages": "Хабарлар"
 }

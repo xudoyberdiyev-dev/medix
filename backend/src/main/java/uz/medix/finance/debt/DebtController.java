@@ -26,8 +26,10 @@ class DebtController {
     private final CurrentActor currentActor;
 
     private final DebtActPdf actPdf;
+    private final ReconActDoc actDocs;
 
-    DebtController(Debts debts, DebtActPdf actPdf, CurrentActor currentActor) {
+    DebtController(Debts debts, DebtActPdf actPdf, ReconActDoc actDocs, CurrentActor currentActor) {
+        this.actDocs = actDocs;
         this.actPdf = actPdf;
         this.debts = debts;
         this.currentActor = currentActor;
@@ -92,11 +94,13 @@ class DebtController {
 
     @GetMapping(value = "/api/debts/customers/{id}/act/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
     @PreAuthorize("hasAuthority('cdebt.view')")
-    @Operation(summary = "Akt sverka (mijoz) — PDF")
+    @Operation(summary = "Akt sverka (mijoz) — PDF", description = "O17: egasi shabloni, ikki tomonlama. lang: ru (standart), uz-Latn, uz-Cyrl; "
+            + "letter — qarzni tan olish xati (mijoz qarzdor bo'lsa, standart — ha).")
     ResponseEntity<byte[]> customerActPdf(@PathVariable long id, @RequestParam long branchId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
-        return actPdf.render(actor(), Side.CUSTOMER, branchId, id, from, to).response();
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @RequestParam(required = false) String lang, @RequestParam(defaultValue = "true") boolean letter) {
+        return actPdf.render(actor(), Side.CUSTOMER, branchId, id, from, to, lang, letter).response();
     }
 
     @GetMapping(value = "/api/debts/suppliers/{id}/act/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
@@ -104,7 +108,28 @@ class DebtController {
     @Operation(summary = "Akt sverka (yetkazib beruvchi) — PDF")
     ResponseEntity<byte[]> supplierActPdf(@PathVariable long id, @RequestParam long branchId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
-        return actPdf.render(actor(), Side.SUPPLIER, branchId, id, from, to).response();
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @RequestParam(required = false) String lang, @RequestParam(defaultValue = "true") boolean letter) {
+        return actPdf.render(actor(), Side.SUPPLIER, branchId, id, from, to, lang, letter).response();
+    }
+
+    @GetMapping("/api/debts/customers/{id}/act/xlsx")
+    @PreAuthorize("hasAuthority('cdebt.view')")
+    @Operation(summary = "Akt sverka (mijoz) — Excel (O17)")
+    ResponseEntity<byte[]> customerActXlsx(@PathVariable long id, @RequestParam long branchId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @RequestParam(required = false) String lang, @RequestParam(defaultValue = "true") boolean letter) {
+        return actPdf.xlsxResponse(actDocs.build(actor(), Side.CUSTOMER, branchId, id, from, to, lang, null, null, null, letter));
+    }
+
+    @GetMapping("/api/debts/suppliers/{id}/act/xlsx")
+    @PreAuthorize("hasAuthority('sdebt.view')")
+    @Operation(summary = "Akt sverka (yetkazib beruvchi) — Excel (O17)")
+    ResponseEntity<byte[]> supplierActXlsx(@PathVariable long id, @RequestParam long branchId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @RequestParam(required = false) String lang, @RequestParam(defaultValue = "true") boolean letter) {
+        return actPdf.xlsxResponse(actDocs.build(actor(), Side.SUPPLIER, branchId, id, from, to, lang, null, null, null, letter));
     }
 }

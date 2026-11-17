@@ -43,11 +43,16 @@ class ProductIT {
     PasswordEncoder encoder;
 
     private Cookie loginAs(String role) throws Exception {
+        return loginAs(role, null);
+    }
+
+    private Cookie loginAs(String role, Long branchId) throws Exception {
         String login = "prd" + UUID.randomUUID().toString().substring(0, 8);
         jdbc.sql("""
-                INSERT INTO employee (login, full_name, role_id, password_hash, must_change_password)
-                SELECT :login, 'Sinov', id, :hash, false FROM role WHERE code = :role""")
+                INSERT INTO employee (login, full_name, role_id, branch_id, password_hash, must_change_password)
+                SELECT :login, 'Sinov', id, :b, :hash, false FROM role WHERE code = :role""")
                 .param("login", login)
+                .param("b", branchId)
                 .param("hash", encoder.encode(PASSWORD))
                 .param("role", role)
                 .update();
@@ -89,6 +94,72 @@ class ProductIT {
 
     private static long id(MvcResult r) throws Exception {
         return Long.parseLong(r.getResponse().getContentAsString().replaceAll("^\\{\"id\":(\\d+).*", "$1"));
+    }
+
+    private long branch() {
+        jdbc.sql("INSERT INTO company (name) SELECT 'Medix Group' WHERE NOT EXISTS (SELECT 1 FROM company)").update();
+        var rnd = java.util.concurrent.ThreadLocalRandom.current();
+        String code = "" + (char) ('A' + rnd.nextInt(26)) + (char) ('A' + rnd.nextInt(26)) + (char) ('A' + rnd.nextInt(26));
+        return jdbc.sql("""
+                INSERT INTO branch (company_id, code, name, legal_name, tin)
+                SELECT id, :c, 'Filial ' || :c, 'MChJ', :t FROM company ON CONFLICT DO NOTHING RETURNING id""")
+                .param("c", code)
+                .param("t", String.valueOf(500_000_000L + rnd.nextLong(99_999_999L)))
+                .query(Long.class)
+                .optional()
+                .orElseGet(this::branch);
+    }
+
+    private long warehouse(long branchId, String name) {
+        return jdbc.sql("INSERT INTO warehouse (branch_id, name) VALUES (:b, :n) RETURNING id")
+                .param("b", branchId)
+                .param("n", name)
+                .query(Long.class)
+                .single();
+    }
+
+    /** O13: ombordagi joy — o'z filiali omborlari, qidiruv, ro'yxat ustuni, boshqa filial ombori taqiqlangan, bo'sh — o'chiriladi. */
+    @Test
+    void warehouseLocation() throws Exception {
+        long b1 = branch();
+        long b2 = branch();
+        long w1 = warehouse(b1, "Asosiy " + uniq());
+        long w2 = warehouse(b2, "Boshqa " + uniq());
+        Cookie purchaser = loginAs("PURCHASER", b1);
+        mvc.perform(get("/api/products/location-warehouses").cookie(purchaser))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.warehouseId == " + w1 + ")].location").value(org.hamcrest.Matchers.contains((Object) null)))
+                .andExpect(jsonPath("$[?(@.warehouseId == " + w2 + ")]").isEmpty());
+        String tag = uniq();
+        String place = "Q" + tag + " qator · 3-stellaj";
+        String withLoc = body("Hudud " + tag, null, null).replace("}", ",\"locations\":[{\"warehouseId\":" + w1 + ",\"location\":\"" + place + "\"}]}");
+        MvcResult created = mvc.perform(json(post("/api/products"), purchaser, withLoc))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.locations[?(@.warehouseId == " + w1 + ")].location").value(place))
+                .andExpect(jsonPath("$.locations[?(@.warehouseId == " + w2 + ")]").isEmpty())
+                .andReturn();
+        long id = id(created);
+        assertThat(jdbc.sql("SELECT location FROM product_location WHERE product_id = :p").param("p", id).query(String.class).list())
+                .containsExactly(place);
+        // Joy bo'yicha qidiruv va ro'yxat ustuni
+        mvc.perform(get("/api/products").param("q", "q" + tag + " qator").cookie(purchaser))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(1))
+                .andExpect(jsonPath("$.items[0].id").value(id))
+                .andExpect(jsonPath("$.items[0].location").value(place));
+        // Boshqa filial ombori — taqiqlangan
+        mvc.perform(json(put("/api/products/" + id), purchaser,
+                        body("Hudud " + tag, null, null).replace("}", ",\"locations\":[{\"warehouseId\":" + w2 + ",\"location\":\"X\"}]}")))
+                .andExpect(status().isForbidden());
+        // locations berilmasa — o'zgarmaydi; bo'sh — o'chiriladi
+        mvc.perform(json(put("/api/products/" + id), purchaser, body("Hudud " + tag, null, null)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.locations[?(@.warehouseId == " + w1 + ")].location").value(place));
+        mvc.perform(json(put("/api/products/" + id), purchaser,
+                        body("Hudud " + tag, null, null).replace("}", ",\"locations\":[{\"warehouseId\":" + w1 + ",\"location\":\" \"}]}")))
+                .andExpect(status().isOk());
+        assertThat(jdbc.sql("SELECT count(*) FROM product_location WHERE product_id = :p").param("p", id).query(Long.class).single())
+                .isZero();
     }
 
     @Test

@@ -73,8 +73,8 @@ class RoleMatrixIT {
         Cookie admin = login(employee("ADMIN"));
         mvc.perform(get("/api/roles/matrix").cookie(admin))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.permissions", hasSize(144)))
-                .andExpect(jsonPath("$.grants.DRIVER", hasSize(1)));
+                .andExpect(jsonPath("$.permissions", hasSize(148)))
+                .andExpect(jsonPath("$.grants.DRIVER", hasSize(2)));
 
         String name = "Katta operator " + UUID.randomUUID().toString().substring(0, 4);
         MvcResult copy = mvc.perform(post("/api/roles/OPERATOR/copy").with(csrf()).cookie(admin)
@@ -130,7 +130,7 @@ class RoleMatrixIT {
                 .andExpect(jsonPath("$.permissions[?(@.key == 'approvals.director')].lock", hasItem("dir")))
                 .andExpect(jsonPath("$.roles[?(@.code == 'DIRECTOR')].scope", hasItem("all")))
                 .andExpect(jsonPath("$.roles[?(@.code == 'WAREHOUSE_MANAGER')].home", hasItem("keeper")))
-                .andExpect(jsonPath("$.defaults.DRIVER", hasSize(1)));
+                .andExpect(jsonPath("$.defaults.DRIVER", hasSize(2)));
 
         String name = "Narxchi " + UUID.randomUUID().toString().substring(0, 4);
         // Rol doirasi «Barcha filiallar» — faqat Direktor (E14): Bosh administrator yaratolmaydi
@@ -173,9 +173,9 @@ class RoleMatrixIT {
 
         // Avvaldan bor standart to'plam o'zgarmaydi (Haydovchi — Jo'natish sahifasisiz)
         mvc.perform(put("/api/roles/matrix").with(csrf()).cookie(admin).contentType(MediaType.APPLICATION_JSON)
-                        .content(draft("DRIVER", "Haydovchi", "own", "driver", true, "\"trip.driver\"")))
+                        .content(draft("DRIVER", "Haydovchi", "own", "driver", true, "\"trip.driver\", \"messages.use\"")))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.grants.DRIVER", hasSize(1)));
+                .andExpect(jsonPath("$.grants.DRIVER", hasSize(2)));
 
         // Doira «o'z filiali» ga qaytsa — keyingi kirishda barcha filiallar yo'q; Bosh administrator oʻzgartirolmaydi
         mvc.perform(put("/api/roles/matrix").with(csrf()).cookie(admin).contentType(MediaType.APPLICATION_JSON)

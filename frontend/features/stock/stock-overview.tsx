@@ -72,6 +72,7 @@ const PRODUCT_COLUMN_KEYS = [
   "category",
   "country",
   "unit",
+  "location",
   "total",
   "reserved",
   "available",
@@ -344,6 +345,7 @@ export function StockOverview() {
     { key: "category", title: t("ov.c.cat"), render: (r) => r.category ?? "—" },
     { key: "country", title: t("ov.c.country"), render: (r) => r.country ?? "—" },
     { key: "unit", title: t("ov.c.unit") },
+    { key: "location", title: t("ov.c.location"), render: (r) => r.location ?? "—" },
     {
       key: "total",
       title: t("ov.c.total"),

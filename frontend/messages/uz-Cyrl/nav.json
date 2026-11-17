@@ -24,6 +24,7 @@
   "customers": "Мижозлар",
   "suppliers": "Етказиб берувчилар",
   "prices": "Нархлар",
+  "referencePrices": "Референт нархлар",
   "salesZones": "Савдо зоналари",
   "dictionaries": "Бошқа маълумотномалар",
   "reports": "Ҳисоботлар",
@@ -35,5 +36,6 @@
   "audit": "Аудит журнали",
   "settings": "Созламалар",
   "reserveCodes": "Захира кодлар",
-  "invoices": "Фактуралар"
+  "invoices": "Фактуралар",
+  "messages": "Хабарлар"
 }
