@@ -522,6 +522,12 @@ public class Products {
         }
     }
 
+    /** O13: yangi mahsulot shakli uchun — joysiz omborlar ro'yxati. */
+    @Transactional(readOnly = true)
+    List<ProductModels.Location> locationWarehouses() {
+        return locations(-1L);
+    }
+
     /** O13: xodim doirasidagi faol omborlar va ulardagi joy (joy berilmagani — null). */
     private List<ProductModels.Location> locations(long productId) {
         Actor actor = currentActor.current().orElse(null);

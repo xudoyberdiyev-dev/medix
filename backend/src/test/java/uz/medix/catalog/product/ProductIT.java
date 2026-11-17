@@ -126,6 +126,10 @@ class ProductIT {
         long w1 = warehouse(b1, "Asosiy " + uniq());
         long w2 = warehouse(b2, "Boshqa " + uniq());
         Cookie purchaser = loginAs("PURCHASER", b1);
+        mvc.perform(get("/api/products/location-warehouses").cookie(purchaser))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.warehouseId == " + w1 + ")].location").value(org.hamcrest.Matchers.contains((Object) null)))
+                .andExpect(jsonPath("$[?(@.warehouseId == " + w2 + ")]").isEmpty());
         String tag = uniq();
         String place = "Q" + tag + " qator · 3-stellaj";
         String withLoc = body("Hudud " + tag, null, null).replace("}", ",\"locations\":[{\"warehouseId\":" + w1 + ",\"location\":\"" + place + "\"}]}");
