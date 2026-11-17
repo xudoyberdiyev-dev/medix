@@ -112,6 +112,7 @@ export function PickSheetPage() {
             <tr className="border-b border-text-primary text-caption text-text-secondary">
               <th className="w-8 py-1 pr-2 font-medium">✓</th>
               <th className="py-1 pr-2 font-medium">Zona</th>
+              <th className="py-1 pr-2 font-medium">Hudud</th>
               <th className="py-1 pr-2 font-medium">Mahsulot</th>
               <th className="py-1 pr-2 font-medium">Partiya</th>
               <th className="py-1 pr-2 font-medium">Muddati</th>
@@ -126,6 +127,7 @@ export function PickSheetPage() {
                   <span className="inline-block size-4 border border-text-primary" aria-hidden />
                 </td>
                 <td className="py-1.5 pr-2 font-mono">{r.zone || "—"}</td>
+                <td className="py-1.5 pr-2">{r.location || "—"}</td>
                 <td className="py-1.5 pr-2">
                   <span className="font-mono text-text-secondary">{r.productCode}</span> {r.productName}
                 </td>

@@ -15,6 +15,7 @@ export const PRODUCT_SORTS = [
   "MAX_QTY",
   "STOCK",
   "PRICE",
+  "LOCATION",
 ] as const;
 export type ProductSort = (typeof PRODUCT_SORTS)[number];
 

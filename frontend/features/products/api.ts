@@ -32,6 +32,16 @@ export function useProduct(id: number | null) {
   });
 }
 
+/** O13: «Hudud» uchun omborlar (yangi mahsulot shakli). */
+export function useLocationWarehouses(enabled: boolean) {
+  return useQuery({
+    queryKey: [...KEY, "location-warehouses"],
+    queryFn: () => unwrap(api.GET("/api/products/location-warehouses")),
+    enabled,
+    staleTime: 60_000,
+  });
+}
+
 export function useEmployeeOptions() {
   return useQuery({ queryKey: ["employee-lookup"], queryFn: () => unwrap(api.GET("/api/employee-lookup")) });
 }

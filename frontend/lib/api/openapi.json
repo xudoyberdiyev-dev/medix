@@ -11119,7 +11119,7 @@
           "schema" : {
             "type" : "string",
             "default" : "NAME",
-            "enum" : [ "CODE", "NAME", "CONTRACT_NAME", "MANUFACTURER", "CATEGORY", "COUNTRY", "VAT", "MIN_QTY", "MAX_QTY", "STOCK", "PRICE" ]
+            "enum" : [ "CODE", "NAME", "CONTRACT_NAME", "MANUFACTURER", "CATEGORY", "COUNTRY", "VAT", "MIN_QTY", "MAX_QTY", "STOCK", "PRICE", "LOCATION" ]
           }
         }, {
           "in" : "query",
@@ -11391,7 +11391,7 @@
           "schema" : {
             "type" : "string",
             "default" : "NAME",
-            "enum" : [ "CODE", "NAME", "CONTRACT_NAME", "MANUFACTURER", "CATEGORY", "COUNTRY", "VAT", "MIN_QTY", "MAX_QTY", "STOCK", "PRICE" ]
+            "enum" : [ "CODE", "NAME", "CONTRACT_NAME", "MANUFACTURER", "CATEGORY", "COUNTRY", "VAT", "MIN_QTY", "MAX_QTY", "STOCK", "PRICE", "LOCATION" ]
           }
         }, {
           "in" : "query",
@@ -11588,6 +11588,28 @@
           }
         },
         "summary" : "Import ustasi: faylni o'qish",
+        "tags" : [ "products" ]
+      }
+    },
+    "/api/products/location-warehouses" : {
+      "get" : {
+        "operationId" : "locationWarehouses",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/Location"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "O13: «Hudud» uchun omborlar (yangi mahsulot shakli) — xodim doirasidagi faol omborlar",
         "tags" : [ "products" ]
       }
     },
@@ -19540,6 +19562,10 @@
             "type" : "string",
             "format" : "date"
           },
+          "location" : {
+            "type" : "string",
+            "description" : "Mahsulotning shu ombordagi joyi (O13)"
+          },
           "manufacturer" : {
             "type" : "string"
           },
@@ -24606,6 +24632,10 @@
             "type" : "integer",
             "format" : "int64"
           },
+          "location" : {
+            "type" : "string",
+            "description" : "Mahsulotning shu ombordagi joyi (O13)"
+          },
           "note" : {
             "type" : "string"
           },
@@ -25601,6 +25631,41 @@
           }
         },
         "required" : [ "places" ]
+      },
+      "Location" : {
+        "type" : "object",
+        "properties" : {
+          "branch" : {
+            "type" : "string"
+          },
+          "location" : {
+            "type" : "string"
+          },
+          "warehouse" : {
+            "type" : "string"
+          },
+          "warehouseId" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "branch", "warehouse", "warehouseId" ]
+      },
+      "LocationInput" : {
+        "type" : "object",
+        "properties" : {
+          "location" : {
+            "type" : "string",
+            "description" : "Bo'sh — joy o'chiriladi",
+            "maxLength" : 60,
+            "minLength" : 0
+          },
+          "warehouseId" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "warehouseId" ]
       },
       "LoginCheck" : {
         "type" : "object",
@@ -28009,6 +28074,10 @@
             "type" : "string",
             "description" : "Narx turidagi narx (chegirmasiz)"
           },
+          "location" : {
+            "type" : "string",
+            "description" : "Mahsulotning buyurtma omboridagi joyi (O13)"
+          },
           "manufacturer" : {
             "type" : "string"
           },
@@ -30244,6 +30313,13 @@
           "ikpu" : {
             "type" : "string"
           },
+          "locations" : {
+            "type" : "array",
+            "description" : "Ombordagi joyi — xodim doirasidagi faol omborlar bo'yicha (joy berilmagan — null)",
+            "items" : {
+              "$ref" : "#/components/schemas/Location"
+            }
+          },
           "manufacturer" : {
             "$ref" : "#/components/schemas/Ref"
           },
@@ -30289,7 +30365,7 @@
             "type" : "string"
           }
         },
-        "required" : [ "active", "barcodes", "code", "codeHistory", "controlled", "hasMovements", "id", "marked", "name", "prescription", "unit", "vatExempt", "vatRate" ]
+        "required" : [ "active", "barcodes", "code", "codeHistory", "controlled", "hasMovements", "id", "locations", "marked", "name", "prescription", "unit", "vatExempt", "vatRate" ]
       },
       "ProductPage" : {
         "type" : "object",
@@ -30390,6 +30466,15 @@
           "ikpu" : {
             "type" : "string",
             "pattern" : "^[0-9]{17}$"
+          },
+          "locations" : {
+            "type" : "array",
+            "description" : "Ombordagi joylar; null — o'zgartirilmaydi",
+            "items" : {
+              "$ref" : "#/components/schemas/LocationInput"
+            },
+            "maxItems" : 50,
+            "minItems" : 0
           },
           "manufacturerId" : {
             "type" : "integer",
@@ -30499,6 +30584,10 @@
           },
           "ikpu" : {
             "type" : "string"
+          },
+          "location" : {
+            "type" : "string",
+            "description" : "Ombordagi joyi (filial doirasidagi omborlar, vergul bilan)"
           },
           "manufacturer" : {
             "type" : "string"
@@ -30777,6 +30866,10 @@
           "lastIn" : {
             "type" : "string",
             "format" : "date"
+          },
+          "location" : {
+            "type" : "string",
+            "description" : "Ombordagi joyi (O13; qoldiq bor omborlar bo'yicha, vergul bilan)"
           },
           "manufacturer" : {
             "type" : "string"

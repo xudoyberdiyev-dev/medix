@@ -72,6 +72,7 @@ const COLUMN_KEYS = [
   "maxQty",
   "stock",
   "price",
+  "location",
   "note",
   "status",
 ] as const;
@@ -101,6 +102,7 @@ const WIDTH: Record<ColumnKey, number> = {
   maxQty: 104,
   stock: 100,
   price: 120,
+  location: 180,
   note: 220,
   status: 110,
 };
@@ -118,6 +120,7 @@ const SORT_OF: Partial<Record<ColumnKey, ProductSort>> = {
   maxQty: "MAX_QTY",
   stock: "STOCK",
   price: "PRICE",
+  location: "LOCATION",
 };
 const MATCH_KEY: Record<string, "code" | "barcode" | "contractName" | "classifierName" | "ikpu" | "farmId"> = {
   CODE: "code",

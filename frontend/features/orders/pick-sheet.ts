@@ -5,6 +5,8 @@ type OrderDetail = components["schemas"]["OrderDetail"];
 /** Terish varagʻining bitta qatori: zona + partiya boʻyicha jamlangan miqdor, qaysi buyurtmalarga necha dona. */
 export type PickSheetRow = {
   zone: string;
+  /** O13: mahsulotning ombordagi joyi («A qator · 3-stellaj»); berilmagan — "" */
+  location: string;
   productCode: string;
   productName: string;
   batch: string;
@@ -30,6 +32,27 @@ export function parseIds(raw: string | null): number[] {
   return out.slice(0, 20);
 }
 
+/** Joylarni tabiiy tartibda solishtirish: «2-stellaj» «10-stellaj»dan oldin. */
+export function cmpPlace(a: string, b: string): number {
+  return a.localeCompare(b, "uz", { numeric: true, sensitivity: "base" });
+}
+
+/**
+ * O13: yigʻuvchi panelida «Joy boʻyicha» tartib — joyi bor qatorlar joy boʻyicha (tabiiy tartib), joysizlar oxirida
+ * (asl tartibi saqlanadi).
+ */
+export function sortByLocation<L extends { location?: string | null; productName: string }>(lines: L[]): L[] {
+  return lines
+    .map((l, i) => ({ l, i }))
+    .sort((a, b) => {
+      const x = a.l.location?.trim() ?? "";
+      const y = b.l.location?.trim() ?? "";
+      if (!x || !y) return Number(!x) - Number(!y) || a.i - b.i;
+      return cmpPlace(x, y) || a.l.productName.localeCompare(b.l.productName, "uz") || a.i - b.i;
+    })
+    .map((x) => x.l);
+}
+
 /** Yigʻiladigan qatorlar: qator boʻyicha qaytarilgan boʻlsa — faqat shular, aks holda hammasi. */
 export function repickLines<L extends { id: number }>(d: { lines: L[]; repickLineIds?: number[] }): L[] {
   if (!d.repickLineIds || d.repickLineIds.length === 0) return d.lines;
@@ -51,6 +74,7 @@ export function buildPickSheet(orders: OrderDetail[]): PickSheet {
         const key = [r.zone, l.productCode, r.batch].join("\u0000");
         const row = map.get(key) ?? {
           zone: r.zone,
+          location: l.location ?? "",
           productCode: l.productCode,
           productName: l.productName,
           batch: r.batch,
@@ -71,6 +95,8 @@ export function buildPickSheet(orders: OrderDetail[]): PickSheet {
     (a, b) =>
       Number(a.zone === "") - Number(b.zone === "") ||
       cmp(a.zone, b.zone) ||
+      Number(a.location === "") - Number(b.location === "") ||
+      cmpPlace(a.location, b.location) ||
       cmp(a.productName, b.productName) ||
       cmp(a.expiryDate, b.expiryDate) ||
       cmp(a.batch, b.batch),

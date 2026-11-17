@@ -21,7 +21,8 @@ export type FieldKey =
   | "max"
   | "marked"
   | "controlled"
-  | "prescription";
+  | "prescription"
+  | "location";
 
 export interface ImportField<K extends string = FieldKey> {
   key: K;
@@ -53,6 +54,7 @@ export const PRODUCT_FIELDS: ImportField[] = [
   { key: "marked", req: false, syn: ["markirovkali", "markirovka", "markirovannyy"] },
   { key: "controlled", req: false, syn: ["nazoratdagi", "kontroliruemyy", "narkotik"] },
   { key: "prescription", req: false, syn: ["retsept", "recept", "poreceptu"] },
+  { key: "location", req: false, syn: ["hudud", "ombordagijoyi", "joyi", "mestonasklade", "mesto", "yacheyka", "location"] },
 ];
 
 /** Prototip 4-qadam jadvali (turi «products») va tahrirlanadigan kataklar. */

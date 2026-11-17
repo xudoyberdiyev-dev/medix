@@ -5126,6 +5126,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/products/location-warehouses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** O13: «Hudud» uchun omborlar (yangi mahsulot shakli) — xodim doirasidagi faol omborlar */
+        get: operations["locationWarehouses"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/products/new-code": {
         parameters: {
             query?: never;
@@ -8496,6 +8513,8 @@ export interface components {
             daysLeft: number;
             /** Format: date */
             expiryDate: string;
+            /** @description Mahsulotning shu ombordagi joyi (O13) */
+            location?: string;
             manufacturer?: string;
             marked: boolean;
             prescription: boolean;
@@ -10415,6 +10434,8 @@ export interface components {
             expiryDate: string;
             /** Format: int64 */
             id: number;
+            /** @description Mahsulotning shu ombordagi joyi (O13) */
+            location?: string;
             note?: string;
             productCode: string;
             /** Format: int64 */
@@ -10831,6 +10852,19 @@ export interface components {
         LoadRequest: {
             /** Format: int32 */
             places: number;
+        };
+        Location: {
+            branch: string;
+            location?: string;
+            warehouse: string;
+            /** Format: int64 */
+            warehouseId: number;
+        };
+        LocationInput: {
+            /** @description Bo'sh — joy o'chiriladi */
+            location?: string;
+            /** Format: int64 */
+            warehouseId: number;
         };
         LoginCheck: {
             /** @description Berilgan login boʻshmi; login berilmasa — null */
@@ -11855,6 +11889,8 @@ export interface components {
             lineNo: number;
             /** @description Narx turidagi narx (chegirmasiz) */
             listPrice?: string;
+            /** @description Mahsulotning buyurtma omboridagi joyi (O13) */
+            location?: string;
             manufacturer?: string;
             marked: boolean;
             /** Format: int32 */
@@ -12774,6 +12810,8 @@ export interface components {
             /** Format: int64 */
             id: number;
             ikpu?: string;
+            /** @description Ombordagi joyi — xodim doirasidagi faol omborlar bo'yicha (joy berilmagan — null) */
+            locations: components["schemas"]["Location"][];
             manufacturer?: components["schemas"]["Ref"];
             marked: boolean;
             /** Format: int32 */
@@ -12826,6 +12864,8 @@ export interface components {
             dose?: string;
             farmId?: string;
             ikpu?: string;
+            /** @description Ombordagi joylar; null — o'zgartirilmaydi */
+            locations?: components["schemas"]["LocationInput"][];
             /** Format: int64 */
             manufacturerId?: number;
             marked: boolean;
@@ -12865,6 +12905,8 @@ export interface components {
             /** Format: int64 */
             id: number;
             ikpu?: string;
+            /** @description Ombordagi joyi (filial doirasidagi omborlar, vergul bilan) */
+            location?: string;
             manufacturer?: string;
             marked: boolean;
             match?: components["schemas"]["SearchMatch"];
@@ -12982,6 +13024,8 @@ export interface components {
             country?: string;
             /** Format: date */
             lastIn?: string;
+            /** @description Ombordagi joyi (O13; qoldiq bor omborlar bo'yicha, vergul bilan) */
+            location?: string;
             manufacturer?: string;
             marked: boolean;
             name: string;
@@ -22858,7 +22902,7 @@ export interface operations {
                 /** @description Qoldiq va narx filiali */
                 branchId?: number;
                 facets?: boolean;
-                sort?: "CODE" | "NAME" | "CONTRACT_NAME" | "MANUFACTURER" | "CATEGORY" | "COUNTRY" | "VAT" | "MIN_QTY" | "MAX_QTY" | "STOCK" | "PRICE";
+                sort?: "CODE" | "NAME" | "CONTRACT_NAME" | "MANUFACTURER" | "CATEGORY" | "COUNTRY" | "VAT" | "MIN_QTY" | "MAX_QTY" | "STOCK" | "PRICE" | "LOCATION";
                 desc?: boolean;
                 /** @description 0 dan boshlanadi */
                 page?: number;
@@ -22948,7 +22992,7 @@ export interface operations {
                 marked?: boolean;
                 noIkpu?: boolean;
                 branchId?: number;
-                sort?: "CODE" | "NAME" | "CONTRACT_NAME" | "MANUFACTURER" | "CATEGORY" | "COUNTRY" | "VAT" | "MIN_QTY" | "MAX_QTY" | "STOCK" | "PRICE";
+                sort?: "CODE" | "NAME" | "CONTRACT_NAME" | "MANUFACTURER" | "CATEGORY" | "COUNTRY" | "VAT" | "MIN_QTY" | "MAX_QTY" | "STOCK" | "PRICE" | "LOCATION";
                 desc?: boolean;
             };
             header?: never;
@@ -23106,6 +23150,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ImportFile"];
+                };
+            };
+        };
+    };
+    locationWarehouses: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Location"][];
                 };
             };
         };

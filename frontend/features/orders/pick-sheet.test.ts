@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { components } from "@/lib/api/schema";
-import { buildPickSheet, parseIds } from "./pick-sheet";
+import { buildPickSheet, cmpPlace, parseIds, sortByLocation } from "./pick-sheet";
 
 type OrderDetail = components["schemas"]["OrderDetail"];
 type Line = components["schemas"]["OrderLine"];
@@ -80,5 +80,34 @@ describe("qator boʻyicha qayta yigʻish (SPEC 188)", () => {
     expect(returnLineIds(lines, {})).toBeNull();
     expect(returnLineIds(lines, { 1: true, 2: true })).toBeNull();
     expect(returnLineIds(lines, { 2: true, 1: false })).toEqual([2]);
+  });
+});
+
+describe("O13: ombordagi joy (hudud)", () => {
+  it("terish varagʻi: zona ichida joy boʻyicha (tabiiy tartib), joysiz qator zona oxirida", () => {
+    const o = order(1, "BY-TSH-000010", [
+      { ...line(1, "P1", "Analgin", 1, [{ zone: "A-01", batch: "X", expiryDate: "2027-01-01", qty: 1 }]), location: "10-stellaj" },
+      { ...line(2, "P2", "Yod", 1, [{ zone: "A-01", batch: "Y", expiryDate: "2027-01-01", qty: 1 }]), location: "2-stellaj" },
+      line(3, "P3", "Bint", 1, [{ zone: "A-01", batch: "Z", expiryDate: "2027-01-01", qty: 1 }]),
+    ]);
+    const s = buildPickSheet([o]);
+    expect(s.rows.map((r) => `${r.productCode}|${r.location}`)).toEqual(["P2|2-stellaj", "P1|10-stellaj", "P3|"]);
+  });
+
+  it("yigʻuvchi paneli: joy boʻyicha saralash, joysizlar asl tartibda oxirida", () => {
+    const lines = [
+      { productName: "C", location: null },
+      { productName: "B", location: "B qator · 1-polka" },
+      { productName: "D", location: "" },
+      { productName: "A", location: "A qator · 12-polka" },
+      { productName: "E", location: "a qator · 3-polka" },
+    ];
+    expect(sortByLocation(lines).map((l) => l.productName)).toEqual(["E", "A", "B", "C", "D"]);
+    expect(lines[0]!.productName).toBe("C");
+  });
+
+  it("cmpPlace — raqamlar tabiiy tartibda, katta-kichik harf farqsiz", () => {
+    expect(cmpPlace("2-polka", "10-polka")).toBeLessThan(0);
+    expect(cmpPlace("a qator", "A qator")).toBe(0);
   });
 });

@@ -24,7 +24,7 @@
     },
     "viewsLabel": "Koʻrinishlar",
     "search": "Qidirish",
-    "searchPlaceholder": "Kod, nom, shtrix-kod, IKPU yoki Farm ID",
+    "searchPlaceholder": "Kod, nom, shtrix-kod, IKPU, Farm ID yoki hudud",
     "f": {
       "manufacturer": "Ishlab chiqaruvchi",
       "category": "Kategoriya",
@@ -62,7 +62,8 @@
       "stock": "Qoldiq",
       "price": "Sotuv narxi",
       "note": "Izoh",
-      "status": "Holat"
+      "status": "Holat",
+      "location": "Hudud"
     },
     "yes": "Ha",
     "noPrice": "Narx yoʻq",
@@ -235,8 +236,10 @@
       "packQty": "Qadoqdagi soni",
       "perPack": "1 qadoqdagi dona",
       "note": "Izoh",
-      "active": "Faol"
-    }
+      "active": "Faol",
+      "locations": "Hudud (ombordagi joyi)"
+    },
+    "iLocation": "Ombordagi joyi (hudud)"
   },
   "pageForm": {
     "new": "Yangi mahsulot",
@@ -255,7 +258,9 @@
       "tax": "Soliq",
       "taxD": "Hujjatlardagi QQS",
       "note": "Izoh",
-      "noteD": "Ichki eslatma"
+      "noteD": "Ichki eslatma",
+      "location": "Ombordagi joyi",
+      "locationD": "Yigʻuvchi mahsulotni tez topishi uchun (ixtiyoriy)"
     },
     "fields": {
       "name": "Mahsulot nomi",
@@ -281,7 +286,10 @@
       "prescription": "Retsept boʻyicha beriladi",
       "vat": "QQS stavkasi",
       "note": "Izoh",
-      "maxUnlimited": "Maksimal miqdor — cheksiz"
+      "maxUnlimited": "Maksimal miqdor — cheksiz",
+      "location": "Hudud (ombordagi joyi)",
+      "locationIn": "Hudud — {warehouse}",
+      "locations": "Hudud (ombordagi joyi)"
     },
     "contractHint": "Shartnoma jarayonidagi nomi",
     "mmHelp": "Buyurtmada bundan kam boʻlmaydi; maksimaldan oshsa — buyurtma tasdiqqa ketadi",
@@ -333,7 +341,10 @@
     "leave": "Chiqish",
     "stay": "Davom etish",
     "unlimited": "Cheksiz",
-    "unlimitedHelp": "Maksimal miqdor yoʻq — buyurtma miqdori boʻyicha tasdiqqa ketmaydi"
+    "unlimitedHelp": "Maksimal miqdor yoʻq — buyurtma miqdori boʻyicha tasdiqqa ketmaydi",
+    "locationPh": "Masalan: A qator · 3-stellaj · 2-polka",
+    "locationHint": "{warehouse} ombori",
+    "locationNone": "Sizning filialingizda faol ombor yoʻq."
   },
   "wizard": {
     "title": "Excelʼdan yuklash",
@@ -442,7 +453,8 @@
       "max": "Max",
       "marked": "Markirovkali",
       "controlled": "Nazoratdagi",
-      "prescription": "Retsept boʻyicha"
+      "prescription": "Retsept boʻyicha",
+      "location": "Hudud (ombordagi joyi)"
     },
     "m": {
       "pReq": "{f} kiritilmagan",

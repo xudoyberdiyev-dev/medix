@@ -276,6 +276,15 @@ function Card({
                 [t("lRx"), yn(p.prescription)],
               ]}
             />
+            {p.locations.length > 0 ? (
+              <InfoGrid
+                title={t("iLocation")}
+                rows={p.locations.map((l): [string, ReactNode] => [
+                  new Set(p.locations.map((x) => x.branch)).size > 1 ? `${l.branch} · ${l.warehouse}` : l.warehouse,
+                  l.location,
+                ])}
+              />
+            ) : null}
             <InfoGrid title={t("iTax")} rows={[[t("lVat"), `${p.vatRate.replace(/\.00$/, "")}%`]]} />
             {p.note ? <InfoGrid title={t("iNote")} rows={[[t("lNote"), p.note]]} /> : null}
           </div>
