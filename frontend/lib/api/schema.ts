@@ -542,7 +542,7 @@ export interface paths {
          * FS va hisob-faktura — PDF (chop etish)
          * @description Narx, summa va QQS — faqat special.cost.
          */
-        get: operations["pdf_5"];
+        get: operations["pdf_6"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2412,7 +2412,7 @@ export interface paths {
          * Sanoq varag'i / inventarizatsiya qaydnomasi — PDF
          * @description Sanoqda — sanoq varag'i («Sanaldi» bo'sh), keyin — farqlar bilan qaydnoma. Tannarx — faqat prices.cost.
          */
-        get: operations["pdf_4"];
+        get: operations["pdf_5"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3710,6 +3710,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/orders/invoice-forms/{type}/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Faktura PDF — ommaviy (reys / ro'yxat)
+         * @description 50 tagacha buyurtma; har buyurtma yangi sahifadan.
+         */
+        get: operations["pdfMany"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orders/invoice-forms/{type}/xlsx": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Faktura .xlsx — ommaviy (reys / ro'yxat)
+         * @description 50 tagacha buyurtma; har buyurtma alohida varaqda. Narxli turlar — prices.view.
+         */
+        get: operations["xlsxMany"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/orders/invoices/pdf": {
         parameters: {
             query?: never;
@@ -4082,6 +4122,26 @@ export interface paths {
         post?: never;
         /** Asl holatiga qaytarish */
         delete: operations["revert"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orders/{id}/invoice-forms/{type}/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Faktura PDF (5 tur)
+         * @description Excel bilan bir xil ustunlar va tuzatishlar; narxli turlar — prices.view.
+         */
+        get: operations["pdf_4"];
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -17062,7 +17122,7 @@ export interface operations {
             };
         };
     };
-    pdf_5: {
+    pdf_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -19796,7 +19856,7 @@ export interface operations {
             };
         };
     };
-    pdf_4: {
+    pdf_5: {
         parameters: {
             query?: never;
             header?: never;
@@ -21626,6 +21686,54 @@ export interface operations {
             };
         };
     };
+    pdfMany: {
+        parameters: {
+            query: {
+                ids: number[];
+            };
+            header?: never;
+            path: {
+                type: "WAREHOUSE" | "WAREHOUSE2" | "CLIENT_SEND" | "CLIENT1" | "CLIENT2";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
+                };
+            };
+        };
+    };
+    xlsxMany: {
+        parameters: {
+            query: {
+                ids: number[];
+            };
+            header?: never;
+            path: {
+                type: "WAREHOUSE" | "WAREHOUSE2" | "CLIENT_SEND" | "CLIENT1" | "CLIENT2";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+        };
+    };
     invoicesPdf: {
         parameters: {
             query: {
@@ -22127,6 +22235,29 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["InvoiceForms"];
+                };
+            };
+        };
+    };
+    pdf_4: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+                type: "WAREHOUSE" | "WAREHOUSE2" | "CLIENT_SEND" | "CLIENT1" | "CLIENT2";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
                 };
             };
         };

@@ -279,16 +279,54 @@ class OrderInvoiceForms {
     /** Excel: sarlavha bloki, ustunlar shablondagidek, «Жами» (soni va summa); albom, sahifaga sig'adi, sarlavha har sahifada. */
     @Transactional(readOnly = true)
     byte[] xlsx(Actor actor, long id, FormType type, boolean prices) {
+        return xlsxMany(actor, List.of(id), type, prices);
+    }
+
+    static final int MAX_BULK = 50;
+
+    /** Ommaviy (reys / ro'yxat): bitta fayl, har buyurtma — alohida varaq (varaq nomi = buyurtma raqami). */
+    @Transactional(readOnly = true)
+    byte[] xlsxMany(Actor actor, List<Long> ids, FormType type, boolean prices) {
         if (type.priced && !prices) {
             throw MedixException.forbidden("invoiceForms.noPrices");
         }
-        InvoiceForms f = get(actor, id, prices, false);
+        List<Long> unique = ids == null ? List.of() : ids.stream().distinct().toList();
+        if (unique.isEmpty() || unique.size() > MAX_BULK) {
+            throw MedixException.badRequest("order.invoiceBulkSize", MAX_BULK);
+        }
+        try (XSSFWorkbook wb = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            java.util.Set<String> names = new java.util.HashSet<>();
+            for (Long id : unique) {
+                InvoiceForms f = get(actor, id, prices, false);
+                String name = unique.size() == 1 ? type.title.replace("№", "N") : f.orderNumber().replaceAll("[\\\\/?*\\[\\]:]", "-");
+                if (name.length() > 31) {
+                    name = name.substring(name.length() - 31);
+                }
+                String base = name;
+                for (int k = 2; !names.add(name.toLowerCase(java.util.Locale.ROOT)); k++) {
+                    name = (base.length() > 27 ? base.substring(0, 27) : base) + " (" + k + ")";
+                }
+                sheet(wb, wb.createSheet(name), f, type);
+            }
+            wb.write(out);
+            return out.toByteArray();
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    /** Chiqariladigan qatorlar: ombor turlari tuzatilmagan bo'lsa Худуд bo'yicha. */
+    static List<FormRow> printRows(InvoiceForms f, FormType type) {
         List<FormRow> rows = new ArrayList<>(f.rows());
         if (type.warehouse() && !f.edited()) {
             rows.sort(Comparator.comparing((FormRow r) -> r.area() == null ? "￿" : r.area().toLowerCase(java.util.Locale.ROOT)));
         }
-        try (XSSFWorkbook wb = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-            Sheet s = wb.createSheet(type.title.replace("№", "N"));
+        return rows;
+    }
+
+    private static void sheet(XSSFWorkbook wb, Sheet s, InvoiceForms f, FormType type) {
+        List<FormRow> rows = printRows(f, type);
+        {
             Font bf = wb.createFont();
             bf.setBold(true);
             CellStyle bold = wb.createCellStyle();
@@ -381,11 +419,12 @@ class OrderInvoiceForms {
             s.setFitToPage(true);
             s.getPrintSetup().setFitWidth((short) 1);
             s.getPrintSetup().setFitHeight((short) 0);
-            wb.write(out);
-            return out.toByteArray();
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
         }
+    }
+
+    String bulkFileName(List<Long> ids, FormType type) {
+        long n = ids == null ? 0 : ids.stream().distinct().count();
+        return n == 1 ? fileName(ids.getFirst(), type) : "faktura-" + type.name().toLowerCase(java.util.Locale.ROOT) + "-" + n + ".xlsx";
     }
 
     String fileName(long id, FormType type) {

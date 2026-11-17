@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="uz">
+<head>
+    <meta charset="UTF-8"/>
+    <title th:text="${title}">Фактура</title>
+    <style th:replace="~{_base :: css}"></style>
+    <style>
+        /* O18: 5 xil faktura — Excel bilan bir xil ustunlar, albom. */
+        @page { size: A4 landscape; margin: 10mm 10mm 14mm 10mm; }
+        body { font-size: 8.5pt; }
+        .doc { page-break-after: always; }
+        .doc:last-child { page-break-after: auto; }
+        h1 { font-size: 12pt; margin: 0 0 2px 0; }
+        thead { display: table-header-group; }
+        th, td { border: 0.6pt solid #9aa3ae; padding: 2px 4px; }
+        th { text-align: center; }
+        .r { text-align: right; }
+        .tot td { font-weight: 700; }
+    </style>
+</head>
+<body>
+<div class="doc" th:each="d : ${docs}">
+    <h1 th:text="${title}">Фактура</h1>
+    <div th:text="${d.number}">Буюртма №</div>
+    <div th:text="${d.customer}">Мижоз</div>
+    <div th:text="${d.warehouse}">Омбор</div>
+    <table>
+        <thead>
+        <tr><th th:each="c : ${columns}" th:text="${c.name}">№</th></tr>
+        </thead>
+        <tbody>
+        <tr th:each="r : ${d.rows}">
+            <td th:each="c : ${r}" th:classappend="${c.right} ? 'r'" th:text="${c.v}">1</td>
+        </tr>
+        <tr class="tot">
+            <td th:each="c, s : ${columns}" th:classappend="${c.right} ? 'r'"
+                th:text="${s.index == 0} ? 'Жами' : (${s.index == d.qtyCol} ? ${d.totalQty} : (${s.last} ? ${d.totalSum} : ''))"></td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+</body>
+</html>

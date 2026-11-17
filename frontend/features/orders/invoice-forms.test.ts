@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { COL_TITLES, FORM_TYPES, changedCells, rowTotal } from "./invoice-forms";
+import { COL_TITLES, FORM_TYPES, changedCells, moveRow, rowTotal } from "./invoice-forms";
 
 const row = (over: Partial<Parameters<typeof changedCells>[0][number]> = {}) => ({
   area: "B-2",
@@ -48,5 +48,17 @@ describe("O18 fakturalar", () => {
     expect(changedCells([row({ name: "Boshqa", qty: 3 })], [row()])).toBe(2);
     expect(changedCells([row(), row({ area: undefined, series: undefined, expiry: undefined, unit: undefined })], [row()])).toBe(3);
     expect(changedCells([], [row()])).toBe(1);
+  });
+});
+
+describe("moveRow (sudrab tartiblash)", () => {
+  it("qatorni pastga va yuqoriga koʻchiradi", () => {
+    expect(moveRow(["a", "b", "c", "d"], 0, 2)).toEqual(["b", "c", "a", "d"]);
+    expect(moveRow(["a", "b", "c", "d"], 3, 1)).toEqual(["a", "d", "b", "c"]);
+  });
+  it("chegaradan tashqari yoki bir joy — oʻzgarmaydi", () => {
+    const rows = ["a", "b"];
+    expect(moveRow(rows, 1, 1)).toBe(rows);
+    expect(moveRow(rows, 0, 5)).toBe(rows);
   });
 });

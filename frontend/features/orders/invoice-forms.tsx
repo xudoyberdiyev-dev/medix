@@ -1,14 +1,16 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowDown, ArrowUp, Plus, RotateCcw, Trash2, Undo2 } from "lucide-react";
+import { ArrowDown, ArrowUp, FileSpreadsheet, FileText, GripVertical, Plus, RotateCcw, Trash2, Undo2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
+import { RowMenu } from "@/components/ui/row-menu";
 import { ErrorState, Skeleton } from "@/components/ui/system-states";
-import { ensureCsrf } from "@/features/auth/session";
+import { can } from "@/features/auth/can";
+import { ensureCsrf, useMe } from "@/features/auth/session";
 import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
 import { formatDateTime, formatMoney } from "@/lib/format";
@@ -65,6 +67,15 @@ export const COL_TITLES: Record<Col, string> = {
   price: "ККС билан Нархи",
   total: "ККС билан Жами киймати (Сумма)",
 };
+
+/** Qatorni sudrab koʻchirish: `from` dagi qator `to` oʻrniga (qolganlari suriladi). */
+export function moveRow<T>(rows: T[], from: number, to: number): T[] {
+  if (from === to || from < 0 || to < 0 || from >= rows.length || to >= rows.length) return rows;
+  const next = [...rows];
+  const [x] = next.splice(from, 1);
+  next.splice(to, 0, x);
+  return next;
+}
 
 /** Qator summasi: soni × narx (tiyin aniqligida, float xatosisiz). */
 export function rowTotal(qty: number, price: string | null | undefined): string {
@@ -192,10 +203,12 @@ export function InvoiceFormsModal(props: { orderId: number; initial: FormType; o
     update(next);
   }
 
-  async function download() {
+  const dragFrom = useRef<number | null>(null);
+
+  async function download(format: "xlsx" | "pdf" = "xlsx") {
     if (timer.current) clearTimeout(timer.current);
     if (dirty.current && canEdit) await save.mutateAsync(current);
-    window.open(`/api/orders/${props.orderId}/invoice-forms/${type}/xlsx`, "_blank", "noopener");
+    window.open(`/api/orders/${props.orderId}/invoice-forms/${type}/${format}`, "_blank", "noopener");
   }
 
   /** Excel kabi: Enter — pastdagi katak, ↑/↓ — qatorlar boʻylab; Ctrl+Z — bekor qilish. */
@@ -277,6 +290,9 @@ export function InvoiceFormsModal(props: { orderId: number; initial: FormType; o
                   </Button>
                 </span>
               ) : null}
+              <Button size="sm" variant="tertiary" icon={FileText} disabled={save.isPending} onClick={() => void download("pdf")}>
+                {t("pdf")}
+              </Button>
             </div>
             <div className="max-h-[50vh] overflow-auto rounded-card border border-border">
               <table className="w-full min-w-[880px] text-caption">
@@ -293,8 +309,39 @@ export function InvoiceFormsModal(props: { orderId: number; initial: FormType; o
                 </thead>
                 <tbody>
                   {current.map((r, i) => (
-                    <tr key={i} className="border-t border-border">
-                      <td className="px-2 py-1 tabular-nums">{i + 1}</td>
+                    <tr
+                      key={i}
+                      className="border-t border-border"
+                      onDragOver={canEdit ? (e) => e.preventDefault() : undefined}
+                      onDrop={
+                        canEdit
+                          ? (e) => {
+                              e.preventDefault();
+                              const from = dragFrom.current;
+                              dragFrom.current = null;
+                              if (from != null && from !== i) update(moveRow(current, from, i));
+                            }
+                          : undefined
+                      }
+                    >
+                      <td className="px-2 py-1 tabular-nums">
+                        {canEdit ? (
+                          <span
+                            draggable
+                            onDragStart={(e) => {
+                              dragFrom.current = i;
+                              e.dataTransfer.effectAllowed = "move";
+                            }}
+                            title={t("drag")}
+                            className="inline-flex cursor-grab items-center gap-1 text-text-secondary"
+                          >
+                            <GripVertical size={14} strokeWidth={1.5} aria-hidden />
+                            <span className="text-text-primary">{i + 1}</span>
+                          </span>
+                        ) : (
+                          i + 1
+                        )}
+                      </td>
                       {form.cols.map((c) => {
                         if (c === "total")
                           return (
@@ -380,5 +427,31 @@ export function InvoiceFormsModal(props: { orderId: number; initial: FormType; o
         )}
       </div>
     </Modal>
+  );
+}
+
+/** Ommaviy fakturalar (reys, joʻnatishga tanlanganlar): 5 tur × Excel/PDF — bitta fayl, har buyurtma alohida varaq/sahifa. */
+export function InvoiceFormsMenu({ orderIds }: { orderIds: number[] }) {
+  const t = useTranslations("orders.tripPage");
+  const me = useMe();
+  if (orderIds.length === 0) return null;
+  return (
+    <RowMenu
+      label={t("invoiceFormsXlsx")}
+      trigger={{ icon: FileSpreadsheet, text: t("invoiceFormsXlsx") }}
+      items={FORM_TYPES.filter((f) => !f.priced || can(me.data, "prices.view")).flatMap((f) =>
+        (["xlsx", "pdf"] as const).map((fmt) => ({
+          key: `${f.type}-${fmt}`,
+          label: `${f.title} · ${fmt === "xlsx" ? "Excel" : "PDF"}`,
+          icon:
+            fmt === "xlsx" ? (
+              <FileSpreadsheet size={16} strokeWidth={1.5} aria-hidden />
+            ) : (
+              <FileText size={16} strokeWidth={1.5} aria-hidden />
+            ),
+          onSelect: () => window.open(`/api/orders/invoice-forms/${f.type}/${fmt}?ids=${orderIds.join(",")}`, "_blank", "noopener"),
+        })),
+      )}
+    />
   );
 }

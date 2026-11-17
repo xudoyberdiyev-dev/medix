@@ -41,6 +41,7 @@ import { Tabs } from "@/components/ui/tabs";
 import { toast } from "@/components/ui/toast";
 import { can } from "@/features/auth/can";
 import { ensureCsrf, useMe } from "@/features/auth/session";
+import { FORM_TYPES } from "@/features/orders/invoice-forms";
 import { useBranches } from "@/features/employees/api";
 import { describeError } from "@/features/setup/form-error";
 import { api, unwrap } from "@/lib/api/client";
@@ -384,6 +385,8 @@ function ActivePick({ item, now }: { item: QueueItem; now: Date }) {
   const qc = useQueryClient();
   const id = item.id;
   const order = useOrder(id);
+  const me = useMe();
+  const forms = FORM_TYPES.filter((f) => (f.type === "WAREHOUSE" && can(me.data, "prices.view")) || f.type === "WAREHOUSE2");
   const [taken, setTaken] = useState<Record<number, boolean>>({});
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<unknown>(null);
@@ -534,13 +537,16 @@ function ActivePick({ item, now }: { item: QueueItem; now: Date }) {
         <Button variant="secondary" icon={Printer} onClick={() => openPickSheet([id])}>
           {tr("picking.printPickSheet")}
         </Button>
-        <Button
-          variant="tertiary"
-          icon={FileSpreadsheet}
-          onClick={() => window.open(`/api/orders/${id}/invoice-forms/WAREHOUSE2/xlsx`, "_blank", "noopener")}
-        >
-          Фактура для склада №2
-        </Button>
+        {forms.map((f) => (
+          <Button
+            key={f.type}
+            variant="tertiary"
+            icon={FileSpreadsheet}
+            onClick={() => window.open(`/api/orders/${id}/invoice-forms/${f.type}/xlsx`, "_blank", "noopener")}
+          >
+            {f.title}
+          </Button>
+        ))}
         <IssueButton orderId={id} />
         <Button icon={PackageCheck} disabled={!all} loading={pending} onClick={() => void finish()}>
           {tr("picking.finish")}

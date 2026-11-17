@@ -37,6 +37,7 @@ import { TextField } from "@/components/ui/text-field";
 import { toast } from "@/components/ui/toast";
 import { can } from "@/features/auth/can";
 import { ensureCsrf, useMe } from "@/features/auth/session";
+import { InvoiceFormsMenu } from "@/features/orders/invoice-forms";
 import { formatIsoDate, parseUzDate } from "@/features/counterparties/api";
 import { Steps } from "@/features/payments/payment-doc-page";
 import { describeError } from "@/features/setup/form-error";
@@ -315,6 +316,8 @@ export function TripPage({ id }: { id: number }) {
   const sheetHref = `/api/trips/${id}/sheet/pdf`;
   /** O11: reysdagi hujjatlashtirilgan buyurtmalar HF — bitta PDF. */
   const invoiceOrderIds = st === "PLANNED" || st === "CANCELLED" ? [] : stops.filter((s) => s.waybillNumber).map((s) => s.orderId);
+  /** O18: reysdagi buyurtmalar fakturalari (5 tur) — bitta Excel, har buyurtma alohida varaqda. */
+  const formOrderIds = st === "CANCELLED" ? [] : stops.map((s) => s.orderId);
   return (
     <div className="flex min-w-0 flex-col gap-4">
       <DocumentHeader
@@ -365,6 +368,7 @@ export function TripPage({ id }: { id: number }) {
                 {t("invoicesPdf")}
               </Button>
             ) : null}
+            <InvoiceFormsMenu orderIds={formOrderIds} />
             {canTrip && st === "PLANNED" ? (
               <RowMenu
                 label={t("more")}
