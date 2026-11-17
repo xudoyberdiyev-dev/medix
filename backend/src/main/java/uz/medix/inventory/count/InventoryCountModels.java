@@ -102,7 +102,8 @@ final class InventoryCountModels {
             @Schema(nullable = true, description = "sanaldi − hisobda; sanalmagan yoki ko'r sanoqda — null") Integer diff,
             boolean added, @Schema(nullable = true) String cost, @Schema(nullable = true) String diffAmount,
             @Schema(nullable = true) String countedBy, @Schema(nullable = true) Instant countedAt,
-            @Schema(nullable = true) String note, boolean recount) {}
+            @Schema(nullable = true) String note, boolean recount,
+            @Schema(nullable = true, description = "Mahsulotning shu ombordagi joyi (O13)") String location) {}
 
     record InventoryCountDetail(long id, String number, long branchId, long warehouseId, String warehouse, @Schema(nullable = true) ZoneRef zone,
             boolean blind, boolean bookHidden, @Schema(nullable = true) String commission, @Schema(nullable = true) String note,
@@ -124,7 +125,7 @@ final class InventoryCountModels {
                     lines.stream().map(l -> new InventoryCountLine(l.id(), l.zone(), l.batchId(), l.batchNumber(), l.expiryDate(), l.productId(),
                             l.productCode(), l.productName(), l.controlled(), hideBook ? null : l.bookQty(), l.countedQty(),
                             hideBook ? null : l.diff(), l.added(), cost ? l.cost() : null, cost && !hideBook ? l.diffAmount() : null,
-                            l.countedBy(), l.countedAt(), l.note(), l.recount())).toList(),
+                            l.countedBy(), l.countedAt(), l.note(), l.recount(), l.location())).toList(),
                     scopeMode, zones, products, countDate, members, chairId, events);
         }
     }

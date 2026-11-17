@@ -45,7 +45,8 @@ public class ProductImport {
 
     /** MEDIX maydonlari (prototip `BQ_FIELDS.products` + MEDIX shablonidagi qo'shimchalar). */
     static final List<String> FIELDS = List.of("code", "name", "contractName", "classifier", "maker", "country", "cat", "form", "dose",
-            "pack", "unit", "barcode", "ikpu", "farmId", "note", "vat", "min", "max", "marked", "controlled", "prescription");
+            "pack", "unit", "barcode", "ikpu", "farmId", "note", "vat", "min", "max", "marked", "controlled", "prescription",
+            "location");
 
     /** Prototip bo'yicha majburiy maydonlar. */
     static final List<String> REQUIRED = List.of("name", "classifier", "maker", "cat", "ikpu", "farmId");
@@ -303,7 +304,8 @@ public class ProductImport {
             if (min != null && max != null && min > max) {
                 msgs.add(err("pMaxMin"));
             }
-            for (String[] lim : new String[][] {{"contractName", "300"}, {"classifier", "500"}, {"farmId", "50"}, {"dose", "50"}, {"note", "1000"}}) {
+            for (String[] lim : new String[][] {{"contractName", "300"}, {"classifier", "500"}, {"farmId", "50"}, {"dose", "50"}, {"note", "1000"},
+                {"location", "60"}}) {
                 if (v.get(lim[0]).length() > Integer.parseInt(lim[1])) {
                     msgs.add(err("pTooLong", "f", lim[0]));
                 }
@@ -349,7 +351,8 @@ public class ProductImport {
                             ProductExcel.blank(v.get("classifier")), maker, cat, country, unit, null, ProductExcel.blank(ikpu),
                             ProductExcel.blank(v.get("farmId")), barcodes, ProductExcel.yes(v.get("controlled")),
                             ProductExcel.yes(v.get("marked")), ProductExcel.yes(v.get("prescription")), vat, min, max, form,
-                            ProductExcel.blank(v.get("dose")), pack, pack, ProductExcel.blank(v.get("note")), null, false);
+                            ProductExcel.blank(v.get("dose")), pack, pack, ProductExcel.blank(v.get("note")), null, false,
+                            products.defaultLocation(ProductExcel.blank(v.get("location"))));
                     createdCode = products.create(pr, code.isEmpty() ? null : code).code();
                     created++;
                 }

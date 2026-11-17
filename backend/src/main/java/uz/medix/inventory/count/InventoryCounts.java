@@ -210,11 +210,12 @@ class InventoryCounts {
         List<InventoryCountLine> lines = jdbc.sql("""
                 SELECT l.id, z.id AS zone_id, z.name AS zone_name, z.type AS zone_type, l.batch_id, b.number AS batch_number, b.expiry_date,
                        l.product_id, p.code, p.name, p.controlled, l.book_qty, l.counted_qty, l.added, l.cost, e.full_name AS counted_by,
-                       l.counted_at, l.note, l.recount
+                       l.counted_at, l.note, l.recount, pl.location
                 FROM inventory_count_line l
                 JOIN zone z ON z.id = l.zone_id JOIN batch b ON b.id = l.batch_id JOIN product p ON p.id = l.product_id
                 LEFT JOIN employee e ON e.id = l.counted_by
-                WHERE l.count_id = :id ORDER BY z.name, p.name, b.expiry_date, b.number""")
+                LEFT JOIN product_location pl ON pl.product_id = l.product_id AND pl.warehouse_id = z.warehouse_id
+                WHERE l.count_id = :id ORDER BY z.name, lower(pl.location) NULLS LAST, p.name, b.expiry_date, b.number""")
                 .param("id", id)
                 .query((rs, n) -> {
                     int book = rs.getInt("book_qty");
@@ -226,7 +227,7 @@ class InventoryCounts {
                             rs.getDate("expiry_date").toLocalDate(), rs.getLong("product_id"), rs.getString("code"), rs.getString("name"),
                             rs.getBoolean("controlled"), book, counted, diff, rs.getBoolean("added"), cost.toString(),
                             diff == null ? null : cost.times(diff).toString(), rs.getString("counted_by"), instant(rs.getTimestamp("counted_at")),
-                            rs.getString("note"), rs.getBoolean("recount"));
+                            rs.getString("note"), rs.getBoolean("recount"), rs.getString("location"));
                 })
                 .list();
         int counted = (int) lines.stream().filter(l -> l.countedQty() != null).count();

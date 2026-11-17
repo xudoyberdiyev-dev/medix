@@ -1,6 +1,7 @@
 package uz.medix.catalog.product;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -45,12 +46,13 @@ final class ProductModels {
             @Schema(nullable = true, description = "Bazaviy narx (QQS bilan); berilmagan bo'lsa null") String price,
             @Schema(nullable = true) String note,
             boolean active,
-            @Schema(nullable = true) uz.medix.shared.text.SearchMatch match) {
+            @Schema(nullable = true) uz.medix.shared.text.SearchMatch match,
+            @Schema(nullable = true, description = "Ombordagi joyi (filial doirasidagi omborlar, vergul bilan)") String location) {
 
         ProductRow withMatch(uz.medix.shared.text.SearchMatch m) {
             return new ProductRow(id, code, name, contractName, classifierName, manufacturer, category, country, dosageForm, dose, unit,
                     packQty, barcode, ikpu, farmId, supplyEmployee, controlled, marked, prescription, vatRate, minQty, maxQty, stock, price,
-                    note, active, m);
+                    note, active, m, location);
         }
     }
 
@@ -88,7 +90,14 @@ final class ProductModels {
             boolean active,
             @Schema(description = "QQSdan ozod (stavka 0)") boolean vatExempt,
             @Schema(description = "Ombor harakati bor — birlik, qadoqdagi soni, nazorat va markirovka qulflanadi") boolean hasMovements,
-            List<CodeChange> codeHistory) {}
+            List<CodeChange> codeHistory,
+            @Schema(description = "Ombordagi joyi — xodim doirasidagi faol omborlar bo'yicha (joy berilmagan — null)") List<Location> locations) {}
+
+    /** O13: mahsulotning ombordagi joyi («Hudud»). */
+    record Location(long warehouseId, String warehouse, String branch, @Schema(nullable = true) String location) {}
+
+    record LocationInput(@NotNull(message = "{validation.required}") Long warehouseId,
+            @Schema(nullable = true, description = "Bo'sh — joy o'chiriladi") @Size(max = 60) String location) {}
 
     record ProductRequest(
             @NotBlank(message = "{validation.required}") @Size(max = 300) String name,
@@ -115,7 +124,15 @@ final class ProductModels {
             @Schema(nullable = true) @Size(max = 1000) String note,
             @Schema(nullable = true, description = "Yangi mahsulot: berilsa shu kod (band bo'lsa 409), aks holda avtomatik; tahrirda — farq qilsa kod o'zgartiriladi (tarixga)")
             @Pattern(regexp = "^[1-9][0-9]{7}$", message = "{validation.productCode}") String code,
-            @Schema(nullable = true, description = "QQSdan ozod — vatRate 0 bo'lishi shart (berilmasa — yo'q)") Boolean vatExempt) {}
+            @Schema(nullable = true, description = "QQSdan ozod — vatRate 0 bo'lishi shart (berilmasa — yo'q)") Boolean vatExempt,
+            @Schema(nullable = true, description = "Ombordagi joylar; null — o'zgartirilmaydi") @Size(max = 50) List<@Valid LocationInput> locations) {
+
+        ProductRequest withLocations(List<LocationInput> l) {
+            return new ProductRequest(name, contractName, classifierName, manufacturerId, categoryId, countryId, unitId, supplyEmployeeId, ikpu,
+                    farmId, barcodes, controlled, marked, prescription, vatRate, minQty, maxQty, dosageForm, dose, packQty, perPack, note, code,
+                    vatExempt, l);
+        }
+    }
 
     /** Shakl uchun bo'sh kod taklifi. */
     record NewCode(String code) {}
@@ -137,7 +154,7 @@ final class ProductModels {
 
     enum Status { ACTIVE, INACTIVE, ALL }
 
-    enum SortField { CODE, NAME, CONTRACT_NAME, MANUFACTURER, CATEGORY, COUNTRY, VAT, MIN_QTY, MAX_QTY, STOCK, PRICE }
+    enum SortField { CODE, NAME, CONTRACT_NAME, MANUFACTURER, CATEGORY, COUNTRY, VAT, MIN_QTY, MAX_QTY, STOCK, PRICE, LOCATION }
 
     /** Saqlangan ko'rinishlar (prototip yorliqlari). */
     enum View { ALL, ACTIVE, CONTROLLED, MARKED, PRESCRIPTION, INACTIVE }
