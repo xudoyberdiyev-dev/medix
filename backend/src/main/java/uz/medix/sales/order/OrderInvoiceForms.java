@@ -315,11 +315,17 @@ class OrderInvoiceForms {
         }
     }
 
-    private static void sheet(XSSFWorkbook wb, Sheet s, InvoiceForms f, FormType type) {
+    /** Chiqariladigan qatorlar: ombor turlari tuzatilmagan bo'lsa Худуд bo'yicha. */
+    static List<FormRow> printRows(InvoiceForms f, FormType type) {
         List<FormRow> rows = new ArrayList<>(f.rows());
         if (type.warehouse() && !f.edited()) {
             rows.sort(Comparator.comparing((FormRow r) -> r.area() == null ? "￿" : r.area().toLowerCase(java.util.Locale.ROOT)));
         }
+        return rows;
+    }
+
+    private static void sheet(XSSFWorkbook wb, Sheet s, InvoiceForms f, FormType type) {
+        List<FormRow> rows = printRows(f, type);
         {
             Font bf = wb.createFont();
             bf.setBold(true);

@@ -981,7 +981,7 @@
     "print": "Chop etish (marshrut varagʻi)",
     "ttn": "TTN",
     "invoicesPdf": "Hisob-fakturalar",
-    "invoiceFormsXlsx": "Fakturalar (Excel)",
+    "invoiceFormsXlsx": "Fakturalar (5 tur)",
     "cancelTrip": "Reysni bekor qilish",
     "cancelCT": "Reysni bekor qilasizmi?",
     "cancelCD": "Reysdagi buyurtmalar «Tayyor» roʻyxatiga qaytadi.",
@@ -1057,6 +1057,7 @@
     "deleteRow": "Qatorni oʻchirish",
     "saveError": "Tuzatishlar saqlanmadi. Internetni tekshiring va qayta urinib koʻring.",
     "menu": "Faktura: {title}",
-    "drag": "Sudrab tartiblang"
+    "drag": "Sudrab tartiblang",
+    "pdf": "PDF yuklab olish"
   }
 }

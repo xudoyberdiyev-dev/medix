@@ -373,13 +373,20 @@ export function TripPage({ id }: { id: number }) {
               <RowMenu
                 label={t("invoiceFormsXlsx")}
                 trigger={{ icon: FileSpreadsheet, text: t("invoiceFormsXlsx") }}
-                items={FORM_TYPES.filter((f) => !f.priced || can(me.data, "prices.view")).map((f) => ({
-                  key: f.type,
-                  label: f.title,
-                  icon: <FileSpreadsheet size={16} strokeWidth={1.5} aria-hidden />,
-                  onSelect: () =>
-                    window.open(`/api/orders/invoice-forms/${f.type}/xlsx?ids=${formOrderIds.join(",")}`, "_blank", "noopener"),
-                }))}
+                items={FORM_TYPES.filter((f) => !f.priced || can(me.data, "prices.view")).flatMap((f) =>
+                  (["xlsx", "pdf"] as const).map((fmt) => ({
+                    key: `${f.type}-${fmt}`,
+                    label: `${f.title} · ${fmt === "xlsx" ? "Excel" : "PDF"}`,
+                    icon:
+                      fmt === "xlsx" ? (
+                        <FileSpreadsheet size={16} strokeWidth={1.5} aria-hidden />
+                      ) : (
+                        <FileText size={16} strokeWidth={1.5} aria-hidden />
+                      ),
+                    onSelect: () =>
+                      window.open(`/api/orders/invoice-forms/${f.type}/${fmt}?ids=${formOrderIds.join(",")}`, "_blank", "noopener"),
+                  })),
+                )}
               />
             ) : null}
             {canTrip && st === "PLANNED" ? (

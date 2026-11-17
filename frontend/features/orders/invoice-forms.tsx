@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowDown, ArrowUp, GripVertical, Plus, RotateCcw, Trash2, Undo2 } from "lucide-react";
+import { ArrowDown, ArrowUp, FileText, GripVertical, Plus, RotateCcw, Trash2, Undo2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { Alert } from "@/components/ui/alert";
@@ -203,10 +203,10 @@ export function InvoiceFormsModal(props: { orderId: number; initial: FormType; o
 
   const dragFrom = useRef<number | null>(null);
 
-  async function download() {
+  async function download(format: "xlsx" | "pdf" = "xlsx") {
     if (timer.current) clearTimeout(timer.current);
     if (dirty.current && canEdit) await save.mutateAsync(current);
-    window.open(`/api/orders/${props.orderId}/invoice-forms/${type}/xlsx`, "_blank", "noopener");
+    window.open(`/api/orders/${props.orderId}/invoice-forms/${type}/${format}`, "_blank", "noopener");
   }
 
   /** Excel kabi: Enter — pastdagi katak, ↑/↓ — qatorlar boʻylab; Ctrl+Z — bekor qilish. */
@@ -288,6 +288,9 @@ export function InvoiceFormsModal(props: { orderId: number; initial: FormType; o
                   </Button>
                 </span>
               ) : null}
+              <Button size="sm" variant="tertiary" icon={FileText} disabled={save.isPending} onClick={() => void download("pdf")}>
+                {t("pdf")}
+              </Button>
             </div>
             <div className="max-h-[50vh] overflow-auto rounded-card border border-border">
               <table className="w-full min-w-[880px] text-caption">

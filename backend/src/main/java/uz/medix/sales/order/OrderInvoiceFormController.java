@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -25,10 +26,12 @@ import uz.medix.shared.security.CurrentActor;
 class OrderInvoiceFormController {
 
     private final OrderInvoiceForms forms;
+    private final OrderInvoiceFormPdf pdf;
     private final CurrentActor currentActor;
 
-    OrderInvoiceFormController(OrderInvoiceForms forms, CurrentActor currentActor) {
+    OrderInvoiceFormController(OrderInvoiceForms forms, OrderInvoiceFormPdf pdf, CurrentActor currentActor) {
         this.forms = forms;
+        this.pdf = pdf;
         this.currentActor = currentActor;
     }
 
@@ -83,5 +86,19 @@ class OrderInvoiceFormController {
                 .header(HttpHeaders.CONTENT_TYPE, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + forms.bulkFileName(ids, type) + "\"")
                 .body(body);
+    }
+
+    @GetMapping(value = "/api/orders/{id}/invoice-forms/{type}/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
+    @PreAuthorize("hasAuthority('orders.view')")
+    @Operation(summary = "Faktura PDF (5 tur)", description = "Excel bilan bir xil ustunlar va tuzatishlar; narxli turlar — prices.view.")
+    ResponseEntity<byte[]> pdf(@PathVariable long id, @PathVariable OrderInvoiceForms.FormType type, Authentication auth) {
+        return pdf.render(actor(), List.of(id), type, has(auth, "prices.view")).response();
+    }
+
+    @GetMapping(value = "/api/orders/invoice-forms/{type}/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
+    @PreAuthorize("hasAuthority('orders.view')")
+    @Operation(summary = "Faktura PDF — ommaviy (reys / ro'yxat)", description = "50 tagacha buyurtma; har buyurtma yangi sahifadan.")
+    ResponseEntity<byte[]> pdfMany(@PathVariable OrderInvoiceForms.FormType type, @RequestParam List<Long> ids, Authentication auth) {
+        return pdf.render(actor(), ids, type, has(auth, "prices.view")).response();
     }
 }
