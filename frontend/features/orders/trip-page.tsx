@@ -21,7 +21,6 @@ import {
   X,
   type LucideIcon,
   FileText,
-  FileSpreadsheet,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
@@ -38,7 +37,7 @@ import { TextField } from "@/components/ui/text-field";
 import { toast } from "@/components/ui/toast";
 import { can } from "@/features/auth/can";
 import { ensureCsrf, useMe } from "@/features/auth/session";
-import { FORM_TYPES } from "@/features/orders/invoice-forms";
+import { InvoiceFormsMenu } from "@/features/orders/invoice-forms";
 import { formatIsoDate, parseUzDate } from "@/features/counterparties/api";
 import { Steps } from "@/features/payments/payment-doc-page";
 import { describeError } from "@/features/setup/form-error";
@@ -369,26 +368,7 @@ export function TripPage({ id }: { id: number }) {
                 {t("invoicesPdf")}
               </Button>
             ) : null}
-            {formOrderIds.length > 0 ? (
-              <RowMenu
-                label={t("invoiceFormsXlsx")}
-                trigger={{ icon: FileSpreadsheet, text: t("invoiceFormsXlsx") }}
-                items={FORM_TYPES.filter((f) => !f.priced || can(me.data, "prices.view")).flatMap((f) =>
-                  (["xlsx", "pdf"] as const).map((fmt) => ({
-                    key: `${f.type}-${fmt}`,
-                    label: `${f.title} · ${fmt === "xlsx" ? "Excel" : "PDF"}`,
-                    icon:
-                      fmt === "xlsx" ? (
-                        <FileSpreadsheet size={16} strokeWidth={1.5} aria-hidden />
-                      ) : (
-                        <FileText size={16} strokeWidth={1.5} aria-hidden />
-                      ),
-                    onSelect: () =>
-                      window.open(`/api/orders/invoice-forms/${f.type}/${fmt}?ids=${formOrderIds.join(",")}`, "_blank", "noopener"),
-                  })),
-                )}
-              />
-            ) : null}
+            <InvoiceFormsMenu orderIds={formOrderIds} />
             {canTrip && st === "PLANNED" ? (
               <RowMenu
                 label={t("more")}

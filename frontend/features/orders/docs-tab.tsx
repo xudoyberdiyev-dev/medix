@@ -14,6 +14,7 @@ import { TextField } from "@/components/ui/text-field";
 import { toast } from "@/components/ui/toast";
 import { ensureCsrf, useMe } from "@/features/auth/session";
 import { formatIsoDate, parseUzDate } from "@/features/counterparties/api";
+import { InvoiceFormsMenu } from "@/features/orders/invoice-forms";
 import { describeError } from "@/features/setup/form-error";
 import { api, unwrap } from "@/lib/api/client";
 import { formatMoney, formatQuantity } from "@/lib/format";
@@ -214,6 +215,7 @@ export function DocsTab({ branchId }: { branchId: number | null }) {
               <div className="text-subtitle tabular-nums" aria-live="polite">
                 {tr("shipments.selected", { count: formatQuantity(picked.length), places: placesText(places, tr) })}
               </div>
+              <InvoiceFormsMenu orderIds={picked} />
               <Button
                 icon={Truck}
                 disabled={picked.length === 0 || !vehicle || !driver}

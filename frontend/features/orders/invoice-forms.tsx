@@ -1,14 +1,16 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowDown, ArrowUp, FileText, GripVertical, Plus, RotateCcw, Trash2, Undo2 } from "lucide-react";
+import { ArrowDown, ArrowUp, FileSpreadsheet, FileText, GripVertical, Plus, RotateCcw, Trash2, Undo2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
+import { RowMenu } from "@/components/ui/row-menu";
 import { ErrorState, Skeleton } from "@/components/ui/system-states";
-import { ensureCsrf } from "@/features/auth/session";
+import { can } from "@/features/auth/can";
+import { ensureCsrf, useMe } from "@/features/auth/session";
 import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
 import { formatDateTime, formatMoney } from "@/lib/format";
@@ -425,5 +427,31 @@ export function InvoiceFormsModal(props: { orderId: number; initial: FormType; o
         )}
       </div>
     </Modal>
+  );
+}
+
+/** Ommaviy fakturalar (reys, joʻnatishga tanlanganlar): 5 tur × Excel/PDF — bitta fayl, har buyurtma alohida varaq/sahifa. */
+export function InvoiceFormsMenu({ orderIds }: { orderIds: number[] }) {
+  const t = useTranslations("orders.tripPage");
+  const me = useMe();
+  if (orderIds.length === 0) return null;
+  return (
+    <RowMenu
+      label={t("invoiceFormsXlsx")}
+      trigger={{ icon: FileSpreadsheet, text: t("invoiceFormsXlsx") }}
+      items={FORM_TYPES.filter((f) => !f.priced || can(me.data, "prices.view")).flatMap((f) =>
+        (["xlsx", "pdf"] as const).map((fmt) => ({
+          key: `${f.type}-${fmt}`,
+          label: `${f.title} · ${fmt === "xlsx" ? "Excel" : "PDF"}`,
+          icon:
+            fmt === "xlsx" ? (
+              <FileSpreadsheet size={16} strokeWidth={1.5} aria-hidden />
+            ) : (
+              <FileText size={16} strokeWidth={1.5} aria-hidden />
+            ),
+          onSelect: () => window.open(`/api/orders/invoice-forms/${f.type}/${fmt}?ids=${orderIds.join(",")}`, "_blank", "noopener"),
+        })),
+      )}
+    />
   );
 }
