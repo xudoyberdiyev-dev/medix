@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowDown, ArrowUp, Plus, RotateCcw, Trash2, Undo2 } from "lucide-react";
+import { ArrowDown, ArrowUp, GripVertical, Plus, RotateCcw, Trash2, Undo2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { Alert } from "@/components/ui/alert";
@@ -65,6 +65,15 @@ export const COL_TITLES: Record<Col, string> = {
   price: "ККС билан Нархи",
   total: "ККС билан Жами киймати (Сумма)",
 };
+
+/** Qatorni sudrab koʻchirish: `from` dagi qator `to` oʻrniga (qolganlari suriladi). */
+export function moveRow<T>(rows: T[], from: number, to: number): T[] {
+  if (from === to || from < 0 || to < 0 || from >= rows.length || to >= rows.length) return rows;
+  const next = [...rows];
+  const [x] = next.splice(from, 1);
+  next.splice(to, 0, x);
+  return next;
+}
 
 /** Qator summasi: soni × narx (tiyin aniqligida, float xatosisiz). */
 export function rowTotal(qty: number, price: string | null | undefined): string {
@@ -192,6 +201,8 @@ export function InvoiceFormsModal(props: { orderId: number; initial: FormType; o
     update(next);
   }
 
+  const dragFrom = useRef<number | null>(null);
+
   async function download() {
     if (timer.current) clearTimeout(timer.current);
     if (dirty.current && canEdit) await save.mutateAsync(current);
@@ -293,8 +304,39 @@ export function InvoiceFormsModal(props: { orderId: number; initial: FormType; o
                 </thead>
                 <tbody>
                   {current.map((r, i) => (
-                    <tr key={i} className="border-t border-border">
-                      <td className="px-2 py-1 tabular-nums">{i + 1}</td>
+                    <tr
+                      key={i}
+                      className="border-t border-border"
+                      onDragOver={canEdit ? (e) => e.preventDefault() : undefined}
+                      onDrop={
+                        canEdit
+                          ? (e) => {
+                              e.preventDefault();
+                              const from = dragFrom.current;
+                              dragFrom.current = null;
+                              if (from != null && from !== i) update(moveRow(current, from, i));
+                            }
+                          : undefined
+                      }
+                    >
+                      <td className="px-2 py-1 tabular-nums">
+                        {canEdit ? (
+                          <span
+                            draggable
+                            onDragStart={(e) => {
+                              dragFrom.current = i;
+                              e.dataTransfer.effectAllowed = "move";
+                            }}
+                            title={t("drag")}
+                            className="inline-flex cursor-grab items-center gap-1 text-text-secondary"
+                          >
+                            <GripVertical size={14} strokeWidth={1.5} aria-hidden />
+                            <span className="text-text-primary">{i + 1}</span>
+                          </span>
+                        ) : (
+                          i + 1
+                        )}
+                      </td>
                       {form.cols.map((c) => {
                         if (c === "total")
                           return (

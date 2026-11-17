@@ -1056,6 +1056,7 @@
     "down": "Pastga",
     "deleteRow": "Qatorni oʻchirish",
     "saveError": "Tuzatishlar saqlanmadi. Internetni tekshiring va qayta urinib koʻring.",
-    "menu": "Faktura: {title}"
+    "menu": "Faktura: {title}",
+    "drag": "Sudrab tartiblang"
   }
 }
