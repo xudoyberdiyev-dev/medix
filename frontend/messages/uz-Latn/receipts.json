@@ -342,5 +342,11 @@
     "datePh": "kk.oo.yyyy",
     "remove": "Qatorni oʻchirish",
     "cell": "{col}, {n}-qator"
+  },
+  "refPrice": {
+    "compare": "Referent narx bilan solishtirish",
+    "title": "{n} ta mahsulot referent narxdan qimmat",
+    "line": "{name}: {price} (referent {ref}, +{pct} %)",
+    "more": "Yana {n} ta — solishtirish natijasida."
   }
 }

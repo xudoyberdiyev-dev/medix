@@ -170,7 +170,7 @@ export interface paths {
             cookie?: never;
         };
         /** Excel eksport uchun yozuvlar (filtr boʻyicha, koʻpi bilan 5000 ta) */
-        get: operations["export_6"];
+        get: operations["export_7"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1017,7 +1017,7 @@ export interface paths {
          * Excel'ga eksport (.xlsx)
          * @description Jadvaldagi filtrlar va saralash bilan; ko'pi bilan 50 000 qator. Mijozlar — clients.view, YB — suppliers.view; telefon va kontakt — clients.contact / suppliers.contact bilan.
          */
-        get: operations["export_5"];
+        get: operations["export_6"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1268,7 +1268,7 @@ export interface paths {
             cookie?: never;
         };
         /** Kartochka «Tarix»: yaratish, tahrir, shartlar, holat, litsenziya va shartnoma o'zgarishlari (yangisi birinchi) */
-        get: operations["history_6"];
+        get: operations["history_7"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3051,7 +3051,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** O'qildi deb belgilash (shu xabargacha) */
-        post: operations["read_1"];
+        post: operations["read_2"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3347,7 +3347,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** O'qildi deb belgilash */
-        post: operations["read"];
+        post: operations["read_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3444,7 +3444,7 @@ export interface paths {
          * BQ tarixi
          * @description Audit jurnalidan: yaratildi, tahrirlandi, import, tasdiqlandi, bekor qilindi.
          */
-        get: operations["history_5"];
+        get: operations["history_6"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3996,7 +3996,7 @@ export interface paths {
          * Buyurtma tarixi
          * @description Audit jurnalidan: yaratildi, yuborildi, tasdiqlandi, yig'ildi, markirovka, jo'natildi, yetkazildi va h.k.
          */
-        get: operations["history_4"];
+        get: operations["history_5"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4832,7 +4832,7 @@ export interface paths {
             cookie?: never;
         };
         /** Narx turi o'zgarishlari tarixi */
-        get: operations["history_3"];
+        get: operations["history_4"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4952,7 +4952,7 @@ export interface paths {
          * Mahsulot narxi tarixi
          * @description branchId berilmasa — o'z filiali (yoki birinchi filial); priceTypeId — bazaviy.
          */
-        get: operations["history_2"];
+        get: operations["history_3"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5016,7 +5016,7 @@ export interface paths {
          * Excel'ga eksport (.xlsx)
          * @description Jadvaldagi filtrlar bilan (yoki tanlanganlar — ids); ko'pi bilan 50 000 qator.
          */
-        get: operations["export_4"];
+        get: operations["export_5"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5243,7 +5243,7 @@ export interface paths {
          * Mahsulot tarixi (kartochka «Tarix»)
          * @description Yaratish, tahrir, kod va holat o'zgarishlari — yangilari birinchi.
          */
-        get: operations["history_1"];
+        get: operations["history_2"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5503,7 +5503,7 @@ export interface paths {
          * Kirim hujjati tarixi
          * @description Audit jurnalidan: yaratildi, tahrirlandi, qabul qilindi, o'tkazildi, bonus, bekor qilindi.
          */
-        get: operations["history"];
+        get: operations["history_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5581,6 +5581,167 @@ export interface paths {
         put?: never;
         /** Holat: Yuborildi / Imzolandi / Farq bor (kontragent qoldigʻi + izoh) */
         post: operations["status"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reference-prices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Solishtirishlar tarixi
+         * @description Oxirgi 200 ta; tannarx ruxsatisiz — faqat sotuv narxi bilan solishtirishlar.
+         */
+        get: operations["history"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reference-prices/compare": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Solishtirish
+         * @description Moslangan qatorlar → mahsulotni topish, bizning narx bilan solishtirish; natija tarixga yoziladi.
+         */
+        post: operations["compare"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reference-prices/profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Saqlangan ustunlar moslashi
+         * @description Profil bo'lmasa — 204.
+         */
+        get: operations["profile"];
+        /**
+         * Ustunlar moslashini saqlash
+         * @description Keyingi faylda avtomatik qo'llanadi.
+         */
+        put: operations["saveProfile"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reference-prices/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Referent narxlar faylini o'qish
+         * @description .xlsx/.xls/.csv — varaqlar va katakchalar. Hech narsa yozilmaydi.
+         */
+        post: operations["read"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reference-prices/receipt/{receiptId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Kirim: referent narxdan qimmat mahsulotlar
+         * @description Oxirgi solishtirishdagi referent narx bilan; bloklamaydi.
+         */
+        get: operations["receiptWarnings"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reference-prices/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Solishtirish natijasi */
+        get: operations["detail_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reference-prices/{id}/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Natijani Excel'ga
+         * @description status bo'sh — hammasi; NOT_FOUND — topilmadi va narxi yo'qlar.
+         */
+        get: operations["export_4"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reference-prices/{id}/lines/{rowNo}/match": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Qatorni qo'lda mahsulotga moslash
+         * @description Moslik eslab qolinadi — keyingi faylda avtomatik.
+         */
+        put: operations["match"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -9291,6 +9452,84 @@ export interface components {
             defaultLocale?: string;
             name: string;
         };
+        CompareDetail: {
+            lines: components["schemas"]["CompareLine"][];
+            skippedRows: number[];
+            summary: components["schemas"]["CompareSummary"];
+        };
+        CompareLine: {
+            barcode?: string;
+            confident: boolean;
+            diff?: string;
+            diffPct?: string;
+            ikpu?: string;
+            manufacturer?: string;
+            /** @enum {string} */
+            matchBy: "BARCODE" | "IKPU" | "CODE" | "MEMORY" | "NAME" | "MANUAL" | "NONE";
+            name: string;
+            ourPrice?: string;
+            productCode?: string;
+            /** Format: int64 */
+            productId?: number;
+            productMaker?: string;
+            productName?: string;
+            refPrice: string;
+            /** Format: int32 */
+            rowNo: number;
+            source?: string;
+            /** @enum {string} */
+            status: "DEARER" | "CHEAPER" | "MATCH" | "NOT_FOUND" | "NO_PRICE";
+            unit?: string;
+        };
+        CompareRequest: {
+            /**
+             * Format: int64
+             * @description Filial; bo'sh — xodimning filiali (kirim tanlansa — kirim filiali)
+             */
+            branchId?: number;
+            fileName: string;
+            /** @enum {string} */
+            mode: "PURCHASE" | "SALE";
+            /**
+             * Format: int64
+             * @description SALE uchun majburiy
+             */
+            priceTypeId?: number;
+            /**
+             * Format: int64
+             * @description PURCHASE: tanlangan kirim; bo'sh — har mahsulotning oxirgi o'tkazilgan kirim narxi
+             */
+            receiptId?: number;
+            rows: components["schemas"]["RefRowInput"][];
+        };
+        CompareSummary: {
+            branch: string;
+            /** Format: int64 */
+            branchId: number;
+            /** Format: int32 */
+            cheaper: number;
+            /** Format: date-time */
+            createdAt: string;
+            createdBy: string;
+            /** Format: int32 */
+            dearer: number;
+            fileName: string;
+            /** Format: int64 */
+            id: number;
+            /** Format: int32 */
+            matched: number;
+            /** @enum {string} */
+            mode: "PURCHASE" | "SALE";
+            /** Format: int32 */
+            notFound: number;
+            priceType?: string;
+            /** Format: int64 */
+            priceTypeId?: number;
+            /** Format: int64 */
+            receiptId?: number;
+            receiptNumber?: string;
+            tolerancePct: string;
+        };
         ConfirmRequest: {
             lineIds: number[];
         };
@@ -11088,6 +11327,10 @@ export interface components {
             /** Format: int64 */
             priceTypeId: number;
             productIds: number[];
+        };
+        MatchRequest: {
+            /** Format: int64 */
+            productId: number;
         };
         Matrix: {
             /** @description Standart rol kodi → standart ruxsatlar («Standartga qaytarish») */
@@ -13401,6 +13644,16 @@ export interface components {
             total: number;
             warehouses: components["schemas"]["ReceiptFacet"][];
         };
+        ReceiptRefWarning: {
+            /** Format: int64 */
+            compareId: number;
+            diffPct: string;
+            /** Format: int64 */
+            productId: number;
+            productName: string;
+            receiptPrice: string;
+            refPrice: string;
+        };
         ReceiptRequest: {
             /** Format: date */
             discountDate?: string;
@@ -13628,6 +13881,35 @@ export interface components {
             /** Format: int64 */
             id: number;
             name: string;
+        };
+        RefFile: {
+            fileName: string;
+            sheets: components["schemas"]["RefSheet"][];
+            /** Format: int64 */
+            size: number;
+        };
+        RefProfile: {
+            mapping: {
+                [key: string]: string;
+            };
+            name: string;
+        };
+        RefProfileRequest: {
+            mapping: {
+                [key: string]: string;
+            };
+            name: string;
+        };
+        RefRowInput: {
+            /** Format: int32 */
+            row: number;
+            values: {
+                [key: string]: string;
+            };
+        };
+        RefSheet: {
+            name: string;
+            rows: string[][];
         };
         RenameRequest: {
             name: string;
@@ -14130,7 +14412,7 @@ export interface components {
         };
         SettingValue: {
             /** @enum {string} */
-            key: "expiryWarnDays" | "invRemindDays" | "orderLateDays" | "limitBranchPct" | "overdueDirDays" | "priceWarnPct" | "returnDays" | "cashBranchApprove" | "hcDirApprove" | "ivDirApprove" | "pwMin" | "sessionMin" | "pinTries" | "pinLockMin";
+            key: "expiryWarnDays" | "invRemindDays" | "orderLateDays" | "limitBranchPct" | "overdueDirDays" | "priceWarnPct" | "returnDays" | "refPriceTolPct" | "cashBranchApprove" | "hcDirApprove" | "ivDirApprove" | "pwMin" | "sessionMin" | "pinTries" | "pinLockMin";
             /** @enum {string} */
             kind: "DAY" | "PCT" | "SUM" | "LEN" | "MIN" | "TRIES" | "LOCK" | "RDAY";
             /** Format: int64 */
@@ -16070,7 +16352,7 @@ export interface operations {
             };
         };
     };
-    export_6: {
+    export_7: {
         parameters: {
             query?: {
                 view?: "ALL" | "CANCEL" | "FAIL" | "PERM" | "CTRL";
@@ -17301,7 +17583,7 @@ export interface operations {
             };
         };
     };
-    export_5: {
+    export_6: {
         parameters: {
             query?: {
                 q?: string;
@@ -17701,7 +17983,7 @@ export interface operations {
             };
         };
     };
-    history_6: {
+    history_7: {
         parameters: {
             query?: {
                 role?: "CUSTOMER" | "SUPPLIER" | "ALL";
@@ -20119,7 +20401,7 @@ export interface operations {
             };
         };
     };
-    read_1: {
+    read_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -20544,7 +20826,7 @@ export interface operations {
             };
         };
     };
-    read: {
+    read_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -20705,7 +20987,7 @@ export interface operations {
             };
         };
     };
-    history_5: {
+    history_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -21489,7 +21771,7 @@ export interface operations {
             };
         };
     };
-    history_4: {
+    history_5: {
         parameters: {
             query?: never;
             header?: never;
@@ -22711,7 +22993,7 @@ export interface operations {
             };
         };
     };
-    history_3: {
+    history_4: {
         parameters: {
             query?: never;
             header?: never;
@@ -22859,7 +23141,7 @@ export interface operations {
             };
         };
     };
-    history_2: {
+    history_3: {
         parameters: {
             query: {
                 productId: number;
@@ -22975,7 +23257,7 @@ export interface operations {
             };
         };
     };
-    export_4: {
+    export_5: {
         parameters: {
             query?: {
                 q?: string;
@@ -23316,7 +23598,7 @@ export interface operations {
             };
         };
     };
-    history_1: {
+    history_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -23704,7 +23986,7 @@ export interface operations {
             };
         };
     };
-    history: {
+    history_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -23842,6 +24124,216 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ReconDetail"];
+                };
+            };
+        };
+    };
+    history: {
+        parameters: {
+            query?: {
+                branchId?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CompareSummary"][];
+                };
+            };
+        };
+    };
+    compare: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CompareRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CompareDetail"];
+                };
+            };
+        };
+    };
+    profile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RefProfile"];
+                };
+            };
+        };
+    };
+    saveProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RefProfileRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RefProfile"];
+                };
+            };
+        };
+    };
+    read: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RefFile"];
+                };
+            };
+        };
+    };
+    receiptWarnings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                receiptId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReceiptRefWarning"][];
+                };
+            };
+        };
+    };
+    detail_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CompareDetail"];
+                };
+            };
+        };
+    };
+    export_4: {
+        parameters: {
+            query?: {
+                status?: "DEARER" | "CHEAPER" | "MATCH" | "NOT_FOUND" | "NO_PRICE";
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    match: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+                rowNo: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MatchRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CompareDetail"];
                 };
             };
         };

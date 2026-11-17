@@ -594,7 +594,7 @@
     },
     "/api/audit/export" : {
       "get" : {
-        "operationId" : "export_6",
+        "operationId" : "export_7",
         "parameters" : [ {
           "in" : "query",
           "name" : "view",
@@ -2402,7 +2402,7 @@
     "/api/counterparties/export" : {
       "get" : {
         "description" : "Jadvaldagi filtrlar va saralash bilan; ko'pi bilan 50 000 qator. Mijozlar — clients.view, YB — suppliers.view; telefon va kontakt — clients.contact / suppliers.contact bilan.",
-        "operationId" : "export_5",
+        "operationId" : "export_6",
         "parameters" : [ {
           "in" : "query",
           "name" : "q",
@@ -3035,7 +3035,7 @@
     },
     "/api/counterparties/{id}/history" : {
       "get" : {
-        "operationId" : "history_6",
+        "operationId" : "history_7",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -6675,7 +6675,7 @@
     },
     "/api/messages/threads/{id}/read" : {
       "post" : {
-        "operationId" : "read_1",
+        "operationId" : "read_2",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -7211,7 +7211,7 @@
     },
     "/api/notifications/{id}/read" : {
       "post" : {
-        "operationId" : "read",
+        "operationId" : "read_1",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -7431,7 +7431,7 @@
     "/api/opening-balances/{id}/history" : {
       "get" : {
         "description" : "Audit jurnalidan: yaratildi, tahrirlandi, import, tasdiqlandi, bekor qilindi.",
-        "operationId" : "history_5",
+        "operationId" : "history_6",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -8856,7 +8856,7 @@
     "/api/orders/{id}/history" : {
       "get" : {
         "description" : "Audit jurnalidan: yaratildi, yuborildi, tasdiqlandi, yig'ildi, markirovka, jo'natildi, yetkazildi va h.k.",
-        "operationId" : "history_4",
+        "operationId" : "history_5",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -10664,7 +10664,7 @@
     },
     "/api/price-types/{id}/history" : {
       "get" : {
-        "operationId" : "history_3",
+        "operationId" : "history_4",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -10941,7 +10941,7 @@
     "/api/prices/history" : {
       "get" : {
         "description" : "branchId berilmasa — o'z filiali (yoki birinchi filial); priceTypeId — bazaviy.",
-        "operationId" : "history_2",
+        "operationId" : "history_3",
         "parameters" : [ {
           "in" : "query",
           "name" : "productId",
@@ -11257,7 +11257,7 @@
     "/api/products/export" : {
       "get" : {
         "description" : "Jadvaldagi filtrlar bilan (yoki tanlanganlar — ids); ko'pi bilan 50 000 qator.",
-        "operationId" : "export_4",
+        "operationId" : "export_5",
         "parameters" : [ {
           "in" : "query",
           "name" : "q",
@@ -11804,7 +11804,7 @@
     "/api/products/{id}/history" : {
       "get" : {
         "description" : "Yaratish, tahrir, kod va holat o'zgarishlari — yangilari birinchi.",
-        "operationId" : "history_1",
+        "operationId" : "history_2",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -12474,7 +12474,7 @@
     "/api/receipts/{id}/history" : {
       "get" : {
         "description" : "Audit jurnalidan: yaratildi, tahrirlandi, qabul qilindi, o'tkazildi, bonus, bekor qilindi.",
-        "operationId" : "history",
+        "operationId" : "history_1",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -12662,6 +12662,289 @@
         },
         "summary" : "Holat: Yuborildi / Imzolandi / Farq bor (kontragent qoldigʻi + izoh)",
         "tags" : [ "reconciliations" ]
+      }
+    },
+    "/api/reference-prices" : {
+      "get" : {
+        "description" : "Oxirgi 200 ta; tannarx ruxsatisiz — faqat sotuv narxi bilan solishtirishlar.",
+        "operationId" : "history",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/CompareSummary"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Solishtirishlar tarixi",
+        "tags" : [ "pricing" ]
+      }
+    },
+    "/api/reference-prices/compare" : {
+      "post" : {
+        "description" : "Moslangan qatorlar → mahsulotni topish, bizning narx bilan solishtirish; natija tarixga yoziladi.",
+        "operationId" : "compare",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CompareRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CompareDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Solishtirish",
+        "tags" : [ "pricing" ]
+      }
+    },
+    "/api/reference-prices/profile" : {
+      "get" : {
+        "description" : "Profil bo'lmasa — 204.",
+        "operationId" : "profile",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RefProfile"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Saqlangan ustunlar moslashi",
+        "tags" : [ "pricing" ]
+      },
+      "put" : {
+        "description" : "Keyingi faylda avtomatik qo'llanadi.",
+        "operationId" : "saveProfile",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/RefProfileRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RefProfile"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Ustunlar moslashini saqlash",
+        "tags" : [ "pricing" ]
+      }
+    },
+    "/api/reference-prices/read" : {
+      "post" : {
+        "description" : ".xlsx/.xls/.csv — varaqlar va katakchalar. Hech narsa yozilmaydi.",
+        "operationId" : "read",
+        "requestBody" : {
+          "content" : {
+            "multipart/form-data" : {
+              "schema" : {
+                "type" : "object",
+                "properties" : {
+                  "file" : {
+                    "type" : "string",
+                    "format" : "binary"
+                  }
+                },
+                "required" : [ "file" ]
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RefFile"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Referent narxlar faylini o'qish",
+        "tags" : [ "pricing" ]
+      }
+    },
+    "/api/reference-prices/receipt/{receiptId}" : {
+      "get" : {
+        "description" : "Oxirgi solishtirishdagi referent narx bilan; bloklamaydi.",
+        "operationId" : "receiptWarnings",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "receiptId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ReceiptRefWarning"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Kirim: referent narxdan qimmat mahsulotlar",
+        "tags" : [ "pricing" ]
+      }
+    },
+    "/api/reference-prices/{id}" : {
+      "get" : {
+        "operationId" : "detail_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CompareDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Solishtirish natijasi",
+        "tags" : [ "pricing" ]
+      }
+    },
+    "/api/reference-prices/{id}/export" : {
+      "get" : {
+        "description" : "status bo'sh — hammasi; NOT_FOUND — topilmadi va narxi yo'qlar.",
+        "operationId" : "export_4",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "status",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "DEARER", "CHEAPER", "MATCH", "NOT_FOUND", "NO_PRICE" ]
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        },
+        "summary" : "Natijani Excel'ga",
+        "tags" : [ "pricing" ]
+      }
+    },
+    "/api/reference-prices/{id}/lines/{rowNo}/match" : {
+      "put" : {
+        "description" : "Moslik eslab qolinadi — keyingi faylda avtomatik.",
+        "operationId" : "match",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "path",
+          "name" : "rowNo",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/MatchRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CompareDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Qatorni qo'lda mahsulotga moslash",
+        "tags" : [ "pricing" ]
       }
     },
     "/api/reports/accountants" : {
@@ -21556,6 +21839,194 @@
         },
         "required" : [ "name" ]
       },
+      "CompareDetail" : {
+        "type" : "object",
+        "properties" : {
+          "lines" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/CompareLine"
+            }
+          },
+          "skippedRows" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int32"
+            }
+          },
+          "summary" : {
+            "$ref" : "#/components/schemas/CompareSummary"
+          }
+        },
+        "required" : [ "lines", "skippedRows", "summary" ]
+      },
+      "CompareLine" : {
+        "type" : "object",
+        "properties" : {
+          "barcode" : {
+            "type" : "string"
+          },
+          "confident" : {
+            "type" : "boolean"
+          },
+          "diff" : {
+            "type" : "string"
+          },
+          "diffPct" : {
+            "type" : "string"
+          },
+          "ikpu" : {
+            "type" : "string"
+          },
+          "manufacturer" : {
+            "type" : "string"
+          },
+          "matchBy" : {
+            "type" : "string",
+            "enum" : [ "BARCODE", "IKPU", "CODE", "MEMORY", "NAME", "MANUAL", "NONE" ]
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "ourPrice" : {
+            "type" : "string"
+          },
+          "productCode" : {
+            "type" : "string"
+          },
+          "productId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "productMaker" : {
+            "type" : "string"
+          },
+          "productName" : {
+            "type" : "string"
+          },
+          "refPrice" : {
+            "type" : "string"
+          },
+          "rowNo" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "source" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "DEARER", "CHEAPER", "MATCH", "NOT_FOUND", "NO_PRICE" ]
+          },
+          "unit" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "confident", "matchBy", "name", "refPrice", "rowNo", "status" ]
+      },
+      "CompareRequest" : {
+        "type" : "object",
+        "properties" : {
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Filial; bo'sh — xodimning filiali (kirim tanlansa — kirim filiali)"
+          },
+          "fileName" : {
+            "type" : "string",
+            "maxLength" : 255,
+            "minLength" : 0
+          },
+          "mode" : {
+            "type" : "string",
+            "enum" : [ "PURCHASE", "SALE" ]
+          },
+          "priceTypeId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "SALE uchun majburiy"
+          },
+          "receiptId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "PURCHASE: tanlangan kirim; bo'sh — har mahsulotning oxirgi o'tkazilgan kirim narxi"
+          },
+          "rows" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/RefRowInput"
+            },
+            "maxItems" : 5000,
+            "minItems" : 1
+          }
+        },
+        "required" : [ "fileName", "mode", "rows" ]
+      },
+      "CompareSummary" : {
+        "type" : "object",
+        "properties" : {
+          "branch" : {
+            "type" : "string"
+          },
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "cheaper" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "createdBy" : {
+            "type" : "string"
+          },
+          "dearer" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "fileName" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "matched" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "mode" : {
+            "type" : "string",
+            "enum" : [ "PURCHASE", "SALE" ]
+          },
+          "notFound" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "priceType" : {
+            "type" : "string"
+          },
+          "priceTypeId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "receiptId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "receiptNumber" : {
+            "type" : "string"
+          },
+          "tolerancePct" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "branch", "branchId", "cheaper", "createdAt", "createdBy", "dearer", "fileName", "id", "matched", "mode", "notFound", "tolerancePct" ]
+      },
       "ConfirmRequest" : {
         "type" : "object",
         "properties" : {
@@ -26159,6 +26630,16 @@
           }
         },
         "required" : [ "base", "branchId", "percent", "priceTypeId", "productIds" ]
+      },
+      "MatchRequest" : {
+        "type" : "object",
+        "properties" : {
+          "productId" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "productId" ]
       },
       "Matrix" : {
         "type" : "object",
@@ -31740,6 +32221,32 @@
         },
         "required" : [ "items", "kpi", "page", "size", "statuses", "suppliers", "total", "warehouses" ]
       },
+      "ReceiptRefWarning" : {
+        "type" : "object",
+        "properties" : {
+          "compareId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "diffPct" : {
+            "type" : "string"
+          },
+          "productId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "productName" : {
+            "type" : "string"
+          },
+          "receiptPrice" : {
+            "type" : "string"
+          },
+          "refPrice" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "compareId", "diffPct", "productId", "productName", "receiptPrice", "refPrice" ]
+      },
       "ReceiptRequest" : {
         "type" : "object",
         "properties" : {
@@ -32323,6 +32830,91 @@
           }
         },
         "required" : [ "id", "name" ]
+      },
+      "RefFile" : {
+        "type" : "object",
+        "properties" : {
+          "fileName" : {
+            "type" : "string"
+          },
+          "sheets" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/RefSheet"
+            }
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "fileName", "sheets", "size" ]
+      },
+      "RefProfile" : {
+        "type" : "object",
+        "properties" : {
+          "mapping" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "string"
+            }
+          },
+          "name" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "mapping", "name" ]
+      },
+      "RefProfileRequest" : {
+        "type" : "object",
+        "properties" : {
+          "mapping" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "string"
+            }
+          },
+          "name" : {
+            "type" : "string",
+            "maxLength" : 120,
+            "minLength" : 1
+          }
+        },
+        "required" : [ "mapping", "name" ]
+      },
+      "RefRowInput" : {
+        "type" : "object",
+        "properties" : {
+          "row" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "values" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "string"
+            }
+          }
+        },
+        "required" : [ "row", "values" ]
+      },
+      "RefSheet" : {
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string"
+          },
+          "rows" : {
+            "type" : "array",
+            "items" : {
+              "type" : "array",
+              "items" : {
+                "type" : "string"
+              }
+            }
+          }
+        },
+        "required" : [ "name", "rows" ]
       },
       "RenameRequest" : {
         "type" : "object",
@@ -33549,7 +34141,7 @@
         "properties" : {
           "key" : {
             "type" : "string",
-            "enum" : [ "expiryWarnDays", "invRemindDays", "orderLateDays", "limitBranchPct", "overdueDirDays", "priceWarnPct", "returnDays", "cashBranchApprove", "hcDirApprove", "ivDirApprove", "pwMin", "sessionMin", "pinTries", "pinLockMin" ]
+            "enum" : [ "expiryWarnDays", "invRemindDays", "orderLateDays", "limitBranchPct", "overdueDirDays", "priceWarnPct", "returnDays", "refPriceTolPct", "cashBranchApprove", "hcDirApprove", "ivDirApprove", "pwMin", "sessionMin", "pinTries", "pinLockMin" ]
           },
           "kind" : {
             "type" : "string",
