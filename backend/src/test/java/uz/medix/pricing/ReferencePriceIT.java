@@ -254,6 +254,12 @@ class ReferencePriceIT {
                         + row(1, "Analgin", null, null, null, "1000") + "]}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("referencePrice.priceTypeRequired"));
+        mvc.perform(json(put("/api/reference-prices/profile"), operator,
+                        "{\"name\":\"Davlat\",\"mapping\":{\"name\":\"Nomi\",\"price\":\"Narx\",\"bogus\":\"X\"}}"))
+                .andExpect(status().isOk());
+        mvc.perform(get("/api/reference-prices/profile").cookie(operator))
+                .andExpect(jsonPath("$.mapping.price").value("Narx"))
+                .andExpect(jsonPath("$.mapping.bogus").doesNotExist());
         Cookie storekeeper = loginAs("WAREHOUSE_MANAGER", branch);
         mvc.perform(get("/api/reference-prices").cookie(storekeeper)).andExpect(status().isForbidden());
     }

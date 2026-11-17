@@ -57,6 +57,11 @@ public final class ReferenceModels {
 
     public record MatchRequest(@NotNull Long productId) {}
 
+    /** Ustunlarni moslash profili: maydon → fayldagi sarlavha (import ustasi kabi). */
+    public record RefProfile(String name, Map<String, String> mapping) {}
+
+    public record RefProfileRequest(@NotNull @Size(min = 1, max = 120) String name, @NotNull Map<String, String> mapping) {}
+
     public record ReceiptRefWarning(long productId, String productName, String receiptPrice, String refPrice, String diffPct,
             long compareId) {}
 }

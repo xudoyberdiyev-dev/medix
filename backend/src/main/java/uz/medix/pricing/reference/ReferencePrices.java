@@ -28,6 +28,8 @@ import uz.medix.pricing.reference.ReferenceModels.CompareSummary;
 import uz.medix.pricing.reference.ReferenceModels.LineStatus;
 import uz.medix.pricing.reference.ReferenceModels.MatchBy;
 import uz.medix.pricing.reference.ReferenceModels.ReceiptRefWarning;
+import uz.medix.pricing.reference.ReferenceModels.RefProfile;
+import uz.medix.pricing.reference.ReferenceModels.RefProfileRequest;
 import uz.medix.pricing.reference.ReferenceModels.RefRowInput;
 import uz.medix.shared.audit.AuditEntry;
 import uz.medix.shared.audit.AuditLog;
@@ -549,6 +551,43 @@ public class ReferencePrices {
         recount(id);
         audit.record(AuditEntry.of("referencePrice.match", "reference_compare", id).change(null, Map.of("row", rowNo, "product", productId)));
         return detail(actor, id, costVisible).orElseThrow();
+    }
+
+    // ===== Moslash profili =====
+
+    static final String PROFILE_TYPE = "reference_price";
+    static final List<String> FIELDS = List.of("name", "barcode", "ikpu", "code", "manufacturer", "price", "unit");
+
+    @Transactional(readOnly = true)
+    public Optional<RefProfile> profile() {
+        return jdbc.sql("SELECT name FROM import_profile WHERE type = :t").param("t", PROFILE_TYPE).query(String.class).optional().map(name -> {
+            Map<String, String> m = new java.util.LinkedHashMap<>();
+            jdbc.sql("SELECT field, column_title FROM import_profile_field WHERE type = :t ORDER BY field").param("t", PROFILE_TYPE)
+                    .query((rs, i) -> m.put(rs.getString(1), rs.getString(2))).list();
+            return new RefProfile(name, m);
+        });
+    }
+
+    @Transactional
+    public RefProfile saveProfile(Actor actor, RefProfileRequest r) {
+        Map<String, String> mapping = new java.util.LinkedHashMap<>();
+        r.mapping().forEach((f, title) -> {
+            if (FIELDS.contains(f) && title != null && !title.isBlank()) {
+                mapping.put(f, title.strip().length() > 200 ? title.strip().substring(0, 200) : title.strip());
+            }
+        });
+        if (mapping.isEmpty()) {
+            throw MedixException.badRequest("import.profileEmpty");
+        }
+        jdbc.sql("""
+                INSERT INTO import_profile (type, name, updated_by, updated_at) VALUES (:t, :n, :e, now())
+                ON CONFLICT (type) DO UPDATE SET name = EXCLUDED.name, updated_by = EXCLUDED.updated_by, updated_at = now()""")
+                .param("t", PROFILE_TYPE).param("n", r.name().strip()).param("e", actor.employeeId()).update();
+        jdbc.sql("DELETE FROM import_profile_field WHERE type = :t").param("t", PROFILE_TYPE).update();
+        mapping.forEach((f, title) -> jdbc.sql("INSERT INTO import_profile_field (type, field, column_title) VALUES (:t, :f, :c)")
+                .param("t", PROFILE_TYPE).param("f", f).param("c", title).update());
+        audit.record(AuditEntry.of("import.profile", "import_profile", null).change(null, Map.of("type", PROFILE_TYPE, "fields", mapping.size())));
+        return new RefProfile(r.name().strip(), mapping);
     }
 
     // ===== Kirim kartochkasi ogohlantirishi =====

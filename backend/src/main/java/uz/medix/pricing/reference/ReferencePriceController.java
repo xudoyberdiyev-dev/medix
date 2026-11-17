@@ -28,6 +28,8 @@ import uz.medix.pricing.reference.ReferenceModels.LineStatus;
 import uz.medix.pricing.reference.ReferenceModels.MatchRequest;
 import uz.medix.pricing.reference.ReferenceModels.ReceiptRefWarning;
 import uz.medix.pricing.reference.ReferenceModels.RefFile;
+import uz.medix.pricing.reference.ReferenceModels.RefProfile;
+import uz.medix.pricing.reference.ReferenceModels.RefProfileRequest;
 import uz.medix.shared.error.MedixException;
 import uz.medix.shared.security.Actor;
 import uz.medix.shared.security.CurrentActor;
@@ -66,6 +68,20 @@ class ReferencePriceController {
         try (InputStream in = file.getInputStream()) {
             return ReferenceSheetReader.read(file.getOriginalFilename(), file.getSize(), in);
         }
+    }
+
+    @GetMapping("/profile")
+    @PreAuthorize(VIEW)
+    @Operation(summary = "Saqlangan ustunlar moslashi", description = "Profil bo'lmasa — 204.")
+    ResponseEntity<RefProfile> profile() {
+        return service.profile().map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.noContent().build());
+    }
+
+    @PutMapping("/profile")
+    @PreAuthorize(VIEW)
+    @Operation(summary = "Ustunlar moslashini saqlash", description = "Keyingi faylda avtomatik qo'llanadi.")
+    RefProfile saveProfile(@Valid @RequestBody RefProfileRequest request) {
+        return service.saveProfile(actor(), request);
     }
 
     @PostMapping("/compare")
