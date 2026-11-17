@@ -1180,6 +1180,16 @@ class OrderIT {
                 .andExpect(jsonPath("$.canEdit").value(false))
                 .andExpect(jsonPath("$.canSeePrices").value(false))
                 .andExpect(jsonPath("$.rows[0].price").doesNotExist());
+        // Ommaviy (reys / ro'yxat): har buyurtma alohida varaqda; o'lcham chegarasi; narxli tur — yig'uvchiga yo'q
+        MvcResult bulk = mvc.perform(get("/api/orders/invoice-forms/WAREHOUSE2/xlsx").param("ids", o + "," + o).cookie(picker))
+                .andExpect(status().isOk()).andReturn();
+        try (var wb = new org.apache.poi.xssf.usermodel.XSSFWorkbook(new java.io.ByteArrayInputStream(bulk.getResponse().getContentAsByteArray()))) {
+            assertThat(wb.getNumberOfSheets()).isEqualTo(1);
+            assertThat(wb.getSheetAt(0).getRow(0).getCell(0).getStringCellValue()).isEqualTo("Фактура для склада №2");
+        }
+        mvc.perform(get("/api/orders/invoice-forms/WAREHOUSE/xlsx").param("ids", String.valueOf(o)).cookie(picker)).andExpect(status().isForbidden());
+        mvc.perform(get("/api/orders/invoice-forms/CLIENT1/xlsx").param("ids", java.util.stream.LongStream.rangeClosed(1, 51).mapToObj(String::valueOf)
+                .collect(java.util.stream.Collectors.joining(","))).cookie(operator)).andExpect(status().isBadRequest());
         // Asl holatiga qaytarish
         send(delete("/api/orders/" + o + "/invoice-forms"), operator, "")
                 .andExpect(status().isOk())

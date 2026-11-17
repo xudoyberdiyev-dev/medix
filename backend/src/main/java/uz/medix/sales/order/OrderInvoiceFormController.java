@@ -3,6 +3,7 @@ package uz.medix.sales.order;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.util.List;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import uz.medix.shared.error.MedixException;
 import uz.medix.shared.security.Actor;
@@ -68,6 +70,18 @@ class OrderInvoiceFormController {
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_TYPE, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + forms.fileName(id, type) + "\"")
+                .body(body);
+    }
+
+    @GetMapping("/api/orders/invoice-forms/{type}/xlsx")
+    @PreAuthorize("hasAuthority('orders.view')")
+    @Operation(summary = "Faktura .xlsx — ommaviy (reys / ro'yxat)", description = "50 tagacha buyurtma; har buyurtma alohida varaqda. "
+            + "Narxli turlar — prices.view.")
+    ResponseEntity<byte[]> xlsxMany(@PathVariable OrderInvoiceForms.FormType type, @RequestParam List<Long> ids, Authentication auth) {
+        byte[] body = forms.xlsxMany(actor(), ids, type, has(auth, "prices.view"));
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_TYPE, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + forms.bulkFileName(ids, type) + "\"")
                 .body(body);
     }
 }
