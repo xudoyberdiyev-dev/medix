@@ -133,7 +133,7 @@ class ReferencePriceIT {
         MvcResult r = mvc.perform(json(post("/api/price-changes"), purchaser, "{\"branchId\":" + branch + ",\"effectiveFrom\":\""
                         + LocalDate.now(ZoneId.of("Asia/Tashkent")) + "\",\"lines\":[{\"productId\":" + product + ",\"priceTypeId\":" + baseType()
                         + ",\"newPrice\":\"" + amount + "\"}]}"))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andReturn();
         long id = Long.parseLong(r.getResponse().getContentAsString().replaceAll("^\\{\"id\":(\\d+).*", "$1"));
         mvc.perform(post("/api/price-changes/" + id + "/submit").with(csrf()).cookie(purchaser))
