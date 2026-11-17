@@ -75,7 +75,9 @@ test("Yigʻuvchi panelida qator joyi koʻrinadi", async ({ page }) => {
   await page.getByRole("tab", { name: /^Vaqt berish/ }).click();
   await page.getByRole("list", { name: "Vaqt berilmagan buyurtmalar" }).getByText(number).click();
   await field(page, "Yigʻish vaqti").fill("15");
-  await field(page, "Markirovka vaqti").fill("10");
+  // Markirovkasiz buyurtmada «Markirovka vaqti» maydoni yoʻq
+  const markTime = field(page, "Markirovka vaqti");
+  if (await markTime.count()) await markTime.fill("10");
   await page.getByRole("button", { name: "Vaqt berish" }).click();
   await expect(page.getByRole("status").getByText("Vaqt berildi", { exact: true })).toBeVisible();
 

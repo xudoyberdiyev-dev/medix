@@ -45,14 +45,15 @@ async function choose(page: Page, label: string, option: RegExp, search?: string
   await page.getByRole("option", { name: option }).first().click();
 }
 
-test("Direktor: markirovkali mahsulotda «1 qadoqdagi dona soni» = 2", async ({ page }) => {
+test("Direktor: markirovkali mahsulotda «Qadoqdagi soni» = 2 (quti hajmi)", async ({ page }) => {
   await login(page, CEO_LOGIN, CEO_PASSWORD);
   const res = await page.request.get("/api/products?q=Amoksitsillin%20E2E");
   expect(res.ok()).toBeTruthy();
   const id = ((await res.json()) as { items: { id: number }[] }).items[0]?.id;
   expect(id).toBeTruthy();
   await page.goto(`/products/${id}/edit`);
-  await field(page, "1 qadoqdagi dona soni").fill("2");
+  // «1 qadoqdagi dona» harakatli mahsulotda qulflangan — quti hajmi «Qadoqdagi soni» dan olinadi
+  await field(page, "Qadoqdagi soni").fill("2");
   await page.getByRole("button", { name: "Saqlash", exact: true }).click();
   await expect(page.getByText("Mahsulot saqlandi")).toBeVisible();
 });
