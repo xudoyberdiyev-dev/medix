@@ -63,4 +63,84 @@ public final class MoneyWords {
         }
         return out;
     }
+
+    // ===== Rus tilida (akt sverka, O17): «Пятьдесят один миллион двести шестнадцать тысяч триста семьдесят один сум 45 тийин» =====
+
+    private static final String[] RU_ONES = {"", "один", "два", "три", "четыре", "пять", "шесть", "семь", "восемь", "девять"};
+    private static final String[] RU_ONES_F = {"", "одна", "две", "три", "четыре", "пять", "шесть", "семь", "восемь", "девять"};
+    private static final String[] RU_TEENS = {"десять", "одиннадцать", "двенадцать", "тринадцать", "четырнадцать", "пятнадцать", "шестнадцать",
+            "семнадцать", "восемнадцать", "девятнадцать"};
+    private static final String[] RU_TENS = {"", "", "двадцать", "тридцать", "сорок", "пятьдесят", "шестьдесят", "семьдесят", "восемьдесят",
+            "девяносто"};
+    private static final String[] RU_HUNDREDS = {"", "сто", "двести", "триста", "четыреста", "пятьсот", "шестьсот", "семьсот", "восемьсот",
+            "девятьсот"};
+    private static final String[][] RU_SCALES = {{"", "", ""}, {"тысяча", "тысячи", "тысяч"}, {"миллион", "миллиона", "миллионов"},
+            {"миллиард", "миллиарда", "миллиардов"}, {"триллион", "триллиона", "триллионов"}};
+
+    /** Rus tilida, bosh harf bilan. */
+    public static String ru(Money money) {
+        BigDecimal a = money.amount().setScale(2, RoundingMode.HALF_UP);
+        boolean negative = a.signum() < 0;
+        a = a.abs();
+        BigInteger integer = a.toBigInteger();
+        int tiyin = a.subtract(new BigDecimal(integer)).movePointRight(2).intValueExact();
+        List<String> words = new ArrayList<>();
+        for (int i = 0; integer.signum() > 0; i++) {
+            BigInteger[] qr = integer.divideAndRemainder(THOUSAND);
+            int g = qr[1].intValue();
+            integer = qr[0];
+            if (g == 0) {
+                continue;
+            }
+            if (i >= RU_SCALES.length) {
+                throw new IllegalArgumentException("Summa juda katta: " + money.amount());
+            }
+            List<String> part = new ArrayList<>();
+            int h = g / 100;
+            int t = g % 100 / 10;
+            int o = g % 10;
+            if (h > 0) {
+                part.add(RU_HUNDREDS[h]);
+            }
+            if (t == 1) {
+                part.add(RU_TEENS[o]);
+            } else {
+                if (t > 1) {
+                    part.add(RU_TENS[t]);
+                }
+                if (o > 0) {
+                    part.add(i == 1 ? RU_ONES_F[o] : RU_ONES[o]);
+                }
+            }
+            if (i > 0) {
+                part.add(RU_SCALES[i][ruForm(g)]);
+            }
+            words.addAll(0, part);
+        }
+        String body = words.isEmpty() ? "ноль" : String.join(" ", words);
+        String text = (negative ? "минус " : "") + body + " сум " + String.format(java.util.Locale.ROOT, "%02d", tiyin) + " тийин";
+        return Character.toUpperCase(text.charAt(0)) + text.substring(1);
+    }
+
+    /** Hujjat tilida: ru, uz-Cyrl (lotin matn transliteratsiyasi), qolgani — uz-Latn; bosh harf bilan. */
+    public static String inLang(Money money, String lang) {
+        if ("ru".equals(lang)) {
+            return ru(money);
+        }
+        String latn = of(money);
+        latn = Character.toUpperCase(latn.charAt(0)) + latn.substring(1);
+        return "uz-Cyrl".equals(lang) ? uz.medix.shared.text.UzTranslit.toCyrl(latn) : latn;
+    }
+
+    private static int ruForm(int n) {
+        int t = n % 100;
+        int o = n % 10;
+        if (t >= 11 && t <= 14) {
+            return 2;
+        }
+        if (o == 1) {
+            return 0;
+        }
+        return o >= 2 && o <= 4 ? 1 : 2;
+    }
 }

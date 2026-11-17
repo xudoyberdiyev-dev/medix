@@ -22,10 +22,14 @@ import uz.medix.shared.security.CurrentActor;
 class ReconActController {
 
     private final ReconActs acts;
+    private final ReconActDoc docs;
+    private final DebtActPdf render;
     private final CurrentActor currentActor;
 
-    ReconActController(ReconActs acts, CurrentActor currentActor) {
+    ReconActController(ReconActs acts, ReconActDoc docs, DebtActPdf render, CurrentActor currentActor) {
         this.acts = acts;
+        this.docs = docs;
+        this.render = render;
         this.currentActor = currentActor;
     }
 
@@ -63,5 +67,30 @@ class ReconActController {
         Actor a = actor();
         acts.setStatus(a, id, r);
         return acts.get(a, id);
+    }
+
+    /** O17: akt sverka egasi shablonida — hujjat raqami va sanasi, «Farq bor» bo'lsa — «выявлены расхождения: …». */
+    private ReconActDoc.Doc doc(long id, String lang, boolean letter) {
+        Actor a = actor();
+        ReconActs.ReconRow h = acts.get(a, id).head();
+        return docs.build(a, h.side(), h.branchId(), h.counterpartyId(), h.from(), h.to(), lang, h.number(),
+                h.createdAt().atZone(java.time.ZoneId.of("Asia/Tashkent")).toLocalDate(),
+                h.status() == ReconActs.Status.DIFF ? h.diffNote() : null, letter);
+    }
+
+    @GetMapping(value = "/api/reconciliations/{id}/pdf", produces = org.springframework.http.MediaType.APPLICATION_PDF_VALUE)
+    @PreAuthorize("hasAuthority('recon.view')")
+    @Operation(summary = "Akt sverka — PDF (O17, egasi shabloni)", description = "lang: ru (standart), uz-Latn, uz-Cyrl; letter — qarzni tan olish xati.")
+    org.springframework.http.ResponseEntity<byte[]> pdf(@PathVariable long id, @RequestParam(required = false) String lang,
+            @RequestParam(defaultValue = "true") boolean letter) {
+        return render.pdf(doc(id, lang, letter)).response();
+    }
+
+    @GetMapping("/api/reconciliations/{id}/xlsx")
+    @PreAuthorize("hasAuthority('recon.view')")
+    @Operation(summary = "Akt sverka — Excel (O17, egasi shabloni)")
+    org.springframework.http.ResponseEntity<byte[]> xlsx(@PathVariable long id, @RequestParam(required = false) String lang,
+            @RequestParam(defaultValue = "true") boolean letter) {
+        return render.xlsxResponse(doc(id, lang, letter));
     }
 }
