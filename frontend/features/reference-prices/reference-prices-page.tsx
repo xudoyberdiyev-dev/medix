@@ -265,14 +265,22 @@ function Wizard({
   const [priceTypeId, setPriceTypeId] = useState<string | null>(null);
   const [receipt, setReceipt] = useState<string | null>(presetReceipt ? String(presetReceipt) : null);
   const allBranches = Boolean(me.data?.allBranches);
-  const [branch, setBranch] = useState<string | null>(
-    me.data?.allBranches ? (selectedBranch ? String(selectedBranch) : null) : me.data?.branchId ? String(me.data.branchId) : null,
-  );
+  const [branchPick, setBranch] = useState<string | null>(null);
   const [err, setErr] = useState("");
 
   const colOptions: SelectOption[] = headers.map((h, i) => ({ value: String(i), label: h.trim() || t("colN", { n: i + 1 }) }));
   const typeOptions: SelectOption[] = (types.data ?? []).filter((x) => !x.batch).map((x) => ({ value: String(x.id), label: x.name }));
   const branchOptions: SelectOption[] = (branches.data ?? []).filter((b) => b.active).map((b) => ({ value: String(b.id), label: b.name }));
+  // Direktor: tanlangan filial, boʻlmasa birinchi faol; qolganlar — oʻz filiali
+  const branch =
+    branchPick ??
+    (allBranches
+      ? selectedBranch
+        ? String(selectedBranch)
+        : (branchOptions[0]?.value ?? null)
+      : me.data?.branchId
+        ? String(me.data.branchId)
+        : null);
   const missing = REF_FIELDS.filter((f) => f.req && effective[f.key] == null);
 
   function submit() {
