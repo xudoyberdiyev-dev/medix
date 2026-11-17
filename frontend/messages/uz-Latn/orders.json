@@ -1035,5 +1035,26 @@
     "toReserve": "Zaxira kodlarga oʻtkazish",
     "toCustomer": "Mijoz nomiga oʻtkazish",
     "changed": "Kodlar egasi oʻzgartirildi"
+  },
+  "invoiceForms": {
+    "title": "Faktura — oldindan koʻrish va tuzatish",
+    "types": "Faktura turi",
+    "note": "Tuzatishlar faqat faylga yoziladi — buyurtma, qoldiq va qarz oʻzgarmaydi.",
+    "download": "Excel yuklab olish",
+    "close": "Ortga",
+    "changed": "{n} ta katak tuzatildi",
+    "savedBy": "saqlandi: {who}, {at}",
+    "saving": "saqlanmoqda…",
+    "undo": "Bekor qilish (Ctrl+Z)",
+    "addRow": "Qator qoʻshish",
+    "newRow": "Yangi qator",
+    "revert": "Asl holatiga",
+    "actions": "Amallar",
+    "original": "Asl qiymat: {v}",
+    "up": "Yuqoriga",
+    "down": "Pastga",
+    "deleteRow": "Qatorni oʻchirish",
+    "saveError": "Tuzatishlar saqlanmadi. Internetni tekshiring va qayta urinib koʻring.",
+    "menu": "Faktura: {title}"
   }
 }

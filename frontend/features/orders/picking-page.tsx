@@ -16,6 +16,7 @@ import {
   PackageCheck,
   PackageOpen,
   Play,
+  FileSpreadsheet,
   Printer,
   ReceiptText,
   Replace,
@@ -532,6 +533,13 @@ function ActivePick({ item, now }: { item: QueueItem; now: Date }) {
       <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
         <Button variant="secondary" icon={Printer} onClick={() => openPickSheet([id])}>
           {tr("picking.printPickSheet")}
+        </Button>
+        <Button
+          variant="tertiary"
+          icon={FileSpreadsheet}
+          onClick={() => window.open(`/api/orders/${id}/invoice-forms/WAREHOUSE2/xlsx`, "_blank", "noopener")}
+        >
+          Фактура для склада №2
         </Button>
         <IssueButton orderId={id} />
         <Button icon={PackageCheck} disabled={!all} loading={pending} onClick={() => void finish()}>
