@@ -15,17 +15,17 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uz.medix.catalog.refprice.RefPriceModels.CompareMode;
-import uz.medix.catalog.refprice.RefPriceModels.CompareResult;
-import uz.medix.catalog.refprice.RefPriceModels.CompareRow;
-import uz.medix.catalog.refprice.RefPriceModels.Counts;
+import uz.medix.catalog.refprice.RefPriceModels.RefCompareResult;
+import uz.medix.catalog.refprice.RefPriceModels.RefCompareRow;
+import uz.medix.catalog.refprice.RefPriceModels.RefCounts;
 import uz.medix.catalog.refprice.RefPriceModels.MatchKind;
-import uz.medix.catalog.refprice.RefPriceModels.ProductRef;
+import uz.medix.catalog.refprice.RefPriceModels.RefProduct;
 import uz.medix.catalog.refprice.RefPriceModels.RefList;
 import uz.medix.catalog.refprice.RefPriceModels.RefRowInput;
-import uz.medix.catalog.refprice.RefPriceModels.ReceiptWarning;
+import uz.medix.catalog.refprice.RefPriceModels.RefReceiptWarning;
 import uz.medix.catalog.refprice.RefPriceModels.RowStatus;
-import uz.medix.catalog.refprice.RefPriceModels.UploadRequest;
-import uz.medix.catalog.refprice.RefPriceModels.UploadResult;
+import uz.medix.catalog.refprice.RefPriceModels.RefUploadRequest;
+import uz.medix.catalog.refprice.RefPriceModels.RefUploadResult;
 import uz.medix.shared.audit.AuditEntry;
 import uz.medix.shared.audit.AuditLog;
 import uz.medix.shared.error.MedixException;
@@ -67,7 +67,7 @@ class RefPrices {
     }
 
     @Transactional
-    UploadResult upload(UploadRequest r, Actor actor) {
+    RefUploadResult upload(RefUploadRequest r, Actor actor) {
         List<Integer> skipped = new ArrayList<>();
         List<RefRowInput> ok = new ArrayList<>();
         java.util.Set<Integer> seen = new java.util.HashSet<>();
@@ -114,7 +114,7 @@ class RefPrices {
         }
         audit.record(AuditEntry.of("refPrice.upload", "ref_price_list", id)
                 .change(null, Map.of("fileName", r.fileName().strip(), "rows", ok.size(), "skipped", skipped.size())));
-        return new UploadResult(id, ok.size(), skipped);
+        return new RefUploadResult(id, ok.size(), skipped);
     }
 
     /** Bir yuklash davomida ma'lumotnomalar bir marta o'qiladi (20 000 qatorgacha). */
@@ -277,7 +277,7 @@ class RefPrices {
      * oxirgi o'tkazilgan kirim narxi (faqat tannarx huquqi bilan — controller tekshiradi).
      */
     @Transactional(readOnly = true)
-    CompareResult compare(long listId, CompareMode mode, Long priceTypeId, Long receiptId, Long branchId, Actor actor) {
+    RefCompareResult compare(long listId, CompareMode mode, Long priceTypeId, Long receiptId, Long branchId, Actor actor) {
         String fileName = jdbc.sql("SELECT file_name FROM ref_price_list WHERE id = :l").param("l", listId).query(String.class).optional()
                 .orElseThrow(() -> MedixException.notFound("error.notFound"));
         long branch = branch(branchId, actor);
@@ -321,7 +321,7 @@ class RefPrices {
         }
         BigDecimal tol = tolerance();
         String ptLabel = ptName;
-        List<CompareRow> rows = jdbc.sql("""
+        List<RefCompareRow> rows = jdbc.sql("""
                 SELECT r.id, r.row_no, r.name, r.manufacturer, r.barcode, r.unit, r.price, r.match_kind, r.needs_check,
                        p.id AS product_id, p.code, p.name AS product_name, m.name AS product_maker, o.our, o.source
                 FROM ref_price_row r
@@ -337,7 +337,7 @@ class RefPrices {
         long eq = 0;
         long none = 0;
         long check = 0;
-        for (CompareRow r : rows) {
+        for (RefCompareRow r : rows) {
             switch (r.status()) {
                 case EXPENSIVE -> exp++;
                 case CHEAP -> cheap++;
@@ -348,16 +348,16 @@ class RefPrices {
                 check++;
             }
         }
-        return new CompareResult(listId, fileName, mode, pt, ptName, receiptId, receiptNumber, branch,
-                tol.stripTrailingZeros().toPlainString(), new Counts(exp, cheap, eq, none, check), rows);
+        return new RefCompareResult(listId, fileName, mode, pt, ptName, receiptId, receiptNumber, branch,
+                tol.stripTrailingZeros().toPlainString(), new RefCounts(exp, cheap, eq, none, check), rows);
     }
 
-    private static CompareRow row(ResultSet rs, BigDecimal tol, String priceType) throws SQLException {
+    private static RefCompareRow row(ResultSet rs, BigDecimal tol, String priceType) throws SQLException {
         BigDecimal ref = rs.getBigDecimal("price");
         BigDecimal our = rs.getBigDecimal("our");
         Long productId = rs.getObject("product_id", Long.class);
-        ProductRef product = productId == null ? null
-                : new ProductRef(productId, rs.getString("code"), rs.getString("product_name"), rs.getString("product_maker"));
+        RefProduct product = productId == null ? null
+                : new RefProduct(productId, rs.getString("code"), rs.getString("product_name"), rs.getString("product_maker"));
         BigDecimal diff = null;
         BigDecimal pct = null;
         RowStatus status = RowStatus.NOT_FOUND;
@@ -367,7 +367,7 @@ class RefPrices {
             status = status(pct, tol);
         }
         String source = rs.getString("source");
-        return new CompareRow(rs.getLong("id"), rs.getInt("row_no"), rs.getString("name"), rs.getString("manufacturer"),
+        return new RefCompareRow(rs.getLong("id"), rs.getInt("row_no"), rs.getString("name"), rs.getString("manufacturer"),
                 rs.getString("barcode"), rs.getString("unit"), product, MatchKind.valueOf(rs.getString("match_kind")),
                 rs.getBoolean("needs_check"), new Money(ref).toString(), our == null ? null : new Money(our).toString(),
                 diff == null ? null : new Money(diff).toString(), pct == null ? null : pct.toPlainString(),
@@ -398,14 +398,14 @@ class RefPrices {
 
     /** Kirim kartochkasi: kirim narxi eng oxirgi referent narxdan (ruxsat etilgan farqdan ortiq) qimmat qatorlar. */
     @Transactional(readOnly = true)
-    List<ReceiptWarning> receiptWarnings(long receiptId, Actor actor) {
+    List<RefReceiptWarning> receiptWarnings(long receiptId, Actor actor) {
         if (jdbc.sql("SELECT branch_id FROM receipt WHERE id = :r").param("r", receiptId).query(Long.class).optional()
                 .filter(actor::canAccessBranch)
                 .isEmpty()) {
             throw MedixException.notFound("error.notFound");
         }
         BigDecimal tol = tolerance();
-        List<ReceiptWarning> out = new ArrayList<>();
+        List<RefReceiptWarning> out = new ArrayList<>();
         jdbc.sql("""
                 SELECT rl.product_id, p.name, rl.price, ref.price AS ref_price, ref.list_id, ref.file_name
                 FROM receipt_line rl JOIN product p ON p.id = rl.product_id
@@ -418,7 +418,7 @@ class RefPrices {
                     BigDecimal ref = rs.getBigDecimal("ref_price");
                     BigDecimal pct = our.subtract(ref).multiply(BigDecimal.valueOf(100)).divide(ref, 2, RoundingMode.HALF_UP);
                     if (status(pct, tol) == RowStatus.EXPENSIVE) {
-                        out.add(new ReceiptWarning(rs.getLong("product_id"), rs.getString("name"), new Money(our).toString(),
+                        out.add(new RefReceiptWarning(rs.getLong("product_id"), rs.getString("name"), new Money(our).toString(),
                                 new Money(ref).toString(), pct.toPlainString(), rs.getLong("list_id"), rs.getString("file_name")));
                     }
                     return 0;

@@ -31,7 +31,7 @@ describe("ruxsatga qarab menyu", () => {
       ["sales", ["orders", "approvals", "shipments"]],
       ["warehouse", ["receipts", "stock", "expiry", "transfers", "inventory-counts", "returns", "reserveCodes", "opening"]],
       ["money", ["payments", "cash", "bank", "invoices", "customer-debts", "supplier-debts", "reconciliations"]],
-      ["references", ["products", "customers", "suppliers", "prices", "salesZones", "dictionaries"]],
+      ["references", ["products", "customers", "suppliers", "prices", "referencePrices", "salesZones", "dictionaries"]],
       ["admin", ["company", "branches", "warehouses", "staff", "roles", "audit", "settings"]],
     ]);
   });

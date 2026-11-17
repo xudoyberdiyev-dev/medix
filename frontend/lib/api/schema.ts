@@ -8066,6 +8066,118 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/reference-prices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["refLists"];
+        put?: never;
+        post: operations["refUpload"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reference-prices/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["refRead"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reference-prices/profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["refProfile"];
+        put: operations["refSaveProfile"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reference-prices/{id}/compare": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["refCompare"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reference-prices/{id}/rows/{rowId}/product": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["refMatch"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reference-prices/{id}/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["refExport"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reference-prices/receipt-warnings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["refReceiptWarnings"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -15799,6 +15911,115 @@ export interface components {
             warehouse: string;
             /** Format: int64 */
             warehouseId: number;
+        };
+        RefRowInput: {
+            /** Format: int32 */
+            row: number;
+            name?: string;
+            barcode?: string;
+            ikpu?: string;
+            code?: string;
+            manufacturer?: string;
+            unit?: string;
+            price?: string;
+        };
+        RefUploadRequest: {
+            fileName: string;
+            rows: components["schemas"]["RefRowInput"][];
+        };
+        RefUploadResult: {
+            /** Format: int64 */
+            id: number;
+            /** Format: int32 */
+            rows: number;
+            skipped: number[];
+        };
+        RefList: {
+            /** Format: int64 */
+            id: number;
+            fileName: string;
+            /** Format: int32 */
+            rowCount: number;
+            uploadedBy: string;
+            /** Format: date-time */
+            uploadedAt: string;
+            /** Format: int64 */
+            matched: number;
+            /** Format: int64 */
+            needsCheck: number;
+        };
+        RefProduct: {
+            /** Format: int64 */
+            id: number;
+            code: string;
+            name: string;
+            manufacturer?: string;
+        };
+        RefCompareRow: {
+            /** Format: int64 */
+            rowId: number;
+            /** Format: int32 */
+            rowNo: number;
+            name: string;
+            manufacturer?: string;
+            barcode?: string;
+            unit?: string;
+            product?: components["schemas"]["RefProduct"];
+            /** @enum {string} */
+            matchKind: "BARCODE" | "IKPU" | "CODE" | "NAME" | "ALIAS" | "MANUAL" | "NONE";
+            needsCheck: boolean;
+            refPrice: string;
+            ourPrice?: string;
+            diff?: string;
+            diffPct?: string;
+            /** @enum {string} */
+            status: "EXPENSIVE" | "CHEAP" | "MATCH" | "NOT_FOUND";
+            source?: string;
+        };
+        RefCounts: {
+            /** Format: int64 */
+            expensive: number;
+            /** Format: int64 */
+            cheap: number;
+            /** Format: int64 */
+            match: number;
+            /** Format: int64 */
+            notFound: number;
+            /** Format: int64 */
+            needsCheck: number;
+        };
+        RefCompareResult: {
+            /** Format: int64 */
+            listId: number;
+            fileName: string;
+            /** @enum {string} */
+            mode: "SALE" | "RECEIPT";
+            /** Format: int64 */
+            priceTypeId?: number;
+            priceType?: string;
+            /** Format: int64 */
+            receiptId?: number;
+            receiptNumber?: string;
+            /** Format: int64 */
+            branchId: number;
+            tolerancePct: string;
+            counts: components["schemas"]["RefCounts"];
+            rows: components["schemas"]["RefCompareRow"][];
+        };
+        RefMatchRequest: {
+            /** Format: int64 */
+            productId?: number;
+        };
+        RefReceiptWarning: {
+            /** Format: int64 */
+            productId: number;
+            productName: string;
+            receiptPrice: string;
+            refPrice: string;
+            diffPct: string;
+            /** Format: int64 */
+            listId: number;
+            fileName: string;
         };
     };
     responses: never;
@@ -27368,6 +27589,221 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ZoneTransferDetail"];
+                };
+            };
+        };
+    };
+    refLists: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RefList"][];
+                };
+            };
+        };
+    };
+    refUpload: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RefUploadRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RefUploadResult"];
+                };
+            };
+        };
+    };
+    refRead: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportFile"];
+                };
+            };
+        };
+    };
+    refProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportProfile"];
+                };
+            };
+        };
+    };
+    refSaveProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportProfileRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportProfile"];
+                };
+            };
+        };
+    };
+    refCompare: {
+        parameters: {
+            query?: {
+                mode?: "SALE" | "RECEIPT";
+                priceTypeId?: number;
+                receiptId?: number;
+                branchId?: number;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RefCompareResult"];
+                };
+            };
+        };
+    };
+    refMatch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+                rowId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RefMatchRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    refExport: {
+        parameters: {
+            query?: {
+                mode?: "SALE" | "RECEIPT";
+                priceTypeId?: number;
+                receiptId?: number;
+                branchId?: number;
+                status?: "EXPENSIVE" | "CHEAP" | "MATCH" | "NOT_FOUND";
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    refReceiptWarnings: {
+        parameters: {
+            query: {
+                receiptId: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RefReceiptWarning"][];
                 };
             };
         };

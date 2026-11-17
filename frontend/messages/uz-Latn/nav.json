@@ -36,5 +36,6 @@
   "settings": "Sozlamalar",
   "reserveCodes": "Zaxira kodlar",
   "invoices": "Fakturalar",
-  "messages": "Xabarlar"
+  "messages": "Xabarlar",
+  "referencePrices": "Referent narxlar"
 }

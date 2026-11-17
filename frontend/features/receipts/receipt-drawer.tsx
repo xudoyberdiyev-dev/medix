@@ -2,6 +2,7 @@
 
 import { ArrowUpRight, BadgePercent, Check, CircleCheck, ClipboardCheck, Copy, Lock, PackagePlus, Undo2, Wallet, X } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { Alert } from "@/components/ui/alert";
@@ -57,6 +58,7 @@ import {
   type ReceiptRequest,
   type Resolution,
 } from "./api";
+import { useReceiptWarnings } from "@/features/reference-prices/api";
 import { ReceiptCatalogDialog } from "./receipt-catalog-dialog";
 import { ReceiptLinesGrid } from "./receipt-lines-grid";
 import { centsToMoney, dueBase, expectedBonus, receiptSteps, standardDue, toCentsBig } from "./receipt-doc";
@@ -662,6 +664,7 @@ function Editor({
         </div>
       ) : null}
 
+      {doc && can(me.data, "special.cost") ? <RefPriceWarning receiptId={doc.id} /> : null}
       {local ? <Alert tone="danger" title={local} /> : null}
       {err.message ? <Alert tone="danger" title={err.message} /> : null}
 
@@ -1182,5 +1185,35 @@ function PostDialog({ doc, onClose }: { doc: ReceiptDetail; onClose: () => void 
         {err.message ? <Alert tone="danger" title={err.message} /> : null}
       </div>
     </Modal>
+  );
+}
+
+/** O14: kirim narxi oxirgi referent narxdan qimmat boʻlsa — ogohlantirish (bloklamaydi) va solishtirishga havola. */
+function RefPriceWarning({ receiptId }: { receiptId: number }) {
+  const t = useTranslations("referencePrices");
+  const w = useReceiptWarnings(receiptId, true).data ?? [];
+  if (w.length === 0) return null;
+  const listId = w[0]!.listId;
+  return (
+    <Alert tone="warning" title={t("rcWarn", { n: w.length })}>
+      <ul className="mt-1 flex flex-col gap-0.5">
+        {w.slice(0, 5).map((x) => (
+          <li key={x.productId}>
+            {t("rcWarnD", {
+              name: x.productName,
+              our: formatMoney(x.receiptPrice),
+              ref: formatMoney(x.refPrice),
+              pct: x.diffPct.replace(".", ","),
+            })}
+          </li>
+        ))}
+      </ul>
+      <Link
+        href={`/reference-prices/${listId}?mode=RECEIPT&receiptId=${receiptId}`}
+        className="mt-1 inline-block font-medium underline underline-offset-2"
+      >
+        {t("rcCompare")}
+      </Link>
+    </Alert>
   );
 }

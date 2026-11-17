@@ -36,5 +36,6 @@
   "settings": "Созламалар",
   "reserveCodes": "Захира кодлар",
   "invoices": "Фактуралар",
-  "messages": "Хабарлар"
+  "messages": "Хабарлар",
+  "referencePrices": "Референт нархлар"
 }

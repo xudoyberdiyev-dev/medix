@@ -52,5 +52,6 @@
   "zoneTransfers": "Перемещения по зонам",
   "reserveCodes": "Резервные коды",
   "invoices": "Фактуры",
-  "messages": "Сообщения"
+  "messages": "Сообщения",
+  "referencePrices": "Референтные цены"
 }

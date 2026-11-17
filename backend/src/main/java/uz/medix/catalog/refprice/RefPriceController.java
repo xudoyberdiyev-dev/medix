@@ -31,14 +31,14 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import uz.medix.catalog.product.ProductImport;
 import uz.medix.catalog.refprice.RefPriceModels.CompareMode;
-import uz.medix.catalog.refprice.RefPriceModels.CompareResult;
-import uz.medix.catalog.refprice.RefPriceModels.CompareRow;
-import uz.medix.catalog.refprice.RefPriceModels.MatchRequest;
+import uz.medix.catalog.refprice.RefPriceModels.RefCompareResult;
+import uz.medix.catalog.refprice.RefPriceModels.RefCompareRow;
+import uz.medix.catalog.refprice.RefPriceModels.RefMatchRequest;
 import uz.medix.catalog.refprice.RefPriceModels.RefList;
-import uz.medix.catalog.refprice.RefPriceModels.ReceiptWarning;
+import uz.medix.catalog.refprice.RefPriceModels.RefReceiptWarning;
 import uz.medix.catalog.refprice.RefPriceModels.RowStatus;
-import uz.medix.catalog.refprice.RefPriceModels.UploadRequest;
-import uz.medix.catalog.refprice.RefPriceModels.UploadResult;
+import uz.medix.catalog.refprice.RefPriceModels.RefUploadRequest;
+import uz.medix.catalog.refprice.RefPriceModels.RefUploadResult;
 import uz.medix.shared.error.MedixException;
 import uz.medix.shared.money.Money;
 import uz.medix.shared.security.Actor;
@@ -107,7 +107,7 @@ class RefPriceController {
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Moslangan qatorlarni saqlash va mahsulotga moslash",
             description = "Tartib: shtrix-kod/GTIN → avval qo'lda moslangan → MXIK → kod → nom o'xshashligi. Nom/narxi yaroqsiz qatorlar o'tkazib yuboriladi.")
-    UploadResult upload(@Valid @RequestBody UploadRequest request) {
+    RefUploadResult upload(@Valid @RequestBody RefUploadRequest request) {
         return refPrices.upload(request, actor());
     }
 
@@ -115,7 +115,7 @@ class RefPriceController {
     @PreAuthorize(REF)
     @Operation(summary = "Solishtirish natijasi",
             description = "SALE — narx turi (berilmasa bazaviy); RECEIPT — kirim (receiptId) yoki filialdagi oxirgi o'tkazilgan kirim narxi, faqat special.cost bilan.")
-    CompareResult compare(@PathVariable long id, @RequestParam(defaultValue = "SALE") CompareMode mode,
+    RefCompareResult compare(@PathVariable long id, @RequestParam(defaultValue = "SALE") CompareMode mode,
             @RequestParam(required = false) Long priceTypeId, @RequestParam(required = false) Long receiptId,
             @RequestParam(required = false) Long branchId, Authentication auth) {
         if (mode == CompareMode.RECEIPT && !has(auth, "special.cost")) {
@@ -127,7 +127,7 @@ class RefPriceController {
     @PutMapping("/{id}/rows/{rowId}/product")
     @PreAuthorize(REF)
     @Operation(summary = "Qo'lda moslash (null — olib tashlash); keyingi fayllarda avtomatik qo'llanadi")
-    void match(@PathVariable long id, @PathVariable long rowId, @RequestBody MatchRequest request) {
+    void match(@PathVariable long id, @PathVariable long rowId, @RequestBody RefMatchRequest request) {
         refPrices.match(id, rowId, request.productId(), actor());
     }
 
@@ -137,7 +137,7 @@ class RefPriceController {
     void export(@PathVariable long id, @RequestParam(defaultValue = "SALE") CompareMode mode, @RequestParam(required = false) Long priceTypeId,
             @RequestParam(required = false) Long receiptId, @RequestParam(required = false) Long branchId,
             @RequestParam(required = false) RowStatus status, Authentication auth, HttpServletResponse response) throws IOException {
-        CompareResult r = compare(id, mode, priceTypeId, receiptId, branchId, auth);
+        RefCompareResult r = compare(id, mode, priceTypeId, receiptId, branchId, auth);
         response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         response.setHeader("Content-Disposition", "attachment; filename=\"referent-narx-" + id + ".xlsx\"");
         write(r, status, response.getOutputStream());
@@ -146,7 +146,7 @@ class RefPriceController {
     @GetMapping("/receipt-warnings")
     @PreAuthorize("hasAuthority('receipt.view')")
     @Operation(summary = "Kirim kartochkasi: referent narxdan qimmat qatorlar (tannarx huquqisiz — bo'sh)")
-    List<ReceiptWarning> receiptWarnings(@RequestParam long receiptId, Authentication auth) {
+    List<RefReceiptWarning> receiptWarnings(@RequestParam long receiptId, Authentication auth) {
         if (!has(auth, "special.cost")) {
             return List.of();
         }
@@ -155,7 +155,7 @@ class RefPriceController {
 
     private static final String[] STATUS = {"Qimmat", "Arzon", "Mos", "Topilmadi"};
 
-    static void write(CompareResult r, RowStatus only, OutputStream out) throws IOException {
+    static void write(RefCompareResult r, RowStatus only, OutputStream out) throws IOException {
         try (SXSSFWorkbook wb = new SXSSFWorkbook(200)) {
             Sheet sheet = wb.createSheet("Solishtirish");
             CellStyle header = wb.createCellStyle();
@@ -172,7 +172,7 @@ class RefPriceController {
                 c.setCellStyle(header);
             }
             int n = 1;
-            for (CompareRow x : r.rows()) {
+            for (RefCompareRow x : r.rows()) {
                 if (only != null && x.status() != only) {
                     continue;
                 }

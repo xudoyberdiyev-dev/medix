@@ -27,11 +27,11 @@ final class RefPriceModels {
             @Schema(nullable = true) @Size(max = 50) String unit,
             @Schema(nullable = true) @Size(max = 40) String price) {}
 
-    record UploadRequest(
+    record RefUploadRequest(
             @NotBlank(message = "{validation.required}") @Size(max = 255) String fileName,
             @NotNull(message = "{validation.required}") @Size(min = 1, max = MAX_ROWS) List<@Valid RefRowInput> rows) {}
 
-    record UploadResult(long id, int rows, @Schema(description = "Nom yoki narxi yaroqsiz — o'tkazib yuborilgan qatorlar") List<Integer> skipped) {}
+    record RefUploadResult(long id, int rows, @Schema(description = "Nom yoki narxi yaroqsiz — o'tkazib yuborilgan qatorlar") List<Integer> skipped) {}
 
     record RefList(long id, String fileName, int rowCount, String uploadedBy, Instant uploadedAt,
             @Schema(description = "Mahsulotga moslangan qatorlar") long matched,
@@ -43,16 +43,16 @@ final class RefPriceModels {
 
     enum RowStatus { EXPENSIVE, CHEAP, MATCH, NOT_FOUND }
 
-    record ProductRef(long id, String code, String name, @Schema(nullable = true) String manufacturer) {}
+    record RefProduct(long id, String code, String name, @Schema(nullable = true) String manufacturer) {}
 
-    record CompareRow(
+    record RefCompareRow(
             long rowId,
             int rowNo,
             String name,
             @Schema(nullable = true) String manufacturer,
             @Schema(nullable = true) String barcode,
             @Schema(nullable = true) String unit,
-            @Schema(nullable = true) ProductRef product,
+            @Schema(nullable = true) RefProduct product,
             MatchKind matchKind,
             boolean needsCheck,
             String refPrice,
@@ -62,15 +62,15 @@ final class RefPriceModels {
             RowStatus status,
             @Schema(nullable = true, description = "Qaysi kirim (raqam) yoki narx turi") String source) {}
 
-    record Counts(long expensive, long cheap, long match, long notFound, long needsCheck) {}
+    record RefCounts(long expensive, long cheap, long match, long notFound, long needsCheck) {}
 
-    record CompareResult(long listId, String fileName, CompareMode mode, @Schema(nullable = true) Long priceTypeId,
+    record RefCompareResult(long listId, String fileName, CompareMode mode, @Schema(nullable = true) Long priceTypeId,
             @Schema(nullable = true) String priceType, @Schema(nullable = true) Long receiptId, @Schema(nullable = true) String receiptNumber,
-            long branchId, String tolerancePct, Counts counts, List<CompareRow> rows) {}
+            long branchId, String tolerancePct, RefCounts counts, List<RefCompareRow> rows) {}
 
-    record MatchRequest(@Schema(nullable = true, description = "null — moslikni olib tashlash") Long productId) {}
+    record RefMatchRequest(@Schema(nullable = true, description = "null — moslikni olib tashlash") Long productId) {}
 
     /** Kirim kartochkasi: referent narxdan qimmat qatorlar (oxirgi yuklangan fayllar bo'yicha). */
-    record ReceiptWarning(long productId, String productName, String receiptPrice, String refPrice, String diffPct, long listId,
+    record RefReceiptWarning(long productId, String productName, String receiptPrice, String refPrice, String diffPct, long listId,
             String fileName) {}
 }
