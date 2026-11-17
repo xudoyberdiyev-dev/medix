@@ -8,6 +8,7 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.matchesPattern;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -1114,6 +1115,78 @@ class OrderIT {
                 .andExpect(jsonPath("$.rows[0].row").value(3))
                 .andExpect(jsonPath("$.work.scannedQty").value(6))
                 .andExpect(jsonPath("$.work.complete").value(true));
+    }
+
+    /**
+     * O18: 5 xil faktura — asl qatorlar (partiya, muddat, Худуд), qo'lda tuzatish faqat faylga (buyurtma o'zgarmaydi), saqlanadi va
+     * «Asl holatiga» qaytadi; ustunlar shablondagidek; yig'uvchi — faqat narxsiz faktura, tahrir yo'q.
+     */
+    @Test
+    void invoiceFormsEditAndExcel() throws Exception {
+        Place p = place();
+        long c = customer(p.branchId(), null);
+        Cookie operator = loginAs("OPERATOR", p.branchId());
+        Cookie keeper = loginAs("WAREHOUSE_MANAGER", p.branchId());
+        Cookie picker = loginAs("PICKER", p.branchId());
+        long prod = product(p, "BY Faktura dori", "1000", 0, null, null);
+        jdbc.sql("UPDATE product SET marked = true, farm_id = 'F-77' WHERE id = :p").param("p", prod).update();
+        jdbc.sql("INSERT INTO product_barcode (product_id, barcode) VALUES (:p, :b)").param("p", prod).param("b", ean13()).update();
+        jdbc.sql("INSERT INTO product_location (product_id, warehouse_id, location) VALUES (:p, :w, 'B-2')").param("p", prod)
+                .param("w", p.warehouseId()).update();
+        tx.executeWithoutResult(s -> {
+            long b = ledger.createBatch(prod, "LOT-INV", null, LocalDate.of(2029, 5, 31), Money.of("100"), false, "BQ", null);
+            ledger.post(new DocRef("BQ", prod, "BQ-INV"), List.of(Move.in(p.main(), b, 10)));
+        });
+        long o = markedOrder(p, c, prod, 4, operator, keeper, picker);
+        mvc.perform(get("/api/orders/" + o + "/invoice-forms").cookie(operator))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.edited").value(false))
+                .andExpect(jsonPath("$.canEdit").value(true))
+                .andExpect(jsonPath("$.rows[0].area").value("B-2"))
+                .andExpect(jsonPath("$.rows[0].farmId").value("F-77"))
+                .andExpect(jsonPath("$.rows[0].series").value("LOT-INV"))
+                .andExpect(jsonPath("$.rows[0].expiry").value("31.05.2029"))
+                .andExpect(jsonPath("$.rows[0].qty").value(4));
+        String price = jdbc.sql("SELECT price::text FROM sales_order_line WHERE order_id = :o").param("o", o).query(String.class).single();
+        // Tuzatish: nom va soni; summa qayta hisoblanadi; buyurtma qatori o'zgarmaydi
+        String body = "{\"rows\":[{\"area\":\"B-2\",\"name\":\"Tuzatilgan nom\",\"manufacturer\":null,\"series\":\"LOT-INV\",\"qty\":3,"
+                + "\"expiry\":\"31.05.2029\",\"unit\":\"dona\",\"price\":\"" + price + "\"},{\"name\":\"Qoʻshimcha qator\",\"qty\":1,\"price\":\"10\"}]}";
+        send(put("/api/orders/" + o + "/invoice-forms"), picker, body).andExpect(status().isForbidden());
+        send(put("/api/orders/" + o + "/invoice-forms"), operator, body)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.edited").value(true))
+                .andExpect(jsonPath("$.editedBy").value("Sinov OPERATOR"))
+                .andExpect(jsonPath("$.rows.length()").value(2))
+                .andExpect(jsonPath("$.rows[0].name").value("Tuzatilgan nom"))
+                .andExpect(jsonPath("$.rows[1].total").value("10.00"))
+                .andExpect(jsonPath("$.original[0].name").value("BY Faktura dori"));
+        assertThat(jdbc.sql("SELECT qty FROM sales_order_line WHERE order_id = :o").param("o", o).query(Integer.class).single()).isEqualTo(4);
+        // Excel — ustunlar shablondagidek, tuzatilgan qatorlar, «Жами»
+        MvcResult x = mvc.perform(get("/api/orders/" + o + "/invoice-forms/CLIENT_SEND/xlsx").cookie(operator)).andExpect(status().isOk()).andReturn();
+        try (var wb = new org.apache.poi.xssf.usermodel.XSSFWorkbook(new java.io.ByteArrayInputStream(x.getResponse().getContentAsByteArray()))) {
+            var sh = wb.getSheetAt(0);
+            assertThat(sh.getRow(0).getCell(0).getStringCellValue()).isEqualTo("Фактура для Клиентов отправка");
+            var head = sh.getRow(5);
+            assertThat(head.getCell(1).getStringCellValue()).isEqualTo("Фарм ИД");
+            assertThat(head.getCell(9).getStringCellValue()).isEqualTo("ККС билан Жами киймати (Сумма)");
+            assertThat(sh.getRow(6).getCell(2).getStringCellValue()).isEqualTo("Tuzatilgan nom");
+            assertThat(sh.getRow(8).getCell(0).getStringCellValue()).isEqualTo("Жами");
+            assertThat(sh.getRow(8).getCell(5).getNumericCellValue()).isEqualTo(4.0);
+        }
+        // Yig'uvchi: narxli faktura — yo'q; narxsiz — bor, narx maydonlari bo'sh
+        mvc.perform(get("/api/orders/" + o + "/invoice-forms/WAREHOUSE/xlsx").cookie(picker)).andExpect(status().isForbidden());
+        mvc.perform(get("/api/orders/" + o + "/invoice-forms/WAREHOUSE2/xlsx").cookie(picker)).andExpect(status().isOk());
+        mvc.perform(get("/api/orders/" + o + "/invoice-forms").cookie(picker))
+                .andExpect(jsonPath("$.canEdit").value(false))
+                .andExpect(jsonPath("$.canSeePrices").value(false))
+                .andExpect(jsonPath("$.rows[0].price").doesNotExist());
+        // Asl holatiga qaytarish
+        send(delete("/api/orders/" + o + "/invoice-forms"), operator, "")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.edited").value(false))
+                .andExpect(jsonPath("$.rows[0].name").value("BY Faktura dori"));
+        assertThat(jdbc.sql("SELECT count(*) FROM audit_log WHERE entity_id = :o AND action IN ('order.invoiceEdit', 'order.invoiceRevert')")
+                .param("o", String.valueOf(o)).query(Long.class).single()).isEqualTo(2L);
     }
 
     /** O5: markirovka tayyor fayldan — oldindan ko'rish hech narsa saqlamaydi, qabul qilishda mos kelganlari yoziladi. */

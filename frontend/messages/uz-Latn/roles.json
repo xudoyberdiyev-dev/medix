@@ -312,6 +312,7 @@
     "zcodes_edit": "Zaxira kodlar: ishlatildi / hisobdan chiqarish",
     "invoices_view": "Fakturalar: navbatni koʻrish, HF va kodlarni yuklab olish",
     "invoices_send": "Fakturalar: fayl yuklash, «Yuborildi» deb belgilash",
+    "invoices_edit": "Fakturalar: chiqarishdan oldin qoʻlda tuzatish (faqat faylga)",
     "messages_use": "Xabarlar: yozish, javob berish, topshiriq berish va bajarish",
     "messages_broadcast": "Xabarlar: butun rol yoki filialga yuborish",
     "prices_reference": "Narxlar: referent narx bilan solishtirish"
