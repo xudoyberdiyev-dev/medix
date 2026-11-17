@@ -59,12 +59,17 @@ class NotificationStream {
 
     /** Xodimlarning ochiq oynalariga «bildirishnomalar o'zgardi» signali. */
     void changed(Collection<Long> employeeIds) {
+        signal(employeeIds, EVENT_CHANGED);
+    }
+
+    /** Xodimlarning ochiq oynalariga berilgan nomdagi signal (masalan «messages» — yangi xabar yoki o'qildi belgisi). */
+    void signal(Collection<Long> employeeIds, String event) {
         Set<Long> ids = Set.copyOf(employeeIds);
         try {
             sender.execute(() -> {
                 for (long id : ids) {
                     for (SseEmitter e : emitters.getOrDefault(id, Set.of())) {
-                        send(id, e, SseEmitter.event().name(EVENT_CHANGED).data("changed"));
+                        send(id, e, SseEmitter.event().name(event).data("changed"));
                     }
                 }
             });
@@ -95,14 +100,19 @@ class NotificationStream {
 
     /** Signal faqat joriy tranzaksiya muvaffaqiyatli yakunlangach (bekor qilinsa — signal yo'q); tranzaksiyasiz — darhol. */
     void changedAfterCommit(Collection<Long> employeeIds) {
+        signalAfterCommit(employeeIds, EVENT_CHANGED);
+    }
+
+    /** {@link #signal} — joriy tranzaksiya muvaffaqiyatli yakunlangach. */
+    void signalAfterCommit(Collection<Long> employeeIds, String event) {
         if (!TransactionSynchronizationManager.isSynchronizationActive()) {
-            changed(employeeIds);
+            signal(employeeIds, event);
             return;
         }
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCommit() {
-                changed(employeeIds);
+                signal(employeeIds, event);
             }
         });
     }

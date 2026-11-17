@@ -92,6 +92,12 @@ public class Notifications {
         return text.length() <= 500 ? text : text.substring(0, 499) + "…";
     }
 
+    /** Aniq xodimlarga (masalan topshiriq holati — yuboruvchiga). Qaytaradi: yangi yozilganlar soni. */
+    @Transactional
+    public int notifyEmployees(Collection<Long> employees, Message m) {
+        return notify("-", 0, employees, m);
+    }
+
     /** Ruxsat kaliti egalari (filial doirasida) va qo'shimcha xodimlarga. Qaytaradi: yangi yozilganlar soni. */
     @Transactional
     public int notify(String permission, long branchId, Collection<Long> extraEmployees, Message m) {
