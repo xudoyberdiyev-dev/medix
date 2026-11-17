@@ -313,6 +313,7 @@
     "invoices_view": "Fakturalar: navbatni koʻrish, HF va kodlarni yuklab olish",
     "invoices_send": "Fakturalar: fayl yuklash, «Yuborildi» deb belgilash",
     "messages_use": "Xabarlar: yozish, javob berish, topshiriq berish va bajarish",
-    "messages_broadcast": "Xabarlar: butun rol yoki filialga yuborish"
+    "messages_broadcast": "Xabarlar: butun rol yoki filialga yuborish",
+    "prices_reference": "Narxlar: referent narx bilan solishtirish"
   }
 }

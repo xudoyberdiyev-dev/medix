@@ -78,6 +78,10 @@
     "returnDays": {
       "name": "Mijozdan qaytarish muddati",
       "desc": "Sotuv yetkazilgandan keyin shuncha kun ichida qaytarish mumkin; keyin — faqat Filial rahbari yoki Direktor ruxsati bilan. 0 — cheksiz."
+    },
+    "refPriceTolPct": {
+      "name": "Referent narx — ruxsat etilgan farq",
+      "desc": "Referent narx bilan solishtirishda bizning narx shu foiz ichida farq qilsa, «Mos» hisoblanadi. 0 — faqat teng narx."
     }
   },
   "unit": {

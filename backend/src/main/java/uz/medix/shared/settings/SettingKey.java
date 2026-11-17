@@ -15,6 +15,8 @@ public enum SettingKey {
     priceWarnPct(Section.SALES, Kind.PCT, Scope.DIRECTOR),
     /** Mijozdan qaytarish muddati, kun (O8, egasi 13.11.2026): yetkazilgandan keyin; 0 — cheksiz. */
     returnDays(Section.SALES, Kind.RDAY, Scope.DIRECTOR),
+    /** Referent narx bilan solishtirishda ruxsat etilgan farq, % (O14, egasi 17.11.2026): shu oraliqda — «Mos». */
+    refPriceTolPct(Section.SALES, Kind.PCT, Scope.DIRECTOR),
     cashBranchApprove(Section.MONEY, Kind.SUM, Scope.DIRECTOR),
     hcDirApprove(Section.MONEY, Kind.SUM, Scope.DIRECTOR),
     ivDirApprove(Section.MONEY, Kind.SUM, Scope.DIRECTOR),
