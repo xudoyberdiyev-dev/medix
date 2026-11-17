@@ -1,7 +1,8 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, ArrowUpRight, CircleCheck, FileCheck2, Plus, Printer, Send, type LucideIcon } from "lucide-react";
+import { AlertTriangle, ArrowUpRight, CircleCheck, FileCheck2, Plus, Send, type LucideIcon } from "lucide-react";
+import { ActFiles } from "@/features/debts/act-files";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -532,19 +533,7 @@ export function ReconViewPage({ id }: { id: number }) {
               </Button>
             </>
           ) : null}
-          <Button
-            variant="secondary"
-            icon={Printer}
-            onClick={() =>
-              window.open(
-                `/api/debts/${h.side === "CUSTOMER" ? "customers" : "suppliers"}/${h.counterpartyId}/act/pdf?branchId=${h.branchId}&from=${h.from}&to=${h.to}`,
-                "_blank",
-                "noopener",
-              )
-            }
-          >
-            {t("view.print")}
-          </Button>
+          <ActFiles base={`/api/reconciliations/${h.id}`} />
         </div>
       </div>
       {h.status === "DIFF" && !diffOpen && h.theirBalance && savedDiff ? (
