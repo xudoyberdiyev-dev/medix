@@ -85,7 +85,7 @@ class Messages {
         List<Person> people = jdbc.sql("""
                 SELECT e.id, e.full_name, r.code AS role_code, r.name AS role_name, e.branch_id, b.name AS branch_name
                 FROM employee e JOIN role r ON r.id = e.role_id LEFT JOIN branch b ON b.id = e.branch_id
-                WHERE e.id <> :me AND """ + VISIBLE + " ORDER BY e.full_name, e.id LIMIT 1000")
+                WHERE e.id <> :me""" + " AND " + VISIBLE + " ORDER BY e.full_name, e.id LIMIT 1000")
                 .param("me", a.employeeId())
                 .param("all", a.allBranches())
                 .param("b", branchOf(a))
