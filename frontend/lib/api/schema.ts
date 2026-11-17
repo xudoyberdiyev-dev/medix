@@ -2834,7 +2834,7 @@ export interface paths {
         put?: never;
         /**
          * Kodni skanerlash
-         * @description Tekshiruv tartibi: format → takror (global) → mahsulot (GTIN) → partiya → tur (quti/dona) → qator to'lganmi.
+         * @description Tekshiruv tartibi: format → takror (global) → mahsulot (GTIN; quti/SSCC — lineId, gtin yoki yagona qator) → partiya (kodda bo'lsa) → qator to'lganmi. Quti (SSCC) mahsulotning «1 qadoqdagi dona» soni qadar birlik hisoblanadi.
          */
         post: operations["scan"];
         delete?: never;
@@ -11142,7 +11142,7 @@ export interface components {
             /** Format: int64 */
             id: number;
             /** @enum {string} */
-            kind: "BOX" | "UNIT";
+            kind: "BOX" | "UNIT" | "AGGREGATE";
             /** Format: int64 */
             lineId: number;
             /** Format: int64 */
@@ -11155,6 +11155,11 @@ export interface components {
             serial: string;
             /** @enum {string} */
             status: "ACTIVE" | "REMOVED" | "RELEASED" | "SOLD" | "RETURNED";
+            /**
+             * Format: int32
+             * @description Kod qamraydigan birliklar: dona kodi — 1, quti (SSCC) — qutidagi dona soni
+             */
+            units: number;
         };
         MarkCodePage: {
             items: components["schemas"]["MarkCode"][];
@@ -11195,7 +11200,7 @@ export interface components {
         MarkLine: {
             batches: components["schemas"]["MarkBatch"][];
             /** @enum {string} */
-            kind: "BOX" | "UNIT";
+            kind: "BOX" | "UNIT" | "AGGREGATE";
             /** Format: int64 */
             lineId: number;
             /** Format: int32 */
@@ -11267,13 +11272,16 @@ export interface components {
             upToMessageId: number;
         };
         MarkWork: {
-            /** Format: int32 */
-            boxesNeeded: number;
             /**
              * Format: int32
-             * @description Skanerlangan quti / kerak
+             * @description Skanerlangan quti (agregatsiya, SSCC) kodlari soni
              */
-            boxesScanned: number;
+            boxCodes: number;
+            /**
+             * Format: int32
+             * @description Qutilar qamragan birliklar
+             */
+            boxUnits: number;
             /** @description Faol (olib tashlanmagan) kodlar */
             codes: components["schemas"]["MarkCode"][];
             /** @description Barcha kodlar skanerlangan va markirovkasiz qatorlar tasdiqlangan — yakunlash mumkin */
@@ -11297,12 +11305,23 @@ export interface components {
             marker?: string;
             /** Format: int64 */
             markerId?: number;
+            /**
+             * Format: int32
+             * @description Jami kerak birliklar
+             */
+            neededQty: number;
             number: string;
+            /**
+             * Format: int32
+             * @description Jami skanerlangan birliklar (qutilar + donalar)
+             */
+            scannedQty: number;
             status: string;
-            /** Format: int32 */
-            unitsNeeded: number;
-            /** Format: int32 */
-            unitsScanned: number;
+            /**
+             * Format: int32
+             * @description Skanerlangan dona kodlari soni
+             */
+            unitCodes: number;
             /** @description Markirovkasiz qatorlar (tasdiqlanadi, E1) */
             unmarkedLines: components["schemas"]["UnmarkedLine"][];
             /** @description Buyurtmada markirovkali qator yo'q — «Markirovkasiz — tasdiqlash» */
@@ -13929,7 +13948,7 @@ export interface components {
             /** Format: int64 */
             id: number;
             /** @enum {string} */
-            kind: "BOX" | "UNIT";
+            kind: "BOX" | "UNIT" | "AGGREGATE";
             /** Format: int64 */
             orderId: number;
             orderNumber: string;
@@ -13999,7 +14018,7 @@ export interface components {
             /** Format: int64 */
             id: number;
             /** @enum {string} */
-            kind: "BOX" | "UNIT";
+            kind: "BOX" | "UNIT" | "AGGREGATE";
             note?: string;
             /** Format: int64 */
             orderId: number;
@@ -14312,6 +14331,13 @@ export interface components {
         };
         ScanRequest: {
             code: string;
+            /** @description O16: quti (SSCC) kodi mahsulotining GTIN/shtrix-kodi (Excel ustuni) */
+            gtin?: string;
+            /**
+             * Format: int64
+             * @description O16: quti (SSCC) kodi qaysi qatorga — bir nechta markirovkali qator bo'lsa qo'lda tanlanadi
+             */
+            lineId?: number;
         };
         ScanResult: {
             accepted: components["schemas"]["MarkCode"];

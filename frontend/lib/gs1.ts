@@ -1,18 +1,22 @@
 /**
- * GS1 DataMatrix markirovka kodi (SPEC 6): (01) GTIN · (21) seriya · (17) yaroqlilik · (10) partiya · (91) Q/D.
- * Serverdagi `uz.medix.shared.gs1.Gs1Code` bilan bir xil qoidalar: frontendda tez tekshiruv, serverda yana bir bor.
+ * GS1 markirovka kodi — O16 (egasi 17.11) haqiqiy format: dona kodi (01) GTIN · (21) seriya (13 belgi) [+ 91/92/93 kripto-dum],
+ * (10) partiya va (17) yaroqlilik ixtiyoriy; quti (agregatsiya) kodi — (00) SSCC, 18 raqam. Serverdagi
+ * `uz.medix.shared.gs1.Gs1Code` bilan bir xil qoidalar: frontendda tez tekshiruv, serverda yana bir bor.
  */
-export type Gs1Kind = "BOX" | "UNIT";
+export type Gs1Kind = "UNIT" | "AGGREGATE";
 
 export interface Gs1Code {
-  gtin: string;
+  gtin: string | null;
   serial: string;
-  batch: string;
+  batch: string | null;
   expiry: string | null; // YYYY-MM-DD
   kind: Gs1Kind;
 }
 
-export type Gs1Error = "marking.format" | "marking.gtinInvalid" | "marking.kindInvalid" | "marking.expiryInvalid";
+export type Gs1Error = "marking.format" | "marking.gtinInvalid" | "marking.ssccInvalid" | "marking.expiryInvalid";
+
+/** O'zbekiston dori markirovkasida seriya uzunligi (ajratgichsiz kodni bo'lish uchun). */
+const UZ_SERIAL = 13;
 
 export type Gs1Parsed = { ok: true; code: Gs1Code } | { ok: false; error: Gs1Error };
 
@@ -21,9 +25,9 @@ export const GS = "\u001D";
 const FIXED: Record<string, number> = { "00": 18, "01": 14, "02": 14, "11": 6, "12": 6, "13": 6, "15": 6, "16": 6, "17": 6, "20": 2 };
 
 export const GS1_ERROR_TEXT: Record<Gs1Error, string> = {
-  "marking.format": "Kod oʻqilmadi: GS1 formati emas yoki (01), (21), (10), (91) maydonlaridan biri yoʻq. Kodni qayta skanerlang.",
+  "marking.format": "Kod oʻqilmadi: dona kodi (01)+(21) yoki quti kodi (00) emas. Kodni qayta skanerlang.",
   "marking.gtinInvalid": "Koddagi GTIN notoʻgʻri (nazorat raqami mos emas). Qadoqdagi boshqa kodni skanerlang.",
-  "marking.kindInvalid": "Koddagi tur (91) notoʻgʻri: Q (quti) yoki D (dona) boʻlishi kerak.",
+  "marking.ssccInvalid": "Quti (agregatsiya) kodi notoʻgʻri: SSCC 18 raqam va toʻgʻri nazorat raqami boʻlishi kerak.",
   "marking.expiryInvalid": "Koddagi yaroqlilik sanasi (17) notoʻgʻri. Kodni qayta skanerlang.",
 };
 
@@ -87,7 +91,9 @@ function separated(s: string): Map<string, string> | null {
       i += len;
     } else {
       const gs = s.indexOf(GS, i);
-      const end = gs < 0 ? s.length : gs;
+      let end = gs < 0 ? s.length : gs;
+      // Ajratgichsiz dona kodi: seriya 13 belgi, keyin kripto-dum (91/92/93)
+      if (ai === "21" && end - i > UZ_SERIAL && /^9[123]./.test(s.slice(i + UZ_SERIAL, end))) end = i + UZ_SERIAL;
       value = s.slice(i, end);
       i = end;
     }
@@ -101,16 +107,21 @@ export function parseGs1(raw: string): Gs1Parsed {
   let s = raw.trim();
   if (s.startsWith("]d2") || s.startsWith("]C1") || s.startsWith("]Q3")) s = s.slice(3);
   if (!s || s.length > 300) return { ok: false, error: "marking.format" };
+  // Excel oldingi nollarni yo'qotgan SSCC (15–20 raqam) → 20 ga to'ldiriladi
+  if (/^\d{15,20}$/.test(s) && !s.startsWith("01")) s = s.padStart(20, "0");
   const f = s[0] === "(" ? bracketed(s) : separated(s);
   if (!f) return { ok: false, error: "marking.format" };
+  const sscc = f.get("00");
+  if (sscc !== undefined) {
+    if (f.has("01") || f.has("21")) return { ok: false, error: "marking.format" };
+    if (!/^\d{18}$/.test(sscc) || !checkDigitOk(sscc)) return { ok: false, error: "marking.ssccInvalid" };
+    return { ok: true, code: { gtin: null, serial: sscc, batch: null, expiry: null, kind: "AGGREGATE" } };
+  }
   const gtin = f.get("01");
   const serial = f.get("21");
-  const batch = f.get("10");
-  const kind = f.get("91");
-  if (!gtin || !serial || !batch || !kind) return { ok: false, error: "marking.format" };
+  const batch = f.get("10") ?? null;
+  if (!gtin || !serial || batch === "") return { ok: false, error: "marking.format" };
   if (!/^\d{14}$/.test(gtin) || !checkDigitOk(gtin)) return { ok: false, error: "marking.gtinInvalid" };
-  const k = kind.toUpperCase() === "Q" ? "BOX" : kind.toUpperCase() === "D" ? "UNIT" : null;
-  if (!k) return { ok: false, error: "marking.kindInvalid" };
   let expiry: string | null = null;
   const e = f.get("17");
   if (e !== undefined) {
@@ -118,6 +129,6 @@ export function parseGs1(raw: string): Gs1Parsed {
     if (!expiry) return { ok: false, error: "marking.expiryInvalid" };
   }
   const printable = /^[\x21-\x7E]{1,20}$/;
-  if (!printable.test(serial) || !printable.test(batch)) return { ok: false, error: "marking.format" };
-  return { ok: true, code: { gtin, serial, batch, expiry, kind: k } };
+  if (!printable.test(serial) || (batch !== null && !printable.test(batch))) return { ok: false, error: "marking.format" };
+  return { ok: true, code: { gtin, serial, batch, expiry, kind: "UNIT" } };
 }

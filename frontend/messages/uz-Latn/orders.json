@@ -23,7 +23,8 @@
   },
   "kind": {
     "BOX": "quti",
-    "UNIT": "dona"
+    "UNIT": "dona",
+    "AGGREGATE": "quti (SSCC)"
   },
   "unit": {
     "pcs": "dona",
@@ -462,7 +463,11 @@
     "verifyCheck": "Kodlar firmamiz nomida va takrorlanmagan — Saplaynʼda tekshirdim",
     "verifyFinish": "Saplaynʼda tekshirildi — yakunlash",
     "verifyExportFailed": "Faylni yuklab boʻlmadi",
-    "reasonSaplayn": "Saplayn: boshqa firma nomida / yaroqsiz"
+    "reasonSaplayn": "Saplayn: boshqa firma nomida / yaroqsiz",
+    "counterMixed": "{boxes} quti ({boxUnits} dona) + {units} dona = {scanned} / {needed}",
+    "boxUnits": "SSCC · quti ({n} dona)",
+    "pickBoxProduct": "Quti kodi qaysi mahsulotniki? Mahsulotni tanlang — quti shu qatorga yoziladi.",
+    "scanHint": "Butun qutilar uchun faqat quti (SSCC) kodini, ochiq donalar uchun har bir dona kodini skanerlang."
   },
   "monitor": {
     "forbidden": "Monitor Ombor mudiri, Filial rahbari va Direktor uchun.",
@@ -789,10 +794,10 @@
     "clear": "Tozalash"
   },
   "gs1": {
-    "format": "Kod oʻqilmadi: GS1 formati emas yoki (01), (21), (10), (91) maydonlaridan biri yoʻq. Kodni qayta skanerlang.",
+    "format": "Kod oʻqilmadi: dona kodi (01)+(21) yoki quti kodi (00) emas. Kodni qayta skanerlang.",
     "gtinInvalid": "Koddagi GTIN notoʻgʻri (nazorat raqami mos emas). Qadoqdagi boshqa kodni skanerlang.",
-    "kindInvalid": "Koddagi tur (91) notoʻgʻri: Q (quti) yoki D (dona) boʻlishi kerak.",
-    "expiryInvalid": "Koddagi yaroqlilik sanasi (17) notoʻgʻri. Kodni qayta skanerlang."
+    "expiryInvalid": "Koddagi yaroqlilik sanasi (17) notoʻgʻri. Kodni qayta skanerlang.",
+    "ssccInvalid": "Quti (agregatsiya) kodi notoʻgʻri: SSCC 18 raqam va toʻgʻri nazorat raqami boʻlishi kerak. Kodni qayta skanerlang."
   },
   "customer": {
     "aria": "Mijoz holati",
@@ -1005,7 +1010,7 @@
   "markImport": {
     "open": "Excel'dan yuklash",
     "title": "Kodlarni fayldan yuklash",
-    "about": "Oldindan tayyorlangan Excel (.xlsx) yoki CSV fayl: har qatorda bitta markirovka kodi («Markirovka kodi» ustuni yoki birinchi ustun). GTIN koddan olinadi. Har kod qoʻlda skanerlash bilan bir xil tekshiriladi.",
+    "about": "Excel (.xlsx) yoki CSV fayl — namunadagidek: «Markirovka kodi» | «GTIN». Har mahsulot oldidan sarlavha qatori (dori nomi — tashlab yuboriladi), ostida quti (SSCC) va dona kodlari. Quti kodining mahsuloti GTIN ustunidan aniqlanadi. Har kod qoʻlda skanerlash bilan bir xil tekshiriladi.",
     "pick": "Faylni tanlash",
     "pickOther": "Boshqa fayl",
     "template": "Namuna fayl",

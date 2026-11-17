@@ -6289,7 +6289,7 @@
     },
     "/api/marking/orders/{id}/scan" : {
       "post" : {
-        "description" : "Tekshiruv tartibi: format → takror (global) → mahsulot (GTIN) → partiya → tur (quti/dona) → qator to'lganmi.",
+        "description" : "Tekshiruv tartibi: format → takror (global) → mahsulot (GTIN; quti/SSCC — lineId, gtin yoki yagona qator) → partiya (kodda bo'lsa) → qator to'lganmi. Quti (SSCC) mahsulotning «1 qadoqdagi dona» soni qadar birlik hisoblanadi.",
         "operationId" : "scan",
         "parameters" : [ {
           "in" : "path",
@@ -26234,7 +26234,7 @@
           },
           "kind" : {
             "type" : "string",
-            "enum" : [ "BOX", "UNIT" ]
+            "enum" : [ "BOX", "UNIT", "AGGREGATE" ]
           },
           "lineId" : {
             "type" : "integer",
@@ -26263,9 +26263,14 @@
           "status" : {
             "type" : "string",
             "enum" : [ "ACTIVE", "REMOVED", "RELEASED", "SOLD", "RETURNED" ]
+          },
+          "units" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Kod qamraydigan birliklar: dona kodi — 1, quti (SSCC) — qutidagi dona soni"
           }
         },
-        "required" : [ "batch", "code", "gtin", "id", "kind", "lineId", "orderId", "orderNumber", "productName", "scannedAt", "scannedBy", "serial", "status" ]
+        "required" : [ "batch", "code", "gtin", "id", "kind", "lineId", "orderId", "orderNumber", "productName", "scannedAt", "scannedBy", "serial", "status", "units" ]
       },
       "MarkCodePage" : {
         "type" : "object",
@@ -26362,7 +26367,7 @@
           },
           "kind" : {
             "type" : "string",
-            "enum" : [ "BOX", "UNIT" ]
+            "enum" : [ "BOX", "UNIT", "AGGREGATE" ]
           },
           "lineId" : {
             "type" : "integer",
@@ -26487,14 +26492,15 @@
       "MarkWork" : {
         "type" : "object",
         "properties" : {
-          "boxesNeeded" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "boxesScanned" : {
+          "boxCodes" : {
             "type" : "integer",
             "format" : "int32",
-            "description" : "Skanerlangan quti / kerak"
+            "description" : "Skanerlangan quti (agregatsiya, SSCC) kodlari soni"
+          },
+          "boxUnits" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Qutilar qamragan birliklar"
           },
           "codes" : {
             "type" : "array",
@@ -26545,19 +26551,26 @@
             "type" : "integer",
             "format" : "int64"
           },
+          "neededQty" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Jami kerak birliklar"
+          },
           "number" : {
             "type" : "string"
+          },
+          "scannedQty" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Jami skanerlangan birliklar (qutilar + donalar)"
           },
           "status" : {
             "type" : "string"
           },
-          "unitsNeeded" : {
+          "unitCodes" : {
             "type" : "integer",
-            "format" : "int32"
-          },
-          "unitsScanned" : {
-            "type" : "integer",
-            "format" : "int32"
+            "format" : "int32",
+            "description" : "Skanerlangan dona kodlari soni"
           },
           "unmarkedLines" : {
             "type" : "array",
@@ -26571,7 +26584,7 @@
             "description" : "Buyurtmada markirovkali qator yo'q — «Markirovkasiz — tasdiqlash»"
           }
         },
-        "required" : [ "boxesNeeded", "boxesScanned", "codes", "complete", "customer", "id", "lines", "number", "status", "unitsNeeded", "unitsScanned", "unmarkedLines", "unmarkedOnly" ]
+        "required" : [ "boxCodes", "boxUnits", "codes", "complete", "customer", "id", "lines", "neededQty", "number", "scannedQty", "status", "unitCodes", "unmarkedLines", "unmarkedOnly" ]
       },
       "MarkupLine" : {
         "type" : "object",
@@ -32967,7 +32980,7 @@
           },
           "kind" : {
             "type" : "string",
-            "enum" : [ "BOX", "UNIT" ]
+            "enum" : [ "BOX", "UNIT", "AGGREGATE" ]
           },
           "orderId" : {
             "type" : "integer",
@@ -33108,7 +33121,7 @@
           },
           "kind" : {
             "type" : "string",
-            "enum" : [ "BOX", "UNIT" ]
+            "enum" : [ "BOX", "UNIT", "AGGREGATE" ]
           },
           "note" : {
             "type" : "string"
@@ -33867,6 +33880,17 @@
             "type" : "string",
             "maxLength" : 300,
             "minLength" : 0
+          },
+          "gtin" : {
+            "type" : "string",
+            "description" : "O16: quti (SSCC) kodi mahsulotining GTIN/shtrix-kodi (Excel ustuni)",
+            "maxLength" : 14,
+            "minLength" : 0
+          },
+          "lineId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "O16: quti (SSCC) kodi qaysi qatorga — bir nechta markirovkali qator bo'lsa qo'lda tanlanadi"
           }
         },
         "required" : [ "code" ]

@@ -2,7 +2,7 @@ import { createTranslator } from "next-intl";
 import { describe, expect, it } from "vitest";
 import { uzLatn } from "@/i18n/messages.generated";
 import { canApprove, canCancelOrder, codesExportUrl } from "./api";
-import { confirmText, counterText } from "./marking-page";
+import { codeText, confirmText, counterText } from "./marking-page";
 import { statusTabs, tabSummary } from "./orders-page";
 import { groupByStage, sinceText, type MonitorCard } from "./monitor-page";
 import { clockLeft, timerText } from "./picking-page";
@@ -48,9 +48,18 @@ describe("clockLeft (Yigʻuvchi paneli taymeri)", () => {
 });
 
 describe("markirovka hisoblagichi", () => {
-  it("quti va dona alohida", () => {
-    expect(counterText({ boxesScanned: 10, boxesNeeded: 10, unitsScanned: 3, unitsNeeded: 25 }, t)).toBe("10 / 10 quti · 3 / 25 dona");
-    expect(counterText({ boxesScanned: 0, boxesNeeded: 0, unitsScanned: 1, unitsNeeded: 2 }, t)).toBe("1 / 2 dona");
+  it("O16: quti (SSCC) va ochiq donalar — «3 quti (300 dona) + 10 dona = 310 / 310»", () => {
+    expect(counterText({ boxCodes: 3, boxUnits: 300, unitCodes: 10, scannedQty: 310, neededQty: 310 }, t)).toBe(
+      "3 quti (300 dona) + 10 dona = 310 / 310",
+    );
+    expect(counterText({ boxCodes: 0, boxUnits: 0, unitCodes: 1, scannedQty: 1, neededQty: 2 }, t)).toBe("1 / 2 dona");
+  });
+
+  it("kod qatori: quti — SSCC va dona soni", () => {
+    expect(codeText({ serial: "047800116744728760", batch: "LOT-A", kind: "AGGREGATE", units: 100 }, t)).toBe(
+      "047800116744728760 · LOT-A · SSCC · quti (100 dona)",
+    );
+    expect(codeText({ serial: "7HTFlJLN7jbo3", batch: "LOT-A", kind: "UNIT", units: 1 }, t)).toBe("7HTFlJLN7jbo3 · LOT-A · dona");
   });
 });
 
