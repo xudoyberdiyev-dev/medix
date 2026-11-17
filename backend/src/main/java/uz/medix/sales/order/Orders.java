@@ -627,10 +627,6 @@ class Orders {
                 owner.owner(), owner.manual()));
     }
 
-    /**
-     * Qator bo'yicha yig'ilgan miqdor: terilgan − yig'ishga qaytarilgan (V45 dan qator bo'yicha; undan oldingilari — shu qatorda
-     * terilgan partiya bo'yicha). Yig'ish boshlanmagan qatorlar ro'yxatda yo'q.
-     */
     /** O13: mahsulotlarning ombordagi joyi (catalog moduli jadvali, faqat o'qish). */
     private Map<Long, String> locations(long warehouseId, List<Long> productIds) {
         if (productIds.isEmpty()) {
@@ -645,6 +641,10 @@ class Orders {
         return m;
     }
 
+    /**
+     * Qator bo'yicha yig'ilgan miqdor: terilgan − yig'ishga qaytarilgan (V45 dan qator bo'yicha; undan oldingilari — shu qatorda
+     * terilgan partiya bo'yicha). Yig'ish boshlanmagan qatorlar ro'yxatda yo'q.
+     */
     private Map<Long, Integer> pickedByLine(long orderId) {
         Map<Long, Integer> out = new HashMap<>();
         jdbc.sql("""
