@@ -1353,7 +1353,7 @@
     "/api/branch-sales/{id}/pdf" : {
       "get" : {
         "description" : "Narx, summa va QQS — faqat special.cost.",
-        "operationId" : "pdf_5",
+        "operationId" : "pdf_6",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -5571,7 +5571,7 @@
     "/api/inventory-counts/{id}/pdf" : {
       "get" : {
         "description" : "Sanoqda — sanoq varag'i («Sanaldi» bo'sh), keyin — farqlar bilan qaydnoma. Tannarx — faqat prices.cost.",
-        "operationId" : "pdf_4",
+        "operationId" : "pdf_5",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -8478,6 +8478,88 @@
         "tags" : [ "orders" ]
       }
     },
+    "/api/orders/invoice-forms/{type}/pdf" : {
+      "get" : {
+        "description" : "50 tagacha buyurtma; har buyurtma yangi sahifadan.",
+        "operationId" : "pdfMany",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "type",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "WAREHOUSE", "WAREHOUSE2", "CLIENT_SEND", "CLIENT1", "CLIENT2" ]
+          }
+        }, {
+          "in" : "query",
+          "name" : "ids",
+          "required" : true,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/pdf" : {
+                "schema" : {
+                  "type" : "string",
+                  "format" : "byte"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Faktura PDF — ommaviy (reys / ro'yxat)",
+        "tags" : [ "invoice-forms" ]
+      }
+    },
+    "/api/orders/invoice-forms/{type}/xlsx" : {
+      "get" : {
+        "description" : "50 tagacha buyurtma; har buyurtma alohida varaqda. Narxli turlar — prices.view.",
+        "operationId" : "xlsxMany",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "type",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "WAREHOUSE", "WAREHOUSE2", "CLIENT_SEND", "CLIENT1", "CLIENT2" ]
+          }
+        }, {
+          "in" : "query",
+          "name" : "ids",
+          "required" : true,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "string",
+                  "format" : "byte"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Faktura .xlsx — ommaviy (reys / ro'yxat)",
+        "tags" : [ "invoice-forms" ]
+      }
+    },
     "/api/orders/invoices/pdf" : {
       "get" : {
         "description" : "Bir nechta buyurtma (masalan, reys boʻyicha), 50 tagacha; sotuvi yoʻq buyurtmalar oʻtkazib yuboriladi (O11).",
@@ -9173,6 +9255,44 @@
           }
         },
         "summary" : "Tuzatilgan holatni saqlash (avtosaqlash)",
+        "tags" : [ "invoice-forms" ]
+      }
+    },
+    "/api/orders/{id}/invoice-forms/{type}/pdf" : {
+      "get" : {
+        "description" : "Excel bilan bir xil ustunlar va tuzatishlar; narxli turlar — prices.view.",
+        "operationId" : "pdf_4",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "path",
+          "name" : "type",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "WAREHOUSE", "WAREHOUSE2", "CLIENT_SEND", "CLIENT1", "CLIENT2" ]
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/pdf" : {
+                "schema" : {
+                  "type" : "string",
+                  "format" : "byte"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Faktura PDF (5 tur)",
         "tags" : [ "invoice-forms" ]
       }
     },
