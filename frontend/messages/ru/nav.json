@@ -35,5 +35,6 @@
   "audit": "Журнал аудита",
   "settings": "Настройки",
   "reserveCodes": "Резервные коды",
-  "invoices": "Фактуры"
+  "invoices": "Фактуры",
+  "messages": "Сообщения"
 }

@@ -156,6 +156,9 @@
     "description" : "Ombor ko'chirishi (OK)",
     "name" : "warehouse-transfer"
   }, {
+    "description" : "Ichki xabarlar va topshiriqlar",
+    "name" : "messages"
+  }, {
     "description" : "Ko'chirish — ZK, OK, FS bitta ro'yxatda",
     "name" : "transfer-overview"
   }, {
@@ -1416,7 +1419,7 @@
     "/api/branch-sales/{id}/send" : {
       "post" : {
         "description" : "Tovar chiqadi, HF raqami beriladi, xaridor filial qarzi oshadi; hujjat «Yo'lda».",
-        "operationId" : "send_1",
+        "operationId" : "send_2",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -5466,7 +5469,7 @@
     "/api/inventory-counts/{id}/start" : {
       "post" : {
         "description" : "Qoldiq surati olinadi, qamrovdagi zonalarda ombor harakati to'xtatiladi.",
-        "operationId" : "start_2",
+        "operationId" : "start_3",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -5630,7 +5633,7 @@
     },
     "/api/invoice-tasks/files/{fileId}" : {
       "get" : {
-        "operationId" : "file",
+        "operationId" : "file_1",
         "parameters" : [ {
           "in" : "path",
           "name" : "fileId",
@@ -5709,7 +5712,7 @@
     "/api/invoice-tasks/{id}/files" : {
       "post" : {
         "description" : "PDF, JPG, PNG; ≤ 10 MB. Faqat «Yuborilishi kerak» holatida.",
-        "operationId" : "upload",
+        "operationId" : "upload_1",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -6326,7 +6329,7 @@
     "/api/marking/orders/{id}/start" : {
       "post" : {
         "description" : "Bir markirovkachida bitta faol buyurtma.",
-        "operationId" : "start_1",
+        "operationId" : "start_2",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -6394,6 +6397,445 @@
         },
         "summary" : "Markirovka navbati",
         "tags" : [ "marking" ]
+      }
+    },
+    "/api/messages/files" : {
+      "post" : {
+        "description" : "Istalgan fayl (rasm, PDF, Excel, Word …) ≤ 20 MB; yuborishda fileIds bilan biriktiriladi.",
+        "operationId" : "upload",
+        "requestBody" : {
+          "content" : {
+            "multipart/form-data" : {
+              "schema" : {
+                "type" : "object",
+                "properties" : {
+                  "file" : {
+                    "type" : "string",
+                    "format" : "binary"
+                  }
+                },
+                "required" : [ "file" ]
+              }
+            }
+          }
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/MessageFile"
+                }
+              }
+            },
+            "description" : "Created"
+          }
+        },
+        "summary" : "Biriktirma yuklash",
+        "tags" : [ "messages" ]
+      }
+    },
+    "/api/messages/files/{fileId}" : {
+      "get" : {
+        "description" : "Faqat suhbat qatnashchilariga. inline=true — rasmni ko'rish oynasi uchun.",
+        "operationId" : "file",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "fileId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "inline",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "string",
+                  "format" : "byte"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Biriktirmani yuklab olish",
+        "tags" : [ "messages" ]
+      }
+    },
+    "/api/messages/recipients" : {
+      "get" : {
+        "description" : "Xodimlar (filial doirasida), rol va filiallar (faqat messages.broadcast bilan).",
+        "operationId" : "recipients",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Recipients"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Kimga yozish mumkin",
+        "tags" : [ "messages" ]
+      }
+    },
+    "/api/messages/tasks" : {
+      "get" : {
+        "description" : "MINE — menga berilgan, GIVEN — men bergan; holat va «muddati o'tgan» filtri.",
+        "operationId" : "tasks",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "scope",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "default" : "MINE",
+            "enum" : [ "MINE", "GIVEN" ]
+          }
+        }, {
+          "in" : "query",
+          "name" : "status",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "NEW", "IN_PROGRESS", "DONE", "CANCELLED" ]
+          }
+        }, {
+          "in" : "query",
+          "name" : "overdue",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/TaskItem"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Topshiriqlar",
+        "tags" : [ "messages" ]
+      }
+    },
+    "/api/messages/threads" : {
+      "get" : {
+        "description" : "Oxirgi xabar bo'yicha; qidiruv — xodim, matn, rol yoki filial nomi.",
+        "operationId" : "threads",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "q",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ThreadList"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Suhbatlar ro'yxati",
+        "tags" : [ "messages" ]
+      },
+      "post" : {
+        "description" : "Bitta xodimga — mavjud shaxsiy suhbatga qo'shiladi; bir nechta xodim, rol yoki filialga — yangi guruh suhbati.",
+        "operationId" : "start_1",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/NewThreadRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Created"
+                }
+              }
+            },
+            "description" : "Created"
+          }
+        },
+        "summary" : "Yangi xabar",
+        "tags" : [ "messages" ]
+      }
+    },
+    "/api/messages/threads/{id}" : {
+      "get" : {
+        "description" : "Oxirgi 50 ta xabar; oldingilari — before=<eng eski xabar id>.",
+        "operationId" : "thread",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "before",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ThreadDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Suhbat",
+        "tags" : [ "messages" ]
+      }
+    },
+    "/api/messages/threads/{id}/messages" : {
+      "post" : {
+        "operationId" : "send_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SendRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Created"
+                }
+              }
+            },
+            "description" : "Created"
+          }
+        },
+        "summary" : "Suhbatga xabar yoki topshiriq yuborish",
+        "tags" : [ "messages" ]
+      }
+    },
+    "/api/messages/threads/{id}/read" : {
+      "post" : {
+        "operationId" : "read_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/MarkReadRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        },
+        "summary" : "O'qildi deb belgilash (shu xabargacha)",
+        "tags" : [ "messages" ]
+      }
+    },
+    "/api/messages/unread" : {
+      "get" : {
+        "operationId" : "unread",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/UnreadCounts"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "O'qilmagan xabarlar va ochiq topshiriqlar soni (topbar)",
+        "tags" : [ "messages" ]
+      }
+    },
+    "/api/messages/{messageId}" : {
+      "delete" : {
+        "description" : "Faqat o'ziniki, 15 daqiqa ichida; «o'chirildi» izi qoladi. Topshiriq — «Bekor qilish».",
+        "operationId" : "delete",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "messageId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        },
+        "summary" : "Xabarni o'chirish",
+        "tags" : [ "messages" ]
+      },
+      "patch" : {
+        "description" : "Faqat o'ziniki, yuborilgandan 15 daqiqa ichida.",
+        "operationId" : "edit",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "messageId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/EditRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        },
+        "summary" : "Xabarni tahrirlash",
+        "tags" : [ "messages" ]
+      }
+    },
+    "/api/messages/{messageId}/reads" : {
+      "get" : {
+        "operationId" : "reads",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "messageId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ReadReceipt"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Kim o'qidi (guruh xabari)",
+        "tags" : [ "messages" ]
+      }
+    },
+    "/api/messages/{messageId}/status" : {
+      "post" : {
+        "description" : "Ijrochi: IN_PROGRESS, DONE (o'z holati). Yuboruvchi: NEW — «Qayta ochish», CANCELLED — «Bekor qilish».",
+        "operationId" : "status_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "messageId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/StatusRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        },
+        "summary" : "Topshiriq holati",
+        "tags" : [ "messages" ]
       }
     },
     "/api/money-accounts" : {
@@ -14040,7 +14482,7 @@
     },
     "/api/setup" : {
       "get" : {
-        "operationId" : "status_1",
+        "operationId" : "status_2",
         "responses" : {
           "200" : {
             "content" : {
@@ -18515,6 +18957,31 @@
         },
         "required" : [ "orders", "prices", "resolvedToday" ]
       },
+      "Assignee" : {
+        "type" : "object",
+        "properties" : {
+          "doneAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "employeeId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "fullName" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "NEW", "IN_PROGRESS", "DONE", "CANCELLED" ]
+          },
+          "updatedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        },
+        "required" : [ "employeeId", "fullName", "status", "updatedAt" ]
+      },
       "Attention" : {
         "type" : "object",
         "properties" : {
@@ -19619,6 +20086,19 @@
           }
         },
         "required" : [ "bank", "cash", "id", "name", "total" ]
+      },
+      "BranchOption" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "name" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "id", "name" ]
       },
       "BranchPayment" : {
         "type" : "object",
@@ -21782,6 +22262,20 @@
         },
         "required" : [ "branchId", "name" ]
       },
+      "Created" : {
+        "type" : "object",
+        "properties" : {
+          "messageId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "threadId" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "messageId", "threadId" ]
+      },
       "CreditDetail" : {
         "type" : "object",
         "properties" : {
@@ -22740,6 +23234,17 @@
         },
         "required" : [ "barcodes" ]
       },
+      "EditRequest" : {
+        "type" : "object",
+        "properties" : {
+          "body" : {
+            "type" : "string",
+            "maxLength" : 4000,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "body" ]
+      },
       "Employee" : {
         "type" : "object",
         "properties" : {
@@ -23123,6 +23628,29 @@
           }
         },
         "required" : [ "active", "categories", "countries", "inactive", "manufacturers", "supplyEmployees" ]
+      },
+      "FileInfo" : {
+        "type" : "object",
+        "properties" : {
+          "contentType" : {
+            "type" : "string"
+          },
+          "fileName" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "image" : {
+            "type" : "boolean"
+          },
+          "sizeBytes" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "contentType", "fileName", "id", "image", "sizeBytes" ]
       },
       "FilterOption" : {
         "type" : "object",
@@ -25410,6 +25938,16 @@
         },
         "required" : [ "boxesNeeded", "customer", "deliveryType", "id", "lines", "number", "statusChangedAt", "totalQty", "unitsNeeded", "unmarkedLines" ]
       },
+      "MarkReadRequest" : {
+        "type" : "object",
+        "properties" : {
+          "upToMessageId" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "upToMessageId" ]
+      },
       "MarkWork" : {
         "type" : "object",
         "properties" : {
@@ -25649,6 +26187,104 @@
         },
         "required" : [ "id", "name" ]
       },
+      "MessageFile" : {
+        "type" : "object",
+        "properties" : {
+          "contentType" : {
+            "type" : "string"
+          },
+          "fileName" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "image" : {
+            "type" : "boolean"
+          },
+          "sizeBytes" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "contentType", "fileName", "id", "image", "sizeBytes" ]
+      },
+      "MessageItem" : {
+        "type" : "object",
+        "properties" : {
+          "assignees" : {
+            "type" : "array",
+            "description" : "Topshiriq ijrochilari (xabarda bo'sh)",
+            "items" : {
+              "$ref" : "#/components/schemas/Assignee"
+            }
+          },
+          "body" : {
+            "type" : "string",
+            "description" : "O'chirilgan xabarda null"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "deletedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "dueAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "editable" : {
+            "type" : "boolean",
+            "description" : "Joriy xodim tahrirlashi/o'chirishi mumkin (o'ziniki, 15 daqiqa ichida)"
+          },
+          "editedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "files" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/FileInfo"
+            }
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "kind" : {
+            "type" : "string",
+            "enum" : [ "MESSAGE", "TASK" ]
+          },
+          "readCount" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "O'qigan qatnashchilar soni (yuboruvchidan tashqari)"
+          },
+          "recipientCount" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Qabul qiluvchilar soni (yuboruvchidan tashqari)"
+          },
+          "senderId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "senderName" : {
+            "type" : "string"
+          },
+          "taskTitle" : {
+            "type" : "string"
+          },
+          "threadId" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "assignees", "createdAt", "editable", "files", "id", "kind", "readCount", "recipientCount", "senderId", "senderName", "threadId" ]
+      },
       "MonitorBoard" : {
         "type" : "object",
         "properties" : {
@@ -25861,6 +26497,36 @@
           }
         },
         "required" : [ "code" ]
+      },
+      "NewThreadRequest" : {
+        "type" : "object",
+        "properties" : {
+          "audience" : {
+            "type" : "string",
+            "enum" : [ "PERSON", "PEOPLE", "ROLE", "BRANCH" ]
+          },
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "ROLE/BRANCH — filial; ROLE da null — barcha filiallar (faqat barcha filiallar doirasi)"
+          },
+          "employeeIds" : {
+            "type" : "array",
+            "description" : "PERSON/PEOPLE — xodimlar",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          },
+          "message" : {
+            "$ref" : "#/components/schemas/SendRequest"
+          },
+          "roleCode" : {
+            "type" : "string",
+            "description" : "ROLE — rol kodi"
+          }
+        },
+        "required" : [ "audience", "message" ]
       },
       "NotificationItem" : {
         "type" : "object",
@@ -28533,6 +29199,32 @@
         },
         "required" : [ "permissions" ]
       },
+      "Person" : {
+        "type" : "object",
+        "properties" : {
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "branchName" : {
+            "type" : "string"
+          },
+          "fullName" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "roleCode" : {
+            "type" : "string"
+          },
+          "roleName" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "fullName", "id" ]
+      },
       "PhotoResult" : {
         "type" : "object",
         "properties" : {
@@ -30243,6 +30935,22 @@
         },
         "required" : [ "bonus", "bonusDue", "due", "ownGoods", "ownMoves", "receipts", "supplierDebt", "today", "topSuppliers" ]
       },
+      "ReadReceipt" : {
+        "type" : "object",
+        "properties" : {
+          "employeeId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "fullName" : {
+            "type" : "string"
+          },
+          "read" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "employeeId", "fullName", "read" ]
+      },
       "ReadyOrder" : {
         "type" : "object",
         "properties" : {
@@ -31236,6 +31944,33 @@
         },
         "required" : [ "customer", "id", "number", "status", "total" ]
       },
+      "Recipients" : {
+        "type" : "object",
+        "properties" : {
+          "branches" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/BranchOption"
+            }
+          },
+          "canBroadcast" : {
+            "type" : "boolean"
+          },
+          "people" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Person"
+            }
+          },
+          "roles" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/RoleOption"
+            }
+          }
+        },
+        "required" : [ "branches", "canBroadcast", "people", "roles" ]
+      },
       "ReconCreateRequest" : {
         "type" : "object",
         "properties" : {
@@ -32191,6 +32926,18 @@
         },
         "required" : [ "active", "home", "name", "permissions", "scope" ]
       },
+      "RoleOption" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "code", "name" ]
+      },
       "RoleRef" : {
         "type" : "object",
         "properties" : {
@@ -32542,6 +33289,38 @@
           }
         },
         "required" : [ "used" ]
+      },
+      "SendRequest" : {
+        "type" : "object",
+        "properties" : {
+          "body" : {
+            "type" : "string",
+            "maxLength" : 4000,
+            "minLength" : 0
+          },
+          "dueAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "fileIds" : {
+            "type" : "array",
+            "description" : "Oldin yuklangan fayllar",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          },
+          "kind" : {
+            "type" : "string",
+            "enum" : [ "MESSAGE", "TASK" ]
+          },
+          "taskTitle" : {
+            "type" : "string",
+            "maxLength" : 200,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "kind" ]
       },
       "SessionInfo" : {
         "type" : "object",
@@ -33063,6 +33842,16 @@
           }
         },
         "required" : [ "count", "total" ]
+      },
+      "StatusRequest" : {
+        "type" : "object",
+        "properties" : {
+          "status" : {
+            "type" : "string",
+            "enum" : [ "NEW", "IN_PROGRESS", "DONE", "CANCELLED" ]
+          }
+        },
+        "required" : [ "status" ]
       },
       "StockLine" : {
         "type" : "object",
@@ -34110,6 +34899,55 @@
         },
         "required" : [ "branch", "id", "name" ]
       },
+      "TaskItem" : {
+        "type" : "object",
+        "properties" : {
+          "assignees" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Assignee"
+            }
+          },
+          "body" : {
+            "type" : "string"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "dueAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "messageId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "overdue" : {
+            "type" : "boolean"
+          },
+          "senderId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "senderName" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string",
+            "description" : "MINE — mening holatim; GIVEN — umumiy (hammasi bajarilgan → DONE, hammasi bekor → CANCELLED, aks holda eng orqadagi)",
+            "enum" : [ "NEW", "IN_PROGRESS", "DONE", "CANCELLED" ]
+          },
+          "threadId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "title" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "assignees", "createdAt", "messageId", "overdue", "senderId", "senderName", "status", "threadId", "title" ]
+      },
       "Terms" : {
         "type" : "object",
         "properties" : {
@@ -34222,6 +35060,105 @@
             "format" : "int64"
           }
         }
+      },
+      "ThreadDetail" : {
+        "type" : "object",
+        "properties" : {
+          "hasMore" : {
+            "type" : "boolean"
+          },
+          "messages" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/MessageItem"
+            }
+          },
+          "participants" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Person"
+            }
+          },
+          "thread" : {
+            "$ref" : "#/components/schemas/ThreadSummary"
+          }
+        },
+        "required" : [ "hasMore", "messages", "participants", "thread" ]
+      },
+      "ThreadList" : {
+        "type" : "object",
+        "properties" : {
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ThreadSummary"
+            }
+          },
+          "unreadTotal" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "items", "unreadTotal" ]
+      },
+      "ThreadSummary" : {
+        "type" : "object",
+        "properties" : {
+          "audience" : {
+            "type" : "string",
+            "enum" : [ "PERSON", "PEOPLE", "ROLE", "BRANCH" ]
+          },
+          "audienceBranchName" : {
+            "type" : "string",
+            "description" : "ROLE/BRANCH — filial (ROLE da null — barcha filiallar)"
+          },
+          "audienceRole" : {
+            "type" : "string",
+            "description" : "ROLE — rol kodi"
+          },
+          "audienceRoleName" : {
+            "type" : "string",
+            "description" : "ROLE — rol nomi"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "kind" : {
+            "type" : "string",
+            "enum" : [ "DIRECT", "GROUP" ]
+          },
+          "lastKind" : {
+            "type" : "string",
+            "enum" : [ "MESSAGE", "TASK" ]
+          },
+          "lastMessageAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "lastSenderName" : {
+            "type" : "string"
+          },
+          "lastText" : {
+            "type" : "string"
+          },
+          "others" : {
+            "type" : "array",
+            "description" : "Qatnashchilar (o'zidan tashqari), ko'pi bilan 5 ta",
+            "items" : {
+              "$ref" : "#/components/schemas/Person"
+            }
+          },
+          "participantCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "unread" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "audience", "id", "kind", "lastMessageAt", "others", "participantCount", "unread" ]
       },
       "TimeRequest" : {
         "type" : "object",
@@ -34933,6 +35870,20 @@
           }
         },
         "required" : [ "confirmed", "lineId", "lineNo", "productCode", "productName", "qty", "unit" ]
+      },
+      "UnreadCounts" : {
+        "type" : "object",
+        "properties" : {
+          "messages" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "openTasks" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "messages", "openTasks" ]
       },
       "UpdateBranchRequest" : {
         "type" : "object",

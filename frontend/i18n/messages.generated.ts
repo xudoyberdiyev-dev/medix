@@ -6,6 +6,7 @@ import uzLatn_bonuses from "@/messages/uz-Latn/bonuses.json";
 import uzLatn_branchPanel from "@/messages/uz-Latn/branchPanel.json";
 import uzLatn_branchSales from "@/messages/uz-Latn/branchSales.json";
 import uzLatn_cash from "@/messages/uz-Latn/cash.json";
+import uzLatn_chat from "@/messages/uz-Latn/chat.json";
 import uzLatn_common from "@/messages/uz-Latn/common.json";
 import uzLatn_company from "@/messages/uz-Latn/company.json";
 import uzLatn_counterparties from "@/messages/uz-Latn/counterparties.json";
@@ -56,6 +57,7 @@ import uzCyrl_bonuses from "@/messages/uz-Cyrl/bonuses.json";
 import uzCyrl_branchPanel from "@/messages/uz-Cyrl/branchPanel.json";
 import uzCyrl_branchSales from "@/messages/uz-Cyrl/branchSales.json";
 import uzCyrl_cash from "@/messages/uz-Cyrl/cash.json";
+import uzCyrl_chat from "@/messages/uz-Cyrl/chat.json";
 import uzCyrl_common from "@/messages/uz-Cyrl/common.json";
 import uzCyrl_company from "@/messages/uz-Cyrl/company.json";
 import uzCyrl_counterparties from "@/messages/uz-Cyrl/counterparties.json";
@@ -106,6 +108,7 @@ import ru_bonuses from "@/messages/ru/bonuses.json";
 import ru_branchPanel from "@/messages/ru/branchPanel.json";
 import ru_branchSales from "@/messages/ru/branchSales.json";
 import ru_cash from "@/messages/ru/cash.json";
+import ru_chat from "@/messages/ru/chat.json";
 import ru_common from "@/messages/ru/common.json";
 import ru_company from "@/messages/ru/company.json";
 import ru_counterparties from "@/messages/ru/counterparties.json";
@@ -158,6 +161,7 @@ export const uzLatn = {
   "branchPanel": uzLatn_branchPanel,
   "branchSales": uzLatn_branchSales,
   "cash": uzLatn_cash,
+  "chat": uzLatn_chat,
   "common": uzLatn_common,
   "company": uzLatn_company,
   "counterparties": uzLatn_counterparties,
@@ -211,6 +215,7 @@ export const uzCyrl = {
   "branchPanel": uzCyrl_branchPanel,
   "branchSales": uzCyrl_branchSales,
   "cash": uzCyrl_cash,
+  "chat": uzCyrl_chat,
   "common": uzCyrl_common,
   "company": uzCyrl_company,
   "counterparties": uzCyrl_counterparties,
@@ -264,6 +269,7 @@ export const ru = {
   "branchPanel": ru_branchPanel,
   "branchSales": ru_branchSales,
   "cash": ru_cash,
+  "chat": ru_chat,
   "common": ru_common,
   "company": ru_company,
   "counterparties": ru_counterparties,

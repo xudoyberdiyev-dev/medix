@@ -584,7 +584,7 @@ export interface paths {
          * Jo'natish
          * @description Tovar chiqadi, HF raqami beriladi, xaridor filial qarzi oshadi; hujjat «Yo'lda».
          */
-        post: operations["send_1"];
+        post: operations["send_2"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2417,7 +2417,7 @@ export interface paths {
          * Sanoqni ochish
          * @description Qoldiq surati olinadi, qamrovdagi zonalarda ombor harakati to'xtatiladi.
          */
-        post: operations["start_2"];
+        post: operations["start_3"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2492,7 +2492,7 @@ export interface paths {
             cookie?: never;
         };
         /** Yuklangan faylni yuklab olish */
-        get: operations["file"];
+        get: operations["file_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2548,7 +2548,7 @@ export interface paths {
          * E-faktura / TTN faylini yuklash
          * @description PDF, JPG, PNG; ≤ 10 MB. Faqat «Yuborilishi kerak» holatida.
          */
-        post: operations["upload"];
+        post: operations["upload_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2856,7 +2856,7 @@ export interface paths {
          * Markirovkani boshlash
          * @description Bir markirovkachida bitta faol buyurtma.
          */
-        post: operations["start_1"];
+        post: operations["start_2"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2894,6 +2894,242 @@ export interface paths {
         get: operations["queue"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/messages/files": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Biriktirma yuklash
+         * @description Istalgan fayl (rasm, PDF, Excel, Word …) ≤ 20 MB; yuborishda fileIds bilan biriktiriladi.
+         */
+        post: operations["upload"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/messages/files/{fileId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Biriktirmani yuklab olish
+         * @description Faqat suhbat qatnashchilariga. inline=true — rasmni ko'rish oynasi uchun.
+         */
+        get: operations["file"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/messages/recipients": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Kimga yozish mumkin
+         * @description Xodimlar (filial doirasida), rol va filiallar (faqat messages.broadcast bilan).
+         */
+        get: operations["recipients"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/messages/tasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Topshiriqlar
+         * @description MINE — menga berilgan, GIVEN — men bergan; holat va «muddati o'tgan» filtri.
+         */
+        get: operations["tasks"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/messages/threads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Suhbatlar ro'yxati
+         * @description Oxirgi xabar bo'yicha; qidiruv — xodim, matn, rol yoki filial nomi.
+         */
+        get: operations["threads"];
+        put?: never;
+        /**
+         * Yangi xabar
+         * @description Bitta xodimga — mavjud shaxsiy suhbatga qo'shiladi; bir nechta xodim, rol yoki filialga — yangi guruh suhbati.
+         */
+        post: operations["start_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/messages/threads/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Suhbat
+         * @description Oxirgi 50 ta xabar; oldingilari — before=<eng eski xabar id>.
+         */
+        get: operations["thread"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/messages/threads/{id}/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Suhbatga xabar yoki topshiriq yuborish */
+        post: operations["send_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/messages/threads/{id}/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** O'qildi deb belgilash (shu xabargacha) */
+        post: operations["read_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/messages/unread": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** O'qilmagan xabarlar va ochiq topshiriqlar soni (topbar) */
+        get: operations["unread"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/messages/{messageId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Xabarni o'chirish
+         * @description Faqat o'ziniki, 15 daqiqa ichida; «o'chirildi» izi qoladi. Topshiriq — «Bekor qilish».
+         */
+        delete: operations["delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Xabarni tahrirlash
+         * @description Faqat o'ziniki, yuborilgandan 15 daqiqa ichida.
+         */
+        patch: operations["edit"];
+        trace?: never;
+    };
+    "/api/messages/{messageId}/reads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Kim o'qidi (guruh xabari) */
+        get: operations["reads"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/messages/{messageId}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Topshiriq holati
+         * @description Ijrochi: IN_PROGRESS, DONE (o'z holati). Yuboruvchi: NEW — «Qayta ochish», CANCELLED — «Bekor qilish».
+         */
+        post: operations["status_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -6053,7 +6289,7 @@ export interface paths {
             cookie?: never;
         };
         /** Usta holati */
-        get: operations["status_1"];
+        get: operations["status_2"];
         put?: never;
         post?: never;
         delete?: never;
@@ -8018,6 +8254,17 @@ export interface components {
             prices: components["schemas"]["PriceApproval"][];
             resolvedToday: components["schemas"]["ResolvedApproval"][];
         };
+        Assignee: {
+            /** Format: date-time */
+            doneAt?: string;
+            /** Format: int64 */
+            employeeId: number;
+            fullName: string;
+            /** @enum {string} */
+            status: "NEW" | "IN_PROGRESS" | "DONE" | "CANCELLED";
+            /** Format: date-time */
+            updatedAt: string;
+        };
         Attention: {
             /** Format: int32 */
             bonusDue: number;
@@ -8464,6 +8711,11 @@ export interface components {
             id: number;
             name: string;
             total: string;
+        };
+        BranchOption: {
+            /** Format: int64 */
+            id: number;
+            name: string;
         };
         BranchPayment: {
             amount: string;
@@ -9259,6 +9511,12 @@ export interface components {
             extraZones?: ("RECEIVING" | "MAIN" | "QUARANTINE" | "SHIPPING" | "COLD" | "SAFE")[];
             name: string;
         };
+        Created: {
+            /** Format: int64 */
+            messageId: number;
+            /** Format: int64 */
+            threadId: number;
+        };
         CreditDetail: {
             /** Format: int32 */
             avgDelayDays: number;
@@ -9640,6 +9898,9 @@ export interface components {
             codeOwner?: components["schemas"]["Ref"];
             sameName?: components["schemas"]["Ref"];
         };
+        EditRequest: {
+            body: string;
+        };
         Employee: {
             /** @description Buxgalterga Direktor bergan «barcha filiallar» doirasi (E3) */
             allBranches: boolean;
@@ -9785,6 +10046,15 @@ export interface components {
             inactive: number;
             manufacturers: components["schemas"]["Facet"][];
             supplyEmployees: components["schemas"]["Facet"][];
+        };
+        FileInfo: {
+            contentType: string;
+            fileName: string;
+            /** Format: int64 */
+            id: number;
+            image: boolean;
+            /** Format: int32 */
+            sizeBytes: number;
         };
         FilterOption: {
             /** Format: int64 */
@@ -10719,6 +10989,10 @@ export interface components {
              */
             unmarkedLines: number;
         };
+        MarkReadRequest: {
+            /** Format: int64 */
+            upToMessageId: number;
+        };
         MarkWork: {
             /** Format: int32 */
             boxesNeeded: number;
@@ -10815,6 +11089,52 @@ export interface components {
             /** Format: int64 */
             id: number;
             name: string;
+        };
+        MessageFile: {
+            contentType: string;
+            fileName: string;
+            /** Format: int64 */
+            id: number;
+            image: boolean;
+            /** Format: int32 */
+            sizeBytes: number;
+        };
+        MessageItem: {
+            /** @description Topshiriq ijrochilari (xabarda bo'sh) */
+            assignees: components["schemas"]["Assignee"][];
+            /** @description O'chirilgan xabarda null */
+            body?: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            deletedAt?: string;
+            /** Format: date-time */
+            dueAt?: string;
+            /** @description Joriy xodim tahrirlashi/o'chirishi mumkin (o'ziniki, 15 daqiqa ichida) */
+            editable: boolean;
+            /** Format: date-time */
+            editedAt?: string;
+            files: components["schemas"]["FileInfo"][];
+            /** Format: int64 */
+            id: number;
+            /** @enum {string} */
+            kind: "MESSAGE" | "TASK";
+            /**
+             * Format: int32
+             * @description O'qigan qatnashchilar soni (yuboruvchidan tashqari)
+             */
+            readCount: number;
+            /**
+             * Format: int32
+             * @description Qabul qiluvchilar soni (yuboruvchidan tashqari)
+             */
+            recipientCount: number;
+            /** Format: int64 */
+            senderId: number;
+            senderName: string;
+            taskTitle?: string;
+            /** Format: int64 */
+            threadId: number;
         };
         MonitorBoard: {
             cards: components["schemas"]["MonitorCard"][];
@@ -10922,6 +11242,20 @@ export interface components {
         };
         NewCode: {
             code: string;
+        };
+        NewThreadRequest: {
+            /** @enum {string} */
+            audience: "PERSON" | "PEOPLE" | "ROLE" | "BRANCH";
+            /**
+             * Format: int64
+             * @description ROLE/BRANCH — filial; ROLE da null — barcha filiallar (faqat barcha filiallar doirasi)
+             */
+            branchId?: number;
+            /** @description PERSON/PEOPLE — xodimlar */
+            employeeIds?: number[];
+            message: components["schemas"]["SendRequest"];
+            /** @description ROLE — rol kodi */
+            roleCode?: string;
         };
         NotificationItem: {
             body?: string;
@@ -12020,6 +12354,16 @@ export interface components {
         PermissionsRequest: {
             permissions: string[];
         };
+        Person: {
+            /** Format: int64 */
+            branchId?: number;
+            branchName?: string;
+            fullName: string;
+            /** Format: int64 */
+            id: number;
+            roleCode?: string;
+            roleName?: string;
+        };
         PhotoResult: {
             /** Format: int64 */
             id: number;
@@ -12703,6 +13047,12 @@ export interface components {
             today: string;
             topSuppliers: components["schemas"]["Debtor"][];
         };
+        ReadReceipt: {
+            /** Format: int64 */
+            employeeId: number;
+            fullName: string;
+            read: boolean;
+        };
         ReadyOrder: {
             address?: string;
             /** Format: int64 */
@@ -13130,6 +13480,12 @@ export interface components {
             status: string;
             total: string;
         };
+        Recipients: {
+            branches: components["schemas"]["BranchOption"][];
+            canBroadcast: boolean;
+            people: components["schemas"]["Person"][];
+            roles: components["schemas"]["RoleOption"][];
+        };
         ReconCreateRequest: {
             /** Format: int64 */
             branchId: number;
@@ -13528,6 +13884,10 @@ export interface components {
             permissions: string[];
             scope: string;
         };
+        RoleOption: {
+            code: string;
+            name: string;
+        };
         RoleRef: {
             code: string;
             /**
@@ -13671,6 +14031,16 @@ export interface components {
              * @description Bloklanmagan xodimlar
              */
             used: number;
+        };
+        SendRequest: {
+            body?: string;
+            /** Format: date-time */
+            dueAt?: string;
+            /** @description Oldin yuklangan fayllar */
+            fileIds?: number[];
+            /** @enum {string} */
+            kind: "MESSAGE" | "TASK";
+            taskTitle?: string;
         };
         SessionInfo: {
             /** Format: date-time */
@@ -13867,6 +14237,10 @@ export interface components {
              */
             status?: "DRAFT" | "PENDING_APPROVAL" | "QUEUED" | "PICKING" | "MARKING" | "CHECKING" | "DOCUMENTING" | "LOADING" | "IN_TRANSIT" | "DELIVERED" | "UNDELIVERED" | "REJECTED" | "CANCELLED";
             total: string;
+        };
+        StatusRequest: {
+            /** @enum {string} */
+            status: "NEW" | "IN_PROGRESS" | "DONE" | "CANCELLED";
         };
         StockLine: {
             /** Format: int64 */
@@ -14310,6 +14684,28 @@ export interface components {
             id: number;
             name: string;
         };
+        TaskItem: {
+            assignees: components["schemas"]["Assignee"][];
+            body?: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            dueAt?: string;
+            /** Format: int64 */
+            messageId: number;
+            overdue: boolean;
+            /** Format: int64 */
+            senderId: number;
+            senderName: string;
+            /**
+             * @description MINE — mening holatim; GIVEN — umumiy (hammasi bajarilgan → DONE, hammasi bekor → CANCELLED, aks holda eng orqadagi)
+             * @enum {string}
+             */
+            status: "NEW" | "IN_PROGRESS" | "DONE" | "CANCELLED";
+            /** Format: int64 */
+            threadId: number;
+            title: string;
+        };
         Terms: {
             /** Format: int64 */
             branchId: number;
@@ -14362,6 +14758,43 @@ export interface components {
             supplierPaymentDays?: number;
             /** Format: int64 */
             supplyEmployeeId?: number;
+        };
+        ThreadDetail: {
+            hasMore: boolean;
+            messages: components["schemas"]["MessageItem"][];
+            participants: components["schemas"]["Person"][];
+            thread: components["schemas"]["ThreadSummary"];
+        };
+        ThreadList: {
+            items: components["schemas"]["ThreadSummary"][];
+            /** Format: int64 */
+            unreadTotal: number;
+        };
+        ThreadSummary: {
+            /** @enum {string} */
+            audience: "PERSON" | "PEOPLE" | "ROLE" | "BRANCH";
+            /** @description ROLE/BRANCH — filial (ROLE da null — barcha filiallar) */
+            audienceBranchName?: string;
+            /** @description ROLE — rol kodi */
+            audienceRole?: string;
+            /** @description ROLE — rol nomi */
+            audienceRoleName?: string;
+            /** Format: int64 */
+            id: number;
+            /** @enum {string} */
+            kind: "DIRECT" | "GROUP";
+            /** @enum {string} */
+            lastKind?: "MESSAGE" | "TASK";
+            /** Format: date-time */
+            lastMessageAt: string;
+            lastSenderName?: string;
+            lastText?: string;
+            /** @description Qatnashchilar (o'zidan tashqari), ko'pi bilan 5 ta */
+            others: components["schemas"]["Person"][];
+            /** Format: int32 */
+            participantCount: number;
+            /** Format: int64 */
+            unread: number;
         };
         TimeRequest: {
             /** Format: int32 */
@@ -14664,6 +15097,12 @@ export interface components {
             /** Format: int32 */
             qty: number;
             unit: string;
+        };
+        UnreadCounts: {
+            /** Format: int64 */
+            messages: number;
+            /** Format: int64 */
+            openTasks: number;
         };
         UpdateBranchRequest: {
             accountantName?: string;
@@ -16159,7 +16598,7 @@ export interface operations {
             };
         };
     };
-    send_1: {
+    send_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -18833,7 +19272,7 @@ export interface operations {
             };
         };
     };
-    start_2: {
+    start_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -18927,7 +19366,7 @@ export interface operations {
             };
         };
     };
-    file: {
+    file_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -18991,7 +19430,7 @@ export interface operations {
             };
         };
     };
-    upload: {
+    upload_1: {
         parameters: {
             query: {
                 kind: "EFAKTURA" | "TTN";
@@ -19383,7 +19822,7 @@ export interface operations {
             };
         };
     };
-    start_1: {
+    start_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -19442,6 +19881,331 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["MarkQueueItem"][];
                 };
+            };
+        };
+    };
+    upload: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageFile"];
+                };
+            };
+        };
+    };
+    file: {
+        parameters: {
+            query?: {
+                inline?: boolean;
+            };
+            header?: never;
+            path: {
+                fileId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+        };
+    };
+    recipients: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Recipients"];
+                };
+            };
+        };
+    };
+    tasks: {
+        parameters: {
+            query?: {
+                scope?: "MINE" | "GIVEN";
+                status?: "NEW" | "IN_PROGRESS" | "DONE" | "CANCELLED";
+                overdue?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskItem"][];
+                };
+            };
+        };
+    };
+    threads: {
+        parameters: {
+            query?: {
+                q?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ThreadList"];
+                };
+            };
+        };
+    };
+    start_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NewThreadRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Created"];
+                };
+            };
+        };
+    };
+    thread: {
+        parameters: {
+            query?: {
+                before?: number;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ThreadDetail"];
+                };
+            };
+        };
+    };
+    send_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SendRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Created"];
+                };
+            };
+        };
+    };
+    read_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarkReadRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    unread: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnreadCounts"];
+                };
+            };
+        };
+    };
+    delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                messageId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    edit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                messageId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EditRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    reads: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                messageId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReadReceipt"][];
+                };
+            };
+        };
+    };
+    status_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                messageId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StatusRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -24030,7 +24794,7 @@ export interface operations {
             };
         };
     };
-    status_1: {
+    status_2: {
         parameters: {
             query?: never;
             header?: never;

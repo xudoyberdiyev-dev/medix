@@ -51,5 +51,6 @@
   "writeOffs": "Списание",
   "zoneTransfers": "Перемещения по зонам",
   "reserveCodes": "Резервные коды",
-  "invoices": "Фактуры"
+  "invoices": "Фактуры",
+  "messages": "Сообщения"
 }

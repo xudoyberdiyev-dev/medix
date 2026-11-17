@@ -1,4 +1,5 @@
 import {
+  MessagesSquare,
   Archive,
   ArrowLeftRight,
   Banknote,
@@ -134,7 +135,13 @@ export const RETURN_PAGES = ["/customer-returns", "/write-offs", "/supplier-retu
 
 /** Menyu tuzilmasi — prototip `Medix ERP` (NAV) bilan aynan. */
 export const navigation: NavGroup[] = [
-  { items: [{ key: "home", label: "Bosh sahifa", href: "/", icon: House }] },
+  {
+    items: [
+      { key: "home", label: "Bosh sahifa", href: "/", icon: House },
+      // O12: ichki xabarlar va topshiriqlar — barcha rollar (panel rollari ham)
+      { key: "messages", label: "Xabarlar", href: "/messages", icon: MessagesSquare, anyOf: ["messages.use"] },
+    ],
+  },
   {
     // Panel rollari (Ombor mudiri, Yigʻuvchi, Markirovkachi, Haydovchi) — faqat oʻz paneli
     items: [

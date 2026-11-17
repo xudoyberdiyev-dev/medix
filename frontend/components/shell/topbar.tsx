@@ -9,6 +9,7 @@ import { useMe } from "@/features/auth/session";
 import { BranchSwitcher } from "./branch-switcher";
 import { LanguageChip } from "./language-chip";
 import { LiveSync } from "./live-sync";
+import { MessagesButton } from "./messages-button";
 import { MobileNav } from "./mobile-nav";
 import { isNavActive, navigation } from "./nav";
 import { NotificationBell } from "./notification-bell";
@@ -24,7 +25,7 @@ export function navGroupFor(pathname: string) {
   return navigation.find((g) => g.key && g.items.some((i) => isNavActive(pathname, i)))?.key;
 }
 
-/** Yuqori panel (prototip): «Guruh / Sahifa», filial chipi (kod bilan), qidiruv (oʻrtada), bildirishnomalar, til, avatar. */
+/** Yuqori panel (prototip): «Guruh / Sahifa», filial chipi (kod bilan), qidiruv (oʻrtada), xabarlar (O12), bildirishnomalar, til, avatar. */
 export function TopBar(props: TitleProps) {
   const t = useTranslations();
   const pathname = usePathname();
@@ -50,6 +51,7 @@ export function TopBar(props: TitleProps) {
       </div>
       <div className="flex shrink-0 items-center gap-1 md:gap-3">
         <LiveSync />
+        <MessagesButton />
         <NotificationBell />
         <LanguageChip />
         <UserAvatar />

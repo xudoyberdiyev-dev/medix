@@ -4,12 +4,12 @@ import { useEffect, useRef, useSyncExternalStore } from "react";
 
 /**
  * Real vaqt signallari (SPEC 10, SSE): bitta varaqda bitta `EventSource` — `/api/notifications/stream`.
- * Hodisalar: «notifications» (oʻz bildirishnomalari), «orders», «trips», «receipts» (shu filialda hujjat oʻzgardi).
+ * Hodisalar: «notifications» (oʻz bildirishnomalari), «messages» (ichki xabarlar), «orders», «trips», «receipts» (shu filialda hujjat oʻzgardi).
  * Signalda maʼlumot yoʻq — sahifa oʻz soʻrovini qayta bajaradi. Ulanish uzilsa brauzer oʻzi qayta ulanadi;
  * qayta ulanganda («ready») barcha obunachilar chaqiriladi — uzilish paytida oʻtkazib yuborilganlar ham koʻrinsin.
  */
 export const STREAM_URL = "/api/notifications/stream";
-export type LiveEvent = "notifications" | "orders" | "trips" | "receipts" | "transfers";
+export type LiveEvent = "notifications" | "orders" | "trips" | "receipts" | "transfers" | "messages";
 
 /** SSE ulangan boʻlsa soʻrov faqat zaxira; ulanmagan boʻlsa — sahifaning odatdagi oraligʻi. */
 export const LIVE_POLL_MS = 300_000;
@@ -46,7 +46,7 @@ function open() {
     setConnected(true);
     handlers.forEach((set) => set.forEach((h) => h()));
   });
-  for (const ev of ["notifications", "orders", "trips", "receipts", "transfers"] as const) {
+  for (const ev of ["notifications", "orders", "trips", "receipts", "transfers", "messages"] as const) {
     es.addEventListener(ev, () => fire(ev));
   }
   es.onerror = () => setConnected(false);
@@ -133,6 +133,7 @@ export function useLiveConnected(): boolean {
  * kiritilayotgan maʼlumot yoʻqolmasin). TanStack Query faqat ekrandagi soʻrovlarni qayta oladi.
  */
 export const LIVE_INVALIDATES: Record<Exclude<LiveEvent, "notifications">, readonly (readonly string[])[]> = {
+  messages: [["messages"]],
   orders: [
     ["orders", "list"],
     ["orders", "monitor"],
