@@ -660,7 +660,7 @@ class Messages {
     // ---------------------------------------------------------------- fayllar
 
     @Transactional
-    MessageModels.UploadedFile upload(Actor a, String fileName, String contentType, byte[] data) {
+    MessageModels.MessageFile upload(Actor a, String fileName, String contentType, byte[] data) {
         if (data.length == 0) {
             throw MedixException.badRequest("messages.fileEmpty");
         }
@@ -681,7 +681,7 @@ class Messages {
                 .param("d", data)
                 .query(Long.class)
                 .single();
-        return new MessageModels.UploadedFile(id, name, type, data.length, isImage(type));
+        return new MessageModels.MessageFile(id, name, type, data.length, isImage(type));
     }
 
     /** Faylni yuklab olish: faqat yuklagan xodim yoki suhbat qatnashchisi; o'chirilgan xabar fayli — yo'q. */

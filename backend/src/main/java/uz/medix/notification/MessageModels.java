@@ -89,7 +89,7 @@ final class MessageModels {
 
     record Created(long threadId, long messageId) {}
 
-    record UploadedFile(long id, String fileName, String contentType, int sizeBytes, boolean image) {}
+    record MessageFile(long id, String fileName, String contentType, int sizeBytes, boolean image) {}
 
     record TaskItem(
             long messageId,

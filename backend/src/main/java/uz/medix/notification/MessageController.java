@@ -37,7 +37,7 @@ import uz.medix.notification.MessageModels.TaskScope;
 import uz.medix.notification.MessageModels.TaskStatus;
 import uz.medix.notification.MessageModels.ThreadDetail;
 import uz.medix.notification.MessageModels.ThreadList;
-import uz.medix.notification.MessageModels.UploadedFile;
+import uz.medix.notification.MessageModels.MessageFile;
 import uz.medix.shared.error.MedixException;
 import uz.medix.shared.security.Actor;
 import uz.medix.shared.security.Authorities;
@@ -161,7 +161,7 @@ class MessageController {
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasAuthority('messages.use')")
     @Operation(summary = "Biriktirma yuklash", description = "Istalgan fayl (rasm, PDF, Excel, Word …) ≤ 20 MB; yuborishda fileIds bilan biriktiriladi.")
-    UploadedFile upload(@RequestParam("file") MultipartFile file) throws IOException {
+    MessageFile upload(@RequestParam("file") MultipartFile file) throws IOException {
         if (file.getSize() > Messages.MAX_FILE_BYTES) {
             throw MedixException.badRequest("messages.fileSize");
         }
