@@ -216,10 +216,10 @@ class MessagesIT {
         mvc.perform(get("/api/messages/unread").cookie(p1.cookie())).andExpect(jsonPath("$.openTasks").value(1));
 
         // Ijrochilar: har biri o'z holatini o'zgartiradi; ijrochi bekor qila olmaydi.
-        status(p1, task, "DONE", 200);
-        status(p1, task, "DONE", 409);
-        status(p2, task, "IN_PROGRESS", 200);
-        status(p2, task, "CANCELLED", 403);
+        taskStatus(p1, task, "DONE", 200);
+        taskStatus(p1, task, "DONE", 409);
+        taskStatus(p2, task, "IN_PROGRESS", 200);
+        taskStatus(p2, task, "CANCELLED", 403);
         mvc.perform(get("/api/messages/tasks?scope=GIVEN").cookie(boss.cookie()))
                 .andExpect(jsonPath("$[0].messageId").value(task))
                 .andExpect(jsonPath("$[0].status").value("IN_PROGRESS"));
@@ -230,16 +230,16 @@ class MessagesIT {
                 .param("id", Long.toString(task)).query(Long.class).single()).isEqualTo(3);
 
         // Yuboruvchi: bekor qilish — hammasi; qayta ochish — yana NEW.
-        status(boss, task, "CANCELLED", 200);
+        taskStatus(boss, task, "CANCELLED", 200);
         assertThat(jdbc.sql("SELECT count(*) FROM msg_task_assignee WHERE message_id = :m AND status = 'CANCELLED'")
                 .param("m", task).query(Long.class).single()).isEqualTo(2);
-        status(boss, task, "NEW", 200);
+        taskStatus(boss, task, "NEW", 200);
         mvc.perform(get("/api/messages/unread").cookie(p2.cookie())).andExpect(jsonPath("$.openTasks").value(1));
         // Topshiriq o'chirilmaydi.
         mvc.perform(delete("/api/messages/" + task).with(csrf()).cookie(boss.cookie())).andExpect(status().isConflict());
     }
 
-    private void status(Session s, long task, String st, int expected) throws Exception {
+    private void taskStatus(Session s, long task, String st, int expected) throws Exception {
         mvc.perform(post("/api/messages/" + task + "/status").with(csrf()).cookie(s.cookie()).contentType(MediaType.APPLICATION_JSON)
                         .content("{\"status\":\"" + st + "\"}"))
                 .andExpect(status().is(expected));
