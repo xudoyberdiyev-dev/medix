@@ -925,7 +925,7 @@ test("CEO: Kompaniya — tizim holati va nomni tahrirlash", async ({ page }) => 
   await page.goto("/company");
   await expect(page.getByRole("heading", { name: "Kompaniya", level: 1 })).toBeVisible();
   await expect(page.getByText("Tizim ishga tushirilgan")).toBeVisible();
-  await page.getByRole("button", { name: "Tahrirlash" }).click();
+  await page.getByRole("button", { name: "Tahrirlash", exact: true }).click();
   const modal = page.getByRole("dialog", { name: "Kompaniyani tahrirlash" });
   const name = modal.getByLabel(/^Guruh nomi\s*\*?$/);
   const old = await name.inputValue();
