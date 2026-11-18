@@ -15877,6 +15877,25 @@
         "tags" : [ "settings" ]
       }
     },
+    "/api/settings/system-status" : {
+      "get" : {
+        "operationId" : "status_3",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SystemErrorStatus"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Tizim holati: server xatolari (24 soat, 7 kun), eng koʻp uchraganlari va oxirgi 20 tasi",
+        "tags" : [ "settings" ]
+      }
+    },
     "/api/settings/thresholds" : {
       "get" : {
         "description" : "Muddat ogohlantirishi (kun), narx o'zgarishi ogohlantirishi (%), limit oshishi — Filial rahbari (%), muddati o'tgan qarz — Direktor (kun).",
@@ -19900,25 +19919,6 @@
         },
         "summary" : "Qoralamani o'tkazish",
         "tags" : [ "zone-transfer" ]
-      }
-    },
-    "/api/settings/system-status" : {
-      "get" : {
-        "operationId" : "systemStatus",
-        "responses" : {
-          "200" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/SystemErrorStatus"
-                }
-              }
-            },
-            "description" : "OK"
-          }
-        },
-        "summary" : "Tizim holati: server xatolari (24 soat, 7 kun), eng koʻp uchraganlari va oxirgi 20 tasi",
-        "tags" : [ "settings" ]
       }
     }
   },
@@ -37727,7 +37727,7 @@
             "type" : "string"
           }
         },
-        "required" : [ "exception", "method", "occurredAt", "path" ]
+        "required" : [ "exception", "message", "method", "occurredAt", "path" ]
       },
       "SystemErrorStatus" : {
         "type" : "object",

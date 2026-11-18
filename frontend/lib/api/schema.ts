@@ -6900,6 +6900,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/settings/system-status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Tizim holati: server xatolari (24 soat, 7 kun), eng koʻp uchraganlari va oxirgi 20 tasi */
+        get: operations["status_3"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/settings/thresholds": {
         parameters: {
             query?: never;
@@ -8702,23 +8719,6 @@ export interface paths {
          * @description Darhol o'tkaziladi. Karantindan sotuvga ochiq zonaga — transfer.quar ruxsati bo'lmasa «Tasdiqda» holatiga o'tadi.
          */
         post: operations["submit"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/settings/system-status": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Tizim holati: server xatolari (24 soat, 7 kun), eng koʻp uchraganlari va oxirgi 20 tasi */
-        get: operations["systemStatus"];
-        put?: never;
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -15886,7 +15886,7 @@ export interface components {
         };
         SystemErrorRow: {
             exception: string;
-            message?: string;
+            message: string;
             method: string;
             /** Format: date-time */
             occurredAt: string;
@@ -26898,6 +26898,26 @@ export interface operations {
             };
         };
     };
+    status_3: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SystemErrorStatus"];
+                };
+            };
+        };
+    };
     thresholds: {
         parameters: {
             query?: never;
@@ -29452,26 +29472,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ZoneTransferDetail"];
-                };
-            };
-        };
-    };
-    systemStatus: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SystemErrorStatus"];
                 };
             };
         };
