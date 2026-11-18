@@ -1,1 +1,1 @@
-▶️ 100+: 20:01 kechki sessiya boshlandi — reja: O24 qorongʻi rejim yakuni (sahifalar koʻrigi, WCAG AA kontrast, rol panellari)
+▶️ 100+: 00:10 sessiya boshlandi — reja: P1 ruxsat teshiklari (@PreAuthorize ~30 API + ArchUnit test), keyin P2–P7
