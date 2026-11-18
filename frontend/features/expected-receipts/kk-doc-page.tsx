@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, CheckCheck, Download, FilePenLine, PackageCheck, Paperclip, Truck, X } from "lucide-react";
+import { Check, CheckCheck, Download, FilePenLine, FileText, PackageCheck, Paperclip, Truck, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRef, useState } from "react";
@@ -218,6 +218,15 @@ function View({ doc }: { doc: KkDetail }) {
         meta={<Steps steps={steps} />}
         actions={
           <>
+            {doc.receipts.some((r) => r.status === "POSTED") || st === "RECEIVED" ? (
+              <Button
+                variant="secondary"
+                icon={FileText}
+                onClick={() => window.open(`/api/expected-receipts/${doc.id}/act/pdf`, "_blank", "noopener")}
+              >
+                {td("act")}
+              </Button>
+            ) : null}
             {canCancel ? (
               <Button variant="secondary" icon={X} onClick={() => (setReason(""), setDlg("cancel"))}>
                 {td("cancel")}

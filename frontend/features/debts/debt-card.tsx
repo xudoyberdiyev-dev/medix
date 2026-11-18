@@ -110,6 +110,10 @@ export function DebtCardPage({ side, id, name }: { side: Side; id: number; name:
           <Link href={`/receipts/${d.docId}`} className="text-primary hover:underline">
             {d.docNumber}
           </Link>
+        ) : d.docType === "KK" ? (
+          <Link href={`/expected-receipts/${d.docId}`} className="text-primary hover:underline">
+            {d.docNumber}
+          </Link>
         ) : (
           d.docNumber
         ),

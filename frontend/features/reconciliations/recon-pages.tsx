@@ -51,7 +51,7 @@ const STATUS: Record<ReconStatus, { tone: Tone; icon: LucideIcon }> = {
   DIFF: { tone: "danger", icon: AlertTriangle },
 };
 
-const DOC_TYPES = ["SV", "KR", "MT", "YT", "QM", "QY", "AH", "BQ"] as const;
+const DOC_TYPES = ["SV", "KR", "KK", "MT", "YT", "QM", "QY", "AH", "BQ"] as const;
 const isDocType = (v: string): v is (typeof DOC_TYPES)[number] => (DOC_TYPES as readonly string[]).includes(v);
 
 const errText = (e: unknown) => (e instanceof ApiError ? e.message : String(e));

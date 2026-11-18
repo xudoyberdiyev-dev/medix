@@ -50,9 +50,11 @@ class ExpectedReceiptController {
 
     private final ExpectedReceipts kk;
     private final CurrentActor currentActor;
+    private final ExpectedReceiptActPdf actPdf;
 
-    ExpectedReceiptController(ExpectedReceipts kk, CurrentActor currentActor) {
+    ExpectedReceiptController(ExpectedReceipts kk, CurrentActor currentActor, ExpectedReceiptActPdf actPdf) {
         this.kk = kk;
+        this.actPdf = actPdf;
         this.currentActor = currentActor;
     }
 
@@ -164,6 +166,17 @@ class ExpectedReceiptController {
         }
         kk.upload(actor(), id, file.getOriginalFilename(), file.getContentType(), file.getBytes());
         return detail(id, auth);
+    }
+
+    @GetMapping(value = "/{id}/act/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
+    @PreAuthorize(VIEW)
+    @Operation(summary = "Farq dalolatnomasi — PDF", description = "Yetkazib beruvchiga: kam / ortiqcha / shikastlangan / kutilmoqda; summa — narx ko'rish huquqi bilan.")
+    ResponseEntity<byte[]> act(@PathVariable long id, Authentication auth) {
+        ExpectedReceiptActPdf.Rendered r = actPdf.render(actor(), id, ReceiptController.pricesVisible(auth));
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + r.number() + "-dalolatnoma.pdf\"")
+                .body(r.body());
     }
 
     @GetMapping("/files/{fileId}")

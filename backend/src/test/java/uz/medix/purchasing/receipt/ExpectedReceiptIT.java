@@ -335,6 +335,10 @@ class ExpectedReceiptIT {
                 .andExpect(jsonPath("$.lines[0].writtenOffQty").value(5))
                 .andExpect(jsonPath("$.lines[0].remainingQty").value(40))
                 .andExpect(jsonPath("$.receipts[0].status").value("POSTED"));
+        // Farq dalolatnomasi (PDF)
+        mvc.perform(get("/api/expected-receipts/" + kkId + "/act/pdf").cookie(keeper))
+                .andExpect(status().isOk())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content().contentType("application/pdf"));
         // Bog'langan o'tkazilgan kirim bekor qilinmaydi; qisman KK bekor qilinmaydi
         send(post("/api/receipts/" + receipt + "/cancel"), manager, "{\"reason\":\"xato\"}").andExpect(status().is4xxClientError());
         send(post("/api/expected-receipts/" + kkId + "/cancel"), manager, "{\"reason\":\"x\"}")

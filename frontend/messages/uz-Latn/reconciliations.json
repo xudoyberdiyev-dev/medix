@@ -4,9 +4,17 @@
   "search": "Raqam yoki kontragent…",
   "tabsLabel": "Akt sverka holatlari",
   "all": "Hammasi",
-  "status": { "MADE": "Tuzildi", "SENT": "Yuborildi", "SIGNED": "Imzolandi", "DIFF": "Farq bor" },
+  "status": {
+    "MADE": "Tuzildi",
+    "SENT": "Yuborildi",
+    "SIGNED": "Imzolandi",
+    "DIFF": "Farq bor"
+  },
   "kind": "Kontragent turi",
-  "side": { "CUSTOMER": "Mijoz", "SUPPLIER": "Yetkazib beruvchi" },
+  "side": {
+    "CUSTOMER": "Mijoz",
+    "SUPPLIER": "Yetkazib beruvchi"
+  },
   "clearFilters": "Filtrni tozalash",
   "col": {
     "number": "Raqam",
@@ -30,7 +38,10 @@
   "forbidden": "Akt sverkani koʻrish uchun ruxsat yoʻq. Administratorga murojaat qiling.",
   "new": {
     "title": "Yangi akt sverka",
-    "party": { "CUSTOMER": "Mijoz", "SUPPLIER": "Yetkazib beruvchi" },
+    "party": {
+      "CUSTOMER": "Mijoz",
+      "SUPPLIER": "Yetkazib beruvchi"
+    },
     "pick": "Tanlang",
     "partyRequired": "Kontragentni tanlang",
     "branch": "Filial",
@@ -38,7 +49,12 @@
     "from": "Boshlanish",
     "to": "Tugash",
     "badDate": "Sanani KK.OO.YYYY koʻrinishida kiriting",
-    "quick": { "month": "Shu oy", "lastMonth": "Oʻtgan oy", "lastQ": "Oʻtgan chorak", "ytd": "Yil boshidan" },
+    "quick": {
+      "month": "Shu oy",
+      "lastMonth": "Oʻtgan oy",
+      "lastQ": "Oʻtgan chorak",
+      "ytd": "Yil boshidan"
+    },
     "opening": "Boshlangʻich qoldiq",
     "closing": "Yakuniy qoldiq",
     "submit": "Tuzish",
@@ -90,7 +106,8 @@
       "QM": "Mijozdan qaytarish",
       "QY": "Yetkazib beruvchiga qaytarish",
       "AH": "Avansni hisobga olish",
-      "BQ": "Boshlangʻich qoldiq"
+      "BQ": "Boshlangʻich qoldiq",
+      "KK": "Kutilayotgan kirim (yuk xati)"
     }
   }
 }

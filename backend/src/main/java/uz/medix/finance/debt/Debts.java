@@ -284,10 +284,12 @@ class Debts {
                 .single());
         record Raw(java.time.Instant at, LocalDate date, String type, long id, String number, String note, Money amount) {}
         List<Raw> raw = jdbc.sql("""
-                SELECT pl.occurred_at, coalesce(rc.invoice_date, (pl.occurred_at AT TIME ZONE 'Asia/Tashkent')::date) AS d, pl.doc_type,
-                       pl.doc_id, pl.doc_number, pl.note, pl.amount
+                SELECT pl.occurred_at, coalesce(rc.invoice_date, ek.waybill_date, (pl.occurred_at AT TIME ZONE 'Asia/Tashkent')::date) AS d,
+                       pl.doc_type, pl.doc_id, pl.doc_number, pl.note, pl.amount
                 FROM party_ledger pl
                      LEFT JOIN receipt rc ON pl.side = 'SUPPLIER' AND pl.doc_type = 'KR' AND rc.id = pl.doc_id
+                     -- O15: KK qarzi hujjat sanasi — yuk xati sanasi (tuzatish/bekor qilish yozuvlari — o'z sanasida)
+                     LEFT JOIN expected_receipt ek ON pl.side = 'SUPPLIER' AND pl.doc_type = 'KK' AND pl.note IS NULL AND ek.id = pl.doc_id
                 WHERE pl.branch_id = :b AND pl.counterparty_id = :c AND pl.side = :s
                   AND (pl.occurred_at AT TIME ZONE 'Asia/Tashkent')::date BETWEEN :f AND :t
                 ORDER BY pl.occurred_at, pl.id LIMIT 5000""")

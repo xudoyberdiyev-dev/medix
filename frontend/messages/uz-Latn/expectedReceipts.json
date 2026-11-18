@@ -167,7 +167,8 @@
     "errQty": "{n}-qator: soni 1 dan {max} gacha boʻlsin.",
     "errBatch": "{n}-qator: partiya va yaroqlilik sanasini kiriting.",
     "errZone": "Zonani tanlang.",
-    "errNothing": "Kamida bitta qatorga son kiriting."
+    "errNothing": "Kamida bitta qatorga son kiriting.",
+    "act": "Farq dalolatnomasi"
   },
   "transit": {
     "title": "Yetkazib beruvchidan yoʻlda",
