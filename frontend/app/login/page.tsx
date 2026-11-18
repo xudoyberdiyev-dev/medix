@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { AuthShell, LocaleSegments } from "@/features/auth/auth-shell";
 import { LoginForm } from "./login-form";
 
-export const metadata: Metadata = { title: "Kirish — MEDIX" };
+export const metadata: Metadata = { title: "Kirish — 100+" };
 
 export default function LoginPage() {
   return (

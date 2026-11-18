@@ -9,7 +9,7 @@ import { LocaleProvider } from "@/i18n/locale-provider";
 import { Providers } from "./providers";
 
 export const metadata: Metadata = {
-  title: "MEDIX",
+  title: "100+",
   description: "Farmatsevtika ulgurji distribyutsiyasi uchun ERP",
 };
 

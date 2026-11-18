@@ -115,7 +115,7 @@ export function BankReconTab(props: { accounts: MoneyAccount[]; canEdit: boolean
   const historyColumns: TableColumn<Reconciliation>[] = [
     { key: "statementDate", title: t("statementDate"), render: (r) => formatIsoDate(r.statementDate) },
     { key: "bankBalance", title: t("col.bank"), align: "right", render: (r) => money(r.bankBalance) },
-    { key: "medixBalance", title: "MEDIX", align: "right", render: (r) => money(r.medixBalance) },
+    { key: "medixBalance", title: "100+", align: "right", render: (r) => money(r.medixBalance) },
     {
       key: "difference",
       title: tc("col.diff"),

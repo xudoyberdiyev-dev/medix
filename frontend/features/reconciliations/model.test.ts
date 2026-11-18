@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest";
 import { canStep, diffAmount, favor, filterRecons, quickPeriods, tabCounts } from "./model";
 
 const rows = [
-  { number: "AS-TSH-000001", counterparty: "Shifo Farm", side: "CUSTOMER" as const, status: "MADE" as const },
+  { number: "AS-TSH-000001", counterparty: "Shifo Dori", side: "CUSTOMER" as const, status: "MADE" as const },
   { number: "AS-TSH-000002", counterparty: "Novo Nordisk", side: "SUPPLIER" as const, status: "DIFF" as const },
-  { number: "AS-TSH-000003", counterparty: "Shifo Farm", side: "CUSTOMER" as const, status: "SIGNED" as const },
+  { number: "AS-TSH-000003", counterparty: "Shifo Dori", side: "CUSTOMER" as const, status: "SIGNED" as const },
 ];
 
 describe("akt sverka roʻyxati", () => {

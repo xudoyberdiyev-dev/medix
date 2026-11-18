@@ -21,7 +21,7 @@ function Logo({ inverted = false }: { inverted?: boolean }) {
   return (
     <div className="flex items-center gap-[12px]">
       <span className="flex size-[32px] items-center justify-center rounded-card bg-primary text-[16px] font-semibold text-white">M</span>
-      <span className={cn("text-[17px] font-semibold tracking-[0.02em]", inverted ? "text-white" : "text-brand-900")}>MEDIX</span>
+      <span className={cn("text-[17px] font-semibold tracking-[0.02em]", inverted ? "text-white" : "text-brand-900")}>100+</span>
     </div>
   );
 }
@@ -65,7 +65,7 @@ export function AuthShell({ topRight, children }: { topRight?: ReactNode; childr
           </div>
         </div>
         <div className="relative flex items-center gap-[8px] text-caption text-sidebar-text/75">
-          <span>© 2026 Medix Group</span>
+          <span>© 2026 100+</span>
           <span aria-hidden>·</span>
           <span>v1.0</span>
         </div>

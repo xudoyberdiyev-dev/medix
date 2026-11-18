@@ -7,7 +7,7 @@ const branch = {
   id: 1,
   code: "TSH",
   name: "Toshkent",
-  legalName: "Medix TSH",
+  legalName: "Shifo Dori TSH",
   tin: "301234567",
   active: true,
   vatPayer: true,
@@ -18,7 +18,7 @@ const warehouse = { id: 7, branchId: 1, name: "Markaziy", active: true, zones: [
 describe("sozlash ustasi qadamlari", () => {
   it("birinchi bajarilmagan qadamdan davom etadi", () => {
     expect(firstIncompleteStep(base)).toBe(0);
-    const withCompany = { ...base, company: { id: 1, name: "Medix Group", defaultLocale: "uz-Latn" } };
+    const withCompany = { ...base, company: { id: 1, name: "Shifo Dori Group", defaultLocale: "uz-Latn" } };
     expect(firstIncompleteStep(withCompany)).toBe(1);
     expect(firstIncompleteStep({ ...withCompany, branches: [branch] })).toBe(2);
     expect(firstIncompleteStep({ ...withCompany, branches: [branch], warehouses: [warehouse] })).toBe(3);

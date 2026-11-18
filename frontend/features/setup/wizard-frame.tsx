@@ -75,7 +75,7 @@ export function WizardFrame({
           <span className="flex size-[28px] items-center justify-center rounded-card bg-primary text-[15px] font-semibold text-white">
             M
           </span>
-          <span className="text-[17px] font-semibold tracking-[0.02em] text-brand-900">MEDIX</span>
+          <span className="text-[17px] font-semibold tracking-[0.02em] text-brand-900">100+</span>
         </div>
         <nav aria-label={t("wizard")} className="flex min-w-0 flex-1 justify-center">
           <ol className="flex items-center gap-[12px]">

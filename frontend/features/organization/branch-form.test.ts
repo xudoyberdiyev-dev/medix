@@ -25,7 +25,7 @@ describe("filial kartasi", () => {
       ...f,
       name: "Toshkent",
       code: "TSH",
-      legalName: "Medix MChJ",
+      legalName: "Shifo Dori MChJ",
       tin: "301234567",
       region: "Toshkent shahri",
       address: "Chilonzor 1",

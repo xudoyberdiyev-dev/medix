@@ -258,7 +258,7 @@ function FormBody({
                 value={f.legalName}
                 onChange={set("legalName")}
                 error={err("legalName")}
-                placeholder="«Shifo Farm» MChJ"
+                placeholder="«Shifo Dori» MChJ"
                 maxLength={300}
               />
             </div>

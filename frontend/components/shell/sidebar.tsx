@@ -82,7 +82,7 @@ export function SidebarContent({ variant, onNavigate }: { variant: "rail" | "she
           </span>
         )}
         <span className={cn("flex min-w-0 flex-col", compact("hidden", "max-xl:hidden"))}>
-          <span className="text-subtitle leading-5 text-white">MEDIX</span>
+          <span className="text-subtitle leading-5 text-white">100+</span>
           {company ? <span className="truncate text-[11px] leading-[14px] text-sidebar-text/75">{company}</span> : null}
         </span>
       </div>

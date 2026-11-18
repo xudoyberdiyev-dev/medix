@@ -45,7 +45,7 @@ export function BranchesStep({ status, nav, onBack, onDone }: { status: SetupSta
           <p className="text-table font-semibold">{t("whatTitle")}</p>
           <div className="mt-[12px] flex flex-col">
             <span className="self-start rounded-card bg-brand-900 px-[12px] py-[6px] text-table font-semibold text-white">
-              {status.company?.name ?? "MEDIX"}
+              {status.company?.name ?? "100+"}
             </span>
             <div className="ml-[16px] flex flex-col gap-[8px] border-l border-border pt-[8px] pl-[12px]">
               {(branches.length ? branches.slice(0, 3) : [null, null]).map((b, i) => (

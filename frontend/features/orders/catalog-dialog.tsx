@@ -50,7 +50,7 @@ export function CatalogView({
 }: {
   warehouseId: number;
   customerId: number | null;
-  /** Sarlavha yonidagi qism: «BY-TSH-000357 · Shifo Farm». */
+  /** Sarlavha yonidagi qism: «BY-TSH-000357 · Shifo Dori». */
   title: string;
   facts: { label: string; value: string }[];
   onClose: () => void;
