@@ -111,6 +111,9 @@
       "dueBeforeBase": "Toʻlov kuni hisob-faktura sanasidan (u boʻlmasa — kirim sanasidan) oldin boʻlmaydi. Sanani tekshiring."
     },
     "draftSaved": "Qoralama saqlandi",
+    "draftRestored": "Qoralama tiklandi",
+    "draftRestoredHint": "{at} dagi saqlanmagan kirim qaytarildi. Kerak boʻlmasa — tashlang.",
+    "draftRestoredDrop": "Tashlash",
     "cancelDoc": "Hujjatni bekor qilish",
     "back": "Ortga",
     "saveDraft": "Qoralamani saqlash",
