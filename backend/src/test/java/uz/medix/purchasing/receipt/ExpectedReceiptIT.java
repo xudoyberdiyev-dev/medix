@@ -67,6 +67,9 @@ class ExpectedReceiptIT {
     @Autowired
     ExpectedReceipts kk;
 
+    @Autowired
+    ExpectedReceiptReminders reminders;
+
     private record Place(long branchId, long warehouseId, long receiving, long main, long quarantine, long safe) {}
 
     private Place place() {
@@ -177,6 +180,42 @@ class ExpectedReceiptIT {
 
     private int ledgerRows(long kkId) {
         return jdbc.sql("SELECT count(*) FROM party_ledger WHERE doc_type = 'KK' AND doc_id = :id").param("id", kkId).query(Integer.class).single();
+    }
+
+    private List<String> kkTitles(long kkId, long branchId) {
+        return jdbc.sql("""
+                SELECT n.title FROM notification n JOIN employee e ON e.id = n.employee_id
+                WHERE e.branch_id = :b AND n.dedup_key LIKE 'kk.%:' || :id || ':%' ORDER BY n.id""")
+                .param("b", branchId).param("id", String.valueOf(kkId)).query(String.class).list();
+    }
+
+    @Test
+    void lateExpectedReceiptRemindsDailyUntilReceived() throws Exception {
+        Place p = place();
+        long sup = supplier(p.branchId(), 10);
+        long prod = product("KK Eslatma", false);
+        Cookie keeper = loginAs("BRANCH_MANAGER", p.branchId());
+        long id = id(send(post("/api/expected-receipts"), keeper, doc(p, sup, "PREPAID", null, ln(prod, 10, "100.00")))
+                .andExpect(status().isCreated()).andReturn());
+        // Qoralama — eslatma yo'q
+        reminders.run(today().plusDays(4));
+        assertThat(kkTitles(id, p.branchId())).isEmpty();
+        send(post("/api/expected-receipts/" + id + "/approve"), keeper, "{}").andExpect(status().isOk());
+        // Kutilgan sanadan oldin — jim
+        reminders.run(today().plusDays(3));
+        assertThat(kkTitles(id, p.branchId())).isEmpty();
+        // Kutilgan kuni — «bugun», bir kunda bir marta
+        reminders.run(today().plusDays(4));
+        reminders.run(today().plusDays(4));
+        assertThat(kkTitles(id, p.branchId())).singleElement().satisfies(t -> assertThat(t).startsWith("Bugun kelishi kutilmoqda: KK-"));
+        // Kechiksa — har kuni
+        reminders.run(today().plusDays(6));
+        assertThat(kkTitles(id, p.branchId())).hasSize(2).last()
+                .satisfies(t -> assertThat(t).startsWith("Kutilayotgan kirim kechikdi: 2 kun: KK-"));
+        // Bekor qilingan KK — eslatmasiz
+        send(post("/api/expected-receipts/" + id + "/cancel"), keeper, "{\"reason\":\"Kelmaydi\"}").andExpect(status().isOk());
+        reminders.run(today().plusDays(7));
+        assertThat(kkTitles(id, p.branchId())).hasSize(2);
     }
 
     @Test
