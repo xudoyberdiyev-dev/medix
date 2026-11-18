@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { ArrowDown, ArrowUp, ChevronsUpDown } from "lucide-react";
-import { Fragment, type CSSProperties, type KeyboardEvent, type ReactNode } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type ReactNode } from "react";
 import { cn } from "@/lib/cn";
 import { Icon } from "./icon";
 import { Pagination, type PaginationProps } from "./pagination";
@@ -112,9 +112,41 @@ export function Table<T>({
       left += c.width ?? 0;
     }
   }
+  // U1: hech qaysi ustun qotirilmagan boʻlsa — birinchi ustun (sm dan katta ekranda) chapda qoladi; kenglik shart emas.
+  const autoPin = lastPinned === null && columns.length > 3;
+  if (autoPin) {
+    pinLeft[columns[0].key] = selectable ? 44 : 0;
+    lastPinned = columns[0].key;
+  }
+  // Avto-qotirishda chap chegara klass bilan (telefonda qotirilmaydi — sarlavha va qatorlar bir xil aylanadi).
+  const autoLeft = selectable ? "sm:left-11" : "sm:left-0";
   const anyPinned = lastPinned !== null;
+  const stickyCls = autoPin ? "sm:sticky" : "sticky";
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [edges, setEdges] = useState({ left: false, right: false });
+  const measure = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const left = el.scrollLeft > 1;
+    const right = el.scrollLeft + el.clientWidth < el.scrollWidth - 1;
+    setEdges((e) => (e.left === left && e.right === right ? e : { left, right }));
+  }, []);
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    measure();
+    const ro = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(measure);
+    ro?.observe(el);
+    const table = el.firstElementChild;
+    if (table) ro?.observe(table);
+    return () => ro?.disconnect();
+  }, [measure]);
+  /** Gorizontal aylantirishda qotirilgan ustunlar chegarasidagi soya. */
+  const leftShadow = edges.left ? "shadow-[6px_0_8px_-6px_var(--color-overlay)]" : undefined;
+  const rightShadow = edges.right ? "shadow-[-6px_0_8px_-6px_var(--color-overlay)]" : undefined;
   const pinStyle = (key: string, width?: number): CSSProperties | undefined =>
-    key in pinLeft ? { left: pinLeft[key], width, minWidth: width } : width ? { width } : undefined;
+    key in pinLeft && !autoPin ? { left: pinLeft[key], width, minWidth: width } : width ? { width } : undefined;
+  const pinCls = (key: string) => (autoPin && key in pinLeft ? autoLeft : undefined);
 
   function toggleAll(checked: boolean) {
     if (!onSelectionChange) return;
@@ -168,184 +200,196 @@ export function Table<T>({
         <div className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-3">{toolbar}</div>
       ) : null}
 
-      <div className="relative overflow-auto">
-        <table className="w-full border-separate border-spacing-0 text-table" aria-busy={loading || undefined}>
-          <caption className="sr-only">{caption}</caption>
-          <thead>
-            <tr>
-              {selectable ? (
-                <th
-                  scope="col"
-                  style={SELECT_COL}
-                  className={cn("sticky top-0 z-10 border-b border-border bg-table-header pr-1 pl-4", anyPinned && "left-0 z-20")}
-                >
-                  <Checkbox
-                    checked={allSelected}
-                    indeterminate={someSelected}
-                    disabled={rows.length === 0}
-                    onChange={toggleAll}
-                    aria-label={t("selectAll")}
-                  />
-                </th>
-              ) : null}
-              {columns.map((col) => {
-                const sorted = sort?.key === col.key ? sort.dir : undefined;
-                return (
+      <div className="relative">
+        <div ref={scrollRef} onScroll={measure} className="relative overflow-auto" data-overflow-right={edges.right || undefined}>
+          <table className="w-full border-separate border-spacing-0 text-table" aria-busy={loading || undefined}>
+            <caption className="sr-only">{caption}</caption>
+            <thead>
+              <tr>
+                {selectable ? (
                   <th
-                    key={col.key}
                     scope="col"
-                    aria-sort={sorted === "asc" ? "ascending" : sorted === "desc" ? "descending" : undefined}
-                    style={pinStyle(col.key, col.width)}
+                    style={SELECT_COL}
                     className={cn(
-                      "sticky top-0 z-10 h-10 border-b border-border bg-table-header px-3 text-caption font-medium whitespace-nowrap text-text-secondary",
-                      col.align === "right" ? "text-right" : "text-left",
-                      col.key in pinLeft && "z-20",
-                      col.key === lastPinned && "border-r",
+                      "sticky top-0 z-10 border-b border-border bg-table-header pr-1 pl-4",
+                      anyPinned && (autoPin ? "z-20 sm:left-0" : "left-0 z-20"),
                     )}
                   >
-                    {col.sortable && onSortChange ? (
-                      <button
-                        type="button"
-                        onClick={() => onSortClick(col)}
-                        className={cn(
-                          "inline-flex items-center gap-1 rounded-sm hover:text-text-primary",
-                          col.align === "right" && "flex-row-reverse",
-                          sorted && "text-text-primary",
-                        )}
-                      >
-                        {col.title}
-                        <Icon
-                          icon={sorted === "asc" ? ArrowUp : sorted === "desc" ? ArrowDown : ChevronsUpDown}
-                          width={14}
-                          height={14}
-                          className={sorted ? "text-primary" : "text-text-disabled"}
-                        />
-                      </button>
-                    ) : (
-                      col.title
-                    )}
+                    <Checkbox
+                      checked={allSelected}
+                      indeterminate={someSelected}
+                      disabled={rows.length === 0}
+                      onChange={toggleAll}
+                      aria-label={t("selectAll")}
+                    />
                   </th>
-                );
-              })}
-              {rowActions ? (
-                <th scope="col" className="sticky top-0 z-10 w-12 border-b border-border bg-table-header">
-                  <span className="sr-only">Harakatlar</span>
-                </th>
-              ) : null}
-            </tr>
-          </thead>
-          <tbody>
-            {loading
-              ? Array.from({ length: SKELETON_ROWS }, (_, i) => (
-                  <tr key={`skeleton-${i}`}>
-                    {Array.from({ length: colCount }, (_, j) => (
-                      <td key={j} className={cn("border-b border-border px-3", tdPad)}>
-                        <Skeleton className={j % 3 === 0 ? "w-3/4" : "w-1/2"} />
-                      </td>
-                    ))}
-                  </tr>
-                ))
-              : rows.map((row) => {
-                  const key = rowKey(row);
-                  const isSelected = selectedKeys.includes(key) || key === activeKey;
-                  const expanded = renderExpanded && expandedKeys?.includes(key);
+                ) : null}
+                {columns.map((col) => {
+                  const sorted = sort?.key === col.key ? sort.dir : undefined;
                   return (
-                    <Fragment key={key}>
-                      <tr
-                        aria-expanded={renderExpanded ? Boolean(expanded) : undefined}
-                        tabIndex={0}
-                        aria-selected={selectable ? selectedKeys.includes(key) : undefined}
-                        onClick={onRowClick ? () => onRowClick(row) : undefined}
-                        onKeyDown={(e) => onRowKeyDown(e, row, key)}
-                        className={cn(
-                          "group focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary",
-                          onRowClick && "cursor-pointer",
-                        )}
-                      >
-                        {selectable ? (
-                          <td
-                            style={SELECT_COL}
-                            className={cn(
-                              "border-b border-border pr-1 pl-4",
-                              isSelected ? "bg-primary-soft" : "bg-surface group-hover:bg-table-header",
-                              anyPinned && "sticky left-0 z-[1]",
-                            )}
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <Checkbox
-                              checked={selectedKeys.includes(key)}
-                              onChange={() => toggleRow(key)}
-                              aria-label={t("selectRow")}
-                              className="min-h-0"
-                            />
-                          </td>
-                        ) : null}
-                        {columns.map((col) => (
-                          <td
-                            key={col.key}
-                            style={col.key in pinLeft ? pinStyle(col.key, col.width) : undefined}
-                            className={cn(
-                              "border-b border-border px-3",
-                              col.key in pinLeft && "sticky z-[1]",
-                              col.key === lastPinned && "border-r",
-                              col.wrap ? "min-w-40 break-words whitespace-normal" : "whitespace-nowrap",
-                              tdPad,
-                              isSelected ? "bg-primary-soft" : "bg-surface group-hover:bg-table-header",
-                              col.align === "right" && "tabular text-right",
-                              col.mono && "font-mono text-mono",
-                            )}
-                          >
-                            {cellValue(row, col)}
-                          </td>
-                        ))}
-                        {rowActions ? (
-                          <td
-                            className={cn(
-                              "w-12 border-b border-border px-2 text-right",
-                              isSelected ? "bg-primary-soft" : "bg-surface group-hover:bg-table-header",
-                            )}
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            {rowActions(row)}
-                          </td>
-                        ) : null}
-                      </tr>
-                      {expanded ? (
-                        <tr>
-                          <td colSpan={colCount} className="border-b border-border bg-table-header p-0">
-                            {renderExpanded(row)}
-                          </td>
-                        </tr>
-                      ) : null}
-                    </Fragment>
+                    <th
+                      key={col.key}
+                      scope="col"
+                      aria-sort={sorted === "asc" ? "ascending" : sorted === "desc" ? "descending" : undefined}
+                      style={pinStyle(col.key, col.width)}
+                      className={cn(
+                        "sticky top-0 z-10 h-10 border-b border-border bg-table-header px-3 text-caption font-medium whitespace-nowrap text-text-secondary",
+                        col.align === "right" ? "text-right" : "text-left",
+                        col.key in pinLeft && cn("z-20", pinCls(col.key)),
+                        col.key === lastPinned && cn("border-r", leftShadow),
+                      )}
+                    >
+                      {col.sortable && onSortChange ? (
+                        <button
+                          type="button"
+                          onClick={() => onSortClick(col)}
+                          className={cn(
+                            "inline-flex items-center gap-1 rounded-sm hover:text-text-primary",
+                            col.align === "right" && "flex-row-reverse",
+                            sorted && "text-text-primary",
+                          )}
+                        >
+                          {col.title}
+                          <Icon
+                            icon={sorted === "asc" ? ArrowUp : sorted === "desc" ? ArrowDown : ChevronsUpDown}
+                            width={14}
+                            height={14}
+                            className={sorted ? "text-primary" : "text-text-disabled"}
+                          />
+                        </button>
+                      ) : (
+                        col.title
+                      )}
+                    </th>
                   );
                 })}
-            {showEmpty ? (
-              <tr>
-                <td colSpan={colCount}>{emptyState}</td>
+                {rowActions ? (
+                  <th scope="col" className={cn("sticky top-0 right-0 z-20 w-12 border-b border-border bg-table-header", rightShadow)}>
+                    <span className="sr-only">Harakatlar</span>
+                  </th>
+                ) : null}
               </tr>
+            </thead>
+            <tbody>
+              {loading
+                ? Array.from({ length: SKELETON_ROWS }, (_, i) => (
+                    <tr key={`skeleton-${i}`}>
+                      {Array.from({ length: colCount }, (_, j) => (
+                        <td key={j} className={cn("border-b border-border px-3", tdPad)}>
+                          <Skeleton className={j % 3 === 0 ? "w-3/4" : "w-1/2"} />
+                        </td>
+                      ))}
+                    </tr>
+                  ))
+                : rows.map((row) => {
+                    const key = rowKey(row);
+                    const isSelected = selectedKeys.includes(key) || key === activeKey;
+                    const expanded = renderExpanded && expandedKeys?.includes(key);
+                    return (
+                      <Fragment key={key}>
+                        <tr
+                          aria-expanded={renderExpanded ? Boolean(expanded) : undefined}
+                          tabIndex={0}
+                          aria-selected={selectable ? selectedKeys.includes(key) : undefined}
+                          onClick={onRowClick ? () => onRowClick(row) : undefined}
+                          onKeyDown={(e) => onRowKeyDown(e, row, key)}
+                          className={cn(
+                            "group focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary",
+                            onRowClick && "cursor-pointer",
+                          )}
+                        >
+                          {selectable ? (
+                            <td
+                              style={SELECT_COL}
+                              className={cn(
+                                "border-b border-border pr-1 pl-4",
+                                isSelected ? "bg-primary-soft" : "bg-surface group-hover:bg-table-header",
+                                anyPinned && cn(stickyCls, autoPin ? "sm:left-0" : "left-0", "z-[1]"),
+                              )}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <Checkbox
+                                checked={selectedKeys.includes(key)}
+                                onChange={() => toggleRow(key)}
+                                aria-label={t("selectRow")}
+                                className="min-h-0"
+                              />
+                            </td>
+                          ) : null}
+                          {columns.map((col) => (
+                            <td
+                              key={col.key}
+                              style={col.key in pinLeft ? pinStyle(col.key, col.width) : undefined}
+                              className={cn(
+                                "border-b border-border px-3",
+                                col.key in pinLeft && cn(stickyCls, "z-[1]", pinCls(col.key)),
+                                col.key === lastPinned && cn("border-r", leftShadow),
+                                col.wrap ? "min-w-40 break-words whitespace-normal" : "whitespace-nowrap",
+                                tdPad,
+                                isSelected ? "bg-primary-soft" : "bg-surface group-hover:bg-table-header",
+                                col.align === "right" && "tabular text-right",
+                                col.mono && "font-mono text-mono",
+                              )}
+                            >
+                              {cellValue(row, col)}
+                            </td>
+                          ))}
+                          {rowActions ? (
+                            <td
+                              className={cn(
+                                "sticky right-0 z-[1] w-12 border-b border-border px-2 text-right",
+                                rightShadow,
+                                isSelected ? "bg-primary-soft" : "bg-surface group-hover:bg-table-header",
+                              )}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              {rowActions(row)}
+                            </td>
+                          ) : null}
+                        </tr>
+                        {expanded ? (
+                          <tr>
+                            <td colSpan={colCount} className="border-b border-border bg-table-header p-0">
+                              {renderExpanded(row)}
+                            </td>
+                          </tr>
+                        ) : null}
+                      </Fragment>
+                    );
+                  })}
+              {showEmpty ? (
+                <tr>
+                  <td colSpan={colCount}>{emptyState}</td>
+                </tr>
+              ) : null}
+            </tbody>
+            {totals && !loading && rows.length > 0 ? (
+              <tfoot>
+                <tr>
+                  {selectable ? <td className="sticky bottom-0 bg-table-header" /> : null}
+                  {columns.map((col, i) => (
+                    <td
+                      key={col.key}
+                      className={cn(
+                        "sticky bottom-0 h-row-md bg-table-header px-3 font-semibold whitespace-nowrap",
+                        col.align === "right" && "tabular text-right",
+                      )}
+                    >
+                      {totals[col.key] ?? (i === 0 ? "Jami" : null)}
+                    </td>
+                  ))}
+                  {rowActions ? <td className="sticky bottom-0 bg-table-header" /> : null}
+                </tr>
+              </tfoot>
             ) : null}
-          </tbody>
-          {totals && !loading && rows.length > 0 ? (
-            <tfoot>
-              <tr>
-                {selectable ? <td className="sticky bottom-0 bg-table-header" /> : null}
-                {columns.map((col, i) => (
-                  <td
-                    key={col.key}
-                    className={cn(
-                      "sticky bottom-0 h-row-md bg-table-header px-3 font-semibold whitespace-nowrap",
-                      col.align === "right" && "tabular text-right",
-                    )}
-                  >
-                    {totals[col.key] ?? (i === 0 ? "Jami" : null)}
-                  </td>
-                ))}
-                {rowActions ? <td className="sticky bottom-0 bg-table-header" /> : null}
-              </tr>
-            </tfoot>
-          ) : null}
-        </table>
+          </table>
+        </div>
+        {edges.right && !rowActions ? (
+          <span
+            aria-hidden
+            className="pointer-events-none absolute inset-y-0 right-0 z-30 w-6 bg-gradient-to-l from-overlay/20 to-transparent"
+          />
+        ) : null}
       </div>
 
       {pagination && !showEmpty ? (
