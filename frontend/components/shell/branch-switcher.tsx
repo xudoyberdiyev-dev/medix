@@ -38,7 +38,8 @@ export function BranchSwitcher() {
     active.map((b) => b.id),
   );
   const label = current === null ? t("allBranches") : (branches.data.find((b) => b.id === current)?.name ?? "");
-  const code = current === null ? "ALL" : (branches.data.find((b) => b.id === current)?.code ?? "");
+  // U4: «Barcha filiallar» yonida texnik «ALL» belgisi koʻrsatilmaydi — faqat filial kodi.
+  const code = current === null ? "" : (branches.data.find((b) => b.id === current)?.code ?? "");
   const codeBadge = code ? (
     <span className="rounded-sm bg-background px-1.5 font-mono text-[11px] leading-4 text-text-secondary max-md:hidden">{code}</span>
   ) : null;
