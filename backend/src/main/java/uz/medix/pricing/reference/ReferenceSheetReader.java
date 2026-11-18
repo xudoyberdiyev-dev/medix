@@ -21,7 +21,7 @@ import uz.medix.pricing.reference.ReferenceModels.RefSheet;
 import uz.medix.shared.error.MedixException;
 
 /** Referent narxlar fayli (.xlsx/.xls/.csv) → varaqlar va katakchalar (matn). Katalog import ustasidagi o'qish bilan bir xil. */
-final class ReferenceSheetReader {
+public final class ReferenceSheetReader {
 
     private static final int MAX_ROWS = ReferenceModels.MAX_ROWS;
     private static final int MAX_COLS = 100;
@@ -39,7 +39,7 @@ final class ReferenceSheetReader {
         return fmt.formatCellValue(c).strip();
     }
 
-    static RefFile read(String fileName, long size, InputStream in) {
+    public static RefFile read(String fileName, long size, InputStream in) {
         String name = fileName == null ? "fayl" : fileName;
         if (name.toLowerCase(Locale.ROOT).endsWith(".csv")) {
             return new RefFile(name, size, List.of(new RefSheet(name.replaceAll("(?i)\\.csv$", ""), readCsv(in))));

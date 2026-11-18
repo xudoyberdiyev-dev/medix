@@ -219,6 +219,43 @@ class ExpectedReceiptIT {
     }
 
     @Test
+    void importLinesFromSupplierFile() throws Exception {
+        Place p = place();
+        long prod = product("KK Import Ibuprofen 200 mg", false);
+        String code = jdbc.sql("SELECT code FROM product WHERE id = :id").param("id", prod).query(String.class).single();
+        Cookie manager = loginAs("BRANCH_MANAGER", p.branchId());
+        Cookie keeper = loginAs("WAREHOUSE_MANAGER", p.branchId());
+        String body = "{\"rows\":[{\"row\":1,\"name\":\"Ibuprofen\",\"code\":\"" + code + "\",\"qty\":\"1 200\",\"price\":\"12 500,50\","
+                + "\"vat\":\"12%\",\"batch\":\"B-77\",\"expiry\":\"46387\"},"
+                + "{\"row\":2,\"name\":\"Mavjud emas zzqx\",\"qty\":\"ikki\",\"expiry\":\"ertaga\"}]}";
+        send(post("/api/expected-receipts/import-lines"), manager, body)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].productId").value(prod))
+                .andExpect(jsonPath("$[0].matchBy").value("CODE"))
+                .andExpect(jsonPath("$[0].qty").value(1200))
+                .andExpect(jsonPath("$[0].price").value("12500.50"))
+                .andExpect(jsonPath("$[0].vatRate").value(12))
+                .andExpect(jsonPath("$[0].batchNumber").value("B-77"))
+                .andExpect(jsonPath("$[0].expiryDate").value("2026-12-31"))
+                .andExpect(jsonPath("$[0].problems").isEmpty())
+                .andExpect(jsonPath("$[1].qty").doesNotExist())
+                .andExpect(jsonPath("$[1].problems").value(org.hamcrest.Matchers.hasItems("qty", "expiry")));
+        // Ombor mudiri — narx (tannarx) qaytarilmaydi
+        send(post("/api/expected-receipts/import-lines"), keeper, body)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].price").doesNotExist());
+        // Faqat ko'ruvchi — 403
+        send(post("/api/expected-receipts/import-lines"), loginAs("OPERATOR", p.branchId()), body).andExpect(status().isForbidden());
+        // Fayl o'qish (CSV)
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart("/api/expected-receipts/import-read")
+                        .file(new org.springframework.mock.web.MockMultipartFile("file", "yb.csv", "text/csv",
+                                "Nomi;Soni;Narx\nIbuprofen;10;1200\n".getBytes(java.nio.charset.StandardCharsets.UTF_8)))
+                        .with(csrf()).cookie(manager))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.sheets[0].rows[1][0]").value("Ibuprofen"));
+    }
+
+    @Test
     void creditApproveWritesDebtImmediatelyOnceAndCancelReverses() throws Exception {
         Place p = place();
         long sup = supplier(p.branchId(), 10);

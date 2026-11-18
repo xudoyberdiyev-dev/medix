@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -23,7 +24,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import uz.medix.pricing.SupplierFiles;
 import uz.medix.purchasing.receipt.ExpectedReceiptModels.KkCloseRequest;
+import uz.medix.purchasing.receipt.ExpectedReceiptModels.KkImportLine;
+import uz.medix.purchasing.receipt.ExpectedReceiptModels.KkImportRequest;
 import uz.medix.purchasing.receipt.ExpectedReceiptModels.ExpectedReceiptCancelRequest;
 import uz.medix.purchasing.receipt.ExpectedReceiptModels.ExpectedReceiptDetail;
 import uz.medix.purchasing.receipt.ExpectedReceiptModels.ExpectedReceiptPage;
@@ -51,9 +55,14 @@ class ExpectedReceiptController {
     private final ExpectedReceipts kk;
     private final CurrentActor currentActor;
     private final ExpectedReceiptActPdf actPdf;
+    private final SupplierFiles supplierFiles;
+    private final ExpectedReceiptImport importer;
 
-    ExpectedReceiptController(ExpectedReceipts kk, CurrentActor currentActor, ExpectedReceiptActPdf actPdf) {
+    ExpectedReceiptController(ExpectedReceipts kk, CurrentActor currentActor, ExpectedReceiptActPdf actPdf, SupplierFiles supplierFiles,
+            ExpectedReceiptImport importer) {
         this.kk = kk;
+        this.supplierFiles = supplierFiles;
+        this.importer = importer;
         this.actPdf = actPdf;
         this.currentActor = currentActor;
     }
@@ -99,6 +108,23 @@ class ExpectedReceiptController {
             throw MedixException.badRequest("error.request");
         }
         return kk.inTransit(actor(), productId, branchId, warehouseId);
+    }
+
+    @PostMapping(path = "/import-read", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAuthority('kk.create')")
+    @Operation(summary = "YB faylini o'qish (KK qatorlari uchun)", description = ".xlsx/.xls/.csv — varaqlar va katakchalar. Hech narsa yozilmaydi.")
+    SupplierFiles.File importRead(@RequestParam("file") MultipartFile file) throws IOException {
+        try (InputStream in = file.getInputStream()) {
+            return supplierFiles.read(file.getOriginalFilename(), file.getSize(), in);
+        }
+    }
+
+    @PostMapping("/import-lines")
+    @PreAuthorize("hasAuthority('kk.create')")
+    @Operation(summary = "YB fayli qatorlari → KK qatorlari",
+            description = "Mahsulot topiladi (shtrix-kod → MXIK → kod → xotira → nom), soni/narx/QQS/partiya/yaroqlilik o'qiladi. Hech narsa yozilmaydi.")
+    List<KkImportLine> importLines(@Valid @RequestBody KkImportRequest r, Authentication auth) {
+        return importer.lines(r.rows(), ReceiptController.pricesVisible(auth));
     }
 
     @GetMapping("/{id}")

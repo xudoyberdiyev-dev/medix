@@ -29,6 +29,31 @@ final class ExpectedReceiptModels {
     /** To'lov: qarzga (qarz KK tasdig'ida yoziladi), oldindan to'langan, naqd (qarz — kirim o'tkazilganda, odatdagidek). */
     enum PaymentKind { CREDIT, PREPAID, CASH }
 
+    /** YB faylidan bitta qator (ustunlar moslangan, matn). */
+    record KkImportRow(
+            @Min(1) int row,
+            @Size(max = 500) String name,
+            @Size(max = 100) String barcode,
+            @Size(max = 100) String ikpu,
+            @Size(max = 100) String code,
+            @Size(max = 300) String manufacturer,
+            @Size(max = 50) String qty,
+            @Size(max = 50) String price,
+            @Size(max = 30) String vat,
+            @Size(max = 100) String batch,
+            @Size(max = 50) String expiry) {}
+
+    record KkImportRequest(@NotEmpty(message = "{validation.required}") @Size(max = MAX_LINES) List<@Valid @NotNull KkImportRow> rows) {}
+
+    /**
+     * Yuklangan qator: topilgan mahsulot ({@code matchBy}: BARCODE, IKPU, CODE, MEMORY, NAME, NONE; {@code confident=false} — taxmin),
+     * o'qilgan qiymatlar va muammolar (product, productGuess, qty, price, vat, expiry). Narx — faqat narx ko'rish huquqi bilan.
+     */
+    record KkImportLine(int row, @Schema(nullable = true) String fileName, @Schema(nullable = true) Long productId,
+            @Schema(nullable = true) String productCode, @Schema(nullable = true) String productName, String matchBy, boolean confident,
+            @Schema(nullable = true) Integer qty, @Schema(nullable = true) String price, @Schema(nullable = true) Integer vatRate,
+            @Schema(nullable = true) String batchNumber, @Schema(nullable = true) LocalDate expiryDate, List<String> problems) {}
+
     record ExpectedReceiptLineRequest(
             @NotNull(message = "{validation.required}") Long productId,
             @NotNull(message = "{validation.required}") @Min(1) @Max(MAX_QTY) Integer qty,
