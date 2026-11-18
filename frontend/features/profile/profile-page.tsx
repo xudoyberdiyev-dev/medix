@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Drawer } from "@/components/ui/drawer";
 import { Modal } from "@/components/ui/modal";
+import { Switch } from "@/components/ui/selection-controls";
 import { ErrorState, Skeleton } from "@/components/ui/system-states";
 import { TextField } from "@/components/ui/text-field";
 import { toast } from "@/components/ui/toast";
@@ -19,6 +20,7 @@ import { ACT, isObjectType } from "@/features/audit/audit-page";
 import { describeError } from "@/features/setup/form-error";
 import { cn } from "@/lib/cn";
 import { formatDateTime } from "@/lib/format";
+import { setScanFeedback, useScanFeedbackPref } from "@/lib/scan-feedback";
 import { useTheme, type ThemePref } from "@/lib/theme";
 import { formatIsoDate, todayTashkent } from "@/features/counterparties/api";
 import { cleanLogin, formatPhone } from "@/features/employees/staff";
@@ -64,6 +66,7 @@ export function ProfilePage() {
           <InfoCard profile={p} />
           <LanguageCard />
           <ThemeCard />
+          <ScanCard />
           <PasswordCard profile={p} />
           <PinCard profile={p} />
         </div>
@@ -235,6 +238,21 @@ function ThemeCard() {
     </Card>
   );
 }
+
+/** U14: skanerlash ovozi va tebranishi — faqat skanerlaydigan rollarda (Markirovkachi va b.). Qurilma sozlamasi. */
+function ScanCard() {
+  const t = useTranslations("profile.scan");
+  const me = useMe();
+  const on = useScanFeedbackPref();
+  if (!SCAN_PERMS.some((k) => can(me.data, k))) return null;
+  return (
+    <Card title={t("title")}>
+      <Switch label={t("label")} description={t("note")} checked={on} onChange={setScanFeedback} />
+    </Card>
+  );
+}
+
+const SCAN_PERMS = ["marking.scan", "picking.do", "inventory.count", "receipt.accept"];
 
 function LanguageCard() {
   const t = useTranslations("profile");

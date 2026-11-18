@@ -93,5 +93,10 @@
     "dark": "Qorongʻi",
     "system": "Tizim boʻyicha",
     "note": "Tanlov shu brauzerda saqlanadi. «Tizim boʻyicha» — qurilma sozlamasiga qarab. Chop etiladigan hujjatlar har doim yorugʻ."
+  },
+  "scan": {
+    "title": "Skanerlash",
+    "label": "Ovoz va tebranish",
+    "note": "Toʻgʻri kodda — qisqa signal, xato kodda — past uzun signal va ikki marta tebranish. Shu qurilma uchun."
   }
 }

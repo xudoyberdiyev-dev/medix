@@ -50,6 +50,7 @@ import type { components } from "@/lib/api/schema";
 import { cn } from "@/lib/cn";
 import { formatDateTime, formatQuantity } from "@/lib/format";
 import { GS, parseGs1 } from "@/lib/gs1";
+import { scanFeedback } from "@/lib/scan-feedback";
 import { codesExportUrl, useOrder, verifyExportUrl } from "./api";
 import { IssueButton } from "./issues";
 import { MarkImportButton } from "./mark-import";
@@ -98,25 +99,6 @@ function useNow(): Date {
 }
 
 /** Qisqa ovoz: to'g'ri kod — qisqa baland, xato — uzun past (SPEC 5.4). Brauzer ruxsat bermasa — jim. */
-function beep(ok: boolean) {
-  try {
-    const Ctx = window.AudioContext;
-    if (!Ctx) return;
-    const ctx = new Ctx();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.frequency.value = ok ? 1200 : 220;
-    osc.type = ok ? "sine" : "square";
-    gain.gain.value = 0.15;
-    osc.connect(gain).connect(ctx.destination);
-    osc.start();
-    osc.stop(ctx.currentTime + (ok ? 0.12 : 0.6));
-    osc.onended = () => void ctx.close();
-  } catch {
-    // ovoz ixtiyoriy
-  }
-}
-
 type Flash = { ok: true; title: string; detail: string } | { ok: false; title: string; detail: string };
 
 /** Markirovkachi paneli (SPEC 5.4): Navbat, Mening markirovkam, Bugun yakunlanganlar, Kodlar jurnali. */
@@ -422,7 +404,7 @@ function ActiveMarking({ work }: { work: MarkWork }) {
 
   function show(f: Flash) {
     setFlash(f);
-    beep(f.ok);
+    scanFeedback(f.ok);
   }
 
   // Skaner kodlarni ketma-ket tez yuboradi: oldingi soʻrov tugamaguncha kelgan kod tashlab yuborilmaydi — navbatga qoʻyiladi.
