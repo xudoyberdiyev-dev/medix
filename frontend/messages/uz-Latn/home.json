@@ -350,5 +350,21 @@
     "passive": "Passiv",
     "activeSub": "Oxirgi 30 kunda tovari sotilganmi",
     "pcs": "{n} dona"
+  },
+  "setup": {
+    "title": "Sozlash roʻyxati",
+    "sub": "Ishga tushirish uchun asosiy maʼlumotlar — {p}% bajarildi",
+    "open": "Ochish",
+    "done": "Bajarildi",
+    "step": {
+      "COMPANY": "Kompaniya maʼlumotlari",
+      "BRANCHES": "Filiallar",
+      "WAREHOUSES": "Omborlar",
+      "EMPLOYEES": "Xodimlar",
+      "PRICES": "Narx turlari va narxlar",
+      "CUSTOMERS": "Mijozlar (import)",
+      "PRODUCTS": "Mahsulotlar",
+      "OPENING_STOCK": "Boshlangʻich qoldiq"
+    }
   }
 }

@@ -69,6 +69,7 @@ class VehicleController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyAuthority('lookups.view', 'lookups.fleet', 'shipments.view', 'shipments.trip')")
     @Transactional(readOnly = true)
     @Operation(summary = "Mashinalar (filial doirasida)")
     List<Vehicle> list() {

@@ -93,6 +93,9 @@
     "description" : "Xodimlar",
     "name" : "employees"
   }, {
+    "description" : "Ishga tushirish: sozlash roʻyxati",
+    "name" : "setup-checklist"
+  }, {
     "description" : "Boshlang'ich qoldiq",
     "name" : "opening"
   }, {
@@ -8514,7 +8517,7 @@
     },
     "/api/orders" : {
       "get" : {
-        "description" : "operatorId — kiritgan xodim; soldFrom/soldTo — shu davrda sotilgan yoki qaytarilgan (Savdo hisoboti qatoridan hujjatlarga o'tish, SPEC 8); orderFrom/orderTo — buyurtma sanasi; customerId/operatorId/statuses/deliveryType/paymentType/regionId/salesZoneId — bir nechta qiymat (prototip filtr chiplari); q — raqam, STIR yoki mijoz nomi (lotin/kirill farqsiz); sort/desc — saralash (standart: kiritilgan vaqti, yangisi tepada).",
+        "description" : "operatorId — kiritgan xodim; soldFrom/soldTo — shu davrda sotilgan yoki qaytarilgan (Savdo hisoboti qatoridan hujjatlarga o'tish, SPEC 8); orderFrom/orderTo — buyurtma sanasi; customerId/operatorId/statuses/deliveryType/paymentType/regionId/salesZoneId — bir nechta qiymat (prototip filtr chiplari); q — raqam, STIR yoki mijoz nomi (lotin/kirill farqsiz); overdue — yetkazish sanasi oʻtgan jarayondagi buyurtmalar; sort/desc — saralash (standart: kiritilgan vaqti, yangisi tepada).",
         "operationId" : "list_14",
         "parameters" : [ {
           "in" : "query",
@@ -8651,6 +8654,14 @@
         }, {
           "in" : "query",
           "name" : "mine",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
+          }
+        }, {
+          "in" : "query",
+          "name" : "overdue",
           "required" : false,
           "schema" : {
             "type" : "boolean",
@@ -8813,6 +8824,17 @@
             "items" : {
               "type" : "string",
               "enum" : [ "MARKED", "CONTROLLED", "PRESCRIPTION" ]
+            }
+          }
+        }, {
+          "in" : "query",
+          "name" : "productIds",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
             }
           }
         }, {
@@ -9056,6 +9078,14 @@
         }, {
           "in" : "query",
           "name" : "mine",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
+          }
+        }, {
+          "in" : "query",
+          "name" : "overdue",
           "required" : false,
           "schema" : {
             "type" : "boolean",
@@ -12910,6 +12940,29 @@
         "tags" : [ "profile" ]
       }
     },
+    "/api/profile/favorites" : {
+      "put" : {
+        "description" : "Menyu kalitlari tartib bilan (koʻpi bilan 12) — har qurilmada bir xil (U7).",
+        "operationId" : "setFavorites",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/FavoritesRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          }
+        },
+        "summary" : "Sidebar sevimlilarini saqlash",
+        "tags" : [ "profile" ]
+      }
+    },
     "/api/profile/pin" : {
       "put" : {
         "description" : "Joriy parol bilan tasdiqlanadi. PIN — 4–6 raqam.",
@@ -15877,6 +15930,25 @@
         "tags" : [ "settings" ]
       }
     },
+    "/api/settings/system-status" : {
+      "get" : {
+        "operationId" : "status_3",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SystemErrorStatus"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Tizim holati: server xatolari (24 soat, 7 kun), eng koʻp uchraganlari va oxirgi 20 tasi",
+        "tags" : [ "settings" ]
+      }
+    },
     "/api/settings/thresholds" : {
       "get" : {
         "description" : "Muddat ogohlantirishi (kun), narx o'zgarishi ogohlantirishi (%), limit oshishi — Filial rahbari (%), muddati o'tgan qarz — Direktor (kun).",
@@ -15944,6 +16016,25 @@
         },
         "summary" : "Usta holati",
         "tags" : [ "setup" ]
+      }
+    },
+    "/api/setup-checklist" : {
+      "get" : {
+        "operationId" : "checklist",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SetupChecklist"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Sozlash roʻyxati: kompaniya, filiallar, omborlar, xodimlar, narxlar, mijozlar, mahsulotlar, boshlangʻich qoldiq",
+        "tags" : [ "setup-checklist" ]
       }
     },
     "/api/setup/branches" : {
@@ -22741,6 +22832,27 @@
         },
         "required" : [ "checkedLines", "places" ]
       },
+      "ChecklistItem" : {
+        "type" : "object",
+        "properties" : {
+          "count" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Hozirgi soni (kompaniya — 0/1)"
+          },
+          "done" : {
+            "type" : "boolean"
+          },
+          "link" : {
+            "type" : "string"
+          },
+          "step" : {
+            "type" : "string",
+            "enum" : [ "COMPANY", "BRANCHES", "WAREHOUSES", "EMPLOYEES", "PRICES", "CUSTOMERS", "PRODUCTS", "OPENING_STOCK" ]
+          }
+        },
+        "required" : [ "count", "done", "link", "step" ]
+      },
       "CloseApprover" : {
         "type" : "object",
         "properties" : {
@@ -25736,6 +25848,22 @@
         },
         "required" : [ "active", "categories", "countries", "inactive", "manufacturers", "supplyEmployees" ]
       },
+      "FavoritesRequest" : {
+        "type" : "object",
+        "properties" : {
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "minLength" : 1,
+              "pattern" : "^[A-Za-z0-9_-]{1,40}$"
+            },
+            "maxItems" : 12,
+            "minItems" : 0
+          }
+        },
+        "required" : [ "items" ]
+      },
       "File" : {
         "type" : "object",
         "properties" : {
@@ -26169,6 +26297,10 @@
           "expenses" : {
             "$ref" : "#/components/schemas/ByPayment"
           },
+          "expensesPrev" : {
+            "type" : "string",
+            "description" : "Oldingi teng davr xarajatlari"
+          },
           "from" : {
             "type" : "string",
             "format" : "date"
@@ -26195,6 +26327,10 @@
           "salesDocs" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "salesPrev" : {
+            "type" : "string",
+            "description" : "Oldingi teng davr sof savdosi (U9: ↑/↓ %)"
           },
           "staleDays" : {
             "type" : "integer",
@@ -26229,7 +26365,7 @@
             }
           }
         },
-        "required" : [ "attention", "avgSale", "branches", "customerDebt", "customerDebtBy", "daily", "expenses", "from", "groupDebt", "operators", "orderStatuses", "sales", "salesDocs", "staleDays", "supplierDebt", "supplierDebtBy", "to", "today", "topDebtors" ]
+        "required" : [ "attention", "avgSale", "branches", "customerDebt", "customerDebtBy", "daily", "expenses", "expensesPrev", "from", "groupDebt", "operators", "orderStatuses", "sales", "salesDocs", "salesPrev", "staleDays", "supplierDebt", "supplierDebtBy", "to", "today", "topDebtors" ]
       },
       "HomeAccount" : {
         "type" : "object",
@@ -33477,6 +33613,13 @@
           "email" : {
             "type" : "string"
           },
+          "favorites" : {
+            "type" : "array",
+            "description" : "Sidebar sevimlilari — menyu kalitlari, tartib bilan (U7)",
+            "items" : {
+              "type" : "string"
+            }
+          },
           "firstName" : {
             "type" : "string"
           },
@@ -33530,7 +33673,7 @@
             "enum" : [ "light", "dark", "system" ]
           }
         },
-        "required" : [ "fullName", "id", "login", "pinSet", "roleCode", "roleName", "theme" ]
+        "required" : [ "favorites", "fullName", "id", "login", "pinSet", "roleCode", "roleName", "theme" ]
       },
       "PurchaserHomeView" : {
         "type" : "object",
@@ -36319,6 +36462,22 @@
         },
         "required" : [ "canEdit", "canSecurity", "docs", "opening", "pendingOrders", "print", "values", "vatHistory", "vatRate" ]
       },
+      "SetupChecklist" : {
+        "type" : "object",
+        "properties" : {
+          "donePercent" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ChecklistItem"
+            }
+          }
+        },
+        "required" : [ "donePercent", "items" ]
+      },
       "SetupStatus" : {
         "type" : "object",
         "properties" : {
@@ -37671,6 +37830,74 @@
           }
         },
         "required" : [ "brought", "id", "left", "name", "sold" ]
+      },
+      "SystemErrorGroup" : {
+        "type" : "object",
+        "properties" : {
+          "count" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "exception" : {
+            "type" : "string"
+          },
+          "path" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "count", "exception", "path" ]
+      },
+      "SystemErrorRow" : {
+        "type" : "object",
+        "properties" : {
+          "exception" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          },
+          "method" : {
+            "type" : "string"
+          },
+          "occurredAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "path" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "exception", "message", "method", "occurredAt", "path" ]
+      },
+      "SystemErrorStatus" : {
+        "type" : "object",
+        "properties" : {
+          "last24h" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "last7d" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "recent" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SystemErrorRow"
+            }
+          },
+          "startedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "top24h" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SystemErrorGroup"
+            }
+          }
+        },
+        "required" : [ "last24h", "last7d", "recent", "startedAt", "top24h" ]
       },
       "TargetWarehouse" : {
         "type" : "object",

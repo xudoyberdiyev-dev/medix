@@ -50,6 +50,9 @@ import type { components } from "@/lib/api/schema";
 import { cn } from "@/lib/cn";
 import { formatDateTime, formatQuantity } from "@/lib/format";
 import { GS, parseGs1 } from "@/lib/gs1";
+import { scanFeedback } from "@/lib/scan-feedback";
+import { isNetworkError, useOnline } from "@/lib/use-online";
+import { MobileActionBar, usePhone } from "@/components/ui/mobile-action-bar";
 import { codesExportUrl, useOrder, verifyExportUrl } from "./api";
 import { IssueButton } from "./issues";
 import { MarkImportButton } from "./mark-import";
@@ -98,25 +101,6 @@ function useNow(): Date {
 }
 
 /** Qisqa ovoz: to'g'ri kod — qisqa baland, xato — uzun past (SPEC 5.4). Brauzer ruxsat bermasa — jim. */
-function beep(ok: boolean) {
-  try {
-    const Ctx = window.AudioContext;
-    if (!Ctx) return;
-    const ctx = new Ctx();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.frequency.value = ok ? 1200 : 220;
-    osc.type = ok ? "sine" : "square";
-    gain.gain.value = 0.15;
-    osc.connect(gain).connect(ctx.destination);
-    osc.start();
-    osc.stop(ctx.currentTime + (ok ? 0.12 : 0.6));
-    osc.onended = () => void ctx.close();
-  } catch {
-    // ovoz ixtiyoriy
-  }
-}
-
 type Flash = { ok: true; title: string; detail: string } | { ok: false; title: string; detail: string };
 
 /** Markirovkachi paneli (SPEC 5.4): Navbat, Mening markirovkam, Bugun yakunlanganlar, Kodlar jurnali. */
@@ -159,9 +143,9 @@ export function MarkingPage() {
           onChange={setTab}
           items={[
             { key: "queue", label: t("marking.tabQueue"), count: waiting || undefined },
-            { key: "mine", label: t("marking.tabMine"), count: mine.data ? 1 : undefined },
-            { key: "today", label: t("marking.tabToday") },
-            { key: "codes", label: t("marking.tabCodes") },
+            { key: "mine", label: t("marking.tabMine"), short: t("marking.tabMineShort"), count: mine.data ? 1 : undefined },
+            { key: "today", label: t("marking.tabToday"), short: t("marking.tabTodayShort") },
+            { key: "codes", label: t("marking.tabCodes"), short: t("marking.tabCodesShort") },
           ]}
         />
       </div>
@@ -422,12 +406,28 @@ function ActiveMarking({ work }: { work: MarkWork }) {
 
   function show(f: Flash) {
     setFlash(f);
-    beep(f.ok);
+    scanFeedback(f.ok);
   }
 
   // Skaner kodlarni ketma-ket tez yuboradi: oldingi soʻrov tugamaguncha kelgan kod tashlab yuborilmaydi — navbatga qoʻyiladi.
   const queue = useRef<Promise<void>>(Promise.resolve());
   const [queued, setQueued] = useState(0);
+  // U13: internet uzilganda yuborilmagan kodlar — ulanish tiklangach ketma-ket qayta yuboriladi (ish yoʻqolmaydi).
+  const offline = useRef<{ raw: string; lineId?: number }[]>([]);
+  const [offlineCount, setOfflineCount] = useState(0);
+  const online = useOnline();
+  useEffect(() => {
+    if (!online || offline.current.length === 0) return;
+    const pending = offline.current;
+    offline.current = [];
+    setOfflineCount(0);
+    for (const p of pending) {
+      setQueued((n) => n + 1);
+      queue.current = queue.current.then(() => scanOne(p.raw, p.lineId)).finally(() => setQueued((n) => n - 1));
+    }
+    // scanOne — har renderda yangi; navbat faqat ulanish tiklanganda ishga tushadi
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [online]);
 
   function scan(raw: string) {
     if (!raw.trim()) return;
@@ -457,6 +457,12 @@ function ActiveMarking({ work }: { work: MarkWork }) {
       qc.setQueryData(["marking", "mine"], r.work);
       show({ ok: true, title: tr("marking.accepted"), detail: `${r.accepted.productName} · ${counterText(r.work, tr)}` });
     } catch (e) {
+      if (!(e instanceof ApiError) && isNetworkError(e)) {
+        offline.current.push({ raw, lineId });
+        setOfflineCount(offline.current.length);
+        show({ ok: false, title: tr("marking.offlineQueued"), detail: tr("marking.offlineQueuedHint", { n: offline.current.length }) });
+        return;
+      }
       if (e instanceof ApiError && e.code === "marking.aggregateNeedProduct") setBoxPending(raw);
       show({ ok: false, title: tr("marking.rejected"), detail: e instanceof ApiError ? e.message : (describeError(e).message ?? "") });
     }
@@ -557,6 +563,18 @@ function ActiveMarking({ work }: { work: MarkWork }) {
 
   const finishErr = describeError(finishError);
   const removeErr = describeError(removeError);
+  const phone = usePhone();
+  const finishButton = (
+    <Button
+      size={phone ? "lg" : "md"}
+      icon={CheckCircle2}
+      disabled={!work.complete || (hasCodes && (!exportedAt || !verified))}
+      loading={finishing}
+      onClick={() => void finish()}
+    >
+      {hasCodes ? tr("marking.verifyFinish") : tr("marking.finish")}
+    </Button>
+  );
   return (
     <div className="grid grid-cols-1 gap-6 xl:grid-cols-[2fr_1fr]">
       {flash ? (
@@ -601,6 +619,11 @@ function ActiveMarking({ work }: { work: MarkWork }) {
               <span className="mb-1 flex items-center gap-2 text-caption text-text-secondary">
                 <ScanLine size={16} strokeWidth={1.5} aria-hidden /> {tr("marking.scanField")}
                 {queued > 1 ? <span aria-live="polite">{tr("marking.checking", { count: queued })}</span> : null}
+                {offlineCount > 0 ? (
+                  <span aria-live="polite" className="text-warning">
+                    {tr("marking.offlineQueuedHint", { n: offlineCount })}
+                  </span>
+                ) : null}
               </span>
               <input
                 ref={input}
@@ -748,15 +771,9 @@ function ActiveMarking({ work }: { work: MarkWork }) {
           <div className="mt-4 flex flex-wrap justify-end gap-2">
             <IssueButton orderId={work.id} />
             {hasMarked && !work.complete ? <MarkImportButton orderId={work.id} /> : null}
-            <Button
-              icon={CheckCircle2}
-              disabled={!work.complete || (hasCodes && (!exportedAt || !verified))}
-              loading={finishing}
-              onClick={() => void finish()}
-            >
-              {hasCodes ? tr("marking.verifyFinish") : tr("marking.finish")}
-            </Button>
+            {phone ? null : finishButton}
           </div>
+          {phone ? <MobileActionBar>{finishButton}</MobileActionBar> : null}
         </Card>
       </section>
       <section>

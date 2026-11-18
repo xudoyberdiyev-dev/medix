@@ -74,6 +74,7 @@ import {
 } from "./api";
 import { ReceiptCatalogDialog } from "./receipt-catalog-dialog";
 import { ReceiptLinesGrid } from "./receipt-lines-grid";
+import { readReceiptBackup, writeReceiptBackup } from "./receipt-backup";
 import { centsToMoney, dueBase, expectedBonus, receiptSteps, standardDue, toCentsBig } from "./receipt-doc";
 import { ReceiptStatusBadge, day } from "./receipts-page";
 
@@ -224,24 +225,103 @@ function Editor({
   const editable = canCreate && (!doc || doc.status === "DRAFT") && (pricesVisible || !doc?.hasPrices) && !kkLinked;
 
   const init = doc ?? source ?? null;
-  const [warehouseId, setWarehouseId] = useState<string | null>(init ? String(init.warehouseId) : null);
-  const [supplier, setSupplier] = useState<string | null>(init ? String(init.supplierId) : bonusFor ? String(bonusFor.supplierId) : null);
-  const [supplierLabel, setSupplierLabel] = useState(init?.supplier ?? bonusFor?.supplier ?? "");
-  const [date, setDate] = useState(formatIsoDate(doc?.receiptDate ?? todayTashkent()));
-  const [invoice, setInvoice] = useState(doc?.invoiceNumber ?? "");
-  const [invoiceDate, setInvoiceDate] = useState(formatIsoDate(doc?.invoiceDate));
-  const [paymentType, setPaymentType] = useState<string | null>(init?.paymentType ?? "TRANSFER");
-  const [due, setDue] = useState(doc?.dueManual ? formatIsoDate(doc.dueDate) : "");
-  const [owner, setOwner] = useState<string | null>(init?.ownerId ? String(init.ownerId) : null);
-  const [prepaid, setPrepaid] = useState(doc?.prepaid ?? false);
+  // Qoralama zaxirasi (U11): faqat yangi (nusxa/bonussiz) kirim — brauzer xotirasidagi saqlanmagan forma tiklanadi
+  const userId = me.data?.id ?? null;
+  const backupOn = canCreate && !doc && !source && !bonusFor && userId !== null;
+  const [backup] = useState(() => (backupOn && userId !== null ? readReceiptBackup(userId) : null));
+  const rb = backup?.form ?? null;
+  const [warehouseId, setWarehouseId] = useState<string | null>(rb ? rb.warehouseId : init ? String(init.warehouseId) : null);
+  const [supplier, setSupplier] = useState<string | null>(
+    rb ? rb.supplier : init ? String(init.supplierId) : bonusFor ? String(bonusFor.supplierId) : null,
+  );
+  const [supplierLabel, setSupplierLabel] = useState(rb?.supplierLabel ?? init?.supplier ?? bonusFor?.supplier ?? "");
+  const [date, setDate] = useState(rb?.date ?? formatIsoDate(doc?.receiptDate ?? todayTashkent()));
+  const [invoice, setInvoice] = useState(rb?.invoice ?? doc?.invoiceNumber ?? "");
+  const [invoiceDate, setInvoiceDate] = useState(rb?.invoiceDate ?? formatIsoDate(doc?.invoiceDate));
+  const [paymentType, setPaymentType] = useState<string | null>(rb ? rb.paymentType : (init?.paymentType ?? "TRANSFER"));
+  const [due, setDue] = useState(rb?.due ?? (doc?.dueManual ? formatIsoDate(doc.dueDate) : ""));
+  const [owner, setOwner] = useState<string | null>(rb ? rb.owner : init?.ownerId ? String(init.ownerId) : null);
+  const [prepaid, setPrepaid] = useState(rb?.prepaid ?? doc?.prepaid ?? false);
   const [fromBonus, setFromBonus] = useState(doc?.fromBonus ?? (!init && bonusFor != null));
   const confirmBonus = useConfirmBonus();
-  const [discountKind, setDiscountKind] = useState<string | null>(doc?.discountKind ?? null);
-  const [discountValue, setDiscountValue] = useState(doc?.discountValue ?? "");
-  const [discountDate, setDiscountDate] = useState(formatIsoDate(doc?.discountDate));
-  const [note, setNote] = useState(init?.note ?? "");
-  const [factura, setFactura] = useState(doc?.facturaNumber ?? "");
-  const [lines, setLines] = useState<DraftLine[]>(init ? toDraft(init) : []);
+  const [discountKind, setDiscountKind] = useState<string | null>(rb ? rb.discountKind : (doc?.discountKind ?? null));
+  const [discountValue, setDiscountValue] = useState(rb?.discountValue ?? doc?.discountValue ?? "");
+  const [discountDate, setDiscountDate] = useState(rb?.discountDate ?? formatIsoDate(doc?.discountDate));
+  const [note, setNote] = useState(rb?.note ?? init?.note ?? "");
+  const [factura, setFactura] = useState(rb?.factura ?? doc?.facturaNumber ?? "");
+  const [lines, setLines] = useState<DraftLine[]>(rb ? rb.lines : init ? toDraft(init) : []);
+  useEffect(() => {
+    if (!backupOn || userId === null) return;
+    writeReceiptBackup(userId, {
+      warehouseId,
+      supplier,
+      supplierLabel,
+      date,
+      invoice,
+      invoiceDate,
+      paymentType,
+      due,
+      owner,
+      prepaid,
+      discountKind,
+      discountValue,
+      discountDate,
+      note,
+      factura,
+      lines,
+    });
+  }, [
+    backupOn,
+    userId,
+    warehouseId,
+    supplier,
+    supplierLabel,
+    date,
+    invoice,
+    invoiceDate,
+    paymentType,
+    due,
+    owner,
+    prepaid,
+    discountKind,
+    discountValue,
+    discountDate,
+    note,
+    factura,
+    lines,
+  ]);
+  const backupToast = useRef(false);
+  useEffect(() => {
+    if (!backup || backupToast.current) return;
+    backupToast.current = true;
+    toast({
+      tone: "info",
+      title: t("draftRestored"),
+      description: t("draftRestoredHint", { at: formatDateTime(new Date(backup.at)) }),
+      action: {
+        label: t("draftRestoredDrop"),
+        onClick: () => {
+          if (userId !== null) writeReceiptBackup(userId, null);
+          setWarehouseId(null);
+          setSupplier(null);
+          setSupplierLabel("");
+          setDate(formatIsoDate(todayTashkent()));
+          setInvoice("");
+          setInvoiceDate("");
+          setPaymentType("TRANSFER");
+          setDue("");
+          setOwner(null);
+          setPrepaid(false);
+          setDiscountKind(null);
+          setDiscountValue("");
+          setDiscountDate("");
+          setNote("");
+          setFactura("");
+          setLines([]);
+        },
+      },
+    });
+  }, [backup, userId, t]);
   const [adding, setAdding] = useState(emptyAdd);
   const [local, setLocal] = useState<string | null>(null);
   const [dialog, setDialog] = useState<"accept" | "post" | "cancel" | null>(null);
@@ -342,6 +422,8 @@ function Editor({
       { id: doc?.id, body: b },
       {
         onSuccess: (d) => {
+          // Serverda saqlandi — yangi kirim zaxirasi endi kerak emas
+          if (!doc && userId !== null) writeReceiptBackup(userId, null);
           if (then) return then(d);
           toast({ tone: "success", title: t("draftSaved"), description: d.number });
           if (!doc) onCreated(d.id);

@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Locale;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.simple.JdbcClient;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -49,6 +50,7 @@ class NotificationController {
     }
 
     @GetMapping
+    @PreAuthorize("isAuthenticated()")
     @Transactional(readOnly = true)
     @Operation(summary = "Oxirgi 50 ta bildirishnoma va o'qilmaganlar soni")
     NotificationList list() {
@@ -71,6 +73,7 @@ class NotificationController {
     }
 
     @GetMapping(path = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Real vaqt signallari (SSE): «notifications» — bildirishnomalar; «orders», «trips», «receipts» — shu filialda hujjat o'zgardi")
     SseEmitter stream(HttpServletResponse response) {
         // Proksi (Next.js rewrites, nginx) siqmasin va bufer qilmasin — hodisa darhol yetib borsin.
@@ -80,6 +83,7 @@ class NotificationController {
     }
 
     @PostMapping("/{id}/read")
+    @PreAuthorize("isAuthenticated()")
     @Transactional
     @Operation(summary = "O'qildi deb belgilash")
     void read(@PathVariable long id) {
@@ -91,6 +95,7 @@ class NotificationController {
     }
 
     @PostMapping("/read-all")
+    @PreAuthorize("isAuthenticated()")
     @Transactional
     @Operation(summary = "Hammasini o'qildi deb belgilash")
     void readAll() {

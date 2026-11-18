@@ -28,7 +28,7 @@ import { useBranches } from "@/features/employees/api";
 import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
 import { cn } from "@/lib/cn";
-import { formatMoney, formatQuantity } from "@/lib/format";
+import { formatMoney, formatMoneyOrDash, formatQuantity } from "@/lib/format";
 import { useBranchStore } from "@/lib/stores/branch";
 import { type AttentionRow, nonZero, Panel } from "./director-home";
 import { firstName, greetKey, tashkentHour } from "./director-view";
@@ -203,7 +203,7 @@ function Body({ h }: { h: PurchaserHomeView }) {
             icon: ClockAlert,
             tone: "text-danger",
             text: `${t("late")} · ${d.overdueCount}`,
-            value: formatMoney(d.overdue),
+            value: formatMoneyOrDash(d.overdue),
             href: "/debts/suppliers",
           },
           {
@@ -211,7 +211,7 @@ function Body({ h }: { h: PurchaserHomeView }) {
             icon: CalendarClock,
             tone: "text-warning",
             text: `${t("today")} · ${d.todayCount}`,
-            value: formatMoney(d.today),
+            value: formatMoneyOrDash(d.today),
             href: "/debts/suppliers",
           },
           {
@@ -219,7 +219,7 @@ function Body({ h }: { h: PurchaserHomeView }) {
             icon: CalendarClock,
             tone: "text-warning",
             text: `${t("d3")} · ${d.next3Count}`,
-            value: formatMoney(d.next3Days),
+            value: formatMoneyOrDash(d.next3Days),
             href: "/debts/suppliers",
           },
         ]}

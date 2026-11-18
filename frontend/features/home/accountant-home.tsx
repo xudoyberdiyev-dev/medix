@@ -11,7 +11,7 @@ import { useMe } from "@/features/auth/session";
 import { formatIsoDate, todayTashkent } from "@/features/counterparties/api";
 import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
-import { formatMoney } from "@/lib/format";
+import { formatMoney, formatMoneyOrDash } from "@/lib/format";
 import { useBranchStore } from "@/lib/stores/branch";
 import { Kpi, Now } from "./branch-home";
 import { type MiniCol, MiniTable, Panel, REPORTS_ALL, REPORTS_VIEW } from "./director-home";
@@ -202,8 +202,8 @@ function MoneyByBranch({ rows }: { rows: BranchMoney[] }) {
   const setBranch = useBranchStore((s) => s.setBranchId);
   const cols: MiniCol<BranchMoney>[] = [
     { key: "name", title: t("director.branch"), render: (r) => r.name },
-    { key: "cash", title: t("acc.cCash"), right: true, render: (r) => formatMoney(r.cash) },
-    { key: "bank", title: t("acc.cBank"), right: true, render: (r) => formatMoney(r.bank) },
+    { key: "cash", title: t("acc.cCash"), right: true, render: (r) => formatMoneyOrDash(r.cash) },
+    { key: "bank", title: t("acc.cBank"), right: true, render: (r) => formatMoneyOrDash(r.bank) },
     { key: "total", title: t("dir.total"), right: true, render: (r) => formatMoney(r.total) },
   ];
   return (

@@ -9,11 +9,13 @@ import {
   ClipboardCheck,
   ClipboardList,
   FileText,
+  History,
   LayoutGrid,
   Loader2,
   type LucideIcon,
   PackagePlus,
   Pill,
+  Plus,
   Redo2,
   Search,
   SearchX,
@@ -34,11 +36,12 @@ import { visibleReports } from "@/features/reports/catalog";
 import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
 import { cn } from "@/lib/cn";
+import { readRecent } from "@/lib/recent";
 import { matchesSearch } from "@/lib/search";
 import { navigationFor, type NavGroup, type NavItem } from "./nav";
 
 type ServerHit = components["schemas"]["Hit"];
-export type HitKind = ServerHit["kind"] | "PAGE" | "REPORT";
+export type HitKind = ServerHit["kind"] | "PAGE" | "REPORT" | "ACTION" | "RECENT";
 
 export interface PaletteHit {
   key: string;
@@ -50,8 +53,10 @@ export interface PaletteHit {
 
 /** Guruhlar tartibi va nomlari (Ctrl+K natijalari shu tartibda). */
 export const KIND_LABELS: Record<HitKind, string> = {
+  RECENT: "Oxirgi ochilganlar",
   PAGE: "Sahifalar",
   REPORT: "Hisobotlar",
+  ACTION: "Tez amallar",
   ORDER: "Buyurtmalar",
   RECEIPT: "Kirimlar",
   PRICE_CHANGE: "Narx oʻzgarishlari (NO)",
@@ -70,6 +75,8 @@ export const KIND_LABELS: Record<HitKind, string> = {
 };
 
 const KIND_ICONS: Record<HitKind, LucideIcon> = {
+  RECENT: History,
+  ACTION: Plus,
   PAGE: LayoutGrid,
   REPORT: ChartColumn,
   ORDER: ClipboardList,
@@ -90,6 +97,39 @@ const KIND_ICONS: Record<HitKind, LucideIcon> = {
 };
 
 export const MIN_QUERY = 2;
+
+/** U6: tez amallar (ruxsatga qarab) — boʻsh soʻrovda va qidiruvda. `key` → `search.actions.<key>`. */
+export const QUICK_ACTIONS: { key: string; perm: string; href: string }[] = [
+  { key: "order", perm: "orders.create", href: "/orders/new" },
+  { key: "payment", perm: "payments.create", href: "/payments/mt/new" },
+  { key: "receipt", perm: "receipt.create", href: "/receipts/new" },
+  { key: "product", perm: "products.create", href: "/products/new" },
+  { key: "cash", perm: "cash.io", href: "/cash/ops/new" },
+  { key: "customer", perm: "clients.create", href: "/customers/new" },
+];
+
+export function actionHits(query: string, permissions: string[] | undefined, label: (key: string) => string): PaletteHit[] {
+  if (!permissions) return [];
+  const q = query.trim();
+  return QUICK_ACTIONS.filter((a) => permissions.includes(a.perm))
+    .map<PaletteHit>((a) => ({ key: `action-${a.key}`, kind: "ACTION", title: label(a.key), link: a.href }))
+    .filter((h) => q.length === 0 || (q.length >= MIN_QUERY && matchesSearch(q, [h.title])));
+}
+
+/** Oxirgi ochilgan yoʻl → nom: menyudagi eng uzun mos boʻlim + qolgan qism (masalan «Buyurtmalar · 351»). */
+export function recentHits(paths: string[], permissions: string[] | undefined, itemLabel: (i: NavItem) => string): PaletteHit[] {
+  if (!permissions) return [];
+  const items = navigationFor(permissions).flatMap((g) => g.items);
+  return paths.flatMap<PaletteHit>((path) => {
+    const pathname = path.split("?")[0];
+    const item = items
+      .filter((i) => pathname === i.href || pathname.startsWith(`${i.href}/`))
+      .sort((a, b) => b.href.length - a.href.length)[0];
+    if (!item) return [];
+    const rest = pathname.slice(item.href.length).replace(/^\//, "").split("/").filter(Boolean).join(" · ");
+    return [{ key: `recent-${path}`, kind: "RECENT", title: rest ? `${itemLabel(item)} · ${rest}` : itemLabel(item), link: path }];
+  });
+}
 const LOCAL_LIMIT = 5;
 
 /** Sahifalar (menyudan, ruxsat bo'yicha) va hisobotlar (katalogdan) — serversiz, darhol. */
@@ -163,8 +203,12 @@ function PaletteBody({ onClose }: { onClose: () => void }) {
     enabled: q.length >= MIN_QUERY,
     staleTime: 30_000,
   });
+  const [recent] = useState(readRecent);
   const hits = useMemo<PaletteHit[]>(() => {
-    const local = localHits(query, me.data?.permissions, {
+    const perms = me.data?.permissions;
+    const actions = actionHits(query, perms, (k) => t(`search.actions.${k}` as "search.actions.order"));
+    if (query.trim().length === 0) return [...recentHits(recent, perms, (i) => t(`nav.${i.key}`)), ...actions];
+    const local = localHits(query, perms, {
       item: (i) => t(`nav.${i.key}`),
       group: (g) => (g.key ? t(`navGroups.${g.key}`) : ""),
     });
@@ -178,8 +222,8 @@ function PaletteBody({ onClose }: { onClose: () => void }) {
             link: h.link,
           }))
         : [];
-    return [...local, ...remote];
-  }, [query, q, me.data?.permissions, server.data, t]);
+    return [...local, ...actions, ...remote];
+  }, [query, q, me.data?.permissions, server.data, t, recent]);
   const groups = groupHits(hits);
   const flat = groups.flatMap((g) => g.hits);
   const current = Math.min(active, Math.max(flat.length - 1, 0));
@@ -203,7 +247,7 @@ function PaletteBody({ onClose }: { onClose: () => void }) {
     }
   };
 
-  const short = query.trim().length < MIN_QUERY;
+  const short = query.trim().length < MIN_QUERY && flat.length === 0;
   const loading = !short && (server.isFetching || q !== query.trim());
   return (
     <>

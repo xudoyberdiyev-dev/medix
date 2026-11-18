@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -62,12 +63,14 @@ class AuthController {
     }
 
     @GetMapping("/me")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Joriy foydalanuvchi")
     MeResponse me(@Parameter(hidden = true) @AuthenticationPrincipal YuzplusPrincipal principal) {
         return MeResponse.of(principal, roles.home(principal.roleCode()));
     }
 
     @PostMapping("/password")
+    @PreAuthorize("isAuthenticated()")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(summary = "Parolni almashtirish", description = "Birinchi kirishda majburiy.")
     void changePassword(

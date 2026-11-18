@@ -346,7 +346,9 @@
     "unlimitedHelp": "Maksimal miqdor yoʻq — buyurtma miqdori boʻyicha tasdiqqa ketmaydi",
     "locationPh": "Masalan: A qator · 3-stellaj · 2-polka",
     "locationHint": "{warehouse} ombori",
-    "locationNone": "Sizning filialingizda faol ombor yoʻq."
+    "locationNone": "Sizning filialingizda faol ombor yoʻq.",
+    "secNav": "Boʻlimlar",
+    "secErr": "Xato bor"
   },
   "wizard": {
     "title": "Excelʼdan yuklash",

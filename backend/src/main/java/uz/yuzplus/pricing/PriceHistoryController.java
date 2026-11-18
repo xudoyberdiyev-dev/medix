@@ -11,6 +11,7 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.jdbc.core.simple.JdbcClient;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -55,6 +56,7 @@ class PriceHistoryController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('prices.view')")
     @Transactional(readOnly = true)
     @Operation(summary = "Mahsulot narxi tarixi", description = "branchId berilmasa — o'z filiali (yoki birinchi filial); priceTypeId — bazaviy.")
     PriceHistory history(@RequestParam long productId, @RequestParam(required = false) Long branchId,

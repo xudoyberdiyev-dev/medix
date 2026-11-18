@@ -237,6 +237,7 @@ class PriceTypeController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyAuthority('prices.view', 'clients.view', 'suppliers.view', 'lookups.view')")
     @Transactional(readOnly = true)
     @Operation(summary = "Narx turlari")
     List<PriceType> list() {

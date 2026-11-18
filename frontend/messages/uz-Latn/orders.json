@@ -50,6 +50,13 @@
     "soldTo": "Sotuv: {date} gacha",
     "create": "Yangi buyurtma",
     "statusTabs": "Buyurtma holatlari",
+    "moreStatuses": "Yana {n}",
+    "quickViews": "Tez koʻrinishlar",
+    "quick": {
+      "mine": "Mening",
+      "today": "Bugun",
+      "overdue": "Kechikkanlar"
+    },
     "search": "Qidirish",
     "searchPlaceholder": "Raqam, mijoz yoki STIR",
     "mine": "Mening buyurtmalarim",
@@ -192,6 +199,9 @@
     "discardNew": "Yangi buyurtma hali saqlanmagan — yopsangiz, qoʻshilgan qatorlar yoʻqoladi. Saqlash uchun «Ortga qaytish» ni bosing va «Qoralamani saqlash» ni tanlang.",
     "discardChanged": "Qatorlardagi oʻzgarishlar saqlanmagan — yopsangiz, ular yoʻqoladi. Saqlash uchun «Ortga qaytish» ni bosing va qoralamani saqlang.",
     "discardAction": "Saqlamasdan yopish",
+    "draftRestored": "Qoralama tiklandi",
+    "draftRestoredHint": "{at} dagi saqlanmagan oʻzgarishlar qaytarildi. Kerak boʻlmasa — tashlang.",
+    "draftRestoredDrop": "Tashlash",
     "discardKeep": "Ortga qaytish"
   },
   "docs": {
@@ -340,7 +350,8 @@
     "resLate": "Kechikdi: {n} daqiqa",
     "doneTodayHint": "Bugun yakunlangan buyurtmalar shu yerda chiqadi.",
     "location": "Joyi",
-    "byPlace": "Joy boʻyicha saralash (ombor boʻylab bir marta aylanish)"
+    "byPlace": "Joy boʻyicha saralash (ombor boʻylab bir marta aylanish)",
+    "doneTodayShort": "Bugun"
   },
   "otherBatch": {
     "title": "Boshqa partiyadan oldim",
@@ -467,7 +478,12 @@
     "counterMixed": "{boxes} quti ({boxUnits} dona) + {units} dona = {scanned} / {needed}",
     "boxUnits": "SSCC · quti ({n} dona)",
     "pickBoxProduct": "Quti kodi qaysi mahsulotniki? Mahsulotni tanlang — quti shu qatorga yoziladi.",
-    "scanHint": "Butun qutilar uchun faqat quti (SSCC) kodini, ochiq donalar uchun har bir dona kodini skanerlang."
+    "scanHint": "Butun qutilar uchun faqat quti (SSCC) kodini, ochiq donalar uchun har bir dona kodini skanerlang.",
+    "tabMineShort": "Mening",
+    "tabTodayShort": "Bugun",
+    "tabCodesShort": "Kodlar",
+    "offlineQueued": "Internet yoʻq — kod navbatda",
+    "offlineQueuedHint": "Navbatda {n} ta kod. Ulanish tiklangach avtomatik yuboriladi."
   },
   "monitor": {
     "forbidden": "Monitor Ombor mudiri, Filial rahbari va Direktor uchun.",
@@ -851,6 +867,7 @@
     "eDisc": "{n}-qator ({name}): chegirma 0–99,99 % boʻlishi kerak",
     "eDiscShort": "0–99,99 %",
     "expiry": "Muddat: {d}",
+    "pickedStock": "Mavjud: {qty} dona · Yaqin muddat: {expiry} · Narx: {price}",
     "tLines": "Qatorlar",
     "tQty": "Jami miqdor",
     "tGross": "Summa (chegirmasiz)",
@@ -1059,5 +1076,14 @@
     "menu": "Faktura: {title}",
     "drag": "Sudrab tartiblang",
     "pdf": "PDF yuklab olish"
+  },
+  "preview": {
+    "kind": "Buyurtma",
+    "loading": "Yuklanmoqda…",
+    "open": "Toʻliq ochish",
+    "printSheet": "Terish varagʻi",
+    "note": "Izoh",
+    "lines": "Qatorlar",
+    "moreLines": "Yana {n} ta qator — «Toʻliq ochish»da"
   }
 }

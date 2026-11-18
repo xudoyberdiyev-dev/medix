@@ -240,7 +240,7 @@ function Card({
       />
       <Tabs
         aria-label={t("tabsLabel")}
-        items={TABS.map((k) => ({ key: k, label: t(`tab.${k}`) }))}
+        items={TABS.filter((k) => k !== "prices" || can(me.data, "prices.view")).map((k) => ({ key: k, label: t(`tab.${k}`) }))}
         value={tab}
         onChange={(k) => setTab(k as Tab)}
       />

@@ -111,6 +111,9 @@
       "dueBeforeBase": "Toʻlov kuni hisob-faktura sanasidan (u boʻlmasa — kirim sanasidan) oldin boʻlmaydi. Sanani tekshiring."
     },
     "draftSaved": "Qoralama saqlandi",
+    "draftRestored": "Qoralama tiklandi",
+    "draftRestoredHint": "{at} dagi saqlanmagan kirim qaytarildi. Kerak boʻlmasa — tashlang.",
+    "draftRestoredDrop": "Tashlash",
     "cancelDoc": "Hujjatni bekor qilish",
     "back": "Ortga",
     "saveDraft": "Qoralamani saqlash",
@@ -350,5 +353,13 @@
     "title": "{n} ta mahsulot referent narxdan qimmat",
     "line": "{name}: {price} (referent {ref}, +{pct} %)",
     "more": "Yana {n} ta — solishtirish natijasida."
+  },
+  "preview": {
+    "kind": "Kirim",
+    "loading": "Yuklanmoqda…",
+    "open": "Toʻliq ochish",
+    "note": "Izoh",
+    "lines": "Qatorlar",
+    "moreLines": "Yana {n} ta qator — «Toʻliq ochish»da"
   }
 }

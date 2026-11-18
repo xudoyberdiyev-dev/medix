@@ -12,7 +12,7 @@ import { formatIsoDate, todayTashkent } from "@/features/counterparties/api";
 import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
 import { cn } from "@/lib/cn";
-import { formatMoney } from "@/lib/format";
+import { formatMoney, formatMoneyOrDash } from "@/lib/format";
 import { useBranchStore } from "@/lib/stores/branch";
 import { Attention, type MiniCol, MiniTable, Panel, REPORTS_ALL, REPORTS_VIEW, STATUS_ICON, isOrderStatus } from "./director-home";
 import { firstName, greetKey, pctDelta, tashkentHour, waitParts } from "./director-view";
@@ -155,7 +155,7 @@ function Approvals({ rows }: { rows: Approval[] }) {
   );
 }
 
-export function Delta({ cur, prev }: { cur: string; prev: string | null | undefined }) {
+export function Delta({ cur, prev, invert = false }: { cur: string; prev: string | null | undefined; invert?: boolean }) {
   const t = useTranslations("home.br");
   const d = prev == null ? null : pctDelta(cur, prev);
   if (!d)
@@ -166,7 +166,7 @@ export function Delta({ cur, prev }: { cur: string; prev: string | null | undefi
     );
   const Icon = d.up ? TrendingUp : TrendingDown;
   return (
-    <span className={cn("flex items-center gap-1 text-caption", d.up ? "text-success" : "text-danger")}>
+    <span className={cn("flex items-center gap-1 text-caption", d.up !== invert ? "text-success" : "text-danger")}>
       <Icon size={14} strokeWidth={1.5} aria-hidden /> {d.text} <span className="text-text-secondary">{t("vsPrev")}</span>
     </span>
   );
@@ -259,7 +259,7 @@ export function Flow({ cells, title, hrefSuffix = "" }: { cells: StatusCell[]; t
                   <span className="min-w-0 truncate">{s === "IN_TRANSIT" ? t("br.shipped") : t(`orderStatus.${s}`)}</span>
                 </div>
                 <div className="mt-1 text-section-title tabular-nums">{n}</div>
-                <div className="text-caption tabular-nums text-text-secondary">{formatMoney(c?.todayAmount ?? "0")}</div>
+                <div className="text-caption tabular-nums text-text-secondary">{formatMoneyOrDash(c?.todayAmount ?? "0")}</div>
               </Link>
             </li>
           );
@@ -301,7 +301,7 @@ function Accounts({ rows }: { rows: Account[] }) {
     );
   const cols: MiniCol<Account>[] = [
     { key: "name", title: t("c.acc"), render: (r) => r.name },
-    { key: "bal", title: t("c.bal"), right: true, render: (r) => formatMoney(r.balance) },
+    { key: "bal", title: t("c.bal"), right: true, render: (r) => formatMoneyOrDash(r.balance) },
     {
       key: "day",
       title: t("c.day"),

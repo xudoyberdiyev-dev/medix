@@ -44,7 +44,7 @@ import { useWarehouses } from "@/features/organization/api";
 import { searchProducts } from "@/features/prices/api";
 import { describeError } from "@/features/setup/form-error";
 import { api, unwrap } from "@/lib/api/client";
-import { formatMoney, formatQuantity } from "@/lib/format";
+import { formatDateTime, formatMoney, formatQuantity } from "@/lib/format";
 import {
   APPROVE_BRANCH,
   APPROVE_DIRECTOR,
@@ -61,6 +61,7 @@ import {
   useApproveOrder,
   useCancelOrder,
   useOrder,
+  useProductsStock,
   useRejectOrder,
   useReturnOrder,
   useSaveOrder,
@@ -75,7 +76,7 @@ import { FORM_TYPES, InvoiceFormsModal, type FormType } from "./invoice-forms";
 import { formatPct, parsePct, pctText } from "./discount";
 import { OrderCardAside, OrderCardBody, OrderStepper } from "./order-card";
 import { CustomerStateRow, RecentOrders, useCustomerCredit, type PreviousOrder } from "./customer-state";
-import { clearOpenDraft, draftFormFor, readOpenDraft, writeOpenDraft } from "./open-draft";
+import { clearOpenDraft, draftFormFor, readDraftBackup, readOpenDraft, writeDraftBackup, writeOpenDraft } from "./open-draft";
 import { OrderStatusBadge, day } from "./orders-page";
 
 const PAYMENT_VALUES = ["TRANSFER", "CASH", "ONLINE"] as const;
@@ -182,7 +183,15 @@ function Editor({
   const cancel = useCancelOrder();
   const editable = can(me.data, ORDER_CREATE) && (!doc || doc.status === "DRAFT");
   // Ochiq hujjat (SPEC 208): boshqa sahifadan qaytganda saqlanmagan forma tiklanadi
-  const [restored] = useState(() => (editable ? draftFormFor(readOpenDraft(), doc?.id ?? null) : null));
+  // Qoralama zaxirasi (U11): sessiyada yoʻq boʻlsa — brauzer xotirasidagi (oyna yopilgan/yangilangan) saqlanmagan forma
+  const userId = me.data?.id ?? null;
+  const [{ form: restored, backupAt }] = useState(() => {
+    if (!editable) return { form: null, backupAt: null };
+    const open = draftFormFor(readOpenDraft(), doc?.id ?? null);
+    if (open) return { form: open, backupAt: null };
+    const b = userId === null ? null : readDraftBackup(userId, doc?.id ?? null);
+    return b ? { form: b.form, backupAt: b.at } : { form: null, backupAt: null };
+  });
   const [warehouseId, setWarehouseId] = useState<string | null>(restored ? restored.warehouseId : doc ? String(doc.warehouseId) : null);
   const [customer, setCustomer] = useState<string | null>(
     restored ? restored.customer : doc ? String(doc.customerId) : preset ? String(preset.customerId) : null,
@@ -238,6 +247,13 @@ function Editor({
       cancelPick: can(me.data, ORDER_CANCEL_PICK),
     });
   const serverLine = (productId: number) => doc?.lines.find((l) => l.productId === productId);
+  // U11: saqlanmagan qatorlar va «Tez qoʻshish»da tanlangan mahsulot — joriy qoldiq, yaqin muddat, narx
+  const liveIds = editable
+    ? [...lines.filter((l) => !serverLine(l.productId)).map((l) => l.productId), ...(adding.product ? [Number(adding.product)] : [])]
+    : [];
+  const live = useProductsStock(warehouseId ? Number(warehouseId) : null, customer ? Number(customer) : null, liveIds);
+  const liveOf = (productId: number) => live.data?.get(productId);
+  const pickedLive = adding.product ? liveOf(Number(adding.product)) : undefined;
   const dirty =
     doc !== null &&
     (lines.length !== doc.lines.length ||
@@ -257,6 +273,46 @@ function Editor({
     return () => window.removeEventListener("beforeunload", warn);
   }, [unsaved]);
   const requestClose = () => (unsaved ? setDialog("discard") : onClose());
+  const discard = () => {
+    if (userId !== null) writeDraftBackup(userId, doc?.id ?? null, null);
+    onClose();
+  };
+  // Zaxiradan tiklangan qoralama — bir marta xabar; «Tashlash» formani hujjat holatiga qaytaradi
+  const backupToastShown = useRef(false);
+  useEffect(() => {
+    if (backupAt === null || backupToastShown.current) return;
+    backupToastShown.current = true;
+    toast({
+      tone: "info",
+      title: t("drawer.draftRestored"),
+      description: t("drawer.draftRestoredHint", { at: formatDateTime(new Date(backupAt)) }),
+      action: {
+        label: t("drawer.draftRestoredDrop"),
+        onClick: () => {
+          if (userId !== null) writeDraftBackup(userId, doc?.id ?? null, null);
+          setWarehouseId(doc ? String(doc.warehouseId) : null);
+          setCustomer(doc ? String(doc.customerId) : preset ? String(preset.customerId) : null);
+          setCustomerLabel(doc?.customer ?? preset?.customerLabel ?? "");
+          setDeliveryType(doc?.deliveryType ?? "DELIVERY");
+          setDeliveryDate(doc ? formatIsoDate(doc.deliveryDate) : formatIsoDate(tashkentDay(1)));
+          setAddress(doc?.address ?? "");
+          setPaymentType(doc?.paymentType ?? "TRANSFER");
+          setNote(doc?.note ?? "");
+          setLines(
+            doc
+              ? doc.lines.map((l) => ({
+                  productId: l.productId,
+                  productCode: l.productCode,
+                  productName: l.productName,
+                  qty: String(l.qty),
+                  discount: pctText(l.discountPct),
+                }))
+              : [],
+          );
+        },
+      },
+    });
+  }, [backupAt, userId, doc, preset, t]);
   // Sahifada Esc — roʻyxatga qaytish (ochiq oyna yoki roʻyxat tanlovi boʻlmasa; saqlanmagan boʻlsa soʻraydi)
   const requestCloseRef = useRef(requestClose);
   useEffect(() => {
@@ -281,7 +337,22 @@ function Editor({
     // Faqat tahrirlanadigan qoralama eslab qolinadi; jarayondagi hujjat — roʻyxatdan qayta ochiladi
     if (!editable || (docId === null && !form)) clearOpenDraft();
     else writeOpenDraft({ id: docId, form });
-  }, [editable, docId, unsaved, warehouseId, customer, customerLabel, deliveryType, deliveryDate, address, paymentType, note, lines]);
+    if (editable && userId !== null) writeDraftBackup(userId, docId, form);
+  }, [
+    editable,
+    docId,
+    userId,
+    unsaved,
+    warehouseId,
+    customer,
+    customerLabel,
+    deliveryType,
+    deliveryDate,
+    address,
+    paymentType,
+    note,
+    lines,
+  ]);
 
   function body(): OrderRequest | null {
     if (!warehouseId) return (setLocal(t("drawer.errWarehouse")), null);
@@ -309,7 +380,10 @@ function Editor({
     const b = body();
     if (!b) return null;
     try {
-      return await save.mutateAsync({ id: doc?.id, body: b });
+      const d = await save.mutateAsync({ id: doc?.id, body: b });
+      // Serverda saqlandi — brauzerdagi zaxira endi kerak emas (yangi buyurtma zaxirasi keyingi yangisiga oʻtmasin)
+      if (userId !== null) writeDraftBackup(userId, doc?.id ?? null, null);
+      return d;
     } catch {
       return null;
     }
@@ -527,7 +601,7 @@ function Editor({
           tone="danger"
           title={t("drawer.discardTitle")}
           onClose={() => setDialog(null)}
-          primaryAction={{ label: t("drawer.discardAction"), onClick: onClose }}
+          primaryAction={{ label: t("drawer.discardAction"), onClick: discard }}
           secondaryAction={{ label: t("drawer.discardKeep"), onClick: () => setDialog(null) }}
         >
           <p>{t(doc ? "drawer.discardChanged" : "drawer.discardNew")}</p>
@@ -760,8 +834,11 @@ function Editor({
                 ) : (
                   lines.map((l, i) => {
                     const s = serverLine(l.productId);
+                    const ls = s ? undefined : liveOf(l.productId);
+                    const avail = s?.available ?? ls?.available;
+                    const nearest = s ? s.nearestExpiry : ls?.nearestExpiry;
                     const qty = Number(l.qty);
-                    const over = s && isInt(l.qty) && qty > s.available;
+                    const over = avail !== undefined && isInt(l.qty) && qty > avail;
                     const price = s ? (doc?.status === "DRAFT" ? s.currentPrice : s.price) : null;
                     const list = s?.listPrice && s.listPrice !== price ? s.listPrice : null;
                     return (
@@ -783,9 +860,9 @@ function Editor({
                           ) : null}
                         </td>
                         <td className="px-3 py-2 text-right tabular-nums">
-                          {s ? formatQuantity(s.available) : "—"}
-                          {s?.nearestExpiry ? (
-                            <span className="block text-caption text-text-secondary">{t("entry.expiry", { d: day(s.nearestExpiry) })}</span>
+                          {avail !== undefined ? formatQuantity(avail) : "—"}
+                          {nearest ? (
+                            <span className="block text-caption text-text-secondary">{t("entry.expiry", { d: day(nearest) })}</span>
                           ) : null}
                         </td>
                         <td className="px-3 py-1 text-right">
@@ -796,7 +873,7 @@ function Editor({
                               value={l.qty}
                               onChange={(v) => setLines((ls) => ls.map((x, j) => (j === i ? { ...x, qty: v } : x)))}
                               inputMode="numeric"
-                              error={over ? t("entry.eQty", { n: formatQuantity(s.available) }) : undefined}
+                              error={over ? t("entry.eQty", { n: formatQuantity(avail ?? 0) }) : undefined}
                               className="ml-auto w-28 [&>:first-child]:sr-only [&_input]:text-right"
                             />
                           ) : (
@@ -884,7 +961,17 @@ function Editor({
               <Button variant="tertiary" size="sm" icon={Plus} onClick={addLine}>
                 {t("drawer.addLine")}
               </Button>
-              <span className="text-caption text-text-secondary">{t("entry.keys")}</span>
+              {pickedLive ? (
+                <span role="status" className="text-caption tabular-nums text-text-secondary">
+                  {t("entry.pickedStock", {
+                    qty: formatQuantity(pickedLive.available),
+                    expiry: pickedLive.nearestExpiry ? day(pickedLive.nearestExpiry) : "—",
+                    price: pickedLive.price ? formatMoney(pickedLive.price) : "—",
+                  })}
+                </span>
+              ) : (
+                <span className="text-caption text-text-secondary">{t("entry.keys")}</span>
+              )}
             </div>
           ) : null}
           <dl

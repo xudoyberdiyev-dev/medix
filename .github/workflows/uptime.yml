@@ -1,0 +1,51 @@
+# P4: tashqi monitoring (bepul). Sayt (/login) va backend (proksi orqali /api/auth/login-info — backend javob bermasa 5xx)
+# tekshiriladi; ketma-ket 2 marta (1 daqiqa oraliqda) yiqilsa Telegram'ga xabar.
+# Manzil: repo Settings → Secrets and variables → Actions → Variables → PROD_URL (masalan https://yuzplus.uz). Bo'lmasa — o'tkaziladi.
+# Ochiq repoda har 10 daqiqa; private bo'lsa bepul daqiqalarni tejash uchun har 30 daqiqa.
+name: Monitoring
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+    - cron: "5,35 * * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: uptime
+  cancel-in-progress: false
+
+jobs:
+  check:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (!github.event.repository.private && github.event.schedule == '*/10 * * * *') ||
+      (github.event.repository.private && github.event.schedule == '5,35 * * * *')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - env:
+          URL: ${{ vars.PROD_URL }}
+          TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          [ -z "$URL" ] && { echo "PROD_URL berilmagan — oʻtkazildi"; exit 0; }
+          URL="${URL%/}"
+          probe() {
+            local site api
+            site=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "$URL/login" || echo 000)
+            api=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "$URL/api/auth/login-info" || echo 000)
+            echo "sayt=$site backend=$api"
+            [ "$site" = "200" ] && [ "$api" = "200" ]
+          }
+          if probe; then exit 0; fi
+          sleep 60
+          if result=$(probe); then echo "$result"; exit 0; fi
+          echo "::error::Ishlamayapti: $result"
+          if [ -n "$TOKEN" ] && [ -n "$CHAT_ID" ]; then
+            curl -sS -X POST "https://api.telegram.org/bot${TOKEN}/sendMessage" \
+              --data-urlencode "chat_id=${CHAT_ID}" \
+              --data-urlencode "text=🔴 100+: sayt ishlamayapti (2 marta ketma-ket) — ${result}. ${URL}" > /dev/null
+          fi
+          exit 1

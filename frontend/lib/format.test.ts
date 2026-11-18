@@ -46,3 +46,13 @@ describe("dates in Asia/Tashkent", () => {
     expect(formatDate(new Date("2026-10-31T20:30:00Z"))).toBe("01.11.2026");
   });
 });
+
+describe("formatMoneyOrDash (U8)", () => {
+  it("nol — «—», qolgani odatdagidek", async () => {
+    const { formatMoneyOrDash } = await import("./format");
+    expect(formatMoneyOrDash("0.00")).toBe("—");
+    expect(formatMoneyOrDash("0")).toBe("—");
+    expect(formatMoneyOrDash("0.004")).toBe("—");
+    expect(formatMoneyOrDash("1250.5")).toBe("1.250,50");
+  });
+});

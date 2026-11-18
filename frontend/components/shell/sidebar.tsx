@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, ChevronRight, ChevronsUpDown, Languages, LogOut, PanelLeftClose, PanelLeftOpen, User } from "lucide-react";
+import { ChevronDown, ChevronRight, ChevronsUpDown, Languages, LogOut, PanelLeftClose, PanelLeftOpen, Star, User } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
@@ -14,7 +14,8 @@ import { LOCALE_NAMES, LOCALES, writeLocaleCookie, type Locale } from "@/i18n/co
 import { useSidebarStore } from "@/lib/stores/sidebar";
 import { BrandSquare } from "./brand-logo";
 import { LANG_CODE } from "./language-chip";
-import { isNavActive, navigationFor } from "./nav";
+import { isNavActive, navigationFor, type NavItem } from "./nav";
+import { toggleFavorite, useProfile, useToggleFavorite } from "@/features/profile/api";
 
 /**
  * Sidebar (prototip `100plus ERP`): fon brand-900; guruhlar yigʻiladi (chevron), faol band — sidebar-active rangli ikonka va chap chiziq.
@@ -57,6 +58,13 @@ export function SidebarContent({ variant, onNavigate }: { variant: "rail" | "she
   const selectedBranch = useBranchStore((s) => s.branchId);
   const { badges, company, logo } = useNavBadges(me.data ? (me.data.allBranches ? (selectedBranch ?? null) : null) : undefined);
   const rail = variant === "rail";
+  const groups = navigationFor(me.data?.permissions, me.data?.role.home ?? "");
+  const profile = useProfile();
+  const toggleFav = useToggleFavorite();
+  const favEnabled = Boolean(profile.data);
+  const favs = profile.data?.favorites ?? [];
+  const allItems = groups.flatMap((g) => g.items);
+  const favItems = favs.flatMap((k) => allItems.filter((i) => i.key === k));
   // Ixcham koʻrinish: 768–1279 px da har doim, ≥1280 da — yigʻilganda
   const mini = rail && collapsed;
   const compact = (always: string, belowXl: string) => (rail ? (mini ? always : belowXl) : "");
@@ -65,6 +73,64 @@ export function SidebarContent({ variant, onNavigate }: { variant: "rail" | "she
     writeLocaleCookie(l);
     setMenu(false);
     router.refresh();
+  };
+  const renderItem = (item: NavItem) => {
+    const active = isNavActive(pathname, item);
+    const Icon = item.icon;
+    const label = t(`nav.${item.key}`);
+    const badge: NavBadge | null | undefined = badges[item.key];
+    return (
+      <li key={item.key} className="group/item relative">
+        <Link
+          href={item.href}
+          aria-current={active ? "page" : undefined}
+          title={rail ? (badge ? `${label} · ${badge.count}` : label) : undefined}
+          onClick={onNavigate}
+          className={cn(
+            "relative flex items-center gap-2.5 rounded-card px-2.5 text-[13.5px] transition-colors duration-150 ease-out focus-visible:outline-sidebar-active",
+            rail ? cn("h-[34px]", compact("justify-center px-0", "max-xl:justify-center max-xl:px-0")) : "h-12",
+            active ? "bg-sidebar-active/10 font-medium text-white" : "hover:bg-white/5 hover:text-white",
+          )}
+        >
+          {active ? <span aria-hidden className="absolute inset-y-2 -left-2.5 w-[3px] rounded-r-[3px] bg-sidebar-active" /> : null}
+          <Icon
+            size={18}
+            strokeWidth={1.5}
+            aria-hidden
+            className={cn("shrink-0", active ? "text-sidebar-active" : "text-sidebar-text/85")}
+          />
+          <span className={cn("min-w-0 flex-1 truncate", compact("sr-only", "max-xl:sr-only"))}>{label}</span>
+          {badge ? (
+            <span
+              aria-label={t("shell.badge", { count: badge.count })}
+              className={cn(
+                "h-[18px] min-w-[18px] shrink-0 rounded-full px-1.5 text-center text-[11px] leading-[18px] font-semibold",
+                badge.danger ? "bg-danger-bg text-danger" : "bg-warning-bg text-warning",
+                compact("absolute top-0.5 right-0.5 px-1", "max-xl:absolute max-xl:top-0.5 max-xl:right-0.5 max-xl:px-1"),
+              )}
+            >
+              {badge.count > 99 ? "99+" : badge.count}
+            </span>
+          ) : null}
+        </Link>
+        {favEnabled ? (
+          <button
+            type="button"
+            aria-pressed={favs.includes(item.key)}
+            aria-label={favs.includes(item.key) ? t("shell.favRemove", { name: label }) : t("shell.favAdd", { name: label })}
+            onClick={() => toggleFav.mutate(toggleFavorite(favs, item.key))}
+            className={cn(
+              "absolute top-1/2 right-1.5 flex size-7 -translate-y-1/2 items-center justify-center rounded-control text-sidebar-text/80 hover:bg-white/10 hover:text-white focus-visible:opacity-100",
+              favs.includes(item.key) ? "opacity-100" : "opacity-0 group-hover/item:opacity-100",
+              badge && "hidden",
+              compact("hidden", "max-xl:hidden"),
+            )}
+          >
+            <Star size={14} strokeWidth={1.5} aria-hidden className={favs.includes(item.key) ? "fill-current text-warning" : undefined} />
+          </button>
+        ) : null}
+      </li>
+    );
   };
   return (
     <>
@@ -89,10 +155,27 @@ export function SidebarContent({ variant, onNavigate }: { variant: "rail" | "she
         aria-label={t("shell.mainMenu")}
         className={cn("scrollbar-none flex-1 overflow-y-auto px-3 pb-4", compact("px-2", "max-xl:px-2"))}
       >
-        {navigationFor(me.data?.permissions, me.data?.role.home ?? "").map((group, gi) => {
+        {favItems.length > 0 ? (
+          <div className="mt-2 flex flex-col gap-0.5">
+            <div
+              className={cn(
+                "mt-2 flex h-7 items-center gap-1.5 px-2.5 text-[11px] font-medium tracking-[0.04em] text-sidebar-text/90",
+                compact("sr-only", "max-xl:sr-only"),
+              )}
+            >
+              <Star size={12} strokeWidth={1.5} aria-hidden />
+              {t("shell.favorites")}
+            </div>
+            <ul aria-label={t("shell.favorites")} className="flex flex-col gap-0.5">
+              {favItems.map((item) => renderItem(item))}
+            </ul>
+          </div>
+        ) : null}
+        {groups.map((group, gi) => {
           const hasActive = group.items.some((i) => isNavActive(pathname, i));
           const key = group.key;
-          const isOpen = !key || (open[key] ?? hasActive);
+          // U7: joriy sahifa guruhi doim ochiq; qolganlari — eslab qolingan holat
+          const isOpen = !key || hasActive || (open[key] ?? false);
           return (
             <div key={key ?? gi} className="mt-1 flex flex-col gap-0.5 first:mt-2">
               {key ? (
@@ -101,7 +184,7 @@ export function SidebarContent({ variant, onNavigate }: { variant: "rail" | "she
                   aria-expanded={isOpen}
                   onClick={() => toggleGroup(key, isOpen)}
                   className={cn(
-                    "mt-2 flex h-7 w-full items-center justify-between rounded-control px-2.5 text-[11px] font-medium tracking-[0.04em] text-sidebar-text/75 transition-colors hover:text-sidebar-text",
+                    "mt-2 flex h-7 w-full items-center justify-between rounded-control px-2.5 text-[11px] font-medium tracking-[0.04em] text-sidebar-text/90 transition-colors hover:text-sidebar-text",
                     compact("sr-only", "max-xl:sr-only"),
                   )}
                 >
@@ -114,50 +197,7 @@ export function SidebarContent({ variant, onNavigate }: { variant: "rail" | "she
                 </button>
               ) : null}
               <ul className={cn("flex flex-col gap-0.5", !isOpen && (rail ? (mini ? "" : "xl:hidden") : "hidden"))}>
-                {group.items.map((item) => {
-                  const active = isNavActive(pathname, item);
-                  const Icon = item.icon;
-                  const label = t(`nav.${item.key}`);
-                  const badge: NavBadge | null | undefined = badges[item.key];
-                  return (
-                    <li key={item.key}>
-                      <Link
-                        href={item.href}
-                        aria-current={active ? "page" : undefined}
-                        title={rail ? (badge ? `${label} · ${badge.count}` : label) : undefined}
-                        onClick={onNavigate}
-                        className={cn(
-                          "relative flex items-center gap-2.5 rounded-card px-2.5 text-[13.5px] transition-colors duration-150 ease-out focus-visible:outline-sidebar-active",
-                          rail ? cn("h-[34px]", compact("justify-center px-0", "max-xl:justify-center max-xl:px-0")) : "h-12",
-                          active ? "bg-sidebar-active/10 font-medium text-white" : "hover:bg-white/5 hover:text-white",
-                        )}
-                      >
-                        {active ? (
-                          <span aria-hidden className="absolute inset-y-2 -left-2.5 w-[3px] rounded-r-[3px] bg-sidebar-active" />
-                        ) : null}
-                        <Icon
-                          size={18}
-                          strokeWidth={1.5}
-                          aria-hidden
-                          className={cn("shrink-0", active ? "text-sidebar-active" : "text-sidebar-text/85")}
-                        />
-                        <span className={cn("min-w-0 flex-1 truncate", compact("sr-only", "max-xl:sr-only"))}>{label}</span>
-                        {badge ? (
-                          <span
-                            aria-label={t("shell.badge", { count: badge.count })}
-                            className={cn(
-                              "h-[18px] min-w-[18px] shrink-0 rounded-full px-1.5 text-center text-[11px] leading-[18px] font-semibold",
-                              badge.danger ? "bg-danger-bg text-danger" : "bg-warning-bg text-warning",
-                              compact("absolute top-0.5 right-0.5 px-1", "max-xl:absolute max-xl:top-0.5 max-xl:right-0.5 max-xl:px-1"),
-                            )}
-                          >
-                            {badge.count > 99 ? "99+" : badge.count}
-                          </span>
-                        ) : null}
-                      </Link>
-                    </li>
-                  );
-                })}
+                {group.items.map((item) => renderItem(item))}
               </ul>
             </div>
           );

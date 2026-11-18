@@ -1,0 +1,73 @@
+# P5: kunlik shifrlangan zaxira nusxa (Railway/bulut Postgres) — pg_dump → gpg (AES256) → Actions artefakti (14 kun)
+# va darhol tiklash sinovi (scripts/backup/restore-test.sh).
+# FAQAT PRIVATE REPODA ishlaydi: ochiq repoda artefaktni har kim yuklab olishi mumkin (shifrlangan bo'lsa ham — xavf).
+# Sirlar: PROD_DATABASE_URL (postgresql://user:pass@host:port/db — Railway Postgres → Connect → Public URL),
+#         BACKUP_PASSPHRASE (uzun tasodifiy parol; yo'qotilsa nusxani ochib bo'lmaydi).
+name: Zaxira nusxa
+
+on:
+  schedule:
+    - cron: "17 21 * * *" # 02:17 Toshkent
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    if: ${{ github.event.repository.private }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - name: Sirlar bormi
+        id: cfg
+        env:
+          DB: ${{ secrets.PROD_DATABASE_URL }}
+          PASS: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          if [ -z "$DB" ] || [ -z "$PASS" ]; then
+            echo "PROD_DATABASE_URL / BACKUP_PASSPHRASE berilmagan — oʻtkazildi"; echo "ok=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: pg_dump → gpg
+        if: steps.cfg.outputs.ok == 'true'
+        env:
+          DB: ${{ secrets.PROD_DATABASE_URL }}
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          name="yuzplus-$(TZ=Asia/Tashkent date +%Y%m%d-%H%M).dump.gpg"
+          docker run --rm -e DB postgres:18 sh -c 'pg_dump --format=custom --no-owner --no-acl "$DB"' \
+            | gpg --batch --quiet --symmetric --cipher-algo AES256 --pinentry-mode loopback --passphrase-fd 3 \
+                  --output "$name" 3<<<"$BACKUP_PASSPHRASE"
+          ls -lh "$name"
+          echo "FILE=$name" >> "$GITHUB_ENV"
+      - name: Tiklash sinovi
+        if: steps.cfg.outputs.ok == 'true'
+        env:
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: scripts/backup/restore-test.sh "$FILE"
+      - uses: actions/upload-artifact@v4
+        if: steps.cfg.outputs.ok == 'true'
+        with:
+          name: ${{ env.FILE }}
+          path: ${{ env.FILE }}
+          retention-days: 14
+          if-no-files-found: error
+      - name: Telegram (yiqilsa)
+        if: failure()
+        env:
+          TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          [ -z "$TOKEN" ] || [ -z "$CHAT_ID" ] && exit 0
+          curl -sS -X POST "https://api.telegram.org/bot${TOKEN}/sendMessage" \
+            --data-urlencode "chat_id=${CHAT_ID}" \
+            --data-urlencode "text=🔴 100+: kunlik zaxira nusxa olinmadi yoki tiklash sinovi yiqildi. ${URL}" > /dev/null

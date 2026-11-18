@@ -34,6 +34,8 @@ export interface OrderFilters {
   status: OrderStatus | null;
   q: string;
   mine: boolean;
+  /** U5 «Kechikkanlar»: yetkazish sanasi oʻtgan jarayondagi buyurtmalar. */
+  overdue: boolean;
   /** Prototip filtr chiplari — bir nechta qiymat. */
   customers: Ref[];
   operators: Ref[];
@@ -60,6 +62,7 @@ export const DEFAULT_ORDER_FILTERS: OrderFilters = {
   status: null,
   q: "",
   mine: false,
+  overdue: false,
   customers: [],
   operators: [],
   statuses: [],
@@ -105,6 +108,7 @@ export function parseOrderFilters(params: URLSearchParams, names: { customer: st
     status: (STATUSES as readonly string[]).includes(status ?? "") ? (status as OrderStatus) : null,
     q: params.get("q") ?? "",
     mine: params.get("mine") === "1",
+    overdue: params.get("overdue") === "1",
     customers: refs(params, "customerId", "customer", names.customer),
     operators: refs(params, "operatorId", "operator", names.operator),
     statuses: oneOf(params.getAll("st"), STATUSES),
@@ -144,6 +148,7 @@ export function serializeOrderFilters(f: OrderFilters): string {
   if (f.status) p.set("status", f.status);
   if (f.q.trim()) p.set("q", f.q.trim());
   if (f.mine) p.set("mine", "1");
+  if (f.overdue) p.set("overdue", "1");
   for (const c of f.customers) {
     p.append("customerId", String(c.id));
     p.append("customer", c.name);
@@ -175,6 +180,7 @@ export function hasOrderFilters(f: OrderFilters): boolean {
     f.status ||
     f.q.trim() ||
     f.mine ||
+    f.overdue ||
     f.customers.length ||
     f.operators.length ||
     f.statuses.length ||
@@ -196,6 +202,7 @@ export function orderQuery(f: OrderFilters, branchId: number | null) {
     status: f.status ?? undefined,
     q: f.q.trim() || undefined,
     mine: f.mine || undefined,
+    overdue: f.overdue || undefined,
     customerId: f.customers.length ? f.customers.map((c) => c.id) : undefined,
     operatorId: f.operators.length ? f.operators.map((o) => o.id) : undefined,
     statuses: f.statuses.length ? f.statuses : undefined,

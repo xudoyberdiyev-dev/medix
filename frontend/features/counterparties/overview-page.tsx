@@ -112,6 +112,8 @@ const WIDTH: Record<Col, number> = {
   lastIn: 190,
 };
 const RIGHT: Col[] = ["debt", "overdue", "limit", "ourDebt", "terms"];
+/** U1: tor ekranda (1366/1440) avtomatik yashiriladigan ikkinchi darajali ustunlar — «Ustunlar» menyusida qoladi. */
+const SECONDARY: Col[] = ["kind", "region", "branches", "lic", "price", "lastSale", "buyer", "lastIn"];
 const SORT_OF: Partial<Record<Col, SortKey>> = {
   name: "name",
   debt: "debt",
@@ -395,6 +397,7 @@ export function OverviewPage({ role }: { role: CounterpartyRole }) {
         mono: k === "tin",
         sortable: Boolean(SORT_OF[k]),
         pinned: k === "name",
+        hideBelow: SECONDARY.includes(k) ? ("2xl" as const) : undefined,
         render: (r: OverviewRow) => cell(r, k),
       };
     });
@@ -726,9 +729,15 @@ export function OverviewPage({ role }: { role: CounterpartyRole }) {
                 description={t("emptyD")}
                 action={
                   canEdit ? (
-                    <Button icon={Plus} onClick={() => router.push(`${pathname}/new`)}>
-                      {customers ? t("addC") : t("addS")}
-                    </Button>
+                    // U15: birinchi yozuv — qoʻlda yoki Excelʼdan
+                    <div className="flex flex-wrap items-center justify-center gap-2">
+                      <Button variant="secondary" icon={Upload} onClick={() => router.push(`${pathname}/import`)}>
+                        {t("import")}
+                      </Button>
+                      <Button icon={Plus} onClick={() => router.push(`${pathname}/new`)}>
+                        {customers ? t("addC") : t("addS")}
+                      </Button>
+                    </div>
                   ) : undefined
                 }
               />

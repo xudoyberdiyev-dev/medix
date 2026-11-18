@@ -148,7 +148,18 @@ export function SalesZonesPage() {
             query ? (
               <NoResultsState onClearFilters={() => setQuery("")} />
             ) : (
-              <EmptyState icon={MapPinned} title={t("emptyTitle")} description={t("emptyDescription")} />
+              <EmptyState
+                icon={MapPinned}
+                title={t("emptyTitle")}
+                description={t("emptyDescription")}
+                action={
+                  canEdit ? (
+                    <Button icon={Plus} onClick={() => setCreating(true)}>
+                      {t("add")}
+                    </Button>
+                  ) : undefined
+                }
+              />
             )
           }
         />

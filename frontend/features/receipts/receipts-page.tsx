@@ -30,6 +30,7 @@ import {
   type ReceiptFilters,
   type ReceiptSort,
 } from "./list-state";
+import { ReceiptPreview } from "./receipt-preview";
 
 export function ReceiptStatusBadge({ status, extra }: { status: ReceiptStatus; extra?: string }) {
   const t = useTranslations("receipts");
@@ -104,6 +105,8 @@ export function ReceiptsPage() {
   const [search, setSearch] = useState(filters.q);
   const debounce = useRef<ReturnType<typeof setTimeout>>(undefined);
   const [selected, setSelected] = useState<string[]>([]);
+  // U5: qatorni bosganda — oʻngdan oldindan koʻrish paneli; «Ochish» menyusi va «Toʻliq ochish» — hujjat sahifasi
+  const [preview, setPreview] = useState<number | null>(null);
   // Hujjat — toʻliq sahifa: /receipts/new, /receipts/<id>; eski ?open=<id> (bildirishnomalar) yoʻnaltiriladi
   const setEditor = (e: { id: number | null }) => router.push(e.id === null ? "/receipts/new" : `/receipts/${e.id}`);
   const openParam = params.get("open");
@@ -362,7 +365,7 @@ export function ReceiptsPage() {
           rows={rows}
           rowKey={(d) => String(d.id)}
           loading={docs.isPending}
-          onRowClick={(d) => setEditor({ id: d.id })}
+          onRowClick={(d) => setPreview(d.id)}
           rowActions={(d) => (
             <RowMenu
               items={[
@@ -428,6 +431,9 @@ export function ReceiptsPage() {
           }
         />
       )}
+      {preview !== null ? (
+        <ReceiptPreview id={preview} onClose={() => setPreview(null)} onOpen={(id) => (setPreview(null), setEditor({ id }))} />
+      ) : null}
     </>
   );
 }

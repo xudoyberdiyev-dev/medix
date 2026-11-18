@@ -79,6 +79,7 @@ class PriceChangeController {
     }
 
     @GetMapping("/prices")
+    @PreAuthorize("hasAuthority('prices.view')")
     @Operation(summary = "Amaldagi narxlar (mahsulot × narx turi)", description = "Filial va sana bo'yicha; sana berilmasa — bugun.")
     PricePage prices(
             @RequestParam long branchId,
@@ -104,6 +105,7 @@ class PriceChangeController {
     }
 
     @GetMapping("/prices/export")
+    @PreAuthorize("hasAuthority('prices.view')")
     @Operation(summary = "Amaldagi narxlar — Excel'ga eksport (.xlsx)",
             description = "Jadvaldagi filtr, sana va saralash bilan; har narx turi alohida ustun; ko'pi bilan 50 000 qator.")
     void exportPrices(
@@ -144,6 +146,7 @@ class PriceChangeController {
     }
 
     @GetMapping("/price-changes")
+    @PreAuthorize("hasAuthority('prices.view')")
     @Operation(summary = "NO hujjatlari")
     PriceChangePage list(
             @RequestParam(required = false) Long branchId,
@@ -160,12 +163,14 @@ class PriceChangeController {
     }
 
     @GetMapping("/price-changes/{id}")
+    @PreAuthorize("hasAuthority('prices.view')")
     @Operation(summary = "NO hujjati")
     PriceChangeDetail get(@PathVariable long id) {
         return detail(id);
     }
 
     @GetMapping(value = "/price-changes/{id}/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
+    @PreAuthorize("hasAuthority('prices.view')")
     @Operation(summary = "NO hujjati — PDF (chop etish)")
     ResponseEntity<byte[]> pdf(@PathVariable long id) {
         byte[] body = pdf.render(actor(), id);

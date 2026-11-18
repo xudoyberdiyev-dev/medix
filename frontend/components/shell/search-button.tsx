@@ -2,7 +2,9 @@
 
 import { useTranslations } from "next-intl";
 import { Search } from "lucide-react";
-import { useCallback, useState } from "react";
+import { usePathname } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
+import { recordRecent } from "@/lib/recent";
 import { CommandPalette, useCommandPaletteHotkey } from "./command-palette";
 
 /** TopBar qidiruv maydoni (prototip: «Mahsulot, mijoz yoki hujjat raqami…», Ctrl K): bosilganda yoki Ctrl+K — universal qidiruv oynasi. */
@@ -12,6 +14,11 @@ export function SearchButton() {
   const show = useCallback(() => setOpen(true), []);
   const hide = useCallback(() => setOpen(false), []);
   useCommandPaletteHotkey(show);
+  const pathname = usePathname();
+  // U6: Ctrl+K «Oxirgi ochilganlar» uchun
+  useEffect(() => {
+    if (pathname) recordRecent(pathname);
+  }, [pathname]);
   return (
     <>
       <button

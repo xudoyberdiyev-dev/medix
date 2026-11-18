@@ -4,8 +4,10 @@
   "empty": "Hech narsa topilmadi. Boshqa soʻz yoki hujjat raqamini yozib koʻring.",
   "results": "Natijalar",
   "kinds": {
+    "RECENT": "Oxirgi ochilganlar",
     "PAGE": "Sahifalar",
     "REPORT": "Hisobotlar",
+    "ACTION": "Tez amallar",
     "ORDER": "Buyurtmalar",
     "RECEIPT": "Kirimlar",
     "PRICE_CHANGE": "Narx oʻzgarishlari (NO)",
@@ -24,5 +26,13 @@
   },
   "searching": "Qidirilmoqda",
   "short": "Kamida {min} ta belgi yozing. Kirill yoki lotinda — farqi yoʻq.",
-  "failed": "Qidiruv bajarilmadi. Ulanishni tekshirib, qayta yozing."
+  "failed": "Qidiruv bajarilmadi. Ulanishni tekshirib, qayta yozing.",
+  "actions": {
+    "order": "Yangi buyurtma",
+    "payment": "Mijozdan toʻlov",
+    "receipt": "Yangi kirim",
+    "product": "Mahsulot qoʻshish",
+    "cash": "Kassa operatsiyasi",
+    "customer": "Mijoz qoʻshish"
+  }
 }

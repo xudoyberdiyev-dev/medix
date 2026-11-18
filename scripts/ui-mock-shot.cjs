@@ -75,7 +75,7 @@ const defaults = {
   const errs = [];
   p.on("pageerror", (e) => errs.push(e.message));
   await p.goto(BASE + route);
-  await p.waitForTimeout(2500);
+  await p.waitForTimeout(Number(process.env.WAIT || 2500));
   for (const step of (process.env.STEPS || "").split("|").filter(Boolean)) {
     const [kind, ...rest] = step.split(":");
     const arg = rest.join(":");

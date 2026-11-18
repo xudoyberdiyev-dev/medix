@@ -175,5 +175,20 @@
   },
   "bqLocked": "Tasdiqlangan boshlangʻich qoldiq hujjatlari bor. Kesish sanasini oʻzgartirish ular hisobini buzadi, shuning uchun maydon qulflangan.",
   "bqLockedShort": "Tasdiqlangan BQ hujjatlari bor — oʻzgartirib boʻlmaydi",
-  "bqNone": "Boshlangʻich qoldiq hali kiritilmagan — sana birinchi BQ hujjatidan olinadi."
+  "bqNone": "Boshlangʻich qoldiq hali kiritilmagan — sana birinchi BQ hujjatidan olinadi.",
+  "sys": {
+    "title": "Tizim holati",
+    "sub": "Ushlanmagan server xatolari (5xx). Har kuni 08:10 da oxirgi 24 soat xulosasi Telegramʼga yuboriladi (sozlangan boʻlsa).",
+    "day": "24 soat",
+    "week": "7 kun",
+    "started": "Server ishga tushgan",
+    "top": "Eng koʻp uchragan (24 soat)",
+    "recent": "Oxirgi xatolar",
+    "when": "Vaqt",
+    "where": "Soʻrov",
+    "what": "Xato",
+    "okTitle": "Xato yoʻq",
+    "okText": "Oxirgi 7 kunda server xatosi qayd etilmagan.",
+    "failed": "Tizim holatini yuklab boʻlmadi — sahifani yangilang."
+  }
 }

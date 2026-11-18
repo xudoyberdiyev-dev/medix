@@ -324,6 +324,7 @@ test("Ombor mudiri: kodlar egasini oʻzgartiradi va qaytaradi (O10b)", async ({ 
   const tabs = page.getByRole("tablist", { name: "Buyurtma holatlari" });
   await tabs.getByRole("tab", { name: /^Hammasi/ }).click();
   await page.getByRole("cell", { name: CUSTOMER }).first().click();
+  await page.getByRole("button", { name: "Toʻliq ochish" }).click();
   await expect(page).toHaveURL(/\/orders\/\d+/);
   // Naqd toʻlov → standart «Zaxira kodlarga» (toʻlov turi boʻyicha)
   await expect(page.getByText("toʻlov turi boʻyicha")).toBeVisible();
@@ -489,6 +490,7 @@ test("Filial rahbari: birinchi kirish, buyurtmani tasdiqlaydi", async ({ page })
   const tabs = page.getByRole("tablist", { name: "Buyurtma holatlari" });
   await tabs.getByRole("tab", { name: /^Tasdiqlashda/ }).click();
   await page.getByRole("cell", { name: CUSTOMER }).first().click();
+  await page.getByRole("button", { name: "Toʻliq ochish" }).click();
   await page.getByRole("button", { name: "Tasdiqlash", exact: true }).click();
   await expect(page.getByText("Tasdiqlandi — navbatga oʻtdi").first()).toBeVisible();
 });
@@ -570,6 +572,7 @@ test("Buxgalter: birinchi kirish, kirimni oʻtkazadi (YB qarzi)", async ({ page 
   await firstLogin(page, "accountant.1");
   await page.goto("/receipts");
   await page.getByRole("cell", { name: "YX-777" }).click();
+  await page.getByRole("button", { name: "Toʻliq ochish" }).click();
   await page.getByRole("button", { name: "Oʻtkazish" }).click();
   await expect(page.getByText("Kirim oʻtkazildi").first()).toBeVisible();
 });
@@ -598,6 +601,7 @@ test("Filial rahbari: YT ni tasdiqlaydi va oʻtkazadi", async ({ page }) => {
   await page.goto("/payments");
   await page.getByRole("tab", { name: /Yetkazib beruvchilarga/ }).click();
   await page.getByRole("cell", { name: "Pharm Supply E2E" }).first().click();
+  await page.getByRole("button", { name: "Toʻliq ochish" }).click();
   await expect(page).toHaveURL(/\/payments\/yt\/\d+$/);
   await page.getByRole("button", { name: "Tasdiqlash", exact: true }).click();
   await page.getByRole("dialog").getByRole("button", { name: "Tasdiqlash", exact: true }).click();
@@ -768,6 +772,7 @@ test("Filial rahbari: Direktor darajasidagi buyurtmani tasdiqlay olmaydi", async
   const tabs = page.getByRole("tablist", { name: "Buyurtma holatlari" });
   await tabs.getByRole("tab", { name: /^Tasdiqlashda/ }).click();
   await page.getByRole("cell", { name: CUSTOMER }).first().click();
+  await page.getByRole("button", { name: "Toʻliq ochish" }).click();
   await expect(page.getByText("Direktor tasdigʻi kerak").first()).toBeVisible();
   await expect(page.getByRole("button", { name: "Tasdiqlash", exact: true })).toHaveCount(0);
 });
@@ -778,6 +783,7 @@ test("Direktor: birinchi kirish, buyurtmani tasdiqlaydi", async ({ page }) => {
   const tabs = page.getByRole("tablist", { name: "Buyurtma holatlari" });
   await tabs.getByRole("tab", { name: /^Tasdiqlashda/ }).click();
   await page.getByRole("cell", { name: CUSTOMER }).first().click();
+  await page.getByRole("button", { name: "Toʻliq ochish" }).click();
   await expect(page.getByText("Direktor tasdigʻi kerak").first()).toBeVisible();
   await page.getByRole("button", { name: "Tasdiqlash", exact: true }).click();
   await expect(page.getByText("Tasdiqlandi — navbatga oʻtdi").first()).toBeVisible();

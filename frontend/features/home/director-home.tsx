@@ -44,7 +44,7 @@ import { api, unwrap } from "@/lib/api/client";
 import type { uzLatn } from "@/i18n/messages.generated";
 import type { components } from "@/lib/api/schema";
 import { cn } from "@/lib/cn";
-import { formatMoney } from "@/lib/format";
+import { formatMoney, formatMoneyOrDash } from "@/lib/format";
 import { useBranchStore } from "@/lib/stores/branch";
 import {
   axisLabel,
@@ -58,6 +58,8 @@ import {
   tashkentHour,
   toCents,
 } from "./director-view";
+import { Delta } from "./branch-home";
+import { SetupChecklistCard } from "./setup-checklist";
 import { PeriodPicker, usePeriodState } from "./period-picker";
 
 type Home = components["schemas"]["Home"];
@@ -289,11 +291,12 @@ function DirectorBody({ home: h }: { home: Home }) {
   };
   return (
     <div className="flex flex-col gap-4">
+      <SetupChecklistCard />
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <PtCard label={t("sales")} value={h.sales} note={per} href="/shipping" />
+        <PtCard label={t("sales")} value={h.sales} note={per} href="/shipping" prev={h.salesPrev} />
         <PtCard label={t("customerDebt")} value={h.customerDebtBy} note={t("today")} href="/debts/customers" />
         <PtCard label={t("supplierDebt")} value={h.supplierDebtBy} note={t("today")} href="/debts/suppliers" />
-        <PtCard label={t("expenses")} value={h.expenses} note={per} href="/cash" />
+        <PtCard label={t("expenses")} value={h.expenses} note={per} href="/cash" prev={h.expensesPrev} invert />
       </div>
       <PtTable rows={h.branches} totals={branchTotals} />
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
@@ -458,9 +461,24 @@ export function MiniTable<T>({
   );
 }
 
-const mny = (v: string) => <span className={nonZero(v) ? "" : "text-text-secondary"}>{formatMoney(v)}</span>;
+const mny = (v: string) => <span className={nonZero(v) ? "" : "text-text-secondary"}>{formatMoneyOrDash(v)}</span>;
 
-function PtCard({ label, value, note, href }: { label: string; value: ByPayment; note: string; href: string }) {
+function PtCard({
+  label,
+  value,
+  note,
+  href,
+  prev,
+  invert,
+}: {
+  label: string;
+  value: ByPayment;
+  note: string;
+  href: string;
+  /** U9: oldingi teng davr jami — ↑/↓ % (xarajatda oʻsish — qizil) */
+  prev?: string;
+  invert?: boolean;
+}) {
   const t = useTranslations("home");
   return (
     <Link href={href} className="block min-w-0 rounded-card border border-border bg-surface p-4 transition-colors hover:border-primary">
@@ -469,15 +487,21 @@ function PtCard({ label, value, note, href }: { label: string; value: ByPayment;
         <span className="text-section-title whitespace-nowrap tabular-nums xl:text-[22px]">{formatMoney(value.total)}</span>
         <span className="text-caption text-text-secondary">{t("dir.soum")}</span>
       </div>
-      <div className="mt-1 text-caption text-text-secondary">{note}</div>
-      <dl className="mt-3 grid grid-cols-[1fr_auto] gap-x-3 gap-y-1.5 border-t border-border pt-3 text-body">
-        <dt className="text-text-secondary">{t("card.cash")}</dt>
-        <dd className="text-right tabular-nums">{mny(value.cash)}</dd>
-        <dt className="text-text-secondary">{t("card.transfer")}</dt>
-        <dd className="text-right tabular-nums">{mny(value.transfer)}</dd>
-        <dt className="text-text-secondary">{t("card.online")}</dt>
-        <dd className="text-right tabular-nums">{mny(value.online)}</dd>
-      </dl>
+      <div className="mt-1 flex flex-wrap items-center gap-x-2 text-caption text-text-secondary">
+        {note}
+        {prev !== undefined ? <Delta cur={value.total} prev={prev} invert={invert} /> : null}
+      </div>
+      {/* U8: hammasi nol boʻlgan boʻlinma koʻrsatilmaydi */}
+      {nonZero(value.cash) || nonZero(value.transfer) || nonZero(value.online) ? (
+        <dl className="mt-3 grid grid-cols-[1fr_auto] gap-x-3 gap-y-1.5 border-t border-border pt-3 text-body">
+          <dt className="text-text-secondary">{t("card.cash")}</dt>
+          <dd className="text-right tabular-nums">{mny(value.cash)}</dd>
+          <dt className="text-text-secondary">{t("card.transfer")}</dt>
+          <dd className="text-right tabular-nums">{mny(value.transfer)}</dd>
+          <dt className="text-text-secondary">{t("card.online")}</dt>
+          <dd className="text-right tabular-nums">{mny(value.online)}</dd>
+        </dl>
+      ) : null}
     </Link>
   );
 }

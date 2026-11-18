@@ -90,7 +90,7 @@ class OrderController {
     @PreAuthorize("hasAnyAuthority('orders.view', 'approvals.view')")
     @Operation(summary = "Buyurtmalar", description = "operatorId — kiritgan xodim; soldFrom/soldTo — shu davrda sotilgan yoki qaytarilgan "
             + "(Savdo hisoboti qatoridan hujjatlarga o'tish, SPEC 8); orderFrom/orderTo — buyurtma sanasi; customerId/operatorId/statuses/deliveryType/paymentType/regionId/salesZoneId — bir nechta qiymat (prototip filtr chiplari); q — raqam, STIR yoki mijoz nomi "
-            + "(lotin/kirill farqsiz); sort/desc — saralash (standart: kiritilgan vaqti, yangisi tepada).")
+            + "(lotin/kirill farqsiz); overdue — yetkazish sanasi oʻtgan jarayondagi buyurtmalar; sort/desc — saralash (standart: kiritilgan vaqti, yangisi tepada).")
     OrderPage list(
             @RequestParam(required = false) Long branchId,
             @RequestParam(required = false) OrderStatus status,
@@ -107,11 +107,12 @@ class OrderController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate orderTo,
             @RequestParam(required = false) String q,
             @RequestParam(defaultValue = "false") boolean mine,
+            @RequestParam(defaultValue = "false") boolean overdue,
             @RequestParam(defaultValue = "CREATED") OrderSort sort,
             @RequestParam(defaultValue = "true") boolean desc,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size) {
-        return orders.list(actor(), branchId, status, filter(customerId, operatorId, soldFrom, soldTo, orderFrom, orderTo, statuses, deliveryType, paymentType, regionId, salesZoneId), q, mine,
+        return orders.list(actor(), branchId, status, filter(customerId, operatorId, soldFrom, soldTo, orderFrom, orderTo, statuses, deliveryType, paymentType, regionId, salesZoneId, overdue), q, mine,
                 sort, desc, Math.max(page, 0), Math.clamp(size, 1, 200));
     }
 
@@ -135,22 +136,23 @@ class OrderController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate orderTo,
             @RequestParam(required = false) String q,
             @RequestParam(defaultValue = "false") boolean mine,
+            @RequestParam(defaultValue = "false") boolean overdue,
             @RequestParam(defaultValue = "CREATED") OrderSort sort,
             @RequestParam(defaultValue = "true") boolean desc,
             jakarta.servlet.http.HttpServletResponse response) throws java.io.IOException {
-        OrderPage data = orders.list(actor(), branchId, status, filter(customerId, operatorId, soldFrom, soldTo, orderFrom, orderTo, statuses, deliveryType, paymentType, regionId, salesZoneId), q, mine,
+        OrderPage data = orders.list(actor(), branchId, status, filter(customerId, operatorId, soldFrom, soldTo, orderFrom, orderTo, statuses, deliveryType, paymentType, regionId, salesZoneId, overdue), q, mine,
                 sort, desc, 0, OrderExcel.MAX_ROWS);
         OrderExcel.write(data.items(), response);
     }
 
     private static Orders.OrderFilter filter(List<Long> customerId, List<Long> operatorId, LocalDate soldFrom, LocalDate soldTo,
             LocalDate orderFrom, LocalDate orderTo, List<OrderStatus> statuses, List<DeliveryType> deliveryType, List<PaymentType> paymentType,
-            List<Long> regionId, List<Long> salesZoneId) {
+            List<Long> regionId, List<Long> salesZoneId, boolean overdue) {
         if ((soldFrom != null && soldTo != null && soldFrom.isAfter(soldTo)) || (orderFrom != null && orderTo != null && orderFrom.isAfter(orderTo))) {
             throw YuzplusException.badRequest("home.periodInvalid");
         }
         return new Orders.OrderFilter(customerId, operatorId, soldFrom, soldTo, orderFrom, orderTo, statuses, deliveryType, paymentType, regionId,
-                salesZoneId);
+                salesZoneId, overdue);
     }
 
     @GetMapping("/{id}/invoice")
@@ -227,9 +229,14 @@ class OrderController {
             @RequestParam(required = false) List<Long> categoryIds,
             @RequestParam(required = false) List<Long> countryIds,
             @RequestParam(required = false) List<OrderModels.CatalogFlag> flags,
+            @RequestParam(required = false) List<Long> productIds,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size) {
-        var filter = new OrderModels.CatalogFilter(nn(manufacturerIds), nn(categoryIds), nn(countryIds), nn(flags));
+        List<Long> ids = nn(productIds);
+        if (ids.size() > 200) {
+            ids = ids.subList(0, 200);
+        }
+        var filter = new OrderModels.CatalogFilter(nn(manufacturerIds), nn(categoryIds), nn(countryIds), nn(flags), ids);
         return orders.catalog(actor(), warehouseId, customerId, q, inStockOnly, filter, Math.max(page, 0), Math.clamp(size, 1, 200));
     }
 

@@ -1,5 +1,6 @@
 package uz.yuzplus.shared.error;
 
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -30,9 +31,11 @@ public class GlobalExceptionHandler {
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     private final MessageSource messages;
+    private final SystemErrors systemErrors;
 
-    public GlobalExceptionHandler(MessageSource messages) {
+    public GlobalExceptionHandler(MessageSource messages, SystemErrors systemErrors) {
         this.messages = messages;
+        this.systemErrors = systemErrors;
     }
 
     @ExceptionHandler(YuzplusException.class)
@@ -74,7 +77,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(Exception.class)
-    ProblemDetail unexpected(Exception e) {
+    ProblemDetail unexpected(Exception e, HttpServletRequest request) {
         if (e instanceof ErrorResponse er) {
             // Spring MVC'ning standart xatolari: 404, 405, 415, noto'g'ri parametr.
             HttpStatus status = HttpStatus.resolve(er.getStatusCode().value());
@@ -83,6 +86,7 @@ public class GlobalExceptionHandler {
             }
         }
         log.error("Kutilmagan xato", e);
+        systemErrors.record(request.getMethod(), request.getRequestURI(), e);
         return problem(HttpStatus.INTERNAL_SERVER_ERROR, "error.unexpected");
     }
 

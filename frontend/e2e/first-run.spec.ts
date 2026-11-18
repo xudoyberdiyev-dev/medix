@@ -200,7 +200,7 @@ test("CEO: birinchi kirish, sozlash ustasi, xodim qoʻshish", async ({ page }) =
   // Profil: PIN oʻrnatish
   await page.goto("/profile");
   await expect(page.getByRole("heading", { name: "Faol sessiyalar" })).toBeVisible();
-  await expect(page.getByText("Shu qurilma")).toBeVisible();
+  await expect(page.getByText("Shu qurilma", { exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Mening harakatlarim" })).toBeVisible();
   await page.getByRole("button", { name: "PIN oʻrnatish" }).click();
   const pinDrawer = page.getByRole("dialog");
@@ -538,6 +538,7 @@ test("CEO: buyurtma — mijoz, mahsulot, muammolar paneli, navbatga yuborish", a
 
   await page.goto("/orders");
   await page.getByRole("cell", { name: "Shifo Dorixona E2E" }).first().click();
+  await page.getByRole("button", { name: "Toʻliq ochish" }).click();
   await expect(page.getByRole("heading", { name: "Hisobdan oʻtkazish" })).toBeVisible();
   await page.getByText("Tekshirildi").first().click();
   await field(page, "Joylar soni").fill("1");
@@ -549,9 +550,11 @@ test("CEO: buyurtma — mijoz, mahsulot, muammolar paneli, navbatga yuborish", a
   const tabs = page.getByRole("tablist", { name: "Buyurtma holatlari" });
   await tabs.getByRole("tab", { name: /^Hujjatlashtirilmoqda/ }).click();
   await expect(tabs.getByRole("tab", { name: /^Hujjatlashtirilmoqda/ })).toHaveAttribute("aria-selected", "true");
-  // Prototip holat kartasi: nomi + soni + summasi
+  // U5: ixcham holat chizigʻi — tanlangan segmentda nomi + soni + summasi
   await expect(tabs.getByRole("tab", { name: /^Hujjatlashtirilmoqda/ })).toContainText(/[\d.]+,\d\d/);
   await expect(page.getByRole("cell", { name: "Shifo Dorixona E2E" }).first()).toBeVisible();
+  // Soni yoʻq holat «Yana» menyusida boʻlishi mumkin
+  if (!(await tabs.getByRole("tab", { name: /^Qoralama/ }).isVisible())) await tabs.getByRole("button", { name: /^Yana/ }).click();
   await tabs.getByRole("tab", { name: /^Qoralama/ }).click();
   await expect(page.getByRole("cell", { name: "Shifo Dorixona E2E" })).toHaveCount(0);
   await tabs.getByRole("tab", { name: /^Hammasi/ }).click();

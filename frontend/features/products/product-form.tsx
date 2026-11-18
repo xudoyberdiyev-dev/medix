@@ -160,6 +160,9 @@ function FormBody({ product, initial }: { product: ProductDetail | null; initial
   const back = () => guard(() => router.push(product ? `/products/${product.id}` : "/products"));
   const openOther = (oid: number) => guard(() => router.push(`/products/${oid}`));
 
+  // U11: chap navigatsiyada xatoli boʻlimlar
+  const errSecs = [...new Set(missing.map((k) => FIELD_SECTION[k] ?? "pf-sec-basic"))];
+
   const focusField = (k: string) => {
     const el = top.current?.querySelector<HTMLElement>(`[data-f="${k}"]`);
     if (!el) return;
@@ -220,439 +223,446 @@ function FormBody({ product, initial }: { product: ProductDetail | null; initial
 
   return (
     <div className="flex min-w-0 flex-col items-center" data-screen-label="Mahsulot formasi">
-      <div ref={top} className="flex w-full max-w-[880px] flex-col gap-4">
-        <div className="flex flex-col gap-1.5">
-          <nav className="flex items-center gap-1.5 text-caption">
-            <button type="button" onClick={() => guard(() => router.push("/products"))} className="text-link hover:underline">
-              {t("crumbParent")}
-            </button>
-            <span className="text-text-secondary">/</span>
-            <span className="text-text-secondary">{product ? t("crumbEdit") : t("new")}</span>
-          </nav>
-          <h1 className="text-[22px] leading-7 font-semibold tracking-[-0.01em]">{product ? product.name : t("new")}</h1>
-        </div>
-
-        {missing.length > 0 ? (
-          <Banner tone="danger" icon={CircleAlert}>
-            <span className="font-medium">{t("errN", { n: missing.length })}</span>
-            <span className="flex flex-wrap gap-x-3 gap-y-1">
-              {missing.map((k) => (
-                <button key={k} type="button" onClick={() => focusField(k)} className="underline underline-offset-2">
-                  {t(`fields.${k}`)}
-                </button>
-              ))}
-            </span>
-          </Banner>
-        ) : null}
-        {sameName && missing.length === 0 ? (
-          <Banner tone="warning" icon={TriangleAlert}>
-            <span>
-              {t("dup", {
-                name: sameName.name,
-                maker: options(makers.data, f.manufacturerId).find((o) => o.value === f.manufacturerId)?.label ?? "",
-              })}
-            </span>
-            <button type="button" onClick={() => openOther(sameName.id)} className="self-start font-medium underline underline-offset-2">
-              {t("dupOpen")}
-            </button>
-          </Banner>
-        ) : null}
-        {serverErr.message ? (
-          <Banner tone="danger" icon={CircleAlert}>
-            <span>{serverErr.message}</span>
-          </Banner>
-        ) : null}
-
-        <Section title={t("sec.basic")} description={t("sec.basicD")}>
-          <div className="grid grid-cols-2 gap-4">
-            <div data-f="name" className="col-span-2">
-              <TextField
-                label={t("fields.name")}
-                required
-                value={f.name}
-                onChange={set("name")}
-                error={errText("name")}
-                placeholder="Omeprazol 20mg"
-                maxLength={300}
-              />
-            </div>
-            <div data-f="contractName" className="col-span-2">
-              <TextField
-                label={t("fields.contractName")}
-                required
-                value={f.contractName}
-                onChange={set("contractName")}
-                hint={t("contractHint")}
-                error={errText("contractName")}
-                placeholder="Омепразол капсулы 20 мг №28"
-                maxLength={300}
-              />
-            </div>
-            <div data-f="classifierName">
-              <TextField
-                label={t("fields.classifierName")}
-                required
-                value={f.classifierName}
-                onChange={set("classifierName")}
-                error={errText("classifierName")}
-                placeholder="Omeprazol"
-                maxLength={500}
-              />
-            </div>
-            <div data-f="manufacturerId">
-              <Select
-                label={t("fields.manufacturerId")}
-                required
-                searchable
-                placeholder={t("choose")}
-                options={options(makers.data, f.manufacturerId)}
-                value={f.manufacturerId}
-                onChange={set("manufacturerId")}
-                error={errText("manufacturerId")}
-                footer={canMaker ? { label: t("newMaker"), onSelect: () => setMk({ name: "" }) } : undefined}
-              />
-            </div>
-            <div data-f="categoryId">
-              <Select
-                label={t("fields.categoryId")}
-                required
-                searchable
-                placeholder={t("choose")}
-                options={options(cats.data, f.categoryId)}
-                value={f.categoryId}
-                onChange={set("categoryId")}
-                error={errText("categoryId")}
-              />
-            </div>
-            <Select
-              label={t("fields.supplyEmployeeId")}
-              searchable
-              placeholder={t("choose")}
-              options={supply}
-              value={f.supplyEmployeeId ?? ""}
-              onChange={(v) => set("supplyEmployeeId")(v || null)}
-            />
-            <Select
-              label={t("fields.dosageForm")}
-              placeholder={t("choose")}
-              options={DOSAGE_FORMS.map((k) => ({ value: k, label: tf(k) }))}
-              value={f.dosageForm}
-              onChange={(v) => set("dosageForm")((v as PageForm["dosageForm"]) ?? null)}
-            />
-            <Select
-              label={t("fields.countryId")}
-              searchable
-              placeholder={t("choose")}
-              options={options(countries.data, f.countryId)}
-              value={f.countryId}
-              onChange={set("countryId")}
-            />
-            <TextField label={t("fields.dose")} value={f.dose} onChange={set("dose")} placeholder="20 mg" maxLength={50} />
-            <TextField
-              label={t("fields.packQty")}
-              value={f.packQty}
-              onChange={(v) => set("packQty")(v.replace(/\D/g, "").slice(0, 6))}
-              inputMode="numeric"
-              placeholder="28"
-            />
-            <div data-f="minQty">
-              <TextField
-                label={t("fields.minQty")}
-                value={f.minQty}
-                onChange={(v) => set("minQty")(v.replace(/\D/g, "").slice(0, 6))}
-                inputMode="numeric"
-                placeholder="10"
-                hint={t("mmHelp")}
-              />
-            </div>
-            <div data-f="maxQty">
-              <TextField
-                label={t("fields.maxQty")}
-                value={f.maxUnlimited ? "" : f.maxQty}
-                onChange={(v) => {
-                  // Raqam yozilsa — «Cheksiz» oʻzi olinadi
-                  const n = v.replace(/\D/g, "").slice(0, 6);
-                  setF((st) => ({ ...st, maxQty: n, maxUnlimited: n ? false : st.maxUnlimited }));
-                }}
-                inputMode="numeric"
-                placeholder={f.maxUnlimited ? t("unlimited") : "300"}
-                error={f.maxUnlimited ? undefined : errText("maxQty")}
-              />
-              <Checkbox
-                className="mt-2"
-                label={t("unlimited")}
-                description={t("unlimitedHelp")}
-                checked={f.maxUnlimited}
-                onChange={(on) => setF((s) => ({ ...s, maxUnlimited: on, maxQty: on ? "" : s.maxQty }))}
-              />
-            </div>
-          </div>
-        </Section>
-
-        <Section title={t("sec.id")} description={t("sec.idD")}>
-          <div className="grid grid-cols-2 gap-4">
-            <div data-f="code" className="col-span-2 flex flex-col">
-              <label htmlFor="pf-code" className="mb-1 font-medium text-text-secondary">
-                {t("fields.code")}
-                <span className="ml-0.5 text-danger" aria-hidden>
-                  *
-                </span>
-              </label>
-              <div className="flex flex-wrap items-center gap-3">
-                <input
-                  id="pf-code"
-                  value={f.code}
-                  onChange={(e) => set("code")(e.target.value.replace(/\D/g, "").slice(0, 8))}
-                  inputMode="numeric"
-                  maxLength={8}
-                  placeholder="48203315"
-                  aria-invalid={!!codeErr || undefined}
-                  className={cn(
-                    "h-[34px] w-40 rounded-control border bg-surface px-3 font-mono text-body tracking-[0.04em] outline-none focus:border-primary-button focus:ring-3 focus:ring-primary/15",
-                    codeErr ? "border-danger" : "border-border",
-                  )}
-                />
-                <Button variant="secondary" icon={RefreshCw} onClick={() => fetchNewCode().then((c) => set("code")(c))}>
-                  {t("genCode")}
-                </Button>
-                <span className="text-caption text-text-secondary">{t("codeHelp")}</span>
-              </div>
-              {codeErr ? (
-                <FieldError>
-                  {codeErr}
-                  {codeOwner ? (
-                    <button type="button" onClick={() => openOther(codeOwner.id)} className="font-medium underline underline-offset-2">
-                      {codeOwner.name}
-                    </button>
-                  ) : null}
-                </FieldError>
-              ) : null}
-            </div>
-            <div data-f="barcodes" className="col-span-2 flex flex-col">
-              <label htmlFor="pf-bc" className="mb-1 font-medium text-text-secondary">
-                {t("fields.barcodes")}
-              </label>
-              <div
-                className={cn(
-                  "flex min-h-[34px] flex-wrap items-center gap-1.5 rounded-control border bg-surface px-1.5 py-1",
-                  bcErr || bcOwner ? "border-danger" : "border-border",
-                )}
-              >
-                {f.barcodes.map((b) => (
-                  <span
-                    key={b}
-                    className="inline-flex h-6 items-center gap-1 rounded-control border border-border bg-background pr-1 pl-2 font-mono text-[12.5px]"
-                  >
-                    {b}
-                    <button
-                      type="button"
-                      aria-label={t("bc.remove", { code: b })}
-                      onClick={() => set("barcodes")(f.barcodes.filter((x) => x !== b))}
-                      className="flex size-[18px] items-center justify-center rounded-sm text-text-secondary hover:bg-border"
-                    >
-                      <X size={12} strokeWidth={1.5} aria-hidden />
-                    </button>
-                  </span>
-                ))}
-                <input
-                  id="pf-bc"
-                  value={bcInput}
-                  onChange={(e) => (setBcInput(e.target.value.replace(/\s/g, "").slice(0, 14)), setBcErr(null))}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === ",") {
-                      e.preventDefault();
-                      addBc();
-                    } else if (e.key === "Backspace" && !bcInput && f.barcodes.length) {
-                      set("barcodes")(f.barcodes.slice(0, -1));
-                    }
-                  }}
-                  onBlur={() => bcInput.trim() && addBc()}
-                  inputMode="numeric"
-                  placeholder={t("bc.placeholder")}
-                  className="h-6 min-w-[200px] flex-1 bg-transparent font-mono text-[12.5px] outline-none placeholder:text-text-disabled"
-                />
-              </div>
-              {bcErrText ? <FieldError>{bcErrText}</FieldError> : null}
-              {bcOwner ? (
-                <FieldError>
-                  {t("bc.dup", { code: bcOwner.barcode })}
-                  <button type="button" onClick={() => openOther(bcOwner.product.id)} className="font-medium underline underline-offset-2">
-                    {bcOwner.product.name}
-                  </button>
-                </FieldError>
-              ) : null}
-            </div>
-            <div data-f="ikpu">
-              <TextField
-                label={t("fields.ikpu")}
-                required
-                value={f.ikpu}
-                onChange={(v) => set("ikpu")(v.replace(/\D/g, "").slice(0, 17))}
-                inputMode="numeric"
-                error={errText("ikpu")}
-                placeholder="03004001001000000"
-              />
-            </div>
-            <div data-f="farmId">
-              <TextField
-                label={t("fields.farmId")}
-                required
-                value={f.farmId}
-                onChange={set("farmId")}
-                error={errText("farmId")}
-                placeholder="FRM-0001234"
-                maxLength={50}
-              />
-            </div>
-          </div>
-        </Section>
-
-        <Section title={t("sec.units")} description={t("sec.unitsD")}>
-          <div className="grid grid-cols-2 gap-4">
-            <div data-f="unitId" title={locked ? t("lockedTip") : undefined}>
-              <Select
-                label={t("fields.unitId")}
-                options={options(units.data, unitId)}
-                value={unitId}
-                onChange={set("unitId")}
-                disabled={locked}
-                error={errText("unitId")}
-              />
-            </div>
-            <div title={locked ? t("lockedTip") : undefined} className="relative">
-              <TextField
-                label={t("fields.perPack")}
-                value={f.perPack}
-                onChange={(v) => set("perPack")(v.replace(/\D/g, "").slice(0, 6))}
-                inputMode="numeric"
-                disabled={locked}
-              />
-              {locked ? (
-                <span className="pointer-events-none absolute right-2.5 bottom-2.5 flex text-text-secondary">
-                  <Lock size={14} strokeWidth={1.5} aria-hidden />
-                </span>
-              ) : null}
-            </div>
-          </div>
-        </Section>
-
-        <Section title={t("sec.storage")} description={t("sec.storageD")}>
-          <div className="flex flex-col">
-            <Toggle
-              label={t("fields.controlled")}
-              help={t("ctrlHelp")}
-              on={f.controlled}
-              locked={locked}
-              lockTip={t("lockedTip")}
-              onToggle={() => set("controlled")(!f.controlled)}
-              extra={
-                f.controlled ? (
-                  <div className="flex gap-2.5 rounded-control border border-danger/30 bg-danger-bg px-3 py-2.5 text-danger">
-                    <Icon icon={Lock} className="mt-px" />
-                    <span>{t("ctrlInfo")}</span>
-                  </div>
-                ) : null
-              }
-            />
-            <Toggle
-              label={t("fields.marked")}
-              help={t("markHelp")}
-              on={f.marked}
-              locked={locked}
-              lockTip={t("lockedTip")}
-              onToggle={() => set("marked")(!f.marked)}
-              extra={
-                f.marked ? (
-                  <div className="flex gap-2.5 rounded-control border border-border bg-table-header px-3 py-2.5">
-                    <Icon icon={ScanBarcode} className="mt-px text-text-secondary" />
-                    <span>{t("markInfo")}</span>
-                  </div>
-                ) : null
-              }
-            />
-            <Toggle
-              label={t("fields.prescription")}
-              help={t("rxHelp")}
-              on={f.prescription}
-              last
-              onToggle={() => set("prescription")(!f.prescription)}
-            />
-          </div>
-        </Section>
-
-        <Section title={t("sec.location")} description={t("sec.locationD")}>
-          <div className="flex flex-col gap-3">
-            {warehouses.length === 0 ? (
-              <span className="text-text-secondary">{t("locationNone")}</span>
-            ) : (
-              warehouses.map((w) => (
-                <TextField
-                  key={w.warehouseId}
-                  id={`pf-location-${w.warehouseId}`}
-                  label={
-                    warehouses.length === 1
-                      ? t("fields.location")
-                      : t("fields.locationIn", { warehouse: manyBranches ? `${w.branch} · ${w.warehouse}` : w.warehouse })
-                  }
-                  value={f.locations[String(w.warehouseId)] ?? ""}
-                  maxLength={LOCATION_MAX}
-                  placeholder={t("locationPh")}
-                  hint={warehouses.length === 1 ? t("locationHint", { warehouse: w.warehouse }) : undefined}
-                  onChange={(v) => set("locations")({ ...f.locations, [String(w.warehouseId)]: v })}
-                />
-              ))
-            )}
-          </div>
-        </Section>
-
-        <Section title={t("sec.tax")} description={t("sec.taxD")}>
+      <div className="flex w-full justify-center gap-6">
+        <SectionNav errSecs={errSecs} />
+        <div ref={top} className="flex w-full max-w-[880px] min-w-0 flex-col gap-4">
           <div className="flex flex-col gap-1.5">
-            <span className="font-medium text-text-secondary">{t("fields.vat")}</span>
-            <div
-              role="radiogroup"
-              aria-label={t("fields.vat")}
-              className="inline-flex h-[34px] gap-0.5 self-start rounded-control bg-border/60 p-0.5"
-            >
-              {vatOpts.map(([v, label]) => (
-                <button
-                  key={v}
-                  type="button"
-                  role="radio"
-                  aria-checked={f.vat === v}
-                  onClick={() => set("vat")(v)}
+            <nav className="flex items-center gap-1.5 text-caption">
+              <button type="button" onClick={() => guard(() => router.push("/products"))} className="text-link hover:underline">
+                {t("crumbParent")}
+              </button>
+              <span className="text-text-secondary">/</span>
+              <span className="text-text-secondary">{product ? t("crumbEdit") : t("new")}</span>
+            </nav>
+            <h1 className="text-[22px] leading-7 font-semibold tracking-[-0.01em]">{product ? product.name : t("new")}</h1>
+          </div>
+
+          {missing.length > 0 ? (
+            <Banner tone="danger" icon={CircleAlert}>
+              <span className="font-medium">{t("errN", { n: missing.length })}</span>
+              <span className="flex flex-wrap gap-x-3 gap-y-1">
+                {missing.map((k) => (
+                  <button key={k} type="button" onClick={() => focusField(k)} className="underline underline-offset-2">
+                    {t(`fields.${k}`)}
+                  </button>
+                ))}
+              </span>
+            </Banner>
+          ) : null}
+          {sameName && missing.length === 0 ? (
+            <Banner tone="warning" icon={TriangleAlert}>
+              <span>
+                {t("dup", {
+                  name: sameName.name,
+                  maker: options(makers.data, f.manufacturerId).find((o) => o.value === f.manufacturerId)?.label ?? "",
+                })}
+              </span>
+              <button type="button" onClick={() => openOther(sameName.id)} className="self-start font-medium underline underline-offset-2">
+                {t("dupOpen")}
+              </button>
+            </Banner>
+          ) : null}
+          {serverErr.message ? (
+            <Banner tone="danger" icon={CircleAlert}>
+              <span>{serverErr.message}</span>
+            </Banner>
+          ) : null}
+
+          <Section id="pf-sec-basic" title={t("sec.basic")} description={t("sec.basicD")}>
+            <div className="grid grid-cols-2 gap-4">
+              <div data-f="name" className="col-span-2">
+                <TextField
+                  label={t("fields.name")}
+                  required
+                  value={f.name}
+                  onChange={set("name")}
+                  error={errText("name")}
+                  placeholder="Omeprazol 20mg"
+                  maxLength={300}
+                />
+              </div>
+              <div data-f="contractName" className="col-span-2">
+                <TextField
+                  label={t("fields.contractName")}
+                  required
+                  value={f.contractName}
+                  onChange={set("contractName")}
+                  hint={t("contractHint")}
+                  error={errText("contractName")}
+                  placeholder="Омепразол капсулы 20 мг №28"
+                  maxLength={300}
+                />
+              </div>
+              <div data-f="classifierName">
+                <TextField
+                  label={t("fields.classifierName")}
+                  required
+                  value={f.classifierName}
+                  onChange={set("classifierName")}
+                  error={errText("classifierName")}
+                  placeholder="Omeprazol"
+                  maxLength={500}
+                />
+              </div>
+              <div data-f="manufacturerId">
+                <Select
+                  label={t("fields.manufacturerId")}
+                  required
+                  searchable
+                  placeholder={t("choose")}
+                  options={options(makers.data, f.manufacturerId)}
+                  value={f.manufacturerId}
+                  onChange={set("manufacturerId")}
+                  error={errText("manufacturerId")}
+                  footer={canMaker ? { label: t("newMaker"), onSelect: () => setMk({ name: "" }) } : undefined}
+                />
+              </div>
+              <div data-f="categoryId">
+                <Select
+                  label={t("fields.categoryId")}
+                  required
+                  searchable
+                  placeholder={t("choose")}
+                  options={options(cats.data, f.categoryId)}
+                  value={f.categoryId}
+                  onChange={set("categoryId")}
+                  error={errText("categoryId")}
+                />
+              </div>
+              <Select
+                label={t("fields.supplyEmployeeId")}
+                searchable
+                placeholder={t("choose")}
+                options={supply}
+                value={f.supplyEmployeeId ?? ""}
+                onChange={(v) => set("supplyEmployeeId")(v || null)}
+              />
+              <Select
+                label={t("fields.dosageForm")}
+                placeholder={t("choose")}
+                options={DOSAGE_FORMS.map((k) => ({ value: k, label: tf(k) }))}
+                value={f.dosageForm}
+                onChange={(v) => set("dosageForm")((v as PageForm["dosageForm"]) ?? null)}
+              />
+              <Select
+                label={t("fields.countryId")}
+                searchable
+                placeholder={t("choose")}
+                options={options(countries.data, f.countryId)}
+                value={f.countryId}
+                onChange={set("countryId")}
+              />
+              <TextField label={t("fields.dose")} value={f.dose} onChange={set("dose")} placeholder="20 mg" maxLength={50} />
+              <TextField
+                label={t("fields.packQty")}
+                value={f.packQty}
+                onChange={(v) => set("packQty")(v.replace(/\D/g, "").slice(0, 6))}
+                inputMode="numeric"
+                placeholder="28"
+              />
+              <div data-f="minQty">
+                <TextField
+                  label={t("fields.minQty")}
+                  value={f.minQty}
+                  onChange={(v) => set("minQty")(v.replace(/\D/g, "").slice(0, 6))}
+                  inputMode="numeric"
+                  placeholder="10"
+                  hint={t("mmHelp")}
+                />
+              </div>
+              <div data-f="maxQty">
+                <TextField
+                  label={t("fields.maxQty")}
+                  value={f.maxUnlimited ? "" : f.maxQty}
+                  onChange={(v) => {
+                    // Raqam yozilsa — «Cheksiz» oʻzi olinadi
+                    const n = v.replace(/\D/g, "").slice(0, 6);
+                    setF((st) => ({ ...st, maxQty: n, maxUnlimited: n ? false : st.maxUnlimited }));
+                  }}
+                  inputMode="numeric"
+                  placeholder={f.maxUnlimited ? t("unlimited") : "300"}
+                  error={f.maxUnlimited ? undefined : errText("maxQty")}
+                />
+                <Checkbox
+                  className="mt-2"
+                  label={t("unlimited")}
+                  description={t("unlimitedHelp")}
+                  checked={f.maxUnlimited}
+                  onChange={(on) => setF((s) => ({ ...s, maxUnlimited: on, maxQty: on ? "" : s.maxQty }))}
+                />
+              </div>
+            </div>
+          </Section>
+
+          <Section id="pf-sec-id" title={t("sec.id")} description={t("sec.idD")}>
+            <div className="grid grid-cols-2 gap-4">
+              <div data-f="code" className="col-span-2 flex flex-col">
+                <label htmlFor="pf-code" className="mb-1 font-medium text-text-secondary">
+                  {t("fields.code")}
+                  <span className="ml-0.5 text-danger" aria-hidden>
+                    *
+                  </span>
+                </label>
+                <div className="flex flex-wrap items-center gap-3">
+                  <input
+                    id="pf-code"
+                    value={f.code}
+                    onChange={(e) => set("code")(e.target.value.replace(/\D/g, "").slice(0, 8))}
+                    inputMode="numeric"
+                    maxLength={8}
+                    placeholder="48203315"
+                    aria-invalid={!!codeErr || undefined}
+                    className={cn(
+                      "h-[34px] w-40 rounded-control border bg-surface px-3 font-mono text-body tracking-[0.04em] outline-none focus:border-primary-button focus:ring-3 focus:ring-primary/15",
+                      codeErr ? "border-danger" : "border-border",
+                    )}
+                  />
+                  <Button variant="secondary" icon={RefreshCw} onClick={() => fetchNewCode().then((c) => set("code")(c))}>
+                    {t("genCode")}
+                  </Button>
+                  <span className="text-caption text-text-secondary">{t("codeHelp")}</span>
+                </div>
+                {codeErr ? (
+                  <FieldError>
+                    {codeErr}
+                    {codeOwner ? (
+                      <button type="button" onClick={() => openOther(codeOwner.id)} className="font-medium underline underline-offset-2">
+                        {codeOwner.name}
+                      </button>
+                    ) : null}
+                  </FieldError>
+                ) : null}
+              </div>
+              <div data-f="barcodes" className="col-span-2 flex flex-col">
+                <label htmlFor="pf-bc" className="mb-1 font-medium text-text-secondary">
+                  {t("fields.barcodes")}
+                </label>
+                <div
                   className={cn(
-                    "h-[30px] rounded-control px-3.5 font-medium transition-colors duration-150",
-                    f.vat === v ? "bg-surface text-text-primary shadow-xs" : "text-text-secondary",
+                    "flex min-h-[34px] flex-wrap items-center gap-1.5 rounded-control border bg-surface px-1.5 py-1",
+                    bcErr || bcOwner ? "border-danger" : "border-border",
                   )}
                 >
-                  {label}
-                </button>
-              ))}
+                  {f.barcodes.map((b) => (
+                    <span
+                      key={b}
+                      className="inline-flex h-6 items-center gap-1 rounded-control border border-border bg-background pr-1 pl-2 font-mono text-[12.5px]"
+                    >
+                      {b}
+                      <button
+                        type="button"
+                        aria-label={t("bc.remove", { code: b })}
+                        onClick={() => set("barcodes")(f.barcodes.filter((x) => x !== b))}
+                        className="flex size-[18px] items-center justify-center rounded-sm text-text-secondary hover:bg-border"
+                      >
+                        <X size={12} strokeWidth={1.5} aria-hidden />
+                      </button>
+                    </span>
+                  ))}
+                  <input
+                    id="pf-bc"
+                    value={bcInput}
+                    onChange={(e) => (setBcInput(e.target.value.replace(/\s/g, "").slice(0, 14)), setBcErr(null))}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === ",") {
+                        e.preventDefault();
+                        addBc();
+                      } else if (e.key === "Backspace" && !bcInput && f.barcodes.length) {
+                        set("barcodes")(f.barcodes.slice(0, -1));
+                      }
+                    }}
+                    onBlur={() => bcInput.trim() && addBc()}
+                    inputMode="numeric"
+                    placeholder={t("bc.placeholder")}
+                    className="h-6 min-w-[200px] flex-1 bg-transparent font-mono text-[12.5px] outline-none placeholder:text-text-disabled"
+                  />
+                </div>
+                {bcErrText ? <FieldError>{bcErrText}</FieldError> : null}
+                {bcOwner ? (
+                  <FieldError>
+                    {t("bc.dup", { code: bcOwner.barcode })}
+                    <button
+                      type="button"
+                      onClick={() => openOther(bcOwner.product.id)}
+                      className="font-medium underline underline-offset-2"
+                    >
+                      {bcOwner.product.name}
+                    </button>
+                  </FieldError>
+                ) : null}
+              </div>
+              <div data-f="ikpu">
+                <TextField
+                  label={t("fields.ikpu")}
+                  required
+                  value={f.ikpu}
+                  onChange={(v) => set("ikpu")(v.replace(/\D/g, "").slice(0, 17))}
+                  inputMode="numeric"
+                  error={errText("ikpu")}
+                  placeholder="03004001001000000"
+                />
+              </div>
+              <div data-f="farmId">
+                <TextField
+                  label={t("fields.farmId")}
+                  required
+                  value={f.farmId}
+                  onChange={set("farmId")}
+                  error={errText("farmId")}
+                  placeholder="FRM-0001234"
+                  maxLength={50}
+                />
+              </div>
             </div>
-          </div>
-        </Section>
+          </Section>
 
-        <Section title={t("sec.note")} description={t("sec.noteD")}>
-          <div className="flex flex-col">
-            <label htmlFor="pf-note" className="mb-1 font-medium text-text-secondary">
-              {t("fields.note")}
-            </label>
-            <textarea
-              id="pf-note"
-              rows={3}
-              value={f.note}
-              maxLength={1000}
-              onChange={(e) => set("note")(e.target.value)}
-              placeholder={t("notePh")}
-              className="resize-y rounded-control border border-border bg-surface px-3 py-2 outline-none placeholder:text-text-disabled focus:border-primary-button focus:ring-3 focus:ring-primary/15"
-            />
-          </div>
-        </Section>
+          <Section id="pf-sec-units" title={t("sec.units")} description={t("sec.unitsD")}>
+            <div className="grid grid-cols-2 gap-4">
+              <div data-f="unitId" title={locked ? t("lockedTip") : undefined}>
+                <Select
+                  label={t("fields.unitId")}
+                  options={options(units.data, unitId)}
+                  value={unitId}
+                  onChange={set("unitId")}
+                  disabled={locked}
+                  error={errText("unitId")}
+                />
+              </div>
+              <div title={locked ? t("lockedTip") : undefined} className="relative">
+                <TextField
+                  label={t("fields.perPack")}
+                  value={f.perPack}
+                  onChange={(v) => set("perPack")(v.replace(/\D/g, "").slice(0, 6))}
+                  inputMode="numeric"
+                  disabled={locked}
+                />
+                {locked ? (
+                  <span className="pointer-events-none absolute right-2.5 bottom-2.5 flex text-text-secondary">
+                    <Lock size={14} strokeWidth={1.5} aria-hidden />
+                  </span>
+                ) : null}
+              </div>
+            </div>
+          </Section>
 
-        <Banner tone="info" icon={Info}>
-          <span>{t("priceInfo")}</span>
-        </Banner>
-        <div className="h-6" />
+          <Section id="pf-sec-storage" title={t("sec.storage")} description={t("sec.storageD")}>
+            <div className="flex flex-col">
+              <Toggle
+                label={t("fields.controlled")}
+                help={t("ctrlHelp")}
+                on={f.controlled}
+                locked={locked}
+                lockTip={t("lockedTip")}
+                onToggle={() => set("controlled")(!f.controlled)}
+                extra={
+                  f.controlled ? (
+                    <div className="flex gap-2.5 rounded-control border border-danger/30 bg-danger-bg px-3 py-2.5 text-danger">
+                      <Icon icon={Lock} className="mt-px" />
+                      <span>{t("ctrlInfo")}</span>
+                    </div>
+                  ) : null
+                }
+              />
+              <Toggle
+                label={t("fields.marked")}
+                help={t("markHelp")}
+                on={f.marked}
+                locked={locked}
+                lockTip={t("lockedTip")}
+                onToggle={() => set("marked")(!f.marked)}
+                extra={
+                  f.marked ? (
+                    <div className="flex gap-2.5 rounded-control border border-border bg-table-header px-3 py-2.5">
+                      <Icon icon={ScanBarcode} className="mt-px text-text-secondary" />
+                      <span>{t("markInfo")}</span>
+                    </div>
+                  ) : null
+                }
+              />
+              <Toggle
+                label={t("fields.prescription")}
+                help={t("rxHelp")}
+                on={f.prescription}
+                last
+                onToggle={() => set("prescription")(!f.prescription)}
+              />
+            </div>
+          </Section>
+
+          <Section id="pf-sec-location" title={t("sec.location")} description={t("sec.locationD")}>
+            <div className="flex flex-col gap-3">
+              {warehouses.length === 0 ? (
+                <span className="text-text-secondary">{t("locationNone")}</span>
+              ) : (
+                warehouses.map((w) => (
+                  <TextField
+                    key={w.warehouseId}
+                    id={`pf-location-${w.warehouseId}`}
+                    label={
+                      warehouses.length === 1
+                        ? t("fields.location")
+                        : t("fields.locationIn", { warehouse: manyBranches ? `${w.branch} · ${w.warehouse}` : w.warehouse })
+                    }
+                    value={f.locations[String(w.warehouseId)] ?? ""}
+                    maxLength={LOCATION_MAX}
+                    placeholder={t("locationPh")}
+                    hint={warehouses.length === 1 ? t("locationHint", { warehouse: w.warehouse }) : undefined}
+                    onChange={(v) => set("locations")({ ...f.locations, [String(w.warehouseId)]: v })}
+                  />
+                ))
+              )}
+            </div>
+          </Section>
+
+          <Section id="pf-sec-tax" title={t("sec.tax")} description={t("sec.taxD")}>
+            <div className="flex flex-col gap-1.5">
+              <span className="font-medium text-text-secondary">{t("fields.vat")}</span>
+              <div
+                role="radiogroup"
+                aria-label={t("fields.vat")}
+                className="inline-flex h-[34px] gap-0.5 self-start rounded-control bg-border/60 p-0.5"
+              >
+                {vatOpts.map(([v, label]) => (
+                  <button
+                    key={v}
+                    type="button"
+                    role="radio"
+                    aria-checked={f.vat === v}
+                    onClick={() => set("vat")(v)}
+                    className={cn(
+                      "h-[30px] rounded-control px-3.5 font-medium transition-colors duration-150",
+                      f.vat === v ? "bg-surface text-text-primary shadow-xs" : "text-text-secondary",
+                    )}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </Section>
+
+          <Section id="pf-sec-note" title={t("sec.note")} description={t("sec.noteD")}>
+            <div className="flex flex-col">
+              <label htmlFor="pf-note" className="mb-1 font-medium text-text-secondary">
+                {t("fields.note")}
+              </label>
+              <textarea
+                id="pf-note"
+                rows={3}
+                value={f.note}
+                maxLength={1000}
+                onChange={(e) => set("note")(e.target.value)}
+                placeholder={t("notePh")}
+                className="resize-y rounded-control border border-border bg-surface px-3 py-2 outline-none placeholder:text-text-disabled focus:border-primary-button focus:ring-3 focus:ring-primary/15"
+              />
+            </div>
+          </Section>
+
+          <Banner tone="info" icon={Info}>
+            <span>{t("priceInfo")}</span>
+          </Banner>
+          <div className="h-6" />
+        </div>
       </div>
 
       <div className="sticky -bottom-6 z-[5] -mx-6 -mb-6 flex h-16 items-center justify-center self-stretch border-t border-border bg-surface">
@@ -743,9 +753,12 @@ function FormBody({ product, initial }: { product: ProductDetail | null; initial
   );
 }
 
-function Section({ title, description, children }: { title: string; description: string; children: ReactNode }) {
+function Section({ id, title, description, children }: { id: string; title: string; description: string; children: ReactNode }) {
   return (
-    <section className="flex flex-wrap gap-x-6 gap-y-4 rounded-card border border-border bg-surface px-6 py-5 shadow-xs">
+    <section
+      id={id}
+      className="flex scroll-mt-4 flex-wrap gap-x-6 gap-y-4 rounded-card border border-border bg-surface px-6 py-5 shadow-xs"
+    >
       <div className="min-w-[180px] flex-[0_1_240px]">
         <div className="text-body font-semibold">{title}</div>
         <div className="text-caption text-text-secondary">{description}</div>
@@ -826,5 +839,49 @@ function Toggle({
       </div>
       {extra}
     </div>
+  );
+}
+
+const SECTION_KEYS = ["basic", "id", "units", "storage", "location", "tax", "note"] as const;
+
+/** Maydon → boʻlim (xato boʻlimni belgilash uchun); koʻrsatilmagan maydon — «Asosiy». */
+const FIELD_SECTION: Partial<Record<string, string>> = {
+  code: "pf-sec-id",
+  barcodes: "pf-sec-id",
+  farmId: "pf-sec-id",
+  ikpu: "pf-sec-id",
+  unitId: "pf-sec-units",
+};
+
+/** U11: chapda boʻlimlar navigatsiyasi (xl+, sticky); xatoli boʻlim — qizil nuqta, bosilsa oʻsha boʻlimga sakraydi. */
+function SectionNav({ errSecs }: { errSecs: string[] }) {
+  const t = useTranslations("products.pageForm");
+  return (
+    <nav aria-label={t("secNav")} className="sticky top-0 hidden w-48 shrink-0 self-start pt-16 2xl:block">
+      <ul className="flex flex-col gap-0.5 border-l border-border">
+        {SECTION_KEYS.map((k) => {
+          const id = `pf-sec-${k}`;
+          const err = errSecs.includes(id);
+          return (
+            <li key={k}>
+              <a
+                href={`#${id}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+                }}
+                className={cn(
+                  "-ml-px flex items-center gap-2 border-l-2 border-transparent px-3 py-1.5 text-table hover:border-text-secondary hover:text-text-primary",
+                  err ? "text-danger" : "text-text-secondary",
+                )}
+              >
+                <span className="flex-1">{t(`sec.${k}`)}</span>
+                {err ? <span role="img" aria-label={t("secErr")} className="size-1.5 rounded-full bg-danger" /> : null}
+              </a>
+            </li>
+          );
+        })}
+      </ul>
+    </nav>
   );
 }

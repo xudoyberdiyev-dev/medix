@@ -7,6 +7,7 @@ import static org.hamcrest.Matchers.everyItem;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.matchesPattern;
+import static org.hamcrest.Matchers.not;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -284,6 +285,12 @@ class OrderIT {
         mvc.perform(get("/api/orders/catalog").param("warehouseId", String.valueOf(p.warehouseId())).param("q", "by aspirin")
                         .param("inStockOnly", "false").param("manufacturerIds", "-1").cookie(operator))
                 .andExpect(jsonPath("$.total").value(0));
+        // U11: tanlangan mahsulotlar boʻyicha (qidiruvsiz) — qoldiq va muddat qatorlar uchun
+        mvc.perform(get("/api/orders/catalog").param("warehouseId", String.valueOf(p.warehouseId())).param("inStockOnly", "false")
+                        .param("productIds", String.valueOf(a), String.valueOf(empty)).cookie(operator))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(2))
+                .andExpect(jsonPath("$.items[*].productId", hasItem((int) a)));
         // Qoralamada narx o'zgarsa — ogohlantirish
         setPrice(p, a, "2600");
         mvc.perform(get("/api/orders/" + doc).cookie(operator))
@@ -298,6 +305,10 @@ class OrderIT {
                 .andExpect(jsonPath("$.total").value("26000.00"))
                 .andExpect(jsonPath("$.lines[0].reserved[0].qty").value(10))
                 .andExpect(jsonPath("$.lines[0].reserved[0].batch").value("S-" + a));
+        // U5 «Kechikkanlar»: yetkazish sanasi hali kelmagan navbatdagi buyurtma kirmaydi
+        mvc.perform(get("/api/orders").param("q", "by aspirin").param("customerId", String.valueOf(c)).param("overdue", "true").cookie(operator))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[*].id", not(hasItem((int) doc))));
         // Zahira mavjud qoldiqdan ayriladi
         mvc.perform(get("/api/orders/catalog").param("warehouseId", String.valueOf(p.warehouseId())).param("q", "by aspirin").cookie(operator))
                 .andExpect(jsonPath("$.items[0].available").value(40));

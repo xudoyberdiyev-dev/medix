@@ -3897,7 +3897,7 @@ export interface paths {
         };
         /**
          * Buyurtmalar
-         * @description operatorId — kiritgan xodim; soldFrom/soldTo — shu davrda sotilgan yoki qaytarilgan (Savdo hisoboti qatoridan hujjatlarga o'tish, SPEC 8); orderFrom/orderTo — buyurtma sanasi; customerId/operatorId/statuses/deliveryType/paymentType/regionId/salesZoneId — bir nechta qiymat (prototip filtr chiplari); q — raqam, STIR yoki mijoz nomi (lotin/kirill farqsiz); sort/desc — saralash (standart: kiritilgan vaqti, yangisi tepada).
+         * @description operatorId — kiritgan xodim; soldFrom/soldTo — shu davrda sotilgan yoki qaytarilgan (Savdo hisoboti qatoridan hujjatlarga o'tish, SPEC 8); orderFrom/orderTo — buyurtma sanasi; customerId/operatorId/statuses/deliveryType/paymentType/regionId/salesZoneId — bir nechta qiymat (prototip filtr chiplari); q — raqam, STIR yoki mijoz nomi (lotin/kirill farqsiz); overdue — yetkazish sanasi oʻtgan jarayondagi buyurtmalar; sort/desc — saralash (standart: kiritilgan vaqti, yangisi tepada).
          */
         get: operations["list_14"];
         put?: never;
@@ -5697,6 +5697,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/profile/favorites": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Sidebar sevimlilarini saqlash
+         * @description Menyu kalitlari tartib bilan (koʻpi bilan 12) — har qurilmada bir xil (U7).
+         */
+        put: operations["setFavorites"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/profile/pin": {
         parameters: {
             query?: never;
@@ -6900,6 +6920,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/settings/system-status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Tizim holati: server xatolari (24 soat, 7 kun), eng koʻp uchraganlari va oxirgi 20 tasi */
+        get: operations["status_3"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/settings/thresholds": {
         parameters: {
             query?: never;
@@ -6949,6 +6986,23 @@ export interface paths {
         };
         /** Usta holati */
         get: operations["status_2"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/setup-checklist": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Sozlash roʻyxati: kompaniya, filiallar, omborlar, xodimlar, narxlar, mijozlar, mahsulotlar, boshlangʻich qoldiq */
+        get: operations["checklist"];
         put?: never;
         post?: never;
         delete?: never;
@@ -9839,6 +9893,17 @@ export interface components {
             /** Format: int32 */
             places: number;
         };
+        ChecklistItem: {
+            /**
+             * Format: int64
+             * @description Hozirgi soni (kompaniya — 0/1)
+             */
+            count: number;
+            done: boolean;
+            link: string;
+            /** @enum {string} */
+            step: "COMPANY" | "BRANCHES" | "WAREHOUSES" | "EMPLOYEES" | "PRICES" | "CUSTOMERS" | "PRODUCTS" | "OPENING_STOCK";
+        };
         CloseApprover: {
             /** Format: int64 */
             id: number;
@@ -10977,6 +11042,9 @@ export interface components {
             manufacturers: components["schemas"]["Facet"][];
             supplyEmployees: components["schemas"]["Facet"][];
         };
+        FavoritesRequest: {
+            items: string[];
+        };
         File: {
             fileName: string;
             sheets: components["schemas"]["Sheet"][];
@@ -11140,6 +11208,8 @@ export interface components {
             customerDebtBy: components["schemas"]["ByPayment"];
             daily: components["schemas"]["SalesDay"][];
             expenses: components["schemas"]["ByPayment"];
+            /** @description Oldingi teng davr xarajatlari */
+            expensesPrev: string;
             /** Format: date */
             from: string;
             /** @description Filiallararo (guruh ichidagi) ochiq qarz — jamilarga kirmaydi */
@@ -11149,6 +11219,8 @@ export interface components {
             sales: components["schemas"]["ByPayment"];
             /** Format: int32 */
             salesDocs: number;
+            /** @description Oldingi teng davr sof savdosi (U9: ↑/↓ %) */
+            salesPrev: string;
             /** Format: int32 */
             staleDays: number;
             /** @description Faqat tannarx ko'rish ruxsati (prices.cost) bilan */
@@ -14133,6 +14205,8 @@ export interface components {
             birthDate?: string;
             branchName?: string;
             email?: string;
+            /** @description Sidebar sevimlilari — menyu kalitlari, tartib bilan (U7) */
+            favorites: string[];
             firstName?: string;
             fullName: string;
             /** Format: int64 */
@@ -15302,6 +15376,11 @@ export interface components {
             vatHistory: components["schemas"]["VatRow"][];
             vatRate: string;
         };
+        SetupChecklist: {
+            /** Format: int32 */
+            donePercent: number;
+            items: components["schemas"]["ChecklistItem"][];
+        };
         SetupStatus: {
             /** @description Yakunlashga to'sqinlik qilayotgan sabablar (i18n matni) */
             blockers: string[];
@@ -15860,6 +15939,30 @@ export interface components {
             left: string;
             name: string;
             sold: string;
+        };
+        SystemErrorGroup: {
+            /** Format: int64 */
+            count: number;
+            exception: string;
+            path: string;
+        };
+        SystemErrorRow: {
+            exception: string;
+            message: string;
+            method: string;
+            /** Format: date-time */
+            occurredAt: string;
+            path: string;
+        };
+        SystemErrorStatus: {
+            /** Format: int64 */
+            last24h: number;
+            /** Format: int64 */
+            last7d: number;
+            recent: components["schemas"]["SystemErrorRow"][];
+            /** Format: date-time */
+            startedAt: string;
+            top24h: components["schemas"]["SystemErrorGroup"][];
         };
         TargetWarehouse: {
             branch: components["schemas"]["BranchRef"];
@@ -22537,6 +22640,7 @@ export interface operations {
                 orderTo?: string;
                 q?: string;
                 mine?: boolean;
+                overdue?: boolean;
                 sort?: "CREATED" | "NUMBER" | "DATE" | "CUSTOMER" | "TOTAL";
                 desc?: boolean;
                 page?: number;
@@ -22594,6 +22698,7 @@ export interface operations {
                 categoryIds?: number[];
                 countryIds?: number[];
                 flags?: ("MARKED" | "CONTROLLED" | "PRESCRIPTION")[];
+                productIds?: number[];
                 page?: number;
                 size?: number;
             };
@@ -22677,6 +22782,7 @@ export interface operations {
                 orderTo?: string;
                 q?: string;
                 mine?: boolean;
+                overdue?: boolean;
                 sort?: "CREATED" | "NUMBER" | "DATE" | "CUSTOMER" | "TOTAL";
                 desc?: boolean;
             };
@@ -25143,6 +25249,28 @@ export interface operations {
             };
         };
     };
+    setFavorites: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FavoritesRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     setPin: {
         parameters: {
             query?: never;
@@ -26857,6 +26985,26 @@ export interface operations {
             };
         };
     };
+    status_3: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SystemErrorStatus"];
+                };
+            };
+        };
+    };
     thresholds: {
         parameters: {
             query?: never;
@@ -26917,6 +27065,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SetupStatus"];
+                };
+            };
+        };
+    };
+    checklist: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SetupChecklist"];
                 };
             };
         };
