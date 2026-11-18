@@ -432,7 +432,7 @@ export function ProductsPage() {
             className={cn(
               "inline-flex h-control-sm items-center gap-1.5 rounded-card border px-2.5 text-[13px] font-medium",
               filters.noIkpu
-                ? "border-primary bg-primary-soft text-primary-button"
+                ? "border-primary bg-primary-soft text-link"
                 : "border-dashed border-border bg-surface whitespace-nowrap text-text-secondary hover:bg-table-header hover:text-text-primary",
             )}
           >
@@ -440,11 +440,7 @@ export function ProductsPage() {
             {t("f.noIkpu")}
           </button>
           {hasFilters ? (
-            <button
-              type="button"
-              onClick={clearFilters}
-              className="h-control-sm px-1.5 text-[13px] font-medium text-primary-button hover:underline"
-            >
+            <button type="button" onClick={clearFilters} className="h-control-sm px-1.5 text-[13px] font-medium text-link hover:underline">
               {t("clearFilters")}
             </button>
           ) : null}

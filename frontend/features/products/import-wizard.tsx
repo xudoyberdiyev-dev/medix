@@ -330,7 +330,7 @@ export function ProductImportWizard() {
                   className={cn(
                     "flex size-6 flex-none items-center justify-center rounded-full text-caption font-semibold",
                     done
-                      ? "bg-primary text-white"
+                      ? "bg-primary text-on-solid"
                       : cur
                         ? "border-2 border-primary text-primary"
                         : "border border-border text-text-secondary",
@@ -491,7 +491,7 @@ export function ProductImportWizard() {
                           <span className="flex items-center gap-1 px-2 text-caption font-normal text-text-secondary">
                             {i + 1}
                             {isHdr ? (
-                              <span className="rounded-sm bg-primary px-1 text-[10px] leading-4 text-white">{t("hdrMark")}</span>
+                              <span className="rounded-sm bg-primary px-1 text-[10px] leading-4 text-on-solid">{t("hdrMark")}</span>
                             ) : null}
                           </span>
                           {Array.from({ length: pvN }, (_, j) => (

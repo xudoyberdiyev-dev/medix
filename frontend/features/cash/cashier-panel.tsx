@@ -280,7 +280,7 @@ export function CashierPanel() {
                 [t("pendingOps", { count: p.pendingOps }), p.pendingOpsAmount],
               ]}
               footer={
-                <Link href="/cash" className="text-caption text-primary-button hover:underline">
+                <Link href="/cash" className="text-caption text-link hover:underline">
                   {t("goToCash")}
                 </Link>
               }

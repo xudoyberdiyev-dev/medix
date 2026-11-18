@@ -317,7 +317,7 @@ function MatrixEditor({ data, mode, onSaved }: { data: Matrix; mode: "wizard" | 
       <div className={cn("flex flex-1 flex-col gap-[20px] pb-[24px]", mode === "wizard" && "px-[24px] pt-[32px]")}>
         {mode === "wizard" ? (
           <div className="flex flex-col">
-            <span className="text-caption font-medium text-primary-button">{ts("stepOf", { n: 4, total: 6 })}</span>
+            <span className="text-caption font-medium text-link">{ts("stepOf", { n: 4, total: 6 })}</span>
             <h1 className="mt-[6px] text-[26px] leading-[32px] font-semibold tracking-[-0.01em]">{t("matrix.t4")}</h1>
             <p className="mt-[8px] max-w-[720px] text-body text-pretty text-text-secondary">{t("matrix.d4")}</p>
           </div>
@@ -380,7 +380,7 @@ function MatrixEditor({ data, mode, onSaved }: { data: Matrix; mode: "wizard" | 
                 tried: false,
               })
             }
-            className="flex h-[84px] w-[180px] flex-none items-center justify-center gap-1.5 rounded-modal border border-dashed border-border text-body font-medium text-primary-button hover:bg-background"
+            className="flex h-[84px] w-[180px] flex-none items-center justify-center gap-1.5 rounded-modal border border-dashed border-border text-body font-medium text-link hover:bg-background"
           >
             <Plus size={16} strokeWidth={1.5} aria-hidden />
             {t("matrix.addRole")}
@@ -638,7 +638,7 @@ function MatrixEditor({ data, mode, onSaved }: { data: Matrix; mode: "wizard" | 
                 {empsOf(panelRole.code).length ? (
                   empsOf(panelRole.code).map((e) => (
                     <div key={e.id} className="flex h-9 items-center gap-2.5">
-                      <span className="flex size-7 flex-none items-center justify-center rounded-full bg-primary-soft text-[11px] font-semibold text-primary-button">
+                      <span className="flex size-7 flex-none items-center justify-center rounded-full bg-primary-soft text-[11px] font-semibold text-link">
                         {e.fullName
                           .split(/\s+/)
                           .slice(0, 2)
@@ -682,7 +682,7 @@ function MatrixEditor({ data, mode, onSaved }: { data: Matrix; mode: "wizard" | 
       {tip ? (
         <div
           role="tooltip"
-          className="pointer-events-none fixed z-[190] max-w-[260px] -translate-x-1/2 -translate-y-full rounded-control bg-text-primary px-2.5 py-1.5 text-caption text-white shadow-lg"
+          className="pointer-events-none fixed z-[190] max-w-[260px] -translate-x-1/2 -translate-y-full rounded-control bg-text-primary px-2.5 py-1.5 text-caption text-on-solid shadow-lg"
           style={{ left: tip.x, top: tip.y }}
         >
           <span className="inline-flex items-center gap-1.5">

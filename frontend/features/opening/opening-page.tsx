@@ -54,7 +54,7 @@ export function OpeningStatusBadge({ status }: { status: OpeningStatus }) {
 
 const TYPE_ICON: Record<BqType, LucideIcon> = { GOODS: Package, CUSTOMER_DEBT: Users, SUPPLIER_DEBT: Truck, MONEY: Banknote };
 const CELL_STYLE: Record<CellState, { tone: Tone; icon: LucideIcon; dot: string }> = {
-  NONE: { tone: "neutral", icon: CircleDashed, dot: "bg-text-tertiary" },
+  NONE: { tone: "neutral", icon: CircleDashed, dot: "bg-text-disabled" },
   DRAFT: { tone: "warning", icon: FilePen, dot: "bg-warning" },
   POSTED: { tone: "success", icon: CircleCheck, dot: "bg-success" },
 };
@@ -310,15 +310,15 @@ export function OpeningPage() {
                   </tr>
                 ) : (
                   rows.map((r) => (
-                    <tr key={r.branchId} className="border-b border-border-subtle align-top last:border-b-0">
+                    <tr key={r.branchId} className="border-b border-border align-top last:border-b-0">
                       <th scope="row" className="px-4 py-3 text-left font-normal">
                         <span className="block text-[13.5px] font-semibold">{r.name}</span>
-                        <span className="text-caption text-text-tertiary">
+                        <span className="text-caption text-text-disabled">
                           {t("matrix.wh", { posted: r.postedWarehouses, total: r.warehouses })}
                         </span>
                       </th>
                       {BQ_TYPES.map((k) => (
-                        <td key={k} className="border-l border-border-subtle p-2">
+                        <td key={k} className="border-l border-border p-2">
                           <div className="flex flex-col gap-1.5">
                             {r.cells[k].map((c, i) => {
                               const S = CELL_STYLE[c.state];
@@ -339,7 +339,7 @@ export function OpeningPage() {
                                     ) : null}
                                   </span>
                                   {c.doc && canList ? (
-                                    <span className="font-mono text-[11.5px] text-text-tertiary">{c.doc.number}</span>
+                                    <span className="font-mono text-[11.5px] text-text-disabled">{c.doc.number}</span>
                                   ) : null}
                                 </button>
                               );

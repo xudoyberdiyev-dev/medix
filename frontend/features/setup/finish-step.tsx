@@ -157,15 +157,15 @@ export function FinishStep({
       <div className="flex-1 px-6 pt-8 pb-6">
         <div className="mx-auto flex max-w-[880px] flex-col gap-5">
           <div className="flex flex-col">
-            <span className="text-caption font-medium text-primary-button">{stepOf}</span>
+            <span className="text-caption font-medium text-link">{stepOf}</span>
             <h1 className="mt-1.5 text-[26px] leading-[32px] font-semibold tracking-[-0.01em]">{t("t6")}</h1>
             <p className="mt-2 text-body text-pretty text-text-secondary">{t("d6")}</p>
           </div>
 
           <section className="rounded-card border border-border bg-surface shadow-card">
-            <h2 className="border-b border-border-subtle px-5 py-4 text-[15px] leading-[22px] font-semibold">{t("rdT")}</h2>
+            <h2 className="border-b border-border px-5 py-4 text-[15px] leading-[22px] font-semibold">{t("rdT")}</h2>
             {items.map((it) => (
-              <div key={it.label} className="flex items-center gap-3.5 border-b border-border-subtle px-5 py-3.5 last:border-b-0">
+              <div key={it.label} className="flex items-center gap-3.5 border-b border-border px-5 py-3.5 last:border-b-0">
                 <span
                   className={cn(
                     "flex size-8 flex-none items-center justify-center rounded-control",
@@ -178,11 +178,7 @@ export function FinishStep({
                   <span className="text-table text-text-secondary">{it.label}</span>
                   <span className="text-body font-medium text-pretty">{it.value}</span>
                 </div>
-                <button
-                  type="button"
-                  className="flex-none text-table font-medium text-primary-button hover:underline"
-                  onClick={() => onGo(it.step)}
-                >
+                <button type="button" className="flex-none text-table font-medium text-link hover:underline" onClick={() => onGo(it.step)}>
                   {t("edit")}
                 </button>
               </div>
@@ -194,22 +190,22 @@ export function FinishStep({
           {err.message ? <Alert tone="danger" title={err.message} /> : null}
 
           <section className="rounded-card border border-border bg-surface shadow-card">
-            <div className="flex flex-col border-b border-border-subtle px-5 py-4">
+            <div className="flex flex-col border-b border-border px-5 py-4">
               <h2 className="text-[15px] leading-[22px] font-semibold">{t("nextT")}</h2>
-              <span className="text-caption text-text-muted">{t("nAfter")}</span>
+              <span className="text-caption text-text-secondary">{t("nAfter")}</span>
             </div>
             {nexts.map((n, i) => (
               <button
                 key={n.href}
                 type="button"
                 onClick={() => launch(n.href)}
-                className="flex w-full items-center gap-3.5 border-b border-border-subtle px-5 py-3 text-left last:border-b-0 hover:bg-background"
+                className="flex w-full items-center gap-3.5 border-b border-border px-5 py-3 text-left last:border-b-0 hover:bg-background"
               >
-                <span className="flex size-6 flex-none items-center justify-center rounded-full bg-primary-soft text-caption font-semibold text-primary-button">
+                <span className="flex size-6 flex-none items-center justify-center rounded-full bg-primary-soft text-caption font-semibold text-link">
                   {i + 1}
                 </span>
-                <span className="min-w-0 flex-1 text-body font-medium text-primary-button">{n.label}</span>
-                <Icon icon={ArrowRight} className="text-text-muted" />
+                <span className="min-w-0 flex-1 text-body font-medium text-link">{n.label}</span>
+                <Icon icon={ArrowRight} className="text-text-secondary" />
               </button>
             ))}
           </section>

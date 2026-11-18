@@ -317,11 +317,7 @@ export function ReceiptsPage() {
           onChange={(from, to) => apply({ from, to })}
         />
         {hasChips ? (
-          <button
-            type="button"
-            onClick={clearAll}
-            className="h-control-sm px-1.5 text-[13px] font-medium text-primary-button hover:underline"
-          >
+          <button type="button" onClick={clearAll} className="h-control-sm px-1.5 text-[13px] font-medium text-link hover:underline">
             {t("list.clearFilters")}
           </button>
         ) : null}

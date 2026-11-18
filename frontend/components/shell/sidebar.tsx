@@ -197,7 +197,7 @@ export function SidebarContent({ variant, onNavigate }: { variant: "rail" | "she
                     onClick={() => setLocale(l)}
                     className={cn(
                       "h-6 rounded-sm px-1.5 text-caption",
-                      l === locale ? "bg-primary-soft font-medium text-primary-button" : "text-text-secondary hover:bg-table-header",
+                      l === locale ? "bg-primary-soft font-medium text-link" : "text-text-secondary hover:bg-table-header",
                     )}
                   >
                     {LANG_CODE[l]}

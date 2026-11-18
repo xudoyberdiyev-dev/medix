@@ -14,7 +14,7 @@ import { ApiError } from "@/lib/api/client";
 import { cn } from "@/lib/cn";
 
 const SEGMENT = ["bg-danger", "bg-warning", "bg-primary", "bg-primary-button"] as const;
-const SEGMENT_TEXT = ["text-danger", "text-warning", "text-primary", "text-primary-button"] as const;
+const SEGMENT_TEXT = ["text-danger", "text-warning", "text-primary", "text-link"] as const;
 /** «Parol saqlandi» dan keyin avtomatik davom etish. */
 const CONTINUE_MS = 3000;
 
@@ -136,7 +136,7 @@ export function PasswordForm() {
       {me.data ? (
         <div className="flex">
           <div className="flex max-w-full items-center gap-[8px] rounded-full bg-background py-[4px] pr-[12px] pl-[4px]">
-            <span className="flex size-[28px] flex-none items-center justify-center rounded-full bg-primary-soft text-[11px] font-semibold text-primary-button">
+            <span className="flex size-[28px] flex-none items-center justify-center rounded-full bg-primary-soft text-[11px] font-semibold text-link">
               {initials(name)}
             </span>
             <span className="truncate text-table font-medium">{name}</span>

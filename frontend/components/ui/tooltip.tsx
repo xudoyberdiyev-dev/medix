@@ -53,7 +53,7 @@ export function Tooltip({ content, placement = "top", children }: TooltipProps) 
         id={id}
         role="tooltip"
         className={cn(
-          "pointer-events-none absolute z-40 w-max max-w-tooltip rounded-control bg-text-primary px-2 py-1 text-caption text-white",
+          "pointer-events-none absolute z-40 w-max max-w-tooltip rounded-control bg-text-primary px-2 py-1 text-caption text-on-solid",
           placements[placement],
           visible ? "visible" : "invisible",
         )}

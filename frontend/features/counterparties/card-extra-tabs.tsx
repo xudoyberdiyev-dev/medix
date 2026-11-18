@@ -66,7 +66,7 @@ export function ReconTab(props: {
           ) : null}
           <Link
             href={customers ? "/debts/customers" : "/debts/suppliers"}
-            className="flex items-center gap-1 text-[12.5px] font-medium text-primary-button hover:underline"
+            className="flex items-center gap-1 text-[12.5px] font-medium text-link hover:underline"
           >
             {t("goPage")}
             <ArrowUpRight size={14} strokeWidth={1.5} aria-hidden />

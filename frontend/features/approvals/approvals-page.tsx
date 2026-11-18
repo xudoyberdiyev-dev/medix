@@ -127,7 +127,7 @@ export function ApprovalsPage() {
                   <button
                     type="button"
                     onClick={() => setUrl({ open: null })}
-                    className="m-4 mb-0 inline-flex items-center gap-1 text-table text-primary-button lg:hidden"
+                    className="m-4 mb-0 inline-flex items-center gap-1 text-table text-link lg:hidden"
                   >
                     <ArrowLeft size={16} strokeWidth={1.5} aria-hidden />
                     {t("back")}
@@ -165,7 +165,7 @@ function PriceBlock({ prices }: { prices: View["prices"] }) {
             </span>
             <Link
               href={`/prices/changes/${p.id}`}
-              className="inline-flex h-control-md items-center rounded-control border border-border px-3 font-medium text-primary-button hover:bg-background"
+              className="inline-flex h-control-md items-center rounded-control border border-border px-3 font-medium text-link hover:bg-background"
             >
               {t("review")}
             </Link>
@@ -269,7 +269,7 @@ function Detail({ o, onDone }: { o: OrderApproval; onDone: () => void }) {
         </div>
         <p className="mt-1 flex flex-wrap items-center gap-x-3 text-text-secondary">
           {t("order", { number: o.number, lines: o.lines, total: formatMoney(o.total) })}
-          <Link href={`/orders/${o.id}`} className="inline-flex items-center gap-1 text-primary-button hover:underline">
+          <Link href={`/orders/${o.id}`} className="inline-flex items-center gap-1 text-link hover:underline">
             {t("openCard")}
             <ArrowUpRight size={14} strokeWidth={1.5} aria-hidden />
           </Link>
@@ -304,7 +304,7 @@ function Detail({ o, onDone }: { o: OrderApproval; onDone: () => void }) {
           <h3 className="font-medium">{t("credit")}</h3>
           <Link
             href={`/customers/${o.customerId}?tab=recon`}
-            className="inline-flex items-center gap-1 text-table text-primary-button hover:underline"
+            className="inline-flex items-center gap-1 text-table text-link hover:underline"
           >
             {t("currentDebt", { sum: formatMoney(o.debt) })}
             <ArrowUpRight size={14} strokeWidth={1.5} aria-hidden />
@@ -517,7 +517,7 @@ function Resolved({ items }: { items: View["resolvedToday"] }) {
           <span className="flex min-w-0 flex-1 flex-col">
             <span className="font-medium">{r.customer}</span>
             <span className="text-table text-text-secondary">
-              <Link href={`/orders/${r.id}`} className="font-mono text-primary-button hover:underline">
+              <Link href={`/orders/${r.id}`} className="font-mono text-link hover:underline">
                 {r.number}
               </Link>{" "}
               · {t("decidedBy", { at: formatDateTime(new Date(r.decidedAt)), who: r.decidedBy })}

@@ -223,7 +223,7 @@ function FormBody({ product, initial }: { product: ProductDetail | null; initial
       <div ref={top} className="flex w-full max-w-[880px] flex-col gap-4">
         <div className="flex flex-col gap-1.5">
           <nav className="flex items-center gap-1.5 text-caption">
-            <button type="button" onClick={() => guard(() => router.push("/products"))} className="text-primary-button hover:underline">
+            <button type="button" onClick={() => guard(() => router.push("/products"))} className="text-link hover:underline">
               {t("crumbParent")}
             </button>
             <span className="text-text-secondary">/</span>

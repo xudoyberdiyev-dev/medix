@@ -348,7 +348,7 @@ export function Select(props: SelectProps) {
                           {o.meta}
                         </span>
                       ) : null}
-                      {isSelected && !props.multiple ? <Icon icon={Check} className="text-primary-button" /> : null}
+                      {isSelected && !props.multiple ? <Icon icon={Check} className="text-link" /> : null}
                     </li>
                   );
                 })
@@ -362,7 +362,7 @@ export function Select(props: SelectProps) {
                   setOpen(false);
                   props.footer?.onSelect();
                 }}
-                className="mt-1 flex h-8 w-full items-center gap-2 rounded-control border-t border-border px-2 text-left font-medium text-primary-button hover:bg-table-header"
+                className="mt-1 flex h-8 w-full items-center gap-2 rounded-control border-t border-border px-2 text-left font-medium text-link hover:bg-table-header"
               >
                 <Icon icon={Plus} />
                 {props.footer.label}

@@ -455,7 +455,7 @@ function StockTab({ t, card, unit, productCode }: { t: CardT; card: StockQuery; 
         <div className="flex h-12 items-center px-4">
           <Link
             href={`/stock?q=${encodeURIComponent(productCode)}`}
-            className="flex items-center gap-1.5 font-medium text-primary-button hover:underline"
+            className="flex items-center gap-1.5 font-medium text-link hover:underline"
           >
             {t("qOpen")}
             <ArrowRight size={16} strokeWidth={1.5} aria-hidden />
@@ -482,7 +482,7 @@ function PricesTab({ t, productId, branchId }: { t: CardT; productId: number; br
           title={t("prEmpty")}
           description={t("prInfo")}
           action={
-            <Link href={`/prices`} className="font-medium text-primary-button hover:underline">
+            <Link href={`/prices`} className="font-medium text-link hover:underline">
               {t("prSet")}
             </Link>
           }
@@ -532,7 +532,7 @@ function PricesTab({ t, productId, branchId }: { t: CardT; productId: number; br
                       )}
                     </td>
                     <td className="px-3">
-                      <Link href={`/prices/changes/${r.priceChangeId}`} className="font-mono text-primary-button hover:underline">
+                      <Link href={`/prices/changes/${r.priceChangeId}`} className="font-mono text-link hover:underline">
                         {r.priceChangeNumber}
                       </Link>
                     </td>
@@ -578,7 +578,7 @@ function MovesTab({ t, card }: { t: CardT; card: StockQuery }) {
                   <span className="flex min-w-0 items-center gap-1.5">
                     <span className="truncate text-text-secondary">{isDocType(m.docType) ? ts(`ov.bp.doc_${m.docType}`) : m.docType}</span>
                     {href ? (
-                      <Link href={href} className="font-mono text-primary-button hover:underline">
+                      <Link href={href} className="font-mono text-link hover:underline">
                         {m.docNumber}
                       </Link>
                     ) : (

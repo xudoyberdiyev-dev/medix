@@ -306,7 +306,7 @@ function CustomerCard({ c }: { c: CustomerStatus }) {
       </div>
       <Link
         href={`/orders/new?customer=${c.id}&customerName=${encodeURIComponent(c.name)}`}
-        className="mt-2 inline-flex items-center gap-1 text-body text-primary-button hover:underline"
+        className="mt-2 inline-flex items-center gap-1 text-body text-link hover:underline"
       >
         {t("createOrder")} →
       </Link>

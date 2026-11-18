@@ -160,11 +160,7 @@ export function Table<T>({
         <div className="flex h-[57px] items-center gap-2 border-b border-border bg-primary-soft px-4">
           <span className="mr-2 font-semibold">{selectedKeys.length} ta tanlandi</span>
           {bulkActions}
-          <button
-            type="button"
-            onClick={() => onSelectionChange?.([])}
-            className="ml-auto rounded-control px-2 text-primary-button hover:bg-surface"
-          >
+          <button type="button" onClick={() => onSelectionChange?.([])} className="ml-auto rounded-control px-2 text-link hover:bg-surface">
             Tanlovni bekor qilish
           </button>
         </div>

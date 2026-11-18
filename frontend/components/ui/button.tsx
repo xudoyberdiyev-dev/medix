@@ -10,9 +10,9 @@ const variants: Record<Variant, string> = {
   primary: "border-transparent bg-primary-button text-white hover:bg-primary-button-hover active:bg-primary-button-hover",
   secondary:
     "border-border bg-surface text-text-primary hover:border-text-disabled hover:bg-background active:border-primary active:bg-primary-soft",
-  tertiary: "border-transparent bg-transparent px-2 text-primary-button hover:bg-background active:bg-primary-soft",
-  danger: "border-transparent bg-danger text-white hover:shadow-[inset_0_0_0_999px_rgb(23_43_42/0.16)]",
-  icon: "border-transparent bg-transparent px-0 text-text-secondary hover:bg-background hover:text-text-primary active:bg-primary-soft active:text-primary-button",
+  tertiary: "border-transparent bg-transparent px-2 text-link hover:bg-background active:bg-primary-soft",
+  danger: "border-transparent bg-danger text-on-solid hover:shadow-[inset_0_0_0_999px_rgb(23_43_42/0.16)]",
+  icon: "border-transparent bg-transparent px-0 text-text-secondary hover:bg-background hover:text-text-primary active:bg-primary-soft active:text-link",
 };
 
 const sizes: Record<Size, string> = {

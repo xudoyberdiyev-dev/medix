@@ -564,7 +564,7 @@ function ActiveMarking({ work }: { work: MarkWork }) {
           role={flash.ok ? "status" : "alert"}
           onClick={() => setFlash(null)}
           className={`fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 p-6 text-center ${
-            flash.ok ? "bg-success text-white" : "bg-danger text-white"
+            flash.ok ? "bg-success text-on-solid" : "bg-danger text-on-solid"
           }`}
         >
           {flash.ok ? <CheckCircle2 size={96} strokeWidth={1.5} aria-hidden /> : <CircleX size={96} strokeWidth={1.5} aria-hidden />}

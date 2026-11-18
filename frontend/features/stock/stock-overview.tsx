@@ -613,17 +613,13 @@ export function StockOverview() {
               type="button"
               onClick={() => setMore((m) => !m)}
               aria-expanded={more}
-              className="inline-flex h-control-sm items-center gap-1.5 px-1.5 text-[13px] font-medium text-primary-button hover:underline"
+              className="inline-flex h-control-sm items-center gap-1.5 px-1.5 text-[13px] font-medium text-link hover:underline"
             >
               <SlidersHorizontal size={14} strokeWidth={1.5} aria-hidden />
               {t("ov.moreFilters")}
             </button>
             {hasAnyFilter(f) ? (
-              <button
-                type="button"
-                onClick={clearAll}
-                className="h-control-sm px-1.5 text-[13px] font-medium text-primary-button hover:underline"
-              >
+              <button type="button" onClick={clearAll} className="h-control-sm px-1.5 text-[13px] font-medium text-link hover:underline">
                 {t("ov.clearAll")}
               </button>
             ) : null}

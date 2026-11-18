@@ -26,10 +26,7 @@ export function KkHomeCard({ branchId }: { branchId: number | null }) {
     <section className="flex min-w-0 flex-col overflow-hidden rounded-card border border-border bg-surface">
       <header className="flex items-center justify-between gap-3 px-4 pt-4 pb-3">
         <h2 className="text-subtitle">{t("title")}</h2>
-        <Link
-          href="/expected-receipts?status=IN_TRANSIT"
-          className="inline-flex items-center gap-1 text-body text-primary-button hover:underline"
-        >
+        <Link href="/expected-receipts?status=IN_TRANSIT" className="inline-flex items-center gap-1 text-body text-link hover:underline">
           {t("all")} <ArrowRight size={14} strokeWidth={1.5} aria-hidden />
         </Link>
       </header>

@@ -504,11 +504,7 @@ export function OrdersPage() {
           <FilterChip label={soldLabel(soldNow, t)} what={t("list.soldPeriod")} onClear={() => apply({ soldFrom: null, soldTo: null })} />
         ) : null}
         {hasChips ? (
-          <button
-            type="button"
-            onClick={clearAll}
-            className="h-control-sm px-1.5 text-[13px] font-medium text-primary-button hover:underline"
-          >
+          <button type="button" onClick={clearAll} className="h-control-sm px-1.5 text-[13px] font-medium text-link hover:underline">
             {t("list.clearFilters")}
           </button>
         ) : null}

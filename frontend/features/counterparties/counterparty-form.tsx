@@ -190,7 +190,7 @@ function FormBody({
     <div ref={top} className="mx-auto flex w-full max-w-[880px] flex-col gap-4">
       <div className="flex flex-col gap-1.5">
         <nav className="flex items-center gap-1.5 text-caption">
-          <button type="button" onClick={() => guard(() => router.push(base))} className="text-primary-button hover:underline">
+          <button type="button" onClick={() => guard(() => router.push(base))} className="text-link hover:underline">
             {supplier ? tk("titleS") : tk("titleC")}
           </button>
           <span className="text-text-secondary">/</span>
@@ -351,7 +351,7 @@ function FormBody({
               <button
                 type="button"
                 onClick={() => setF((s) => ({ ...s, contacts: [...s.contacts, { name: "", position: "", phone: "" }] }))}
-                className="flex items-center gap-1.5 self-start text-[13px] font-medium text-primary-button hover:underline"
+                className="flex items-center gap-1.5 self-start text-[13px] font-medium text-link hover:underline"
               >
                 <Plus size={16} strokeWidth={1.5} aria-hidden />
                 {t("cAdd")}

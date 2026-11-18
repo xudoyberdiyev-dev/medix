@@ -380,7 +380,7 @@ export function StaffManager({
               e.lastLoginAt ? (
                 <span className="font-mono">{formatDateTime(new Date(e.lastLoginAt))}</span>
               ) : (
-                <span className="text-text-muted">{tc("never")}</span>
+                <span className="text-text-secondary">{tc("never")}</span>
               ),
           },
         ]
@@ -449,10 +449,10 @@ export function StaffManager({
       <div className={cn("flex flex-1 flex-col gap-[20px] pb-[24px]", stepOf && "px-[24px] pt-[32px]")}>
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex flex-col">
-            {stepOf ? <span className="text-caption font-medium text-primary-button">{stepOf}</span> : null}
+            {stepOf ? <span className="text-caption font-medium text-link">{stepOf}</span> : null}
             <h1 className={cn("text-[26px] leading-[32px] font-semibold tracking-[-0.01em]", stepOf && "mt-[6px]")}>
               {page ? tc("pageT") : t("t5")}
-              {page ? <span className="ml-2 text-[18px] font-normal text-text-muted">{emps.length}</span> : null}
+              {page ? <span className="ml-2 text-[18px] font-normal text-text-secondary">{emps.length}</span> : null}
             </h1>
             <p className="mt-[8px] max-w-[720px] text-body text-pretty text-text-secondary">{page ? tc("pageSub") : t("d5")}</p>
           </div>
@@ -487,7 +487,7 @@ export function StaffManager({
               <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
                 {cov.map((g) => (
                   <div key={g.id} className="rounded-card border border-border bg-surface">
-                    <div className="border-b border-border-subtle px-4 py-3 text-table font-semibold">{g.title}</div>
+                    <div className="border-b border-border px-4 py-3 text-table font-semibold">{g.title}</div>
                     <dl className="flex flex-col gap-2 px-4 py-3">
                       {g.rows.map((r) => (
                         <div key={r.label} className="flex flex-col gap-0.5">
@@ -630,7 +630,7 @@ export function StaffManager({
                 {saveErr.message}
               </Alert>
             ) : null}
-            <section className="flex flex-col gap-4 border-b border-border-subtle pb-6">
+            <section className="flex flex-col gap-4 border-b border-border pb-6">
               <h3 className="text-table font-semibold">{t("sPersonal")}</h3>
               <div data-f="last">
                 <TextField label={t("fLast")} required value={f.last} onChange={(v) => setF({ last: v })} error={err("last")} />
@@ -675,7 +675,7 @@ export function StaffManager({
               </div>
             </section>
 
-            <section className="flex flex-col gap-4 border-b border-border-subtle py-6">
+            <section className="flex flex-col gap-4 border-b border-border py-6">
               <h3 className="text-table font-semibold">{t("sWork")}</h3>
               <div data-f="role" className="flex flex-col gap-1.5">
                 <Select
@@ -699,7 +699,7 @@ export function StaffManager({
               {rr && rr.scope === "all" ? (
                 <div className="flex flex-col gap-1.5">
                   <span className="text-caption font-medium">{t("cBranch")}</span>
-                  <span className="inline-flex h-[26px] items-center gap-1.5 self-start rounded-control bg-primary-soft px-2.5 text-table font-medium text-primary-button">
+                  <span className="inline-flex h-[26px] items-center gap-1.5 self-start rounded-control bg-primary-soft px-2.5 text-table font-medium text-link">
                     <Icon icon={Building2} className="size-3.5" />
                     {t("scAll")}
                   </span>
@@ -737,7 +737,7 @@ export function StaffManager({
                           <span
                             className={cn(
                               "flex size-4 items-center justify-center rounded-[4px] border text-white",
-                              on ? "border-primary-button bg-primary-button" : "border-text-muted bg-surface",
+                              on ? "border-primary-button bg-primary-button" : "border-text-disabled bg-surface",
                             )}
                           >
                             {on ? <Icon icon={Check} className="size-3" /> : null}
@@ -797,7 +797,7 @@ export function StaffManager({
                   </div>
                 </div>
               ) : null}
-              <div className="flex gap-2.5 rounded-control border border-border-subtle bg-background px-3.5 py-3">
+              <div className="flex gap-2.5 rounded-control border border-border bg-background px-3.5 py-3">
                 <Icon icon={Info} className="mt-0.5 flex-none text-text-secondary" />
                 <span className="text-table text-pretty text-text-secondary">{t("firstNote")}</span>
               </div>
@@ -904,7 +904,7 @@ export function StaffManager({
         {creds ? (
           <div className="flex flex-col gap-4">
             <div className="flex items-center gap-3">
-              <span className="flex size-10 flex-none items-center justify-center rounded-full bg-primary-soft text-[14px] font-semibold text-primary-button">
+              <span className="flex size-10 flex-none items-center justify-center rounded-full bg-primary-soft text-[14px] font-semibold text-link">
                 {initials(creds.emp)}
               </span>
               <span className="text-table text-text-secondary">
@@ -918,7 +918,7 @@ export function StaffManager({
                 { label: t("cLogin"), value: creds.emp.login },
                 { label: t("fPw"), value: creds.pw },
               ].map((l) => (
-                <div key={l.label} className="flex items-center gap-3 border-b border-border-subtle px-3.5 py-3">
+                <div key={l.label} className="flex items-center gap-3 border-b border-border px-3.5 py-3">
                   <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                     <span className="text-caption text-text-secondary">{l.label}</span>
                     <span className="font-mono text-[16px] leading-[22px] break-all">{l.value}</span>
@@ -928,7 +928,7 @@ export function StaffManager({
                   </Button>
                 </div>
               ))}
-              <div className="px-3.5 py-2.5 text-caption text-text-muted">{`${t("crUrl")}: ${loginUrl}`}</div>
+              <div className="px-3.5 py-2.5 text-caption text-text-secondary">{`${t("crUrl")}: ${loginUrl}`}</div>
             </div>
             <Alert tone="warning" title={t("crWarn")} />
           </div>

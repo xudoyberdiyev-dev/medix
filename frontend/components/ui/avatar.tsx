@@ -30,7 +30,7 @@ export function Avatar({ name, src, size = "md", decorative = false }: AvatarPro
       aria-hidden={decorative || undefined}
       aria-label={decorative ? undefined : name}
       className={cn(
-        "inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary-soft font-semibold text-primary-button",
+        "inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary-soft font-semibold text-link",
         sizes[size],
       )}
     >

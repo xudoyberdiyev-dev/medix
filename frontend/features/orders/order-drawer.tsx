@@ -1144,7 +1144,7 @@ function DocumentsRow({ doc }: { doc: OrderDetail }) {
       {d.invoiceNumber && canPrintInvoice ? (
         <a
           href={`/api/orders/${doc.id}/invoice/xlsx`}
-          className="mt-2 inline-flex items-center gap-1.5 text-[13px] font-medium text-primary-button hover:underline"
+          className="mt-2 inline-flex items-center gap-1.5 text-[13px] font-medium text-link hover:underline"
         >
           <FileDown size={16} strokeWidth={1.5} aria-hidden />
           {t("docs.invoiceXlsx")}

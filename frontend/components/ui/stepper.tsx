@@ -23,7 +23,7 @@ export function Stepper({ steps, current, onStepClick }: StepperProps) {
               className={cn(
                 "tabular flex size-7 items-center justify-center rounded-full border-2 text-table font-semibold",
                 done && "border-primary-button bg-primary-button text-white",
-                isCurrent && "border-primary-button bg-surface text-primary-button",
+                isCurrent && "border-primary-button bg-surface text-link",
                 !done && !isCurrent && "border-border bg-surface text-text-secondary",
               )}
             >

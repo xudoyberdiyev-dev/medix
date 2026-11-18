@@ -388,11 +388,7 @@ export function PaymentsPage() {
         />
         <DateChip label={t("f.date")} from={f.from} to={f.to} invalid={t("dateInvalid")} onChange={(from, to) => apply({ from, to })} />
         {hasFilters(f) ? (
-          <button
-            type="button"
-            onClick={clearAll}
-            className="h-control-sm px-1.5 text-[13px] font-medium text-primary-button hover:underline"
-          >
+          <button type="button" onClick={clearAll} className="h-control-sm px-1.5 text-[13px] font-medium text-link hover:underline">
             {t("clearF")}
           </button>
         ) : null}
