@@ -5705,7 +5705,10 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        /** Sidebar sevimlilarini saqlash */
+        /**
+         * Sidebar sevimlilarini saqlash
+         * @description Menyu kalitlari tartib bilan (koʻpi bilan 12) — har qurilmada bir xil (U7).
+         */
         put: operations["setFavorites"];
         post?: never;
         delete?: never;

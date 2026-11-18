@@ -12915,6 +12915,7 @@
     },
     "/api/profile/favorites" : {
       "put" : {
+        "description" : "Menyu kalitlari tartib bilan (koʻpi bilan 12) — har qurilmada bir xil (U7).",
         "operationId" : "setFavorites",
         "requestBody" : {
           "content" : {
@@ -25827,7 +25828,6 @@
             "type" : "array",
             "items" : {
               "type" : "string",
-              "maxLength" : 2147483647,
               "minLength" : 1,
               "pattern" : "^[A-Za-z0-9_-]{1,40}$"
             },
