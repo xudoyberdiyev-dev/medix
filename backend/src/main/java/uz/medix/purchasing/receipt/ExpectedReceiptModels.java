@@ -51,6 +51,23 @@ final class ExpectedReceiptModels {
             @Size(max = 500) String note,
             @NotEmpty(message = "{validation.required}") @Size(max = MAX_LINES) List<@Valid @NotNull ExpectedReceiptLineRequest> lines) {}
 
+    record ReceiveLineRequest(
+            @NotNull(message = "{validation.required}") Long expectedLineId,
+            @NotNull(message = "{validation.required}") @Min(1) @Max(MAX_QTY) Integer qty,
+            @NotBlank(message = "{validation.required}") @Size(max = 60) String batchNumber,
+            LocalDate producedOn,
+            @NotNull(message = "{validation.required}") LocalDate expiryDate,
+            @NotNull(message = "{validation.required}") Long zoneId) {}
+
+    /** «Qabul qilish»: KK dan kirim qoralamasi (narxlar KK dan; ombor sanaydi va kirim odatdagidek qabul qilinadi / o'tkaziladi). */
+    record ReceiveRequest(
+            @NotEmpty(message = "{validation.required}") @Size(max = MAX_LINES) List<@Valid @NotNull ReceiveLineRequest> lines) {}
+
+    record ReceiveResult(long receiptId, String receiptNumber) {}
+
+    /** Yakuniy qabul: qolgan kelmagan soni hisobdan chiqariladi («qarzga» KK — qarz kamayadi), holat «Qabul qilindi». */
+    record CloseRequest(@NotBlank(message = "{validation.required}") @Size(max = 300) String reason) {}
+
     record ExpectedReceiptCancelRequest(@NotBlank(message = "{validation.required}") @Size(max = 300) String reason) {}
 
     record ExpectedReceiptSummary(long id, String number, long branchId, long warehouseId, String warehouse, long supplierId,
@@ -83,6 +100,12 @@ final class ExpectedReceiptModels {
             @Schema(nullable = true) String cancelledBy, @Schema(nullable = true) Instant cancelledAt,
             @Schema(nullable = true) String cancelReason, long qty, long receivedQty, List<ExpectedReceiptLine> lines,
             List<ExpectedReceiptFile> files, List<LinkedReceipt> receipts) {}
+
+    record InTransitDoc(long id, String number, String supplier, @Schema(nullable = true) LocalDate expectedDate, boolean late,
+            int remainingQty) {}
+
+    /** Mahsulotning yo'ldagi (KK Yo'lda / Qisman) qolgan soni — sotuvga olinmaydi, faqat ma'lumot. */
+    record InTransitRow(long productId, long qty, @Schema(nullable = true) LocalDate nearestDate, List<InTransitDoc> docs) {}
 
     record FileData(String fileName, String contentType, byte[] data) {}
 }

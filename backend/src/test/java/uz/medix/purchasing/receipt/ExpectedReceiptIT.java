@@ -292,6 +292,65 @@ class ExpectedReceiptIT {
     }
 
     @Test
+    void receivePartlyShortReducesDebtThenCloseWritesOffRest() throws Exception {
+        Place p = place();
+        long sup = supplier(p.branchId(), 7);
+        long prod = product("KK Sitramon", false);
+        Cookie keeper = loginAs("WAREHOUSE_MANAGER", p.branchId());
+        Cookie manager = loginAs("BRANCH_MANAGER", p.branchId());
+        long kkId = id(send(post("/api/expected-receipts"), manager, doc(p, sup, "CREDIT", null, ln(prod, 100, "50.00")))
+                .andExpect(status().isCreated()).andReturn());
+        send(post("/api/expected-receipts/" + kkId + "/approve"), manager, "{}").andExpect(status().isOk());
+        assertThat(debt(p.branchId(), sup)).isEqualByComparingTo("5000.00");
+        long kkLine = jdbc.sql("SELECT id FROM expected_receipt_line WHERE expected_receipt_id = :k").param("k", kkId).query(Long.class).single();
+        // Yo'ldagi tovar ko'rinadi, qoldiqqa kirmaydi
+        mvc.perform(get("/api/expected-receipts/in-transit").param("productId", String.valueOf(prod)).cookie(keeper))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].qty").value(100))
+                .andExpect(jsonPath("$[0].docs[0].id").value(kkId));
+
+        // Qabul qilish: 60 dona kutiladi — kirim qoralamasi (narx KK dan)
+        String recv = "{\"lines\":[{\"expectedLineId\":" + kkLine + ",\"qty\":60,\"batchNumber\":\"S-1\",\"expiryDate\":\"2028-01-31\",\"zoneId\":"
+                + p.main() + "}]}";
+        long receipt = ((Number) JsonPath.read(send(post("/api/expected-receipts/" + kkId + "/receive"), keeper, recv)
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString(), "$.receiptId")).longValue();
+        assertThat(jdbc.sql("SELECT price FROM receipt_line WHERE receipt_id = :r").param("r", receipt).query(BigDecimal.class).single())
+                .isEqualByComparingTo("50.00");
+        // Ochiq kirimdagi 60 hisobga olinadi: yana 41 — ko'p
+        send(post("/api/expected-receipts/" + kkId + "/receive"), keeper, recv.replace("\"qty\":60", "\"qty\":41"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("kk.receiveTooMuch"));
+        // Ombor sanaydi: 55 keldi (5 kam) → «Haqiqiy soni» bilan o'tkaziladi
+        long rLine = jdbc.sql("SELECT id FROM receipt_line WHERE receipt_id = :r").param("r", receipt).query(Long.class).single();
+        send(post("/api/receipts/" + receipt + "/accept"), keeper,
+                "{\"lines\":[{\"lineId\":" + rLine + ",\"receivedQty\":55,\"damagedQty\":0,\"diffReason\":\"SHORT\"}]}").andExpect(status().isOk());
+        send(post("/api/receipts/" + receipt + "/post"), manager, "{\"resolution\":\"ACTUAL\"}").andExpect(status().isOk());
+        // Qarz qayta yozilmadi — faqat kam 5 × 50 kamaydi
+        assertThat(debt(p.branchId(), sup)).isEqualByComparingTo("4750.00");
+        assertThat(jdbc.sql("SELECT sum(qty) FROM stock_balance WHERE product_id = :p").param("p", prod).query(Integer.class).single()).isEqualTo(55);
+        mvc.perform(get("/api/expected-receipts/" + kkId).cookie(manager))
+                .andExpect(jsonPath("$.status").value("PARTIAL"))
+                .andExpect(jsonPath("$.debtOpen").value("4750.00"))
+                .andExpect(jsonPath("$.lines[0].receivedQty").value(55))
+                .andExpect(jsonPath("$.lines[0].writtenOffQty").value(5))
+                .andExpect(jsonPath("$.lines[0].remainingQty").value(40))
+                .andExpect(jsonPath("$.receipts[0].status").value("POSTED"));
+        // Bog'langan o'tkazilgan kirim bekor qilinmaydi; qisman KK bekor qilinmaydi
+        send(post("/api/receipts/" + receipt + "/cancel"), manager, "{\"reason\":\"xato\"}").andExpect(status().is4xxClientError());
+        send(post("/api/expected-receipts/" + kkId + "/cancel"), manager, "{\"reason\":\"x\"}")
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("kk.cancelReceived"));
+        // Yakuniy qabul: qolgan 40 kelmaydi — qarzdan chiqariladi
+        send(post("/api/expected-receipts/" + kkId + "/close"), manager, "{\"reason\":\"YB qolganini yubormaydi\"}")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("RECEIVED"))
+                .andExpect(jsonPath("$.lines[0].remainingQty").value(0));
+        assertThat(debt(p.branchId(), sup)).isEqualByComparingTo("2750.00");
+        mvc.perform(get("/api/expected-receipts/in-transit").param("productId", String.valueOf(prod)).cookie(keeper))
+                .andExpect(jsonPath("$.length()").value(0));
+    }
+
+    @Test
     void parallelApproveWritesDebtOnce() throws Exception {
         Place p = place();
         long sup = supplier(p.branchId(), 0);

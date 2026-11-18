@@ -6,6 +6,7 @@ import jakarta.validation.Valid;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -22,12 +23,16 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import uz.medix.purchasing.receipt.ExpectedReceiptModels.CloseRequest;
 import uz.medix.purchasing.receipt.ExpectedReceiptModels.ExpectedReceiptCancelRequest;
 import uz.medix.purchasing.receipt.ExpectedReceiptModels.ExpectedReceiptDetail;
 import uz.medix.purchasing.receipt.ExpectedReceiptModels.ExpectedReceiptPage;
 import uz.medix.purchasing.receipt.ExpectedReceiptModels.ExpectedReceiptRequest;
 import uz.medix.purchasing.receipt.ExpectedReceiptModels.FileData;
+import uz.medix.purchasing.receipt.ExpectedReceiptModels.InTransitRow;
 import uz.medix.purchasing.receipt.ExpectedReceiptModels.KkStatus;
+import uz.medix.purchasing.receipt.ExpectedReceiptModels.ReceiveRequest;
+import uz.medix.purchasing.receipt.ExpectedReceiptModels.ReceiveResult;
 import uz.medix.shared.error.MedixException;
 import uz.medix.shared.security.Actor;
 import uz.medix.shared.security.CurrentActor;
@@ -81,6 +86,19 @@ class ExpectedReceiptController {
                 ReceiptController.pricesVisible(auth));
     }
 
+    @GetMapping("/in-transit")
+    @PreAuthorize("hasAnyAuthority('kk.view', 'stock.view', 'orders.create', 'products.view')")
+    @Operation(summary = "Yo'ldagi tovar", description = "KK Yo'lda / Qisman qatorlarining qolgan soni mahsulot bo'yicha (sotuvga olinmaydi). productId — bir nechta.")
+    List<InTransitRow> inTransit(
+            @RequestParam(required = false) List<Long> productId,
+            @RequestParam(required = false) Long branchId,
+            @RequestParam(required = false) Long warehouseId) {
+        if (productId != null && productId.size() > 500) {
+            throw MedixException.badRequest("error.request");
+        }
+        return kk.inTransit(actor(), productId, branchId, warehouseId);
+    }
+
     @GetMapping("/{id}")
     @PreAuthorize(VIEW)
     @Operation(summary = "KK kartochkasi", description = "Qatorlar (kutilgan / qabul qilingan / qolgan), fayllar, bog'langan kirimlar, qarz holati.")
@@ -117,6 +135,23 @@ class ExpectedReceiptController {
     @Operation(summary = "KK bekor qilish", description = "Qoralama — kk.create; «Yo'lda» — kk.approve, hech narsa qabul qilinmagan bo'lsa (qarz teskari yoziladi).")
     ExpectedReceiptDetail cancel(@PathVariable long id, @Valid @RequestBody ExpectedReceiptCancelRequest r, Authentication auth) {
         kk.cancel(actor(), id, r.reason(), has(auth, "kk.approve"));
+        return detail(id, auth);
+    }
+
+    @PostMapping("/{id}/receive")
+    @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAnyAuthority('kk.create', 'kk.approve')")
+    @Operation(summary = "Qabul qilish — KK dan kirim qoralamasi",
+            description = "Narxlar KK dan; partiya, yaroqlilik, zona — ombordan. Kirim keyin odatdagidek qabul qilinadi va o'tkaziladi; «qarzga» KK da qarz qayta yozilmaydi.")
+    ReceiveResult receive(@PathVariable long id, @Valid @RequestBody ReceiveRequest r) {
+        return kk.receive(actor(), id, r);
+    }
+
+    @PostMapping("/{id}/close")
+    @PreAuthorize("hasAuthority('kk.approve')")
+    @Operation(summary = "Yakuniy qabul", description = "Qisman holatida: qolgan kelmagan soni hisobdan chiqariladi («qarzga» — qarz kamayadi).")
+    ExpectedReceiptDetail close(@PathVariable long id, @Valid @RequestBody CloseRequest r, Authentication auth) {
+        kk.close(actor(), id, r.reason());
         return detail(id, auth);
     }
 

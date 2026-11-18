@@ -27,9 +27,14 @@ import uz.medix.purchasing.receipt.ExpectedReceiptModels.ExpectedReceiptPage;
 import uz.medix.purchasing.receipt.ExpectedReceiptModels.ExpectedReceiptRequest;
 import uz.medix.purchasing.receipt.ExpectedReceiptModels.ExpectedReceiptSummary;
 import uz.medix.purchasing.receipt.ExpectedReceiptModels.FileData;
+import uz.medix.purchasing.receipt.ExpectedReceiptModels.InTransitDoc;
+import uz.medix.purchasing.receipt.ExpectedReceiptModels.InTransitRow;
 import uz.medix.purchasing.receipt.ExpectedReceiptModels.KkStatus;
 import uz.medix.purchasing.receipt.ExpectedReceiptModels.LinkedReceipt;
 import uz.medix.purchasing.receipt.ExpectedReceiptModels.PaymentKind;
+import uz.medix.purchasing.receipt.ExpectedReceiptModels.ReceiveLineRequest;
+import uz.medix.purchasing.receipt.ExpectedReceiptModels.ReceiveRequest;
+import uz.medix.purchasing.receipt.ExpectedReceiptModels.ReceiveResult;
 import uz.medix.shared.audit.AuditEntry;
 import uz.medix.shared.audit.AuditLog;
 import uz.medix.shared.error.MedixException;
@@ -57,8 +62,10 @@ class ExpectedReceipts {
     private final AuditLog audit;
     private final DocumentSequenceService numbers;
     private final Clock clock;
+    private final Receipts receipts;
 
-    ExpectedReceipts(JdbcClient jdbc, PartyLedger parties, AuditLog audit, DocumentSequenceService numbers, Clock clock) {
+    ExpectedReceipts(JdbcClient jdbc, PartyLedger parties, AuditLog audit, DocumentSequenceService numbers, Clock clock, Receipts receipts) {
+        this.receipts = receipts;
         this.jdbc = jdbc;
         this.parties = parties;
         this.audit = audit;
@@ -211,6 +218,56 @@ class ExpectedReceipts {
                 prices && booked ? parties.docOpen(DOC_TYPE, id).toString() : null, h.createdBy(), h.createdAt().toInstant(),
                 h.approvedBy(), instant(h.approvedAt()), h.cancelledBy(), instant(h.cancelledAt()), h.cancelReason(), qty, received, lines,
                 files, receipts));
+    }
+
+    /**
+     * Yo'ldagi tovar: KK «Yo'lda» / «Qisman» qatorlarining qolgan soni (soni − qabul qilingan − hisobdan chiqarilgan), mahsulot bo'yicha.
+     * Qoldiqqa kirmaydi, zahiralanmaydi — faqat ko'rsatish (Qoldiqlar, mahsulot kartochkasi, buyurtma kiritish, xarid taklifi).
+     */
+    @Transactional(readOnly = true)
+    List<InTransitRow> inTransit(Actor actor, List<Long> productIds, Long branchId, Long warehouseId) {
+        StringBuilder where = new StringBuilder(" WHERE h.status IN ('IN_TRANSIT', 'PARTIAL') AND l.qty - l.received_qty - l.written_off_qty > 0");
+        Map<String, Object> params = new HashMap<>();
+        params.put("today", Date.valueOf(today()));
+        if (!actor.allBranches()) {
+            where.append(" AND h.branch_id = :own");
+            params.put("own", actor.branchId() == null ? -1L : actor.branchId());
+        }
+        if (branchId != null) {
+            where.append(" AND h.branch_id = :b");
+            params.put("b", branchId);
+        }
+        if (warehouseId != null) {
+            where.append(" AND h.warehouse_id = :w");
+            params.put("w", warehouseId);
+        }
+        if (productIds != null && !productIds.isEmpty()) {
+            where.append(" AND l.product_id IN (:p)");
+            params.put("p", productIds);
+        }
+        record Row(long productId, long id, String number, String supplier, Date expectedDate, boolean late, int remaining) {}
+        List<Row> rows = jdbc.sql("""
+                SELECT l.product_id, h.id, h.number, c.name AS supplier, h.expected_date,""" + LATE_SQL + """
+                       AS late, sum(l.qty - l.received_qty - l.written_off_qty)::int AS remaining
+                FROM expected_receipt_line l
+                JOIN expected_receipt h ON h.id = l.expected_receipt_id
+                JOIN counterparty c ON c.id = h.supplier_id""" + where + """
+
+                GROUP BY l.product_id, h.id, h.number, c.name, h.expected_date, h.status
+                ORDER BY l.product_id, h.expected_date NULLS LAST, h.id LIMIT 5000""")
+                .params(params)
+                .query(Row.class)
+                .list();
+        Map<Long, List<InTransitDoc>> byProduct = new java.util.LinkedHashMap<>();
+        for (Row r : rows) {
+            byProduct.computeIfAbsent(r.productId(), k -> new java.util.ArrayList<>())
+                    .add(new InTransitDoc(r.id(), r.number(), r.supplier(), localDate(r.expectedDate()), r.late(), r.remaining()));
+        }
+        return byProduct.entrySet().stream()
+                .map(e -> new InTransitRow(e.getKey(), e.getValue().stream().mapToLong(InTransitDoc::remainingQty).sum(),
+                        e.getValue().stream().map(InTransitDoc::expectedDate).filter(java.util.Objects::nonNull).min(LocalDate::compareTo)
+                                .orElse(null), e.getValue()))
+                .toList();
     }
 
     // ===== Yaratish / tahrirlash (qoralama) =====
@@ -450,6 +507,118 @@ class ExpectedReceipts {
                 .update();
         audit.record(AuditEntry.of("kk.cancel", "expected_receipt", id)
                 .change(Map.of("status", h.status().name()), Map.of("status", KkStatus.CANCELLED.name(), "reason", reason.strip())), actor);
+    }
+
+    // ===== Qabul qilish =====
+
+    /**
+     * KK dan kirim qoralamasi: tanlangan qatorlar (soni ≤ qolgan − boshqa ochiq kirimlardagi), narx KK dan (server nusxalaydi —
+     * Ombor mudiri ko'rmaydi), partiya/yaroqlilik/zona — ombordan. Kirim odatdagidek qabul qilinadi va o'tkaziladi; o'tkazishda KK
+     * yangilanadi (ExpectedReceiptLinks). Qisman kelish — bitta KK dan bir nechta kirim.
+     */
+    @Transactional
+    ReceiveResult receive(Actor actor, long id, ReceiveRequest req) {
+        Head h = lock(id, actor);
+        if (h.status() != KkStatus.IN_TRANSIT && h.status() != KkStatus.PARTIAL) {
+            throw MedixException.conflict("kk.badStatus", h.status().name());
+        }
+        record KLine(long id, int lineNo, long productId, BigDecimal price, int remaining, int pending) {}
+        Map<Long, KLine> klines = new HashMap<>();
+        jdbc.sql("""
+                SELECT l.id, l.line_no, l.product_id, l.price, l.qty - l.received_qty - l.written_off_qty AS remaining,
+                       coalesce((SELECT sum(rl.qty) FROM receipt_line rl JOIN receipt r ON r.id = rl.receipt_id
+                                 WHERE rl.expected_line_id = l.id AND r.status IN ('DRAFT', 'ACCEPTED')), 0) AS pending
+                FROM expected_receipt_line l WHERE l.expected_receipt_id = :id""")
+                .param("id", id)
+                .query(KLine.class)
+                .list()
+                .forEach(k -> klines.put(k.id(), k));
+        Map<Long, Integer> asked = new HashMap<>();
+        for (ReceiveLineRequest l : req.lines()) {
+            KLine k = klines.get(l.expectedLineId());
+            if (k == null) {
+                throw MedixException.badRequest("kk.lineUnknown");
+            }
+            int total = asked.merge(k.id(), l.qty(), Integer::sum);
+            if (total > k.remaining() - k.pending()) {
+                throw MedixException.conflict("kk.receiveTooMuch", k.lineNo(), Math.max(0, k.remaining() - k.pending()));
+            }
+        }
+        record KHead(long warehouseId, long supplierId, String invoiceNumber, Date invoiceDate, Date dueDate) {}
+        KHead kh = jdbc.sql("SELECT warehouse_id, supplier_id, invoice_number, invoice_date, due_date FROM expected_receipt WHERE id = :id")
+                .param("id", id).query(KHead.class).single();
+        LocalDate today = today();
+        LocalDate due = localDate(kh.dueDate());
+        if (due != null && due.isBefore(today)) {
+            due = null; // kirimning o'z to'lov kuni ahamiyatsiz («qarzga» — qarz KK da); standart hisoblanadi
+        }
+        ReceiptModels.PaymentType type = h.paymentKind() == PaymentKind.CASH ? ReceiptModels.PaymentType.CASH : ReceiptModels.PaymentType.TRANSFER;
+        List<ReceiptModels.ReceiptLineRequest> lines = req.lines().stream()
+                .map(l -> {
+                    BigDecimal price = klines.get(l.expectedLineId()).price();
+                    return new ReceiptModels.ReceiptLineRequest(klines.get(l.expectedLineId()).productId(), l.batchNumber(), l.producedOn(),
+                            l.expiryDate(), l.zoneId(), l.qty(), 0, price == null ? null : new Money(price).amount().toPlainString());
+                })
+                .toList();
+        ReceiptModels.ReceiptRequest rr = new ReceiptModels.ReceiptRequest(kh.warehouseId(), kh.supplierId(), today, kh.invoiceNumber(),
+                localDate(kh.invoiceDate()), type, due, null, h.paymentKind() == PaymentKind.PREPAID, null, null, null, null,
+                h.number(), lines, null);
+        long receiptId = receipts.create(actor, rr, true);
+        jdbc.sql("UPDATE receipt SET expected_receipt_id = :k WHERE id = :r").param("k", id).param("r", receiptId).update();
+        int no = 0;
+        for (ReceiveLineRequest l : req.lines()) {
+            jdbc.sql("UPDATE receipt_line SET expected_line_id = :el WHERE receipt_id = :r AND line_no = :no")
+                    .param("el", l.expectedLineId())
+                    .param("r", receiptId)
+                    .param("no", ++no)
+                    .update();
+        }
+        String number = jdbc.sql("SELECT number FROM receipt WHERE id = :r").param("r", receiptId).query(String.class).single();
+        audit.record(AuditEntry.of("kk.receive", "expected_receipt", id).change(null, Map.of("receipt", number, "lines", req.lines().size())),
+                actor);
+        return new ReceiveResult(receiptId, number);
+    }
+
+    /** Yakuniy qabul (Qisman holatida): qolgan kelmagan soni hisobdan chiqariladi, «qarzga» — qarz shu summaga kamayadi. */
+    @Transactional
+    void close(Actor actor, long id, String reason) {
+        Head h = lock(id, actor);
+        if (h.status() != KkStatus.PARTIAL) {
+            throw MedixException.conflict("kk.badStatus", h.status().name());
+        }
+        boolean pending = jdbc.sql("SELECT EXISTS (SELECT 1 FROM receipt WHERE expected_receipt_id = :id AND status IN ('DRAFT', 'ACCEPTED'))")
+                .param("id", id).query(Boolean.class).single();
+        if (pending) {
+            throw MedixException.conflict("kk.closePending");
+        }
+        record Rest(int remaining, BigDecimal price) {}
+        List<Rest> rest = jdbc.sql("""
+                SELECT qty - received_qty - written_off_qty AS remaining, price FROM expected_receipt_line
+                WHERE expected_receipt_id = :id AND qty - received_qty - written_off_qty > 0""")
+                .param("id", id).query(Rest.class).list();
+        Money amount = Money.ZERO;
+        for (Rest r : rest) {
+            if (r.price() != null) {
+                amount = amount.plus(new Money(r.price()).times(r.remaining()));
+            }
+        }
+        if (h.paymentKind() == PaymentKind.CREDIT && amount.isPositive()) {
+            parties.record(new PartyLedger.DocRef(DOC_TYPE, id, h.number()), h.branchId(), h.supplierId(), Side.SUPPLIER,
+                    Money.ZERO.minus(amount), null, "Kelmadi: " + reason.strip());
+        }
+        jdbc.sql("""
+                UPDATE expected_receipt_line SET written_off_qty = written_off_qty + (qty - received_qty - written_off_qty)
+                WHERE expected_receipt_id = :id AND qty - received_qty - written_off_qty > 0""")
+                .param("id", id).update();
+        jdbc.sql("""
+                UPDATE expected_receipt SET status = 'RECEIVED', closed_by = :by, closed_at = now(), updated_at = now(), version = version + 1
+                WHERE id = :id""")
+                .param("by", actor.employeeId())
+                .param("id", id)
+                .update();
+        audit.record(AuditEntry.of("kk.close", "expected_receipt", id)
+                .change(Map.of("status", KkStatus.PARTIAL.name()), Map.of("status", KkStatus.RECEIVED.name(), "writtenOff", amount.toString(),
+                        "reason", reason.strip())), actor);
     }
 
     // ===== Yuk xati fayli =====
