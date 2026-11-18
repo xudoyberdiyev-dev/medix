@@ -392,6 +392,11 @@ class ExpectedReceiptIT {
                 + p.main() + "}]}";
         long receipt = ((Number) JsonPath.read(send(post("/api/expected-receipts/" + kkId + "/receive"), keeper, recv)
                 .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString(), "$.receiptId")).longValue();
+        // Kirim kartochkasida KK havolasi (UI: qatorlar tahrirlanmaydi, «Qabul qilish» darhol)
+        mvc.perform(get("/api/receipts/" + receipt).cookie(keeper))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.expectedReceiptId").value(kkId))
+                .andExpect(jsonPath("$.expectedReceiptNumber").value(org.hamcrest.Matchers.startsWith("KK-")));
         assertThat(jdbc.sql("SELECT price FROM receipt_line WHERE receipt_id = :r").param("r", receipt).query(BigDecimal.class).single())
                 .isEqualByComparingTo("50.00");
         // Ochiq kirimdagi 60 hisobga olinadi: yana 41 — ko'p

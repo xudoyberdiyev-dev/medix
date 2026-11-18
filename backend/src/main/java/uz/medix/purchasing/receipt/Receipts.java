@@ -304,6 +304,8 @@ class Receipts {
         String bonusBalance = prices ? bonuses.balance(h.branchId(), h.supplierId()).toString() : null;
         record Bns(String number, BigDecimal amount, Timestamp createdAt) {}
         Optional<Bns> bns = jdbc.sql("SELECT number, amount, created_at FROM supplier_bonus WHERE receipt_id = :id").param("id", id).query(Bns.class).optional();
+        Optional<KkRef> kk = jdbc.sql("SELECT k.id, k.number FROM receipt r JOIN expected_receipt k ON k.id = r.expected_receipt_id WHERE r.id = :id")
+                .param("id", id).query(KkRef.class).optional();
         return Optional.of(new ReceiptDetail(h.id(), h.number(), h.branchId(), h.warehouseId(), h.warehouse(), h.supplierId(), h.supplier(),
                 h.receiptDate().toLocalDate(), h.invoiceNumber(), localDate(h.invoiceDate()), PaymentType.valueOf(h.paymentType()),
                 localDate(h.dueDate()), h.dueManual(), h.ownerId(), h.owner(), h.prepaid(), h.fromBonus(),
@@ -320,8 +322,11 @@ class Receipts {
                         .orElse(null),
                 qty, bonus, diff, h.createdBy(),
                 h.createdAt().toInstant(), h.acceptedBy(), instant(h.acceptedAt()), h.postedBy(), instant(h.postedAt()), h.cancelledBy(),
-                instant(h.cancelledAt()), h.cancelReason(), out, h.facturaNumber()));
+                instant(h.cancelledAt()), h.cancelReason(), out, h.facturaNumber(), kk.map(KkRef::id).orElse(null),
+                kk.map(KkRef::number).orElse(null)));
     }
+
+    private record KkRef(long id, String number) {}
 
     record LineRow(long id, int lineNo, long productId, String code, String name, boolean controlled, boolean marked, String manufacturer,
             BigDecimal vatRate, String batchNumber, Date producedOn,
