@@ -24,7 +24,8 @@ public enum DocumentPrefix {
     OK("Ombor ko'chirishi"),
     FS("Filiallararo savdo"),
     IN("Inventarizatsiya"),
-    BQ("Boshlang'ich qoldiq");
+    BQ("Boshlang'ich qoldiq"),
+    KK("Kutilayotgan kirim (yuk xati)");
 
     private final String title;
 
