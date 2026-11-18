@@ -40,6 +40,7 @@ import {
   type PayFilters,
   type PayStatus,
 } from "./overview-model";
+import { PaymentPreview } from "./payment-preview";
 
 type Row = components["schemas"]["PaymentOverviewRow"];
 
@@ -132,6 +133,8 @@ export function PaymentsPage() {
   const list = usePaymentOverview(scopeBranch, allowed);
   const [f, setF] = useState<PayFilters>(() => filtersFromParams((k) => params.get(k)));
   const [search, setSearch] = useState(f.q);
+  // U5: qatorni bosganda — oʻngdan oldindan koʻrish paneli («Toʻliq ochish» — hujjat sahifasi)
+  const [preview, setPreview] = useState<Row | null>(null);
 
   // Eski oʻtishlar: ?open=<MT id> va ?tab=yt&new=1&supplier=… — endi toʻliq sahifalarga yoʻnaltiriladi
   const router = useRouter();
@@ -403,7 +406,7 @@ export function PaymentsPage() {
             rows={shown}
             rowKey={(r) => `${r.kind}-${r.id}`}
             loading={list.isPending}
-            onRowClick={open}
+            onRowClick={setPreview}
             rowActions={(r) => (
               <RowMenu
                 items={[
@@ -457,6 +460,18 @@ export function PaymentsPage() {
           ) : null}
         </>
       )}
+      {preview ? (
+        <PaymentPreview
+          row={preview}
+          status={
+            <Badge tone={STATUS_LOOK[preview.status].tone} icon={STATUS_LOOK[preview.status].icon}>
+              {t(`st.${preview.status}`)}
+            </Badge>
+          }
+          onClose={() => setPreview(null)}
+          onOpen={open}
+        />
+      ) : null}
     </>
   );
 }

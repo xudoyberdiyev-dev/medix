@@ -192,7 +192,11 @@
     "clearF": "Filtrni tozalash",
     "open": "Ochish",
     "caption": "Toʻlovlar roʻyxati",
-    "dateInvalid": "Sana notoʻgʻri — kk.oo.yyyy"
+    "dateInvalid": "Sana notoʻgʻri — kk.oo.yyyy",
+    "preview": {
+      "open": "Toʻliq ochish",
+      "note": "Izoh"
+    }
   },
   "refs": {
     "payOrderNo": "Toʻlov topshiriqnomasi №",

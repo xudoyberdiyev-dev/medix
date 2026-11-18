@@ -601,6 +601,7 @@ test("Filial rahbari: YT ni tasdiqlaydi va oʻtkazadi", async ({ page }) => {
   await page.goto("/payments");
   await page.getByRole("tab", { name: /Yetkazib beruvchilarga/ }).click();
   await page.getByRole("cell", { name: "Pharm Supply E2E" }).first().click();
+  await page.getByRole("button", { name: "Toʻliq ochish" }).click();
   await expect(page).toHaveURL(/\/payments\/yt\/\d+$/);
   await page.getByRole("button", { name: "Tasdiqlash", exact: true }).click();
   await page.getByRole("dialog").getByRole("button", { name: "Tasdiqlash", exact: true }).click();
