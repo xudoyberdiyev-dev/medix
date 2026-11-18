@@ -163,3 +163,25 @@ export function codesExportUrl(f: { today?: boolean; mine?: boolean; q?: string;
   const qs = p.toString();
   return `/api/marking/codes/export${qs ? `?${qs}` : ""}`;
 }
+
+/**
+ * U11: tanlangan mahsulotlarning sotuvga mavjud qoldigʻi, eng yaqin muddati va mijoz narxi (katalog soʻrovi,
+ * qidiruvsiz). Hali saqlanmagan qatorlar va «Tez qoʻshish»da tanlangan mahsulot uchun.
+ */
+export function useProductsStock(warehouseId: number | null, customerId: number | null, productIds: number[]) {
+  const ids = [...new Set(productIds)].sort((a, b) => a - b).slice(0, 200);
+  return useQuery({
+    queryKey: ["orders", "catalog", "stock", warehouseId, customerId, ids],
+    queryFn: () =>
+      unwrap(
+        api.GET("/api/orders/catalog", {
+          params: {
+            query: { warehouseId: warehouseId ?? 0, customerId: customerId ?? undefined, inStockOnly: false, productIds: ids, size: 200 },
+          },
+        }),
+      ),
+    enabled: warehouseId !== null && ids.length > 0,
+    placeholderData: keepPreviousData,
+    select: (page) => new Map(page.items.map((r) => [r.productId, r] as const)),
+  });
+}

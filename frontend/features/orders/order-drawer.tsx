@@ -61,6 +61,7 @@ import {
   useApproveOrder,
   useCancelOrder,
   useOrder,
+  useProductsStock,
   useRejectOrder,
   useReturnOrder,
   useSaveOrder,
@@ -246,6 +247,13 @@ function Editor({
       cancelPick: can(me.data, ORDER_CANCEL_PICK),
     });
   const serverLine = (productId: number) => doc?.lines.find((l) => l.productId === productId);
+  // U11: saqlanmagan qatorlar va «Tez qoʻshish»da tanlangan mahsulot — joriy qoldiq, yaqin muddat, narx
+  const liveIds = editable
+    ? [...lines.filter((l) => !serverLine(l.productId)).map((l) => l.productId), ...(adding.product ? [Number(adding.product)] : [])]
+    : [];
+  const live = useProductsStock(warehouseId ? Number(warehouseId) : null, customer ? Number(customer) : null, liveIds);
+  const liveOf = (productId: number) => live.data?.get(productId);
+  const pickedLive = adding.product ? liveOf(Number(adding.product)) : undefined;
   const dirty =
     doc !== null &&
     (lines.length !== doc.lines.length ||
@@ -826,8 +834,11 @@ function Editor({
                 ) : (
                   lines.map((l, i) => {
                     const s = serverLine(l.productId);
+                    const ls = s ? undefined : liveOf(l.productId);
+                    const avail = s?.available ?? ls?.available;
+                    const nearest = s ? s.nearestExpiry : ls?.nearestExpiry;
                     const qty = Number(l.qty);
-                    const over = s && isInt(l.qty) && qty > s.available;
+                    const over = avail !== undefined && isInt(l.qty) && qty > avail;
                     const price = s ? (doc?.status === "DRAFT" ? s.currentPrice : s.price) : null;
                     const list = s?.listPrice && s.listPrice !== price ? s.listPrice : null;
                     return (
@@ -849,9 +860,9 @@ function Editor({
                           ) : null}
                         </td>
                         <td className="px-3 py-2 text-right tabular-nums">
-                          {s ? formatQuantity(s.available) : "—"}
-                          {s?.nearestExpiry ? (
-                            <span className="block text-caption text-text-secondary">{t("entry.expiry", { d: day(s.nearestExpiry) })}</span>
+                          {avail !== undefined ? formatQuantity(avail) : "—"}
+                          {nearest ? (
+                            <span className="block text-caption text-text-secondary">{t("entry.expiry", { d: day(nearest) })}</span>
                           ) : null}
                         </td>
                         <td className="px-3 py-1 text-right">
@@ -862,7 +873,7 @@ function Editor({
                               value={l.qty}
                               onChange={(v) => setLines((ls) => ls.map((x, j) => (j === i ? { ...x, qty: v } : x)))}
                               inputMode="numeric"
-                              error={over ? t("entry.eQty", { n: formatQuantity(s.available) }) : undefined}
+                              error={over ? t("entry.eQty", { n: formatQuantity(avail ?? 0) }) : undefined}
                               className="ml-auto w-28 [&>:first-child]:sr-only [&_input]:text-right"
                             />
                           ) : (
@@ -950,7 +961,17 @@ function Editor({
               <Button variant="tertiary" size="sm" icon={Plus} onClick={addLine}>
                 {t("drawer.addLine")}
               </Button>
-              <span className="text-caption text-text-secondary">{t("entry.keys")}</span>
+              {pickedLive ? (
+                <span role="status" className="text-caption tabular-nums text-text-secondary">
+                  {t("entry.pickedStock", {
+                    qty: formatQuantity(pickedLive.available),
+                    expiry: pickedLive.nearestExpiry ? day(pickedLive.nearestExpiry) : "—",
+                    price: pickedLive.price ? formatMoney(pickedLive.price) : "—",
+                  })}
+                </span>
+              ) : (
+                <span className="text-caption text-text-secondary">{t("entry.keys")}</span>
+              )}
             </div>
           ) : null}
           <dl

@@ -860,6 +860,7 @@
     "eDisc": "{n}-qator ({name}): chegirma 0–99,99 % boʻlishi kerak",
     "eDiscShort": "0–99,99 %",
     "expiry": "Muddat: {d}",
+    "pickedStock": "Mavjud: {qty} dona · Yaqin muddat: {expiry} · Narx: {price}",
     "tLines": "Qatorlar",
     "tQty": "Jami miqdor",
     "tGross": "Summa (chegirmasiz)",

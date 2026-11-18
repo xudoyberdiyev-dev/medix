@@ -22697,6 +22697,7 @@ export interface operations {
                 categoryIds?: number[];
                 countryIds?: number[];
                 flags?: ("MARKED" | "CONTROLLED" | "PRESCRIPTION")[];
+                productIds?: number[];
                 page?: number;
                 size?: number;
             };
