@@ -203,4 +203,21 @@ class ProfilePinIT {
         assertThat(PinService.isTrivial("9876")).isTrue();
         assertThat(PinService.isTrivial("4826")).isFalse();
     }
+
+    /** O24: mavzu standart «system», saqlanadi, notoʻgʻri qiymat — 400. */
+    @Test
+    void themePreference() throws Exception {
+        Session s = loginAs("OPERATOR");
+        mvc.perform(get("/api/profile").cookie(s.cookie()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.theme").value("system"));
+        mvc.perform(put("/api/profile/theme").with(csrf()).cookie(s.cookie())
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"theme\":\"dark\"}"))
+                .andExpect(status().isNoContent());
+        mvc.perform(get("/api/profile").cookie(s.cookie()))
+                .andExpect(jsonPath("$.theme").value("dark"));
+        mvc.perform(put("/api/profile/theme").with(csrf()).cookie(s.cookie())
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"theme\":\"blue\"}"))
+                .andExpect(status().isBadRequest());
+    }
 }
