@@ -2,7 +2,7 @@ name: Docker
 
 # Production image'lari (SPEC 15: GitHub Actions → Docker image → serverda `docker compose pull && up`).
 # develop: deploy fayllari o'zgarsa — faqat yig'ish (Dockerfile'lar buzilmaganini tekshirish).
-# v* tegi (masalan v1.0.0, main'dan): yig'ish va GHCR'ga joylash — ghcr.io/xudoyberdiyev-dev/medix-{backend,frontend,postgres}.
+# v* tegi (masalan v1.0.0, main'dan): yig'ish va GHCR'ga joylash — ghcr.io/xudoyberdiyev-dev/yuzplus-{backend,frontend,postgres}.
 on:
   push:
     branches: [develop]
@@ -47,7 +47,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${{ github.repository_owner }}/medix-${{ matrix.name }}
+          images: ghcr.io/${{ github.repository_owner }}/yuzplus-${{ matrix.name }}
           tags: |
             type=semver,pattern=v{{version}}
             type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/v') }}
@@ -76,7 +76,7 @@ jobs:
           bash -n backup/backup.sh
           bash -n backup/restore-test.sh
       - name: Caddyfile tekshiruvi
-        run: docker run --rm -e YUZPLUS_DOMAIN=medix.example.uz -e YUZPLUS_TLS=internal -v "$PWD/deploy/Caddyfile:/etc/caddy/Caddyfile:ro" caddy:2 caddy validate --config /etc/caddy/Caddyfile
+        run: docker run --rm -e YUZPLUS_DOMAIN=yuzplus.example.uz -e YUZPLUS_TLS=internal -v "$PWD/deploy/Caddyfile:/etc/caddy/Caddyfile:ro" caddy:2 caddy validate --config /etc/caddy/Caddyfile
 
   smoke:
     name: Production compose — ishga tushirish, zaxira va tiklash sinovi
@@ -85,9 +85,9 @@ jobs:
       - uses: actions/checkout@v5
       - name: Image'lar (mahalliy teg :ci)
         run: |
-          docker build -q -t ghcr.io/xudoyberdiyev-dev/medix-postgres:ci deploy/postgres
-          docker build -q -t ghcr.io/xudoyberdiyev-dev/medix-backend:ci backend
-          docker build -q -t ghcr.io/xudoyberdiyev-dev/medix-frontend:ci frontend
+          docker build -q -t ghcr.io/xudoyberdiyev-dev/yuzplus-postgres:ci deploy/postgres
+          docker build -q -t ghcr.io/xudoyberdiyev-dev/yuzplus-backend:ci backend
+          docker build -q -t ghcr.io/xudoyberdiyev-dev/yuzplus-frontend:ci frontend
       - name: Ishga tushirish (ichki CA bilan HTTPS)
         working-directory: deploy
         run: |

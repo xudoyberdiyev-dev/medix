@@ -20,4 +20,4 @@ jobs:
           [ -z "$TOKEN" ] || [ -z "$CHAT_ID" ] && exit 0
           curl -sS -X POST "https://api.telegram.org/bot${TOKEN}/sendMessage" \
             --data-urlencode "chat_id=${CHAT_ID}" \
-            --data-urlencode "text=⚠️ MEDIX: CI yiqildi (${BRANCH}). Keyingi sessiyada tuzatiladi. ${URL}" > /dev/null
+            --data-urlencode "text=⚠️ 100+: CI yiqildi (${BRANCH}). Keyingi sessiyada tuzatiladi. ${URL}" > /dev/null

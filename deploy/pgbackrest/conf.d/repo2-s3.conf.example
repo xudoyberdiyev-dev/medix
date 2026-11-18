@@ -3,8 +3,8 @@
 # Kalitlar shu faylda turadi — u .gitignore'da, repoga tushmaydi. Faylga ruxsat: chmod 600.
 [global]
 repo2-type=s3
-repo2-path=/medix
-repo2-s3-bucket=medix-backup
+repo2-path=/yuzplus
+repo2-s3-bucket=yuzplus-backup
 repo2-s3-endpoint=backup.example.uz
 repo2-s3-region=uz-central-1
 repo2-s3-uri-style=path

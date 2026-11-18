@@ -1,6 +1,6 @@
-# MEDIX — production (SPEC 15). Serverda: deploy/ papkasi + .env (namuna: .env.example).
+# 100+ — production (SPEC 15). Serverda: deploy/ papkasi + .env (namuna: .env.example).
 # Ishga tushirish va yangilash: docs/DEPLOY.md
-name: medix
+name: yuzplus
 
 x-logging: &logging
   driver: json-file
@@ -8,11 +8,11 @@ x-logging: &logging
 
 services:
   postgres:
-    image: ghcr.io/xudoyberdiyev-dev/medix-postgres:${YUZPLUS_VERSION:-latest}
+    image: ghcr.io/xudoyberdiyev-dev/yuzplus-postgres:${YUZPLUS_VERSION:-latest}
     restart: unless-stopped
     environment:
-      POSTGRES_DB: medix
-      POSTGRES_USER: medix
+      POSTGRES_DB: yuzplus
+      POSTGRES_USER: yuzplus
       POSTGRES_PASSWORD: ${YUZPLUS_DB_PASSWORD:?YUZPLUS_DB_PASSWORD .env da berilmagan}
       TZ: Asia/Tashkent
     command:
@@ -22,7 +22,7 @@ services:
       - -c
       - archive_mode=on
       - -c
-      - archive_command=pgbackrest --stanza=medix archive-push %p
+      - archive_command=pgbackrest --stanza=yuzplus archive-push %p
       - -c
       - archive_timeout=300
       - -c
@@ -42,17 +42,17 @@ services:
       - ./pgbackrest/conf.d:/etc/pgbackrest/conf.d:ro
     shm_size: 256m
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U medix -d medix"]
+      test: ["CMD-SHELL", "pg_isready -U yuzplus -d yuzplus"]
       interval: 10s
       retries: 10
     logging: *logging
 
   backend:
-    image: ghcr.io/xudoyberdiyev-dev/medix-backend:${YUZPLUS_VERSION:-latest}
+    image: ghcr.io/xudoyberdiyev-dev/yuzplus-backend:${YUZPLUS_VERSION:-latest}
     restart: unless-stopped
     environment:
-      YUZPLUS_DB_URL: jdbc:postgresql://postgres:5432/medix
-      YUZPLUS_DB_USER: medix
+      YUZPLUS_DB_URL: jdbc:postgresql://postgres:5432/yuzplus
+      YUZPLUS_DB_USER: yuzplus
       YUZPLUS_DB_PASSWORD: ${YUZPLUS_DB_PASSWORD}
       YUZPLUS_COOKIE_SECURE: "true"
       # Caddy ortida: mijoz IP (audit) va https sxemasi X-Forwarded-* dan
@@ -65,7 +65,7 @@ services:
     logging: *logging
 
   frontend:
-    image: ghcr.io/xudoyberdiyev-dev/medix-frontend:${YUZPLUS_VERSION:-latest}
+    image: ghcr.io/xudoyberdiyev-dev/yuzplus-frontend:${YUZPLUS_VERSION:-latest}
     restart: unless-stopped
     environment:
       BACKEND_URL: http://backend:8080

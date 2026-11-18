@@ -18,7 +18,7 @@ const defaults = {
     role: { code: "OPERATOR", name: "Operator" }, permissions: perms,
   },
   "/api/auth/csrf": { token: "x", headerName: "X-XSRF-TOKEN", parameterName: "_csrf" },
-  "/api/nav/badges": { company: "Medix Group" },
+  "/api/nav/badges": { company: "Shifo Dori" },
   "/api/branches": [{ id: 1, code: "TSH", name: "Toshkent filiali", active: true }],
   "/api/warehouses": [{ id: 1, branchId: 1, name: "Asosiy ombor", active: true, zones: [] }],
   "/api/notifications": { items: [], unread: 0, total: 0 },
