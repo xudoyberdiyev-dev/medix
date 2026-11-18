@@ -15,6 +15,8 @@
   --color-primary-button: #0f766e;
   --color-primary-button-hover: #115e59;
   --color-primary-soft: #ddf5ee;
+  /* Havola va urgʻu matni (qorongʻi rejimda yorqinroq) */
+  --color-link: #0f766e;
   --color-surface: #ffffff;
   --color-background: #f5f7f8;
   --color-table-header: #f8fafa;
@@ -138,6 +140,33 @@
       width: 100%;
     }
   }
+}
+
+/* Qorongʻi rejim (O20 — hozircha kirish sahifasi): tokenlar shu sinf ichida qayta belgilanadi, komponentlar oʻzgarmaydi. */
+.theme-dark {
+  color-scheme: dark;
+  --color-brand-900: #0b2524;
+  --color-primary: #2dd4bf;
+  --color-primary-button: #0f766e;
+  --color-primary-button-hover: #0d9488;
+  --color-link: #2dd4bf;
+  --color-primary-soft: #133b38;
+  --color-surface: #13201f;
+  --color-background: #0c1716;
+  --color-table-header: #182826;
+  --color-text-primary: #e4efed;
+  --color-text-secondary: #9db2af;
+  --color-text-disabled: #627a77;
+  --color-border: #263d3b;
+  --color-success: #4ade80;
+  --color-success-bg: #10291a;
+  --color-warning: #fbbf24;
+  --color-warning-bg: #2c2210;
+  --color-danger: #f87171;
+  --color-danger-bg: #2e1414;
+  --color-info: #93c5fd;
+  --color-info-bg: #13213a;
+  --color-overlay: rgb(0 0 0 / 0.6);
 }
 
 @layer base {

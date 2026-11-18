@@ -785,6 +785,26 @@
         "tags" : [ "auth" ]
       }
     },
+    "/api/auth/login-info" : {
+      "get" : {
+        "description" : "Yordam telefoni, ish vaqti va faol rollar soni.",
+        "operationId" : "get_31",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LoginInfo"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Kirish sahifasi maʼlumoti (ommaviy)",
+        "tags" : [ "auth" ]
+      }
+    },
     "/api/auth/me" : {
       "get" : {
         "operationId" : "me",
@@ -2278,6 +2298,36 @@
           }
         },
         "summary" : "Kompaniya logotipi (PNG yoki SVG); yo'q bo'lsa — 404",
+        "tags" : [ "company" ]
+      }
+    },
+    "/api/company/support" : {
+      "put" : {
+        "description" : "Kirish sahifasi pastida ko'rsatiladi (O20). Audit: company.update.",
+        "operationId" : "saveSupport",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CompanySupportRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CompanyOverview"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Yordam telefoni va ish vaqti",
         "tags" : [ "company" ]
       }
     },
@@ -22886,6 +22936,12 @@
           "name" : {
             "type" : "string"
           },
+          "supportHours" : {
+            "type" : "string"
+          },
+          "supportPhone" : {
+            "type" : "string"
+          },
           "warehouses" : {
             "type" : "integer",
             "format" : "int32"
@@ -22907,6 +22963,22 @@
           }
         },
         "required" : [ "name" ]
+      },
+      "CompanySupportRequest" : {
+        "type" : "object",
+        "properties" : {
+          "supportHours" : {
+            "type" : "string",
+            "maxLength" : 60,
+            "minLength" : 0
+          },
+          "supportPhone" : {
+            "type" : "string",
+            "maxLength" : 32,
+            "minLength" : 0,
+            "pattern" : "^[+0-9 ()\\-]*$"
+          }
+        }
       },
       "CompareDetail" : {
         "type" : "object",
@@ -28109,6 +28181,22 @@
           }
         },
         "required" : [ "at", "result" ]
+      },
+      "LoginInfo" : {
+        "type" : "object",
+        "properties" : {
+          "roles" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "supportHours" : {
+            "type" : "string"
+          },
+          "supportPhone" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "roles" ]
       },
       "LoginRequest" : {
         "type" : "object",

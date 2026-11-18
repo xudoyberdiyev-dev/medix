@@ -1,13 +1,16 @@
 "use client";
 
-import { ArrowRight, CircleAlert, Clock, Info, Lock, RotateCcw, User, WifiOff } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { CircleAlert, Clock, Info, Lock, Phone, RotateCcw, User, WifiOff } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Icon, type LucideIcon } from "@/components/ui/icon";
+import { Modal } from "@/components/ui/modal";
 import { Spinner } from "@/components/ui/spinner";
 import { toast } from "@/components/ui/toast";
 import { AuthInput, CapsWarning, useCapsLock } from "@/features/auth/auth-input";
+import { useLoginInfo } from "@/features/auth/login-layout";
+import { greetingKey, longDate } from "@/features/auth/login-greeting";
 import { safeNext, useLogin } from "@/features/auth/session";
 import { rememberTempPassword } from "@/features/auth/temp-password";
 import { ApiError } from "@/lib/api/client";
@@ -47,7 +50,7 @@ function LoginAlert({ kind, text, onRetry, retryLabel }: { kind: AlertKind; text
   );
 }
 
-/** Kirish formasi (prototip LoginScreen): sarlavha, xabar, Login/Parol ikonka bilan, Caps Lock, «Kirish →». */
+/** Kirish formasi (O20 maketi): sana, vaqtga qarab salom, Login/Parol (56 px), «Parolni unutdingizmi?», «Kirish», «Kira olmayapman». */
 export function LoginForm() {
   const t = useTranslations("login");
   const router = useRouter();
@@ -60,6 +63,20 @@ export function LoginForm() {
   const loginRef = useRef<HTMLInputElement>(null);
   const passRef = useRef<HTMLInputElement>(null);
   const reason = params.get("reason");
+  const locale = useLocale();
+  const info = useLoginInfo();
+  const [help, setHelp] = useState<"forgot" | "cant" | null>(null);
+  // Sana va salom faqat brauzerda (server vaqti bilan gidratsiya farqi boʻlmasin)
+  const [now, setNow] = useState<Date | null>(null);
+  useEffect(() => {
+    const tick = () => setNow(new Date());
+    const first = window.setTimeout(tick, 0);
+    const id = window.setInterval(tick, 60_000);
+    return () => {
+      window.clearTimeout(first);
+      window.clearInterval(id);
+    };
+  }, []);
 
   useEffect(() => {
     if (params.get("out") === "1") toast({ tone: "success", title: t("loggedOut") });
@@ -112,8 +129,9 @@ export function LoginForm() {
 
   return (
     <>
-      <h1 className="text-[26px] leading-8 font-semibold tracking-[-0.01em]">{t("title")}</h1>
-      <p className="mt-[8px] text-body text-text-secondary">{t("subtitle")}</p>
+      <p className="min-h-[22px] text-subtitle font-normal text-text-secondary">{now ? longDate(now, locale) : null}</p>
+      <h1 className="mt-[6px] text-[42px] leading-[50px] font-bold tracking-[-0.02em]">{t(now ? greetingKey(now) : "title")}</h1>
+      <p className="mt-[4px] text-[18px] leading-7 text-text-secondary">{t("continue")}</p>
       {alert ? (
         <LoginAlert kind={alert.kind} text={alert.text} retryLabel={t("retry")} onRetry={alert.kind === "offline" ? submit : undefined} />
       ) : null}
@@ -134,12 +152,14 @@ export function LoginForm() {
           autoCapitalize="none"
           spellCheck={false}
           placeholder={t("loginPlaceholder")}
+          hint={t("loginHint")}
+          large={{ show: t("show"), hide: t("hide") }}
           error={errors.login}
         />
         <AuthInput
           id="mx-pass"
           name="password"
-          className="mt-[16px]"
+          className="mt-[18px]"
           label={t("password")}
           icon={Lock}
           password
@@ -154,16 +174,24 @@ export function LoginForm() {
           disabled={busy}
           autoComplete="current-password"
           placeholder={t("passwordPlaceholder")}
+          large={{ show: t("show"), hide: t("hide") }}
           error={errors.password}
         >
           <CapsWarning show={caps.caps && !busy} />
         </AuthInput>
         <button
+          type="button"
+          onClick={() => setHelp("forgot")}
+          className="mt-[14px] self-end rounded-control text-subtitle font-medium text-link hover:underline"
+        >
+          {t("forgotLink")}
+        </button>
+        <button
           type="submit"
           disabled={busy || locked}
           aria-busy={busy || undefined}
           className={cn(
-            "mt-[24px] flex h-[44px] w-full items-center justify-center gap-[8px] rounded-card text-subtitle font-medium transition-colors duration-150 ease-out",
+            "mt-[24px] flex h-[60px] w-full items-center justify-center gap-[8px] rounded-[12px] text-[18px] font-semibold transition-colors duration-150 ease-out",
             locked
               ? "cursor-not-allowed bg-background text-text-secondary"
               : "bg-primary-button text-white hover:bg-primary-button-hover active:bg-brand-900",
@@ -176,14 +204,42 @@ export function LoginForm() {
               {t("checking")}
             </>
           ) : (
-            <>
-              {t("submit")}
-              <Icon icon={ArrowRight} />
-            </>
+            t("submit")
           )}
         </button>
       </form>
-      <p className="mt-[20px] text-center text-table text-pretty text-text-secondary">{t("forgot")}</p>
+      <p className="mt-[18px] text-center text-table text-pretty text-text-secondary">{t("noAccess")}</p>
+      <button
+        type="button"
+        onClick={() => setHelp("cant")}
+        className="mt-[6px] self-center rounded-control text-table font-medium text-link hover:underline"
+      >
+        {t("cantLogin")}
+      </button>
+      <Modal
+        open={help !== null}
+        onClose={() => setHelp(null)}
+        title={help === "cant" ? t("cantTitle") : t("forgotTitle")}
+        size="sm"
+        hideSecondary
+        primaryAction={{ label: t("close"), onClick: () => setHelp(null) }}
+      >
+        {help === "cant" ? (
+          <ul className="flex list-disc flex-col gap-[8px] pl-[18px] text-body text-text-primary">
+            {(["t1", "t2", "t3", "t4"] as const).map((k) => (
+              <li key={k}>{t(`cantTip.${k}`)}</li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-body text-pretty text-text-primary">{t("forgotText")}</p>
+        )}
+        {info.data?.supportPhone ? (
+          <p className="mt-[14px] flex items-center gap-[8px] text-body font-medium text-text-primary">
+            <Icon icon={Phone} className="text-link" />
+            {t("contactPhone", { phone: info.data.supportPhone })}
+          </p>
+        ) : null}
+      </Modal>
     </>
   );
 }

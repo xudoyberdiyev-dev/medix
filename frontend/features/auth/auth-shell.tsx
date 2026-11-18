@@ -17,11 +17,28 @@ const RINGS = [
   { size: 240, offset: -20, radius: 56 },
 ];
 
-function Logo({ inverted = false }: { inverted?: boolean }) {
+/** «100+» logotipi: belgi (kvadrat ichida «100+») va nom. `inverted` — toʻq fon ustida. */
+export function BrandMark({ inverted = false, size = "md" }: { inverted?: boolean; size?: "md" | "lg" }) {
+  const lg = size === "lg";
   return (
-    <div className="flex items-center gap-[12px]">
-      <span className="flex size-[32px] items-center justify-center rounded-card bg-primary text-[16px] font-semibold text-white">M</span>
-      <span className={cn("text-[17px] font-semibold tracking-[0.02em]", inverted ? "text-white" : "text-brand-900")}>100+</span>
+    <div className={cn("flex items-center", lg ? "gap-[10px]" : "gap-[12px]")}>
+      <span
+        className={cn(
+          "flex items-center justify-center bg-primary-button font-bold tracking-[-0.03em] text-white",
+          lg ? "size-[40px] rounded-[12px] text-[14px]" : "size-[32px] rounded-card text-[11px]",
+        )}
+      >
+        100+
+      </span>
+      <span
+        className={cn(
+          "font-semibold tracking-[0.01em]",
+          lg ? "text-[26px] leading-8" : "text-[17px]",
+          inverted ? "text-white" : "text-text-primary",
+        )}
+      >
+        100+
+      </span>
     </div>
   );
 }
@@ -44,7 +61,7 @@ export function AuthShell({ topRight, children }: { topRight?: ReactNode; childr
           />
         ))}
         <div className="relative">
-          <Logo inverted />
+          <BrandMark inverted />
         </div>
         <div className="relative flex flex-1 flex-col justify-center">
           <div className="flex max-w-[420px] flex-col">
@@ -74,7 +91,7 @@ export function AuthShell({ topRight, children }: { topRight?: ReactNode; childr
         {topRight ? <div className="absolute top-[32px] right-[32px]">{topRight}</div> : null}
         <div className="my-auto flex w-[380px] max-w-full flex-col">
           <div className="mb-[40px] flex justify-center lg:hidden">
-            <Logo />
+            <BrandMark />
           </div>
           {children}
         </div>
