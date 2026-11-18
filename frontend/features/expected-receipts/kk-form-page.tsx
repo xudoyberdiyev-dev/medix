@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus, Save, Trash2 } from "lucide-react";
+import { FileSpreadsheet, Plus, Save, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
@@ -31,6 +31,7 @@ import {
   type KkPaymentKind,
   type KkRequest,
 } from "./api";
+import { KkImportModal, type ImportedKkLine } from "./kk-import";
 
 interface FormLine {
   key: string;
@@ -98,7 +99,26 @@ function Form({ doc }: { doc: KkDetail | null }) {
   );
   const [adding, setAdding] = useState({ product: "", qty: "", price: "", vat: "", batch: "", expiry: "" });
   const [error, setError] = useState<string | null>(null);
+  const [importing, setImporting] = useState(false);
   const dp = tf("datePlaceholder");
+
+  const addImported = (imported: ImportedKkLine[]) => {
+    setLines((ls) => [
+      ...ls,
+      ...imported.map((l) => ({
+        key: `i${l.row}-${l.productId}-${Date.now()}`,
+        productId: l.productId,
+        name: l.productName,
+        code: l.productCode,
+        qty: l.qty,
+        price: prices && l.price ? l.price : "",
+        vat: l.vatRate != null ? String(l.vatRate) : "",
+        batch: l.batchNumber ?? "",
+        expiry: formatIsoDate(l.expiryDate),
+      })),
+    ]);
+    toast({ tone: "success", title: tf("imported", { n: imported.length }) });
+  };
 
   const options = (warehouses.data ?? [])
     .filter((w) => w.active && (me.data?.allBranches || w.branchId === me.data?.branchId))
@@ -278,7 +298,13 @@ function Form({ doc }: { doc: KkDetail | null }) {
       </section>
 
       <section className="flex flex-col gap-3 rounded-card border border-border bg-surface p-5">
-        <h2 className="text-subtitle">{tf("lines")}</h2>
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-subtitle">{tf("lines")}</h2>
+          <Button variant="secondary" size="sm" icon={FileSpreadsheet} onClick={() => setImporting(true)}>
+            {tf("importExcel")}
+          </Button>
+        </div>
+        <KkImportModal open={importing} onClose={() => setImporting(false)} onAdd={addImported} prices={prices} />
         <div className="grid grid-cols-1 items-end gap-3 md:grid-cols-6">
           <Select
             label={tf("product")}

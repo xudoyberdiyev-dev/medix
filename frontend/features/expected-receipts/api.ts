@@ -192,3 +192,30 @@ export function useUploadKkFile() {
 }
 
 export const kkFileUrl = (fileId: number) => `/api/expected-receipts/files/${fileId}`;
+
+// ===== YB faylidan qatorlar (O15) =====
+
+export type KkImportFile = components["schemas"]["File"];
+export type KkImportLine = components["schemas"]["KkImportLine"];
+export type KkImportRowRequest = components["schemas"]["KkImportRow"];
+
+/** YB fayli (.xlsx/.xls/.csv) → varaqlar va katakchalar; hech narsa yozilmaydi. */
+export async function readKkImportFile(file: File): Promise<KkImportFile> {
+  await ensureCsrf();
+  return unwrap(
+    api.POST("/api/expected-receipts/import-read", {
+      body: { file: file as unknown as string },
+      bodySerializer: () => {
+        const fd = new FormData();
+        fd.append("file", file);
+        return fd;
+      },
+    }),
+  );
+}
+
+/** Moslangan qatorlar → mahsulot topiladi, soni/narx/QQS/partiya/yaroqlilik oʻqiladi. */
+export async function importKkLines(rows: KkImportRowRequest[]): Promise<KkImportLine[]> {
+  await ensureCsrf();
+  return unwrap(api.POST("/api/expected-receipts/import-lines", { body: { rows } }));
+}

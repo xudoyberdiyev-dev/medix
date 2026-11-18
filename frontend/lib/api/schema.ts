@@ -1083,7 +1083,7 @@ export interface paths {
          * Import ustasi: faylni o'qish
          * @description .xlsx yoki .csv — varaqlar va katakchalar (matn). Hech narsa yozilmaydi; sarlavha va ustunlar brauzerda tanlanadi.
          */
-        post: operations["importRead_1"];
+        post: operations["importRead_2"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2080,6 +2080,46 @@ export interface paths {
         get: operations["file_2"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/expected-receipts/import-lines": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * YB fayli qatorlari → KK qatorlari
+         * @description Mahsulot topiladi (shtrix-kod → MXIK → kod → xotira → nom), soni/narx/QQS/partiya/yaroqlilik o'qiladi. Hech narsa yozilmaydi.
+         */
+        post: operations["importLines"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/expected-receipts/import-read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * YB faylini o'qish (KK qatorlari uchun)
+         * @description .xlsx/.xls/.csv — varaqlar va katakchalar. Hech narsa yozilmaydi.
+         */
+        post: operations["importRead_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -10871,6 +10911,12 @@ export interface components {
             manufacturers: components["schemas"]["Facet"][];
             supplyEmployees: components["schemas"]["Facet"][];
         };
+        File: {
+            fileName: string;
+            sheets: components["schemas"]["Sheet"][];
+            /** Format: int64 */
+            size: number;
+        };
         FileInfo: {
             contentType: string;
             fileName: string;
@@ -11641,6 +11687,43 @@ export interface components {
         };
         KkCloseRequest: {
             reason: string;
+        };
+        KkImportLine: {
+            batchNumber?: string;
+            confident: boolean;
+            /** Format: date */
+            expiryDate?: string;
+            fileName?: string;
+            matchBy: string;
+            price?: string;
+            problems: string[];
+            productCode?: string;
+            /** Format: int64 */
+            productId?: number;
+            productName?: string;
+            /** Format: int32 */
+            qty?: number;
+            /** Format: int32 */
+            row: number;
+            /** Format: int32 */
+            vatRate?: number;
+        };
+        KkImportRequest: {
+            rows: components["schemas"]["KkImportRow"][];
+        };
+        KkImportRow: {
+            barcode: string;
+            batch: string;
+            code: string;
+            expiry: string;
+            ikpu: string;
+            manufacturer: string;
+            name: string;
+            price: string;
+            qty: string;
+            /** Format: int32 */
+            row: number;
+            vat: string;
         };
         KkLinkedReceipt: {
             /** Format: int64 */
@@ -15145,6 +15228,10 @@ export interface components {
             employees: components["schemas"]["Employee"][];
             warehouses: components["schemas"]["Warehouse"][];
         };
+        Sheet: {
+            name: string;
+            rows: string[][];
+        };
         ShortageInfo: {
             history: components["schemas"]["ShortageResolution"][];
             number: string;
@@ -18371,7 +18458,7 @@ export interface operations {
             };
         };
     };
-    importRead_1: {
+    importRead_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -19851,6 +19938,57 @@ export interface operations {
                 };
                 content: {
                     "application/json": string;
+                };
+            };
+        };
+    };
+    importLines: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KkImportRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KkImportLine"][];
+                };
+            };
+        };
+    };
+    importRead_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["File"];
                 };
             };
         };

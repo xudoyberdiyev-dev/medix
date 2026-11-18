@@ -88,7 +88,9 @@
     "errPrice": "Narx notoʻgʻri. Masalan: 12500,00.",
     "errDate": "Sana notoʻgʻri. KK.OO.YYYY koʻrinishida kiriting.",
     "errRequired": "Ombor, yetkazib beruvchi, yuk xati № va sanasini kiriting.",
-    "errNoLines": "Kamida bitta qator qoʻshing."
+    "errNoLines": "Kamida bitta qator qoʻshing.",
+    "importExcel": "Excelʼdan yuklash",
+    "imported": "{n} ta qator qoʻshildi — tekshirib saqlang"
   },
   "doc": {
     "loading": "Hujjat yuklanmoqda",
@@ -185,5 +187,62 @@
     "title": "Kutilayotgan kirimlar",
     "footer": "Yoʻlda: {open} · bugun kutilmoqda: {today} · kechikkan: {late}",
     "all": "Hammasi"
+  },
+  "import": {
+    "title": "Qatorlarni yetkazib beruvchi faylidan yuklash",
+    "dropTitle": "Yetkazib beruvchi yuborgan faylni tanlang",
+    "dropHint": ".xlsx, .xls yoki .csv, 10 MB gacha. Ustunlar keyingi qadamda moslanadi.",
+    "choose": "Fayl tanlash",
+    "check": "Mahsulotlarni topish",
+    "back": "Ortga",
+    "add": "{n} ta qatorni qoʻshish",
+    "mapHint": "{file}: har maydon uchun fayldagi ustunni tanlang. Mahsulot shtrix-kod, MXIK, kod yoki nom boʻyicha topiladi.",
+    "sheet": "Varaq",
+    "headerRow": "Sarlavha qatori",
+    "notMapped": "Tanlanmagan",
+    "colN": "{n}-ustun",
+    "pricesHidden": "Narxlar yuklanmaydi — ularni Filial rahbari yoki Direktor kiritadi.",
+    "summary": "Qoʻshiladi: {ready} ta qator. Oʻtkazib yuboriladi: {skipped} ta (mahsulot topilmagan yoki soni notoʻgʻri — ularni qoʻlda qoʻshing).",
+    "notFound": "Topilmadi",
+    "f": {
+      "name": "Mahsulot nomi",
+      "barcode": "Shtrix-kod / GTIN",
+      "ikpu": "MXIK",
+      "code": "Mahsulot kodi",
+      "manufacturer": "Ishlab chiqaruvchi",
+      "qty": "Soni",
+      "price": "Narx (1 dona)",
+      "vat": "QQS, %",
+      "batch": "Partiya",
+      "expiry": "Yaroqlilik"
+    },
+    "col": {
+      "row": "Qator",
+      "file": "Fayldagi nomi",
+      "product": "Mahsulot (bizda)",
+      "status": "Holat"
+    },
+    "tone": {
+      "ok": "Tayyor",
+      "check": "Tekshiring",
+      "skip": "Qoʻshilmaydi"
+    },
+    "problem": {
+      "product": "mahsulot topilmadi",
+      "productGuess": "nom boʻyicha taxmin — mahsulotni tekshiring",
+      "qty": "soni notoʻgʻri",
+      "price": "narx oʻqilmadi",
+      "vat": "QQS oʻqilmadi",
+      "expiry": "yaroqlilik sanasi oʻqilmadi"
+    },
+    "e": {
+      "type": "Fayl turi notoʻgʻri. .xlsx, .xls yoki .csv faylni tanlang.",
+      "size": "Fayl 10 MB dan katta. Keraksiz varaqlarni oʻchirib qayta yuklang.",
+      "read": "Faylni oʻqib boʻlmadi. Boshqa formatda saqlab qayta yuklang.",
+      "required": "Majburiy maydonlar uchun ustun tanlang: {f}.",
+      "empty": "Sarlavhadan keyin mahsulot qatorlari topilmadi. Sarlavha qatorini tekshiring.",
+      "tooMany": "Bitta hujjatda {n} tadan koʻp qator boʻlmaydi. Faylni boʻlib yuklang.",
+      "check": "Soʻrov bajarilmadi. Qayta urinib koʻring."
+    }
   }
 }
