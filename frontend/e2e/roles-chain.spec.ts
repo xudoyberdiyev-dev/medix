@@ -572,6 +572,7 @@ test("Buxgalter: birinchi kirish, kirimni oʻtkazadi (YB qarzi)", async ({ page 
   await firstLogin(page, "accountant.1");
   await page.goto("/receipts");
   await page.getByRole("cell", { name: "YX-777" }).click();
+  await page.getByRole("button", { name: "Toʻliq ochish" }).click();
   await page.getByRole("button", { name: "Oʻtkazish" }).click();
   await expect(page.getByText("Kirim oʻtkazildi").first()).toBeVisible();
 });
