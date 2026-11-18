@@ -4,6 +4,7 @@ import { Building2, PackageCheck, Route } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useTransition, type ReactNode } from "react";
+import { BrandSquare } from "@/components/shell/brand-logo";
 import { Icon } from "@/components/ui/icon";
 import { LOCALE_NAMES, LOCALE_SHORT, LOCALES, writeLocaleCookie } from "@/i18n/config";
 import { cn } from "@/lib/cn";
@@ -17,17 +18,27 @@ const RINGS = [
   { size: 240, offset: -20, radius: 56 },
 ];
 
-function Logo({ inverted = false }: { inverted?: boolean }) {
+/** «100+» logotipi (O22): belgi (`BrandSquare` — sidebar bilan bir xil) va nom. `inverted` — toʻq fon ustida. */
+export function BrandMark({ inverted = false, size = "md" }: { inverted?: boolean; size?: "md" | "lg" }) {
+  const lg = size === "lg";
   return (
-    <div className="flex items-center gap-[12px]">
-      <span className="flex size-[32px] items-center justify-center rounded-card bg-primary text-[16px] font-semibold text-white">M</span>
-      <span className={cn("text-[17px] font-semibold tracking-[0.02em]", inverted ? "text-white" : "text-brand-900")}>MEDIX</span>
+    <div className="flex items-center gap-[10px]">
+      <BrandSquare size={lg ? 40 : 32} onDark={inverted} />
+      <span
+        className={cn(
+          "font-semibold tracking-[-0.5px]",
+          lg ? "text-[24px] leading-8" : "text-[18px] leading-6",
+          inverted ? "text-white" : "text-brand-900 [.theme-dark_&]:text-text-primary",
+        )}
+      >
+        100+
+      </span>
     </div>
   );
 }
 
 /**
- * Kirish, yangi parol va shu kabi sahifalar qobigʻi (prototip `Medix ERP` → LoginScreen): chapda brend paneli
+ * Kirish, yangi parol va shu kabi sahifalar qobigʻi (prototip `100plus ERP` → LoginScreen): chapda brend paneli
  * (≥1024 px), oʻngda 380 px forma; tor ekranda logotip forma ustida.
  */
 export function AuthShell({ topRight, children }: { topRight?: ReactNode; children: ReactNode }) {
@@ -44,7 +55,7 @@ export function AuthShell({ topRight, children }: { topRight?: ReactNode; childr
           />
         ))}
         <div className="relative">
-          <Logo inverted />
+          <BrandMark inverted />
         </div>
         <div className="relative flex flex-1 flex-col justify-center">
           <div className="flex max-w-[420px] flex-col">
@@ -65,7 +76,7 @@ export function AuthShell({ topRight, children }: { topRight?: ReactNode; childr
           </div>
         </div>
         <div className="relative flex items-center gap-[8px] text-caption text-sidebar-text/75">
-          <span>© 2026 Medix Group</span>
+          <span>© 2026 100+</span>
           <span aria-hidden>·</span>
           <span>v1.0</span>
         </div>
@@ -74,7 +85,7 @@ export function AuthShell({ topRight, children }: { topRight?: ReactNode; childr
         {topRight ? <div className="absolute top-[32px] right-[32px]">{topRight}</div> : null}
         <div className="my-auto flex w-[380px] max-w-full flex-col">
           <div className="mb-[40px] flex justify-center lg:hidden">
-            <Logo />
+            <BrandMark />
           </div>
           {children}
         </div>

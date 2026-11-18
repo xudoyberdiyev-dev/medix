@@ -7,7 +7,7 @@
 </head>
 <body>
 <x-dc>
-<helmet><script src="medix-data.js"></script></helmet>
+<helmet><script src="yuzplus-data.js"></script></helmet>
 <div style="display:flex;flex-direction:column;min-width:0;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
 <sc-if value="{{ isList }}" hint-placeholder-val="{{ true }}">
 <div data-screen-label="Buyurtmalar" style="display:flex;flex-direction:column;gap:16px;min-width:0">
@@ -57,10 +57,10 @@ const OPENS = ['draft', 'pending'];
 const VIEWS = [['all', null], ['drafts', ['draft']], ['pending', ['pending']], ['qWait', o => o.status === 'queued' && !o.tm], ['qTime', o => o.status === 'queued' && !!o.tm], ['picking', ['picking']], ['marking', ['marking']], ['checking', ['checking']], ['docs', ['docs']], ['loading', ['loading', 'ready']], ['shipped', ['shipped']], ['delivered', ['delivered']], ['closed', ['cancelled', 'rejected']]];
 const inV = (f, o) => !f || (typeof f === 'function' ? f(o) : f.includes(o.status));
 class Component extends DCLogic {
-  state = { pickAdd: null, view: 'list', cardId: null, doc: null, entryDemo: null, listEmpty: false, tab: 'all', late: false, fPay: [], q: '', fCust: [], fStatus: [], fDel: [], fRegion: [], fOp: [], date: { from: null, to: null }, sort: null, page: 1, per: 20, sel: {}, hl: null, ready: !!window.MedixData };
-  get D() { return window.MedixData; }
+  state = { pickAdd: null, view: 'list', cardId: null, doc: null, entryDemo: null, listEmpty: false, tab: 'all', late: false, fPay: [], q: '', fCust: [], fStatus: [], fDel: [], fRegion: [], fOp: [], date: { from: null, to: null }, sort: null, page: 1, per: 20, sel: {}, hl: null, ready: !!window.YuzplusData };
+  get D() { return window.YuzplusData; }
   get L() { return this.props.dict || {}; }
-  applyUrl() { const D = window.MedixData, u = D && D.store.urlF; if (!u || u.page !== 'orders' || u.n === this._un) return; this._un = u.n; const P = u.params || {}; if ('pick' in P) return; const o = P.open ? D.store.orders.find(x => x.no === P.open) : null; if (o) return this.setState({ view: 'card', cardId: o.id }); const LEG = { qWait: 'queued', qTime: 'queued', closed: 'cancelled', ready: 'loading' }, tb = P.tab ? (LEG[P.tab] || P.tab) : P.status ? (LEG[P.status] || P.status) : 'all'; this.setState({ view: 'list', late: P.late === '1', fPay: [], tab: tb === 'all' || (D.ST_ALL || []).includes(tb) ? tb : 'all', q: '', fCust: [], fDel: [], fRegion: [], date: P.date ? { from: P.date, to: P.date } : { from: null, to: null }, page: 1, fStatus: [], fOp: P.op ? [P.op] : [] }); }
+  applyUrl() { const D = window.YuzplusData, u = D && D.store.urlF; if (!u || u.page !== 'orders' || u.n === this._un) return; this._un = u.n; const P = u.params || {}; if ('pick' in P) return; const o = P.open ? D.store.orders.find(x => x.no === P.open) : null; if (o) return this.setState({ view: 'card', cardId: o.id }); const LEG = { qWait: 'queued', qTime: 'queued', closed: 'cancelled', ready: 'loading' }, tb = P.tab ? (LEG[P.tab] || P.tab) : P.status ? (LEG[P.status] || P.status) : 'all'; this.setState({ view: 'list', late: P.late === '1', fPay: [], tab: tb === 'all' || (D.ST_ALL || []).includes(tb) ? tb : 'all', q: '', fCust: [], fDel: [], fRegion: [], date: P.date ? { from: P.date, to: P.date } : { from: null, to: null }, page: 1, fStatus: [], fOp: P.op ? [P.op] : [] }); }
   componentDidMount() {
     this._url = setInterval(() => this.applyUrl(), 250);
     if (!this.D) this._p = setInterval(() => { if (this.D) { clearInterval(this._p); this.setState({ ready: true }); } }, 60);
@@ -107,7 +107,7 @@ class Component extends DCLogic {
     if (tm.run) return tm.left < 0 ? { sub: fill(L.q9_late, { n: -tm.left }), subColor: '#B91C1C' } : { sub: fill(L.q9_left, { n: tm.left }), subColor: '#5B6B6A' };
     return tm.diff < 0 ? { sub: fill(L.q9_resLate, { d: -tm.diff }), subColor: '#B91C1C' } : { sub: tm.diff > 0 ? fill(L.q9_resOk, { s: tm.spent, d: tm.diff }) : fill(L.q9_resOnTime, { s: tm.spent }), subColor: '#15803D' }; }
   printSel() { const D = this.D, L = this.L, nos = Object.keys(this.state.sel).map(id => D.store.orders.find(o => String(o.id) === String(id))).filter(o => o && ['queued', 'picking'].includes(o.status)).map(o => o.no);
-    if (!nos.length) return this.toast(L.q9_printNone); window.medixPrint && window.medixPrint(nos.length === 1 ? 'pick' : 'picks', nos[0], { q: nos }); }
+    if (!nos.length) return this.toast(L.q9_printNone); window.yuzplusPrint && window.yuzplusPrint(nos.length === 1 ? 'pick' : 'picks', nos[0], { q: nos }); }
   renderVals() {
     const L = this.L, s = this.state, D = this.D, p = this.props, narrow = !!p.narrow;
     const common = { L, role: p.role, branch: p.branch, userName: p.userName, narrow, toastFn: t => this.toast(t), dirtyFn: d => p.onDirty && p.onDirty(d),

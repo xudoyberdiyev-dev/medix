@@ -46,14 +46,14 @@ const pD = s => { const a = String(s || '').split('.'); return a.length === 3 ? 
 class Component extends DCLogic {
   state = { fin: {}, tried: false };
   get L() { return this.props.dict || {}; }
-  order() { const D = window.MedixData; return D ? D.store.orders.find(o => o.id === this.props.orderId) : null; }
-  lines(o) { const D = window.MedixData; return (((o.pk || D.ensurePk(o)) || {}).lines || []).map((pl, k) => ({ pl, k, p: D.prodById(pl.pid) || {}, alts: D.pickAlts(o, pl.pid) })).filter(x => !x.pl.locked); }
+  order() { const D = window.YuzplusData; return D ? D.store.orders.find(o => o.id === this.props.orderId) : null; }
+  lines(o) { const D = window.YuzplusData; return (((o.pk || D.ensurePk(o)) || {}).lines || []).map((pl, k) => ({ pl, k, p: D.prodById(pl.pid) || {}, alts: D.pickAlts(o, pl.pid) })).filter(x => !x.pl.locked); }
   close() { this.props.onClose && this.props.onClose(); }
-  confirm(o) { const D = window.MedixData, s = this.state, ch = {}; let bad = false;
+  confirm(o) { const D = window.YuzplusData, s = this.state, ch = {}; let bad = false;
     this.lines(o).forEach(({ pl, k, alts }) => { const f = s.fin[k]; if (!f || f.mode !== 'other') return; const a = alts.find(x => x.batch === f.batch); if (!a || a.free < pl.qty) { bad = true; return; } ch[k] = { batch: f.batch, reason: (f.reason || '').trim() }; });
     if (bad) return this.setState({ tried: true });
     const n = D.finishPick(o.id, this.props.userName || '', ch); this.props.onDone && this.props.onDone(n); }
-  renderVals() { const L = this.L, s = this.state, D = window.MedixData, o = this.order(), narrow = !!this.props.narrow, base = { L, pad: narrow ? '12px' : '24px', px: narrow ? '16px' : '24px', stop: e => e.stopPropagation(), close: () => this.close() };
+  renderVals() { const L = this.L, s = this.state, D = window.YuzplusData, o = this.order(), narrow = !!this.props.narrow, base = { L, pad: narrow ? '12px' : '24px', px: narrow ? '16px' : '24px', stop: e => e.stopPropagation(), close: () => this.close() };
     if (!D || !o || o.status !== 'picking') return { ...base, title: '', lines: [], confirm: () => {} };
     const set = (k, patch) => this.setState(x => ({ fin: { ...x.fin, [k]: { ...(x.fin[k] || { mode: 'yes', batch: '', reason: '' }), ...patch } } }));
     const lines = this.lines(o).map(({ pl, k, p, alts }) => { const f = s.fin[k] || { mode: 'yes', batch: '', reason: '' }, other = f.mode === 'other', f0 = pl.plan[0];

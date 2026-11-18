@@ -390,7 +390,7 @@ export function TransfersPage() {
           <button
             type="button"
             onClick={() => reset({ view: f.view })}
-            className="h-control-sm px-1.5 text-[13px] font-medium text-primary-button hover:underline"
+            className="h-control-sm px-1.5 text-[13px] font-medium text-link hover:underline"
           >
             {t("clearFilters")}
           </button>

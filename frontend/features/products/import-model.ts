@@ -31,7 +31,7 @@ export interface ImportField<K extends string = FieldKey> {
   syn: string[];
 }
 
-/** Prototip `BQ_FIELDS.products` (tartib va sinonimlar) + MEDIX shablonidagi qoʻshimcha ustunlar. */
+/** Prototip `BQ_FIELDS.products` (tartib va sinonimlar) + 100+ shablonidagi qoʻshimcha ustunlar. */
 export const PRODUCT_FIELDS: ImportField[] = [
   { key: "code", req: false, syn: ["mahsulotkodi", "kodtovara", "kod", "code"] },
   { key: "name", req: true, syn: ["mahsulotnomi", "naimenovanie", "nomi", "name", "tovar"] },

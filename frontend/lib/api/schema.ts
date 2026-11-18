@@ -250,6 +250,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/auth/login-info": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Kirish sahifasi maʼlumoti (ommaviy)
+         * @description Yordam telefoni, ish vaqti va faol rollar soni.
+         */
+        get: operations["get_31"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/auth/me": {
         parameters: {
             query?: never;
@@ -312,7 +332,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Solishtirish oynasi: sanadagi MEDIX qoldigʻi, oxirgi solishtirish, hali belgilanmagan harakatlar */
+        /** Solishtirish oynasi: sanadagi 100+ qoldigʻi, oxirgi solishtirish, hali belgilanmagan harakatlar */
         get: operations["preview_1"];
         put?: never;
         post?: never;
@@ -978,6 +998,26 @@ export interface paths {
         /** Kompaniya logotipi (PNG yoki SVG); yo'q bo'lsa — 404 */
         get: operations["logo"];
         put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company/support": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Yordam telefoni va ish vaqti
+         * @description Kirish sahifasi pastida ko'rsatiladi (O20). Audit: company.update.
+         */
+        put: operations["saveSupport"];
         post?: never;
         delete?: never;
         options?: never;
@@ -5711,6 +5751,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/profile/theme": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Interfeys mavzusini saqlash
+         * @description Yorug'/qorong'i/tizim bo'yicha — har qurilmada bir xil bo'lishi uchun (O24).
+         */
+        put: operations["setTheme"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/receipts": {
         parameters: {
             query?: never;
@@ -9866,12 +9926,18 @@ export interface components {
             /** Format: int64 */
             logoVersion?: number;
             name: string;
+            supportHours?: string;
+            supportPhone?: string;
             /** Format: int32 */
             warehouses: number;
         };
         CompanyRequest: {
             defaultLocale?: string;
             name: string;
+        };
+        CompanySupportRequest: {
+            supportHours?: string;
+            supportPhone?: string;
         };
         CompareDetail: {
             lines: components["schemas"]["CompareLine"][];
@@ -11863,6 +11929,12 @@ export interface components {
             /** @description OK — kirdi, FAILED — notoʻgʻri parol, BLOCKED — bloklangan */
             result: string;
         };
+        LoginInfo: {
+            /** Format: int32 */
+            roles: number;
+            supportHours?: string;
+            supportPhone?: string;
+        };
         LoginRequest: {
             login: string;
             password: string;
@@ -12269,7 +12341,7 @@ export interface components {
             warehouse: string;
         };
         NavBadgesView: {
-            /** @description Tashkilot nomi (sidebar sarlavhasida, MEDIX ostida) */
+            /** @description Tashkilot nomi (sidebar sarlavhasida, 100+ ostida) */
             company?: string;
             expiry?: components["schemas"]["Badge"];
             /**
@@ -14082,6 +14154,11 @@ export interface components {
             position?: string;
             roleCode: string;
             roleName: string;
+            /**
+             * @description Interfeys mavzusi: light, dark yoki system (O24)
+             * @enum {string}
+             */
+            theme: "light" | "dark" | "system";
         };
         PurchaserHomeView: {
             bonus: components["schemas"]["BonusInfo"];
@@ -14582,9 +14659,9 @@ export interface components {
             lastBankBalance?: string;
             /** Format: date */
             lastDate?: string;
-            medixBalance: string;
             unmatched: components["schemas"]["Move"][];
             unmatchedTotal: string;
+            yuzplusBalance: string;
         };
         ReconRequest: {
             /** Format: int64 */
@@ -14639,12 +14716,12 @@ export interface components {
             difference: string;
             /** Format: int64 */
             id: number;
-            medixBalance: string;
             /** Format: int32 */
             moves: number;
             note?: string;
             /** Format: date */
             statementDate: string;
+            yuzplusBalance: string;
         };
         Ref: {
             /** Format: int64 */
@@ -15864,6 +15941,10 @@ export interface components {
             supplierPaymentDays?: number;
             /** Format: int64 */
             supplyEmployeeId?: number;
+        };
+        ThemeRequest: {
+            /** @enum {string} */
+            theme: "light" | "dark" | "system";
         };
         ThreadDetail: {
             hasMore: boolean;
@@ -17245,6 +17326,26 @@ export interface operations {
             };
         };
     };
+    get_31: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoginInfo"];
+                };
+            };
+        };
+    };
     me: {
         parameters: {
             query?: never;
@@ -18304,6 +18405,30 @@ export interface operations {
                 };
                 content: {
                     "application/json": string;
+                };
+            };
+        };
+    };
+    saveSupport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CompanySupportRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CompanyOverview"];
                 };
             };
         };
@@ -25077,6 +25202,28 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["EndSessionsResult"];
                 };
+            };
+        };
+    };
+    setTheme: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ThemeRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

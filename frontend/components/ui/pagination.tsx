@@ -88,7 +88,7 @@ export function Pagination({ page, pageSize, total, onPageChange, onPageSizeChan
                 onClick={() => onPageChange(item)}
                 className={cn(
                   "tabular h-[30px] min-w-[30px] rounded-control px-1.5 transition-colors duration-150 ease-out",
-                  item === page ? "bg-primary-soft font-semibold text-primary-button" : "text-text-primary hover:bg-background",
+                  item === page ? "bg-primary-soft font-semibold text-link" : "text-text-primary hover:bg-background",
                 )}
               >
                 {item}

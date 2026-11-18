@@ -1,0 +1,125 @@
+package uz.yuzplus.sales.order;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import org.springframework.jdbc.core.simple.JdbcClient;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import uz.yuzplus.sales.order.OrderModels.OrderDetail;
+import uz.yuzplus.sales.order.OrderModels.OrderLine;
+import uz.yuzplus.sales.order.OrderModels.PaymentType;
+import uz.yuzplus.shared.error.YuzplusException;
+import uz.yuzplus.shared.pdf.PdfDocument;
+import uz.yuzplus.shared.pdf.PdfFormat;
+import uz.yuzplus.shared.pdf.PdfRenderer;
+import uz.yuzplus.shared.pdf.PrintSettings;
+import uz.yuzplus.shared.security.Actor;
+
+/** Nakladnoy — server PDF (frontend {@code /print/waybill} bilan bir xil shakl). */
+@Service
+class OrderWaybillPdf {
+
+    private static final Map<PaymentType, String> PAYMENT = Map.of(
+            PaymentType.TRANSFER, "Perechisleniye",
+            PaymentType.CASH, "Naqd",
+            PaymentType.ONLINE, "Online");
+
+    private final Orders orders;
+    private final PdfRenderer pdf;
+    private final JdbcClient jdbc;
+    private final PrintSettings print;
+
+    OrderWaybillPdf(Orders orders, PdfRenderer pdf, JdbcClient jdbc, PrintSettings print) {
+        this.orders = orders;
+        this.pdf = pdf;
+        this.jdbc = jdbc;
+        this.print = print;
+    }
+
+    /** Nakladnoy PDF; nakladnoy hali berilmagan bo'lsa — 409. Narxlar — Sozlamalar → Chop etish → yuk xati varianti. */
+    @Transactional(readOnly = true)
+    PdfDocument render(Actor actor, long id) {
+        OrderDetail o = load(actor, id);
+        String number = waybill(o);
+        Map<String, Object> seller = jdbc.sql("SELECT legal_name, tin, address, phone FROM branch WHERE id = :b")
+                .param("b", o.branchId()).query().singleRow();
+        boolean withPrice = print.waybillWithPrice() && o.lines().stream().anyMatch(l -> l.price() != null);
+        long qty = o.lines().stream().mapToLong(OrderLine::qty).sum();
+
+        Map<String, Object> vars = new HashMap<>();
+        vars.put("number", number);
+        vars.put("orderNumber", o.number());
+        vars.put("date", PdfFormat.date(o.deliveryDate() != null ? o.deliveryDate() : o.orderDate()));
+        vars.put("sellerName", seller.get("legal_name"));
+        vars.put("sellerTin", seller.get("tin"));
+        vars.put("sellerContacts", contacts((String) seller.get("address"), (String) seller.get("phone")));
+        vars.put("warehouse", o.warehouse());
+        vars.put("customer", o.customer());
+        vars.put("customerTin", PdfFormat.orDash(o.customerTin()));
+        vars.put("address", PdfFormat.orDash(o.address()));
+        vars.put("payment", PAYMENT.get(o.paymentType()) + (o.documents().tripNumber() == null ? "" : " · Reys " + o.documents().tripNumber()));
+        vars.put("withPrice", withPrice);
+        Map<Long, String> sold = soldBatches(jdbc, o.id());
+        vars.put("lines", o.lines().stream().map(l -> row(l, sold)).toList());
+        vars.put("totalQty", PdfFormat.qty(qty));
+        vars.put("total", PdfFormat.money(o.total()));
+        vars.put("note", o.note());
+        vars.put("reprint", print.registerPrint("NK", number, actor.employeeId()));
+        return new PdfDocument(number, pdf.render("waybill", vars));
+    }
+
+    private OrderDetail load(Actor actor, long id) {
+        return orders.find(id, actor).orElseThrow(() -> YuzplusException.notFound("error.notFound"));
+    }
+
+    private static String waybill(OrderDetail o) {
+        String n = o.documents().waybillNumber();
+        if (n == null) {
+            throw YuzplusException.conflict("order.waybillNotIssued");
+        }
+        return n;
+    }
+
+    /**
+     * Sotuv yozilgandan keyin zahira yechiladi — partiyalar sotuv qatorlaridan (buyurtma qatori → «partiya · muddat — soni»).
+     * Bekor qilingan sotuv hisobga olinmaydi.
+     */
+    static Map<Long, String> soldBatches(JdbcClient jdbc, long orderId) {
+        record Sold(long lineId, String batch, java.time.LocalDate expiry, int qty) {}
+        return jdbc.sql("""
+                SELECT sl.order_line_id, b.number, b.expiry_date, sl.qty
+                FROM sale_line sl JOIN sale s ON s.id = sl.sale_id JOIN batch b ON b.id = sl.batch_id
+                WHERE s.order_id = :o AND s.status = 'POSTED' ORDER BY b.expiry_date, sl.id""")
+                .param("o", orderId)
+                .query((rs, n) -> new Sold(rs.getLong(1), rs.getString(2), rs.getDate(3).toLocalDate(), rs.getInt(4)))
+                .list()
+                .stream()
+                .collect(Collectors.groupingBy(Sold::lineId, java.util.LinkedHashMap::new,
+                        Collectors.mapping(x -> x.batch() + " · " + PdfFormat.date(x.expiry()) + " — " + PdfFormat.qty(x.qty()),
+                                Collectors.joining("; "))));
+    }
+
+    static Map<String, Object> row(OrderLine l, Map<Long, String> sold) {
+        String batches = l.reserved().isEmpty() ? sold.getOrDefault(l.id(), PdfFormat.DASH)
+                : l.reserved().stream()
+                        .map(r -> r.batch() + " · " + PdfFormat.date(r.expiryDate()) + " — " + PdfFormat.qty(r.qty()))
+                        .collect(Collectors.joining("; "));
+        Map<String, Object> m = new HashMap<>();
+        m.put("code", l.productCode());
+        m.put("name", l.productName());
+        m.put("manufacturer", l.manufacturer());
+        m.put("batches", batches);
+        m.put("qty", PdfFormat.qty(l.qty()));
+        m.put("price", PdfFormat.money(l.price()));
+        m.put("amount", PdfFormat.money(l.amount()));
+        return m;
+    }
+
+    private static String contacts(String address, String phone) {
+        String s = List.of(address == null ? "" : address, phone == null ? "" : phone).stream()
+                .filter(x -> !x.isBlank()).collect(Collectors.joining(" · "));
+        return PdfFormat.orDash(s);
+    }
+}

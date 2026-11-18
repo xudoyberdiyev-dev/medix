@@ -28,7 +28,7 @@ describe("toCyrillic", () => {
     ["Shtrix-kod GS1", "Штрих-код GS1"],
     ["YB qarzi", "ЕБ қарзи"],
     ["U oʻchirilgan", "У ўчирилган"],
-    ["MEDIX tizimi, Ctrl K", "MEDIX тизими, Ctrl K"],
+    ["100+ tizimi", "100+ тизими"],
     ["Excelʼga yuklash", "Excelʼга юклаш"],
     ["Saplaynʼda", "Саплайнъда"],
     ["Naqd, Terminal, Online", "Нақд, Терминал, Онлайн"],

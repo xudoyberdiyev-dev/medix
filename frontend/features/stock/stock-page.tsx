@@ -262,7 +262,7 @@ export function StockPage({
               <Checkbox label={t("sellableOnly")} checked={sellableOnly} onChange={(v) => apply({ sellableOnly: v })} />
               <div className="ml-auto">
                 <SavedViews
-                  storageKey={`medix-${mode}-views`}
+                  storageKey={`yuzplus-${mode}-views`}
                   query={params.toString()}
                   hidden={[]}
                   onApply={(v) => {

@@ -1,4 +1,4 @@
-# MEDIX — PostgreSQL 18 + pgBackRest (SPEC 14: kunlik to'liq nusxa va WAL arxivi).
+# 100+ — PostgreSQL 18 + pgBackRest (SPEC 14: kunlik to'liq nusxa va WAL arxivi).
 # Rasmiy image'da PGDG apt manbasi bor — pgbackrest shundan o'rnatiladi.
 FROM postgres:18
 RUN apt-get update \

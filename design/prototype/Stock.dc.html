@@ -7,7 +7,7 @@
 </head>
 <body>
 <x-dc>
-<helmet><script src="medix-data.js"></script></helmet>
+<helmet><script src="yuzplus-data.js"></script></helmet>
 <div data-screen-label="Qoldiqlar" style="display:flex;flex-direction:column;gap:16px;min-width:0;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
   <dc-import name="PageHeader" title="{{ L.n_stock }}" count="{{ countLabel }}" info="{{ L.q_info }}" more="{{ hdrMore }}" more-label="{{ L.p_more }}" hint-size="100%,34px"></dc-import>
   <div style="display:grid;grid-template-columns:repeat({{ kpiCols }},minmax(0,1fr));gap:12px">
@@ -106,22 +106,22 @@ const UZ = { cCode: 'Kod', cName: 'Mahsulot', cMaker: 'Ishlab chiqaruvchi', cCat
   search: 'Kod, nom, shtrix-kod, partiya, kirim raqami yoki yetkazib beruvchi', expDone: n => `${n} ta qator Excel faylga yuklandi`, vProduct: "Mahsulot bo'yicha", vBatch: "Partiya bo'yicha", vWh: 'Ombor daraxti', kidsHead: 'Partiya × zona', yes: 'Ha', closedTip: "Qabul, Karantin va muddati o'tgan" };
 const PCOLS = [['code', 104], ['name', 260], ['maker', 150], ['cat', 160], ['country', 120], ['unit', 84], ['total', 100, 'r'], ['res', 90, 'r'], ['avail', 100, 'r'], ['closed', 100, 'r'], ['ship', 120, 'r'], ['batches', 100, 'r'], ['near', 196], ['costSum', 160, 'r', 1], ['saleSum', 170, 'r'], ['lastIn', 116], ['supplyBy', 170], ['flags', 120]];
 const BCOLS = [['code', 104], ['name', 240], ['maker', 150], ['branch', 80], ['wh', 170], ['zone', 160], ['batch', 130], ['mfg', 130], ['exp', 190], ['qty', 90, 'r'], ['res', 80, 'r'], ['avail', 90, 'r'], ['cost', 110, 'r', 1], ['costSum', 150, 'r', 1], ['saleSum', 160, 'r'], ['doc', 160], ['docDate', 116], ['supplier', 200], ['flags', 110]];
-const PKEY = 'medix-stock-pcols-v1', BKEY = 'medix-stock-bcols-v1';
+const PKEY = 'yuzplus-stock-pcols-v1', BKEY = 'yuzplus-stock-bcols-v1';
 const loadCols = (key, def) => { const ks = def.map(c => c[0]); try { const v = JSON.parse(localStorage.getItem(key) || 'null'); if (Array.isArray(v) && v.length) { const k2 = v.filter(c => ks.includes(c.key)); ks.forEach(k => { if (!k2.some(c => c.key === k)) k2.push({ key: k, visible: true }); }); return k2; } } catch (e) {} return ks.map(k => ({ key: k, visible: true })); };
 const saveCols = (key, c) => { try { localStorage.setItem(key, JSON.stringify(c)); } catch (e) {} };
 const F0 = { q: '', fWh: [], fZone: [], fExp: [], fStock: [], fMaker: [], fCat: [], fCountry: [], fSupply: [], fSupplier: [], fFlags: [], zoneSel: null, fTransit: false, page: 1 };
 const arr = v => v ? String(v).split(',').map(x => x.trim()).filter(Boolean) : [];
 const expMap = v => [...new Set(arr(v).flatMap(x => x === 'expired' || EB.some(e => e[0] === x) ? [x] : /^\d+$/.test(x) ? EB.filter(e => e[1] <= +x).map(e => e[0]) : []))];
 class Component extends DCLogic {
-  state = { ready: !!window.MedixData, view: 'product', ...F0, open: {}, tOpen: {}, sortP: { key: 'name', dir: 'asc' }, sortB: { key: 'exp', dir: 'asc' }, per: 25, pcols: loadCols(PKEY, PCOLS), bcols: loadCols(BKEY, BCOLS), panel: null, demo: 'normal' };
-  applyUrl() { const D = window.MedixData, u = D && D.store.urlF; if (!u || u.page !== 'stock' || u.n === this._un) return; this._un = u.n; const P = u.params || {};
+  state = { ready: !!window.YuzplusData, view: 'product', ...F0, open: {}, tOpen: {}, sortP: { key: 'name', dir: 'asc' }, sortB: { key: 'exp', dir: 'asc' }, per: 25, pcols: loadCols(PKEY, PCOLS), bcols: loadCols(BKEY, BCOLS), panel: null, demo: 'normal' };
+  applyUrl() { const D = window.YuzplusData, u = D && D.store.urlF; if (!u || u.page !== 'stock' || u.n === this._un) return; this._un = u.n; const P = u.params || {};
     const v = ['product', 'batch', 'wh'].includes(P.view) ? { view: P.view } : {};
     this.setState({ ...F0, ...v, open: {}, q: P.q || '', fExp: expMap(P.exp), fZone: arr(P.zone), fWh: arr(P.wh), fStock: arr(P.stock), fMaker: arr(P.maker), fCat: arr(P.cat), fCountry: arr(P.country), fSupply: arr(P.supply), fSupplier: arr(P.supplier), fFlags: arr(P.flags) }); }
   componentDidMount() {
     this._url = setInterval(() => this.applyUrl(), 250);
-    if (!window.MedixData) this._poll = setInterval(() => { if (window.MedixData) { clearInterval(this._poll); this.setState({ ready: true }); } }, 60);
+    if (!window.YuzplusData) this._poll = setInterval(() => { if (window.YuzplusData) { clearInterval(this._poll); this.setState({ ready: true }); } }, 60);
     if (this.props.demo) this.applyDemo(this.props.demo.k);
-    this._nr = setInterval(() => { const D = window.MedixData, r = D && D.store.navReq; if (r && r.page === 'stock') { D.store.navReq = null; if (r.panel) this.setState({ panel: r.panel }); } }, 300);
+    this._nr = setInterval(() => { const D = window.YuzplusData, r = D && D.store.navReq; if (r && r.page === 'stock') { D.store.navReq = null; if (r.panel) this.setState({ panel: r.panel }); } }, 300);
   }
   componentWillUnmount() { clearInterval(this._url); clearInterval(this._nr); clearInterval(this._poll); clearTimeout(this._rt); }
   componentDidUpdate(pp) { if (this.props.demo && (!pp.demo || pp.demo.n !== this.props.demo.n)) this.applyDemo(this.props.demo.k); }
@@ -133,7 +133,7 @@ class Component extends DCLogic {
     this.setState({ ...base, demo: k === 'empty' || k === 'error' ? k : 'normal' });
   }
   renderVals() {
-    const s = this.state, p = this.props, L = p.dict || {}, D = window.MedixData, T = UZ;
+    const s = this.state, p = this.props, L = p.dict || {}, D = window.YuzplusData, T = UZ;
     if (!D) return { L, kpis: [], views: [], showProduct: false, showBatch: false, showWh: false };
     const br = p.branch && p.branch !== 'ALL' ? p.branch : null, all = !br, canCost = D.can(p.role || 'director', 'special.cost');
     const loading = s.demo === 'loading', err = s.demo === 'error';

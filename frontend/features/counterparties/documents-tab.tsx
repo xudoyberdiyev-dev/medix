@@ -62,7 +62,7 @@ export function DocumentsTab({
         </span>
         <Link
           href={sectionHref(section, customers)}
-          className="flex items-center gap-1 text-[12.5px] font-medium text-primary-button hover:underline"
+          className="flex items-center gap-1 text-[12.5px] font-medium text-link hover:underline"
         >
           {t("goPage")}
           <ArrowUpRight size={14} strokeWidth={1.5} aria-hidden />
@@ -95,7 +95,7 @@ export function DocumentsTab({
               <div key={r.id} className={`${GRID} min-h-11 border-b border-border text-[13px] last:border-b-0`}>
                 <span className="px-4">
                   {href ? (
-                    <Link href={href} className="font-mono text-[12.5px] text-primary-button hover:underline">
+                    <Link href={href} className="font-mono text-[12.5px] text-link hover:underline">
                       {no}
                     </Link>
                   ) : (

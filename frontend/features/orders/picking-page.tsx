@@ -337,7 +337,7 @@ function PlanLine({ line, t }: { line: PlanLineData; t: OrdersT }) {
         <span className="font-semibold whitespace-nowrap tabular-nums">{t("picking.qty", { qty: formatQuantity(line.qty) })}</span>
       </div>
       {line.location ? (
-        <div className="mt-1 flex items-center gap-1.5 text-table font-medium text-primary-button">
+        <div className="mt-1 flex items-center gap-1.5 text-table font-medium text-link">
           <Icon icon={MapPin} size="sm" />
           <span>
             {t("picking.location")}: {line.location}
@@ -356,7 +356,7 @@ function PlanLine({ line, t }: { line: PlanLineData; t: OrdersT }) {
   );
 }
 
-const BY_PLACE_KEY = "medix-pick-by-place";
+const BY_PLACE_KEY = "yuzplus-pick-by-place";
 
 /** «Joy boʻyicha saralash» — yigʻuvchining shaxsiy tanlovi (brauzerda). */
 function readByPlace(): boolean {
@@ -450,7 +450,7 @@ function ActivePick({ item, now }: { item: QueueItem; now: Date }) {
           aria-live="off"
           className={cn(
             "mt-4 flex flex-col items-center rounded-card px-4 py-5 text-center",
-            left.over ? "bg-danger-bg text-danger" : "bg-primary-soft text-primary-button",
+            left.over ? "bg-danger-bg text-danger" : "bg-primary-soft text-link",
           )}
         >
           <span className="font-mono text-[44px] leading-[52px] font-semibold tabular-nums">{left.text}</span>

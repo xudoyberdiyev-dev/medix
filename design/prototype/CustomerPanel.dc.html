@@ -7,7 +7,7 @@
 </head>
 <body>
 <x-dc>
-<helmet><script src="medix-data.js"></script></helmet>
+<helmet><script src="yuzplus-data.js"></script></helmet>
 <div style="font-family:Inter,system-ui,sans-serif;font-size:13px;line-height:18px;color:#172B2A;font-variant-numeric:tabular-nums">
 <sc-if value="{{ isEmpty }}">
   <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 1px 2px rgba(18,60,58,0.04)">
@@ -112,10 +112,10 @@ const fM = n => { const [a, b] = (Math.round(Math.abs(n) * 100) / 100).toFixed(2
 const pD = s => { const [d, m, y] = String(s).split('.').map(Number); return Date.UTC(y, m - 1, d); };
 const fill = (t, o) => String(t || '').replace(/\{(\w+)\}/g, (_, k) => o[k] != null ? o[k] : '');
 class Component extends DCLogic {
-  componentDidMount() { if (!window.MedixData) this._p = setInterval(() => { if (window.MedixData) { clearInterval(this._p); this.forceUpdate(); } }, 60); }
+  componentDidMount() { if (!window.YuzplusData) this._p = setInterval(() => { if (window.YuzplusData) { clearInterval(this._p); this.forceUpdate(); } }, 60); }
   componentWillUnmount() { clearInterval(this._p); }
   renderVals() {
-    const p = this.props, L = p.dict || {}, D = window.MedixData, c0 = D && p.custId ? (D.custAt ? D.custAt(p.custId, p.branch) : D.custById(p.custId)) : null, ds0 = c0 && D.debtOf ? D.debtOf('mt', c0.id, p.branch || c0.at || undefined) : null, c = c0 ? { ...c0, debt: ds0 ? ds0.debt : 0, overdue: ds0 ? ds0.overdue : 0, overdueDays: ds0 ? ds0.overdueDays : 0 } : null;
+    const p = this.props, L = p.dict || {}, D = window.YuzplusData, c0 = D && p.custId ? (D.custAt ? D.custAt(p.custId, p.branch) : D.custById(p.custId)) : null, ds0 = c0 && D.debtOf ? D.debtOf('mt', c0.id, p.branch || c0.at || undefined) : null, c = c0 ? { ...c0, debt: ds0 ? ds0.debt : 0, overdue: ds0 ? ds0.overdue : 0, overdueDays: ds0 ? ds0.overdueDays : 0 } : null;
     const mode = !c ? 'empty' : p.compact ? 'compact' : 'full';
     const base = { L, isEmpty: mode === 'empty', isCompact: mode === 'compact', isFull: mode === 'full', emptyH: p.compact ? 120 : 280, c: c || {}, bar: {}, lic: {}, recent: [], top: [], hasClose: !!p.onClose, hasAdd: !!p.onAdd, onClose: () => p.onClose && p.onClose(), onDetails: () => p.onDetails && p.onDetails() };
     if (!c) return base;
@@ -131,7 +131,7 @@ class Component extends DCLogic {
     const fallback = [11, 2, 4, 1, 21, 8, 5, 3].filter(id => D.prodById(id));
     const ids = [...Object.keys(agg).map(Number).sort((a, b) => agg[b] - agg[a]), ...fallback].filter((v, i, a) => a.indexOf(v) === i).filter(id => { const x = D.prodById(id); return x && x.active; }).slice(0, 6);
     const over = sum > c.limit;
-    return { ...base, openCard: () => window.MedixData && window.MedixData.openParty && window.MedixData.openParty('mt', c.id), lic, isBlocked: !!c.blocked, telHref: 'tel:' + c.phone.replace(/\s/g, ''),
+    return { ...base, openCard: () => window.YuzplusData && window.YuzplusData.openParty && window.YuzplusData.openParty('mt', c.id), lic, isBlocked: !!c.blocked, telHref: 'tel:' + c.phone.replace(/\s/g, ''),
       bar: { debt: gray / scale * 100, order: teal / scale * 100, over: red / scale * 100, limit: c.limit / scale * 100 },
       limitText: fM(c.limit), debtText: fM(cDebt), openDebt: () => D.openDebt && D.openDebt({ kind: 'mt', party: c.id, branch: c.at || p.branch }), orderText: fM(order), debtLimit: `${fN(sum)} / ${fN(c.limit)}`,
       hasOverdue: c.overdue > 0, overdueText: c.overdue > 0 ? `${fM(c.overdue)} · ${fill(L.b_days, { n: c.overdueDays })}` : fM(0), overdueColor: c.overdue > 0 ? '#B91C1C' : '#172B2A', overdueWeight: c.overdue > 0 ? 600 : 400,

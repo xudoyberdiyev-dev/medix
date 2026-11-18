@@ -7,7 +7,7 @@
 </head>
 <body>
 <x-dc>
-<helmet><script src="medix-data.js"></script></helmet>
+<helmet><script src="yuzplus-data.js"></script></helmet>
 <div style="display:flex;flex-direction:column;min-width:0;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
 <sc-if value="{{ isList }}" hint-placeholder-val="{{ true }}">
 <div data-screen-label="Inventarizatsiya" style="display:flex;flex-direction:column;gap:16px;min-width:0">
@@ -61,7 +61,7 @@ const pD = s => { const m = /^(\d{2})\.(\d{2})\.(\d{4})/.exec(String(s || '')); 
 const ST = { draft: ['file-pen', '#5B6B6A', '#F8FAFA'], count: ['scan-line', '#1D4ED8', '#EFF6FF'], check: ['clipboard-list', '#B45309', '#FFFBEB'], posted: ['circle-check', '#15803D', '#F0FDF4'], cancelled: ['circle-x', '#5B6B6A', '#EEF2F4'] };
 class Component extends DCLogic {
   state = { view: 'list', tab: 'all', q: '', doc: null, cnt: null, empty: false };
-  get D() { return window.MedixData; }
+  get D() { return window.YuzplusData; }
   get L() { return this.props.dict || {}; }
   componentDidMount() {
     if (!this.D) this._p = setInterval(() => { if (this.D) { clearInterval(this._p); this.boot(); } }, 60); else this.boot();

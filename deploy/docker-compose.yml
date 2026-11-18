@@ -1,6 +1,6 @@
-# MEDIX — production (SPEC 15). Serverda: deploy/ papkasi + .env (namuna: .env.example).
+# 100+ — production (SPEC 15). Serverda: deploy/ papkasi + .env (namuna: .env.example).
 # Ishga tushirish va yangilash: docs/DEPLOY.md
-name: medix
+name: yuzplus
 
 x-logging: &logging
   driver: json-file
@@ -8,12 +8,12 @@ x-logging: &logging
 
 services:
   postgres:
-    image: ghcr.io/xudoyberdiyev-dev/medix-postgres:${MEDIX_VERSION:-latest}
+    image: ghcr.io/xudoyberdiyev-dev/yuzplus-postgres:${YUZPLUS_VERSION:-latest}
     restart: unless-stopped
     environment:
-      POSTGRES_DB: medix
-      POSTGRES_USER: medix
-      POSTGRES_PASSWORD: ${MEDIX_DB_PASSWORD:?MEDIX_DB_PASSWORD .env da berilmagan}
+      POSTGRES_DB: yuzplus
+      POSTGRES_USER: yuzplus
+      POSTGRES_PASSWORD: ${YUZPLUS_DB_PASSWORD:?YUZPLUS_DB_PASSWORD .env da berilmagan}
       TZ: Asia/Tashkent
     command:
       - postgres
@@ -22,7 +22,7 @@ services:
       - -c
       - archive_mode=on
       - -c
-      - archive_command=pgbackrest --stanza=medix archive-push %p
+      - archive_command=pgbackrest --stanza=yuzplus archive-push %p
       - -c
       - archive_timeout=300
       - -c
@@ -42,30 +42,30 @@ services:
       - ./pgbackrest/conf.d:/etc/pgbackrest/conf.d:ro
     shm_size: 256m
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U medix -d medix"]
+      test: ["CMD-SHELL", "pg_isready -U yuzplus -d yuzplus"]
       interval: 10s
       retries: 10
     logging: *logging
 
   backend:
-    image: ghcr.io/xudoyberdiyev-dev/medix-backend:${MEDIX_VERSION:-latest}
+    image: ghcr.io/xudoyberdiyev-dev/yuzplus-backend:${YUZPLUS_VERSION:-latest}
     restart: unless-stopped
     environment:
-      MEDIX_DB_URL: jdbc:postgresql://postgres:5432/medix
-      MEDIX_DB_USER: medix
-      MEDIX_DB_PASSWORD: ${MEDIX_DB_PASSWORD}
-      MEDIX_COOKIE_SECURE: "true"
+      YUZPLUS_DB_URL: jdbc:postgresql://postgres:5432/yuzplus
+      YUZPLUS_DB_USER: yuzplus
+      YUZPLUS_DB_PASSWORD: ${YUZPLUS_DB_PASSWORD}
+      YUZPLUS_COOKIE_SECURE: "true"
       # Caddy ortida: mijoz IP (audit) va https sxemasi X-Forwarded-* dan
-      MEDIX_FORWARD_HEADERS: native
-      MEDIX_BOOTSTRAP_LOGIN: ${MEDIX_BOOTSTRAP_LOGIN:-}
-      MEDIX_BOOTSTRAP_PASSWORD: ${MEDIX_BOOTSTRAP_PASSWORD:-}
+      YUZPLUS_FORWARD_HEADERS: native
+      YUZPLUS_BOOTSTRAP_LOGIN: ${YUZPLUS_BOOTSTRAP_LOGIN:-}
+      YUZPLUS_BOOTSTRAP_PASSWORD: ${YUZPLUS_BOOTSTRAP_PASSWORD:-}
     depends_on:
       postgres: { condition: service_healthy }
-    mem_limit: ${MEDIX_BACKEND_MEMORY:-2g}
+    mem_limit: ${YUZPLUS_BACKEND_MEMORY:-2g}
     logging: *logging
 
   frontend:
-    image: ghcr.io/xudoyberdiyev-dev/medix-frontend:${MEDIX_VERSION:-latest}
+    image: ghcr.io/xudoyberdiyev-dev/yuzplus-frontend:${YUZPLUS_VERSION:-latest}
     restart: unless-stopped
     environment:
       BACKEND_URL: http://backend:8080
@@ -77,8 +77,8 @@ services:
     image: caddy:2
     restart: unless-stopped
     environment:
-      MEDIX_DOMAIN: ${MEDIX_DOMAIN:?MEDIX_DOMAIN .env da berilmagan}
-      MEDIX_TLS: ${MEDIX_TLS:?MEDIX_TLS .env da berilmagan}
+      YUZPLUS_DOMAIN: ${YUZPLUS_DOMAIN:?YUZPLUS_DOMAIN .env da berilmagan}
+      YUZPLUS_TLS: ${YUZPLUS_TLS:?YUZPLUS_TLS .env da berilmagan}
     ports: ["80:80", "443:443", "443:443/udp"]
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro

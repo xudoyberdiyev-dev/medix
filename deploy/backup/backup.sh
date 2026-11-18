@@ -1,22 +1,22 @@
 #!/usr/bin/env bash
-# MEDIX — baza zaxira nusxasi (pgBackRest). Host cron'dan har kuni ishga tushiriladi (docs/DEPLOY.md):
-#   15 2 * * *  /opt/medix/deploy/backup/backup.sh >> /var/log/medix-backup.log 2>&1
+# 100+ — baza zaxira nusxasi (pgBackRest). Host cron'dan har kuni ishga tushiriladi (docs/DEPLOY.md):
+#   15 2 * * *  /opt/yuzplus/deploy/backup/backup.sh >> /var/log/yuzplus-backup.log 2>&1
 # Yakshanba — to'liq (full), boshqa kunlar — farq (diff). WAL arxivi doimiy (archive_command), shuning uchun
 # istalgan daqiqaga tiklash mumkin. Birinchi ishga tushirishda stanza o'zi yaratiladi.
-# Ixtiyoriy: MEDIX_BACKUP_TYPE=full|diff|incr — turini majburlash.
+# Ixtiyoriy: YUZPLUS_BACKUP_TYPE=full|diff|incr — turini majburlash.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-pgbr() { docker compose exec -T -u postgres postgres pgbackrest --stanza=medix "$@"; }
+pgbr() { docker compose exec -T -u postgres postgres pgbackrest --stanza=yuzplus "$@"; }
 
-echo "== $(date '+%d.%m.%Y %H:%M') MEDIX zaxira nusxasi"
+echo "== $(date '+%d.%m.%Y %H:%M') 100+ zaxira nusxasi"
 if ! pgbr info --output=json | grep -q '"status":{"code":0'; then
   echo "Stanza yo'q yoki nosoz — yaratilmoqda"
   pgbr stanza-create
 fi
 pgbr check
 
-type="${MEDIX_BACKUP_TYPE:-}"
+type="${YUZPLUS_BACKUP_TYPE:-}"
 if [[ -z "$type" ]]; then
   if [[ "$(date +%u)" == "7" ]]; then type=full; else type=diff; fi
 fi

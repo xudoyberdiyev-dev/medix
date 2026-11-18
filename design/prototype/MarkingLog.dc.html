@@ -7,7 +7,7 @@
 </head>
 <body>
 <x-dc>
-<helmet><script src="medix-data.js"></script></helmet>
+<helmet><script src="yuzplus-data.js"></script></helmet>
 <div data-screen-label="Markirovka" style="display:flex;flex-direction:column;gap:16px;min-width:0;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
   <dc-import name="PageHeader" title="{{ L.iv_mkTitle }}" count="{{ countLabel }}" subtitle="{{ L.iv_mkSub }}" hint-size="100%,34px"></dc-import>
   <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px">
@@ -80,7 +80,7 @@ const short = c => { const x = c.replace(/\u001d/g, ''); return x.slice(0, 8) + 
 const PAGE = { KR: ['receipt', 'open:'], SV: ['orders', null], BY: ['orders', null], QM: ['creturns', null], HC: ['writeoff', null], OK: ['transfer', 'tr'], FS: ['transfer', 'tr'], ZK: ['transfer', 'tr'], IN: ['inventory', 'iv'] };
 class Component extends DCLogic {
   state = { tab: 'all', q: '', fProd: [], fWh: [], page: 1, per: 50, panel: null, kpiTab: null };
-  get D() { return window.MedixData; }
+  get D() { return window.YuzplusData; }
   get L() { return this.props.dict || {}; }
   componentDidMount() {
     if (!this.D) this._p = setInterval(() => { if (this.D) { clearInterval(this._p); this.boot(); } }, 60); else this.boot();

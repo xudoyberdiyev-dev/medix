@@ -119,7 +119,7 @@ const fM = n => n == null || isNaN(n) ? '—' : Number(n).toLocaleString('de-DE'
 const fN = n => Number(n || 0).toLocaleString('de-DE');
 const fP = n => n == null || !isFinite(n) ? '—' : (Math.round(n * 10) / 10).toFixed(1).replace('.', ',') + '%';
 const fill = (t, o) => String(t || '').replace(/\{(\w+)\}/g, (_, k) => o[k] != null ? o[k] : '');
-const SKEY = 'medix-rpt-saved';
+const SKEY = 'yuzplus-rpt-saved';
 const GK = ['branch', 'cust', 'prod', 'cat', 'maker', 'region', 'op', 'day', 'week', 'month'];
 const FK = ['cust', 'prod', 'cat', 'maker', 'region', 'ptype', 'op'];
 const DEF = { sv: ['branch', 'cust'], gp: ['prod', 'cust'], fs: ['', ''] };
@@ -127,7 +127,7 @@ const XV = ['op', 'sg', 'sc']; // T10b: Operatorlar savdosi, Ta'minotchi xodim /
 class Component extends DCLogic {
   state = { view: 'catalog', preset: 'month', from: '', to: '', g1: 'branch', g2: 'cust', vat: 'net', withFs: false, f: {}, open: {}, drill: null, sort: null, hide: null, pg: 1, chart: true, gpv: 'all', tip: null, dlg: null, saveName: '', saved: [], loading: false, big: false };
   get L() { return this.props.dict || {}; }
-  get D() { return window.MedixData; }
+  get D() { return window.YuzplusData; }
   componentDidMount() { let sv = []; try { sv = JSON.parse(localStorage.getItem(SKEY) || '[]'); } catch (e) {} this.setState({ saved: sv }); this._url = setInterval(() => this.applyUrl(), 250); this._p = setInterval(() => { if (this.D && !this._rd) { this._rd = 1; this.forceUpdate(); } }, 80); this.applyDemo(); }
   componentWillUnmount() { clearInterval(this._url); clearInterval(this._p); clearTimeout(this._lt); }
   componentDidUpdate(pp) { const d = this.props.demo; if (d && (!pp.demo || pp.demo.n !== d.n)) this.applyDemo(); }

@@ -78,14 +78,14 @@ export function Tabs({ items, value, onChange, ...aria }: TabsProps) {
               <span
                 className={cn(
                   "tabular inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-caption font-medium",
-                  selected ? "bg-primary-soft text-primary-button" : "bg-background text-text-secondary",
+                  selected ? "bg-primary-soft text-link" : "bg-background text-text-secondary",
                 )}
               >
                 {t.count}
               </span>
             ) : null}
             {t.alert ? (
-              <span className="tabular inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-danger px-1.5 text-caption font-medium text-white">
+              <span className="tabular inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-danger px-1.5 text-caption font-medium text-on-solid">
                 {t.alert}
               </span>
             ) : null}

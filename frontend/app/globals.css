@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /*
- * MEDIX dizayn tizimi tokenlari (design/system/tokens.json).
+ * 100+ dizayn tizimi tokenlari (design/system/tokens.json).
  * Kodda faqat token nomi ishlatiladi — HEX emas. Yangi rang qoʻshilmaydi.
  */
 @theme {
@@ -15,6 +15,10 @@
   --color-primary-button: #0f766e;
   --color-primary-button-hover: #115e59;
   --color-primary-soft: #ddf5ee;
+  /* Havola va urgʻu matni (qorongʻi rejimda yorqinroq) */
+  --color-link: #0f766e;
+  /* Toʻq rangli (primary/success/warning/danger/text-primary) fon ustidagi matn */
+  --color-on-solid: #ffffff;
   --color-surface: #ffffff;
   --color-background: #f5f7f8;
   --color-table-header: #f8fafa;
@@ -94,6 +98,7 @@
   --animate-spin: spin 800ms linear infinite;
   --animate-progress: progress 3000ms linear forwards;
   --animate-shake: shake 320ms ease-in-out;
+  --animate-login-fade: login-fade 180ms ease-out;
 
   @keyframes skeleton {
     0%,
@@ -124,6 +129,15 @@
     }
   }
 
+  @keyframes login-fade {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
   @keyframes spin {
     to {
       transform: rotate(360deg);
@@ -137,6 +151,40 @@
     to {
       width: 100%;
     }
+  }
+}
+
+/* Qorongʻi rejim (O24 — butun ilova): tokenlar shu sinf ichida qayta belgilanadi, komponentlar oʻzgarmaydi. */
+/* O24: qorongʻi mavzu faqat ekranda — chop etiladigan hujjatlar (PDF, chop etish) har doim yorugʻ. */
+@media screen {
+  .theme-dark {
+    color-scheme: dark;
+    --color-brand-900: #0b2524;
+    --color-primary: #2dd4bf;
+    --color-primary-button: #0f766e;
+    --color-primary-button-hover: #115e59;
+    --color-link: #2dd4bf;
+    --color-on-solid: #0c1716;
+    --color-primary-soft: #133b38;
+    --color-surface: #13201f;
+    --color-background: #0c1716;
+    --color-table-header: #182826;
+    --color-text-primary: #e4efed;
+    --color-text-secondary: #9db2af;
+    --color-text-disabled: #7d9592;
+    --color-border: #263d3b;
+    --color-success: #4ade80;
+    --color-success-bg: #10291a;
+    --color-warning: #fbbf24;
+    --color-warning-bg: #2c2210;
+    --color-danger: #f87171;
+    --color-danger-bg: #2e1414;
+    --color-info: #93c5fd;
+    --color-info-bg: #13213a;
+    --color-overlay: rgb(0 0 0 / 0.6);
+    --color-sidebar-text: #a9c7c3;
+    --color-sidebar-item-active-bg: rgb(255 255 255 / 0.06);
+    --shadow-overlay: 0 4px 16px rgb(0 0 0 / 0.4);
   }
 }
 
@@ -185,7 +233,10 @@
 /* Asosiy kontent (har sahifaning <main>) — vertikal aylantirish chizigʻi koʻrinmaydi, aylantirish ishlaydi (egasi talabi 10.11 13:51).
    scrollbar-width meros boʻlmaydi: ichki jadvallarning gorizontal aylantirish chizigʻi oʻz holicha qoladi. */
 @layer base {
+  /* O23: main — joylashuv konteyneri. Aks holda ichidagi absolute elementlar (sr-only, tooltip) hujjat (ICB) ga nisbatan
+     joylashib, butun sahifani choʻzadi: pastda boʻsh joy, sidebar tugab qoladi, oyna scrollbar chiqadi. */
   [data-app-content] main {
+    position: relative;
     scrollbar-width: none;
     -ms-overflow-style: none;
   }

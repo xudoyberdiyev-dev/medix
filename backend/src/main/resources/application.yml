@@ -1,10 +1,10 @@
 spring:
   application:
-    name: medix
+    name: yuzplus
   datasource:
-    url: ${MEDIX_DB_URL:jdbc:postgresql://localhost:5432/medix}
-    username: ${MEDIX_DB_USER:medix}
-    password: ${MEDIX_DB_PASSWORD:medix}
+    url: ${YUZPLUS_DB_URL:${MEDIX_DB_URL:jdbc:postgresql://localhost:5432/yuzplus}}
+    username: ${YUZPLUS_DB_USER:${MEDIX_DB_USER:yuzplus}}
+    password: ${YUZPLUS_DB_PASSWORD:${MEDIX_DB_PASSWORD:yuzplus}}
   jpa:
     open-in-view: false
     hibernate:
@@ -34,21 +34,21 @@ spring:
 server:
   port: ${PORT:8080}
   # Teskari proksi (Caddy) ortida: X-Forwarded-For/Proto ga ishonish — faqat ichki tarmoq proksilari (Tomcat RemoteIpValve)
-  forward-headers-strategy: ${MEDIX_FORWARD_HEADERS:none}
+  forward-headers-strategy: ${YUZPLUS_FORWARD_HEADERS:${MEDIX_FORWARD_HEADERS:none}}
   shutdown: graceful
   servlet:
     session:
       timeout: 10h
 
-medix:
+yuzplus:
   session:
-    cookie-secure: ${MEDIX_COOKIE_SECURE:true}
+    cookie-secure: ${YUZPLUS_COOKIE_SECURE:${MEDIX_COOKIE_SECURE:true}}
   bootstrap:
-    login: ${MEDIX_BOOTSTRAP_LOGIN:}
-    password: ${MEDIX_BOOTSTRAP_PASSWORD:}
+    login: ${YUZPLUS_BOOTSTRAP_LOGIN:${MEDIX_BOOTSTRAP_LOGIN:}}
+    password: ${YUZPLUS_BOOTSTRAP_PASSWORD:${MEDIX_BOOTSTRAP_PASSWORD:}}
   employees:
     # Litsenziya: bloklanmagan xodimlar chegarasi (prototip WizStaff «N / 40», egasi E13 — standart 40); 0 — cheklanmagan
-    limit: ${MEDIX_EMPLOYEE_LIMIT:40}
+    limit: ${YUZPLUS_EMPLOYEE_LIMIT:${MEDIX_EMPLOYEE_LIMIT:40}}
   # orders.late-days → Sozlamalar → Savdo «Buyurtma kechikishi» (app_setting.orderLateDays)
   trips:
     # «Qaytish kutilmoqda»da shuncha soatdan ortiq tursa — Ombor mudiri / kassirga eslatma (T12-audit №23)

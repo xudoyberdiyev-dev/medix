@@ -117,7 +117,7 @@ const SECS = [['wh', 'warehouse', 'dir', [['expiryWarnDays', 'day'], ['invRemind
 const KEYS = {}; SECS.forEach(x => x[3].forEach(([k, kd]) => { KEYS[k] = { kind: kd, sec: x[0], who: x[2] }; }));
 class Component extends DCLogic {
   state = { sec: 'wh', draft: {}, dlg: null, roMsg: null, vatRate: '', vatFrom: '', vatTried: false };
-  get D() { return window.MedixData; }
+  get D() { return window.YuzplusData; }
   get L() { return this.props.dict || {}; }
   componentDidMount() { this.runDemo(); }
   componentDidUpdate(pp) { const d = this.props.demo; if (d && (!pp.demo || pp.demo.n !== d.n)) this.runDemo(); }

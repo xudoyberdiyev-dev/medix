@@ -1,15 +1,15 @@
 # T12 — Claude Code uchun topshirish to'plami
 
-Manba: prototip fayllari (Medix ERP.dc.html, 101 ta yordamchi DC, medix-data.js). Faqat prototipdagi haqiqiy holat yozildi. Noaniq joylar «aniqlanmagan» deb belgilangan.
+Manba: prototip fayllari (100plus ERP.dc.html, 101 ta yordamchi DC, yuzplus-data.js). Faqat prototipdagi haqiqiy holat yozildi. Noaniq joylar «aniqlanmagan» deb belgilangan.
 
 ## 1. Arxitektura (prototip)
 
-- **Kirish nuqtasi.** `Medix ERP.dc.html`: login, rol/filial tanlash, menyu (NAV), sahifa almashtirish (`state.page` + URL hash), Ctrl+K, bildirishnomalar, til, demo menyusi.
-- **Ma'lumot qatlami.** `medix-data.js` → `window.MedixData`: 636 ta eksport, 691 funksiya, bitta `store` obyekti. Barcha biznes qoidalari shu yerda, UI faqat chaqiradi.
+- **Kirish nuqtasi.** `100plus ERP.dc.html`: login, rol/filial tanlash, menyu (NAV), sahifa almashtirish (`state.page` + URL hash), Ctrl+K, bildirishnomalar, til, demo menyusi.
+- **Ma'lumot qatlami.** `yuzplus-data.js` → `window.YuzplusData`: 636 ta eksport, 691 funksiya, bitta `store` obyekti. Barcha biznes qoidalari shu yerda, UI faqat chaqiradi.
 - **Sahifalar va komponentlar.** Har sahifa alohida `.dc.html` (`<dc-import>`), props: `dict` (til matnlari), `role`, `branch`, `userName`, `narrow`, `on*`.
 - **Saqlash.**
   - `store` faqat xotirada; `resetStore()` seed holatiga qaytaradi.
-  - Brauzer xotirasida faqat: til (`LANG_KEY`), mahsulotlar (`PROD_KEY`), jadval ustunlari (`medix-stock-*`, Products `COL_KEY`), hisobot shablonlari (Reports `SKEY`), o'rnatish ustasi (`WIZ_KEY`), mahsulot oldindan to'ldirish (`medix-product-prefill`).
+  - Brauzer xotirasida faqat: til (`LANG_KEY`), mahsulotlar (`PROD_KEY`), jadval ustunlari (`yuzplus-stock-*`, Products `COL_KEY`), hisobot shablonlari (Reports `SKEY`), o'rnatish ustasi (`WIZ_KEY`), mahsulot oldindan to'ldirish (`yuzplus-product-prefill`).
 - **Vaqt.** `T0` — demo «bugun» (31.10.2026 emas, seed bazasi; `NOW = T0 + 15:30`). `nowStr()` / `nowMs()` demo soat bilan siljiydi.
 
 ## 2. Sahifalar xaritasi (6)
@@ -47,11 +47,11 @@ Manzil: `#<key>` yoki `#<key>?param=…`. Rollar — `navCan` (11-bo'limdagi jad
 | delivery, interbranch | Yashirin | aniqlanmagan | Manzil saqlangan, menyuda yo'q | — |
 | profile | Profil | Profile (+ PinSetup) | PIN, sessiyalar | — |
 
-Login va o'rnatish ustasi: Medix ERP ichida (login) va SetupWizard (+ WizRoles, WizStaff, WizFinish).
+Login va o'rnatish ustasi: 100plus ERP ichida (login) va SetupWizard (+ WizRoles, WizStaff, WizFinish).
 
 ## 2a. URL parametrlari (T12a da to'ldirildi)
 
-Umumiy qoidalar (Medix ERP `openHref`):
+Umumiy qoidalar (100plus ERP `openHref`):
 - Format: `#<sahifa>?k=v&k2=v2`. Qiymatlar URL-kodlangan.
 - `branch=TSH` — barcha sahifalarda: filialni almashtiradi (faqat barcha filiallarga ruxsati bo'lgan rolda yoki o'z filiali bo'lsa).
 - `open=<raqam>` — hujjat yoki kartochkani ochadi (qaysi sahifa ekaniga qarab, quyida).
@@ -170,100 +170,100 @@ Propslar — har faylning data-props ro'yxati. Qayerda ishlatilishi — 3a-bo'li
 
 | Komponent | Qayerda (fayllar) |
 |---|---|
-| AdminOrg | Medix ERP |
-| AdminStaff | Medix ERP |
+| AdminOrg | 100plus ERP |
+| AdminStaff | 100plus ERP |
 | AdvanceDoc | DebtCard |
 | AllocationGrid | AdvanceDoc, PaymentDoc |
-| Approvals | Medix ERP |
-| AuditLog | Medix ERP |
+| Approvals | 100plus ERP |
+| AuditLog | 100plus ERP |
 | AutosaveIndicator | DocumentHeader |
-| Bank | Medix ERP |
+| Bank | 100plus ERP |
 | BatchPanel | ExpiryControl, Stock |
 | BranchPanel | AdminOrg, SetupWizard |
 | BranchTermsPanel | CounterpartyCard |
 | BulkBar | Counterparties, InventoryDoc, Orders, Products, Receipts, Shipping |
-| Cash | Bank, Medix ERP |
+| Cash | Bank, 100plus ERP |
 | CashClose | Cash |
-| CashierPanel | Medix ERP |
+| CashierPanel | 100plus ERP |
 | ColumnsMenu | Receipts, Reports |
-| ConfirmDialog | AdminOrg, AdminStaff, AdvanceDoc, AuditLog, CashClose, Counterparties, CounterpartyCard, CounterpartyForm, HandoffPanel, ImportWizard, InventoryCount, InventoryDoc, Lookups, Medix ERP, MoneyOpDoc, OpeningBalances, OpeningDoc, OrderEntry, Payables, PaymentDoc, Prices, Products, Profile, Receipts, Settings, StockDocs, TransferDoc, TransferReceive, TripPage, WizFinish, WizRoles, WizStaff |
+| ConfirmDialog | AdminOrg, AdminStaff, AdvanceDoc, AuditLog, CashClose, Counterparties, CounterpartyCard, CounterpartyForm, HandoffPanel, ImportWizard, InventoryCount, InventoryDoc, Lookups, 100plus ERP, MoneyOpDoc, OpeningBalances, OpeningDoc, OrderEntry, Payables, PaymentDoc, Prices, Products, Profile, Receipts, Settings, StockDocs, TransferDoc, TransferReceive, TripPage, WizFinish, WizRoles, WizStaff |
 | Counterparties | Customers, Suppliers |
 | CounterpartyCard | Counterparties |
 | CounterpartyForm | Counterparties |
 | CustomerPanel | OrderCard, OrderEntry |
-| Customers | Medix ERP |
+| Customers | 100plus ERP |
 | DataTable | AdminOrg, AuditLog, Counterparties, DebtCard, ExpiryControl, Home, Inventory, InventoryDoc, Lookups, MarkingLog, OpeningBalances, OpeningDoc, Orders, Payables, Payments, Prices, Products, Receipts, Receivables, Reconciliation, Reports, Shipping, Stock, StockDocs, Transfers, WizStaff |
 | DateRangePicker | DebtCard, FilterBar, MarkerPanel, MarkerReport, PickerReport, Reconciliation, Reports |
-| DebtCard | Medix ERP, Payables, Receivables |
+| DebtCard | 100plus ERP, Payables, Receivables |
 | DecisionDialog | Approvals, OrderCard |
 | DocumentHeader | AdvanceDoc, CashClose, InventoryDoc, MoneyOpDoc, OpeningDoc, OrderCard, OrderEntry, PaymentDoc, Receipts, StockDocs, TransferDoc, TransferReceive, TripPage |
 | DocumentLinesGrid | OrderEntry, Receipts, StockDocs, TransferDoc |
-| DriverPanel | Medix ERP |
-| EmptyState | AdvanceDoc, AuditLog, Cash, Counterparties, CounterpartyCard, CustomerPanel, DebtCard, ExpiryControl, Inventory, Lookups, MarkingLog, Medix ERP, OpeningBalances, OpeningDoc, OrderCard, Orders, Payables, PaymentDoc, Payments, Prices, Products, Receipts, Receivables, Reconciliation, Reports, Shipping, Stock, StockDocs, Transfers, TripPage, WizStaff |
-| ExpiryControl | Medix ERP |
+| DriverPanel | 100plus ERP |
+| EmptyState | AdvanceDoc, AuditLog, Cash, Counterparties, CounterpartyCard, CustomerPanel, DebtCard, ExpiryControl, Inventory, Lookups, MarkingLog, 100plus ERP, OpeningBalances, OpeningDoc, OrderCard, Orders, Payables, PaymentDoc, Payments, Prices, Products, Receipts, Receivables, Reconciliation, Reports, Shipping, Stock, StockDocs, Transfers, TripPage, WizStaff |
+| ExpiryControl | 100plus ERP |
 | FilterBar | AuditLog, Cash, Counterparties, Inventory, MarkingLog, OpeningBalances, Orders, Payables, Payments, Prices, ProductPicker, Products, Receipts, Receivables, Reconciliation, Reports, Stock, StockDocs, Transfers, WizRoles, WizStaff |
 | FilterChip | FilterBar |
 | FormSection | CounterpartyForm, MoneyOpDoc, PaymentDoc, Products |
 | HandoffPanel | Shipping |
 | HistoryTimeline | AdvanceDoc, CounterpartyCard, InventoryDoc, MarkingLog, MoneyOpDoc, OpeningDoc, OrderCard, PaymentDoc, Products, Receipts, StockDocs, TransferDoc |
-| Home | Medix ERP |
+| Home | 100plus ERP |
 | ImportWizard | Counterparties, OpeningDoc, Prices, Products |
 | InfoGrid | AdminOrg, AdminStaff, AdvanceDoc, AuditLog, BatchPanel, CounterpartyCard, InventoryDoc, MoneyOpDoc, OpeningDoc, OrderCard, PaymentDoc, Products, Profile, Receipts, StockDocs, TransferDoc, WizStaff |
-| Inventory | Medix ERP |
+| Inventory | 100plus ERP |
 | InventoryCount | Inventory |
 | InventoryDoc | Inventory |
 | LookupPanel | Lookups |
-| Lookups | Medix ERP |
-| MarkerPanel | Medix ERP |
-| MarkerReport | Medix ERP |
-| MarkingLog | MarkerPanel, Medix ERP |
+| Lookups | 100plus ERP |
+| MarkerPanel | 100plus ERP |
+| MarkerReport | 100plus ERP |
+| MarkingLog | MarkerPanel, 100plus ERP |
 | MoneyInput | AllocationGrid, BranchTermsPanel, Cash, CashClose, CounterpartyForm, MoneyOpDoc, PaymentDoc, Reconciliation |
 | MoneyOpDoc | Cash |
-| OpeningBalances | Medix ERP |
+| OpeningBalances | 100plus ERP |
 | OpeningDoc | OpeningBalances |
 | OrderCard | Orders |
 | OrderEntry | Orders |
 | OrderStatus | Approvals, CustomerPanel, HandoffPanel, TripPage |
-| Orders | Medix ERP |
+| Orders | 100plus ERP |
 | PageHeader | AdminOrg, Approvals, AuditLog, Cash, Counterparties, Inventory, Lookups, MarkingLog, OpeningBalances, Orders, Payables, Payments, Prices, Products, Receipts, Receivables, Reconciliation, RecordHeader, Reports, Settings, Shipping, Stock, StockDocs, Transfers, WizRoles, WizStaff |
 | Pagination | AuditLog, Counterparties, MarkingLog, OpeningDoc, Orders, Payables, Payments, Prices, Products, Receipts, Receivables, Reports, Stock, Transfers |
-| Payables | Medix ERP |
+| Payables | 100plus ERP |
 | PaymentDoc | Payments |
-| Payments | Medix ERP |
+| Payments | 100plus ERP |
 | PickConfirm | OrderCard, PickerPanel |
-| PickerPanel | Medix ERP |
-| PickerReport | Medix ERP |
-| PinSetup | Medix ERP, Profile |
+| PickerPanel | 100plus ERP |
+| PickerReport | 100plus ERP |
+| PinSetup | 100plus ERP, Profile |
 | PriceHistoryPanel | Prices, Products |
-| Prices | Medix ERP |
-| PrintPreview | Medix ERP |
+| Prices | 100plus ERP |
+| PrintPreview | 100plus ERP |
 | ProductPicker | Orders, Receipts |
-| Products | Medix ERP |
-| Profile | Medix ERP |
-| Receipts | Medix ERP |
-| Receivables | Medix ERP |
-| Reconciliation | Medix ERP |
+| Products | 100plus ERP |
+| Profile | 100plus ERP |
+| Receipts | 100plus ERP |
+| Receivables | 100plus ERP |
+| Reconciliation | 100plus ERP |
 | RecordHeader | AdminOrg, AdminStaff, CounterpartyCard, DebtCard, Products |
-| Reports | Medix ERP |
+| Reports | 100plus ERP |
 | SavedViews | Approvals, AuditLog, Counterparties, CounterpartyCard, DebtCard, Inventory, InventoryDoc, Lookups, MarkingLog, MoneyOpDoc, OpeningBalances, OpeningDoc, OrderCard, Payables, PaymentDoc, Payments, Prices, Products, Receipts, Receivables, Reconciliation, Reports, Shipping, Stock, StockDocs, TransferDoc, Transfers, WizStaff |
 | ScanPanel | InventoryCount |
 | Select | BranchTermsPanel, CounterpartyCard, CounterpartyForm, ImportWizard, InventoryDoc, LookupPanel, Lookups, MarkerPanel, MarkerReport, MoneyOpDoc, OpeningDoc, OrderEntry, PaymentDoc, PickerReport, PriceHistoryPanel, Prices, PrintPreview, Products, Receipts, Reconciliation, Reports, ScanPanel, Settings, StockDocs, TransferDoc, TransferReceive, TripPage, WizRoles, WizStaff |
-| Settings | Medix ERP |
-| SetupWizard | Medix ERP |
-| Shipping | Medix ERP |
+| Settings | 100plus ERP |
+| SetupWizard | 100plus ERP |
+| Shipping | 100plus ERP |
 | SideSummary | AdvanceDoc, CashClose, CounterpartyCard, DebtCard, MoneyOpDoc, PaymentDoc, Products, TransferDoc, TransferReceive |
 | StatusBanner | AdvanceDoc, Cash, CashClose, CounterpartyCard, DebtCard, ExpiryControl, HandoffPanel, ImportWizard, Inventory, InventoryCount, InventoryDoc, MoneyOpDoc, OpeningBalances, OpeningDoc, OrderCard, PaymentDoc, Prices, PrintPreview, Receipts, Reconciliation, Reports, StockDocs, TransferDoc, TransferReceive, Transfers, TripPage, WizRoles, WizStaff |
 | StatusStepper | DocumentHeader |
 | StickyFormFooter | CashClose, CounterpartyForm, ImportWizard, MoneyOpDoc, PaymentDoc, Products, Settings, WizRoles, WizStaff |
-| Stock | Medix ERP |
-| StockDocs | Medix ERP |
-| SupervisorPanel | Medix ERP |
-| Suppliers | Medix ERP |
+| Stock | 100plus ERP |
+| StockDocs | 100plus ERP |
+| SupervisorPanel | 100plus ERP |
+| Suppliers | 100plus ERP |
 | TabletShell | InventoryCount |
 | TotalsFooter | Cash, CashClose, InventoryDoc, OpeningDoc, OrderCard, OrderEntry, PaymentDoc, Receipts, StockDocs, TripPage |
 | TransferDoc | Transfers |
 | TransferReceive | Transfers |
-| Transfers | Medix ERP |
+| Transfers | 100plus ERP |
 | TripPage | Shipping |
 | ValidationSummary | AdvanceDoc, CashClose, InventoryDoc, MoneyOpDoc, OpeningDoc, OrderEntry, PaymentDoc, Receipts, StockDocs, TransferDoc, TransferReceive, WizFinish, WizStaff |
 | WarehousePanel | AdminOrg, SetupWizard |
@@ -683,9 +683,9 @@ Turlar seed dan olindi. «?» — har yozuvda bo'lmaydi (ixtiyoriy). Majburiylik
 | «Namuna rasm» | DriverPanel | Kamera yoki fayl yuklash |
 | Namunaviy import fayli (`bqSample`, `prodSampleRows`) | ImportWizard | Shablon yuklab olish |
 | PIN maslahati | PinSetup | Olib tashlanadi |
-| Demo holatlar menyusi (`demo*`) va rol almashtirish | Medix ERP | Olib tashlanadi; rol — login orqali |
+| Demo holatlar menyusi (`demo*`) va rol almashtirish | 100plus ERP | Olib tashlanadi; rol — login orqali |
 | `resetStore`, `bqDemoClear`, `demoSale` | Ma'lumot qatlami | Olib tashlanadi |
-| Login (har parol yoki demo foydalanuvchi) | Medix ERP `USERS` | Haqiqiy autentifikatsiya, sessiya |
+| Login (har parol yoki demo foydalanuvchi) | 100plus ERP `USERS` | Haqiqiy autentifikatsiya, sessiya |
 | Ma'lumot xotirada + brauzer xotirasi | `store`, localStorage | Server API + ma'lumotlar bazasi |
 | Eksport toast (Kirim) | Receipts | Haqiqiy xlsx |
 | Bank MFO, rekvizitlar (`bankMfo`, `BR_INFO`) | Seed | Ma'lumotnomadan |

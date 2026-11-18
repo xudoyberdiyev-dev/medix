@@ -7,7 +7,7 @@
 </head>
 <body>
 <x-dc>
-<helmet><script src="medix-data.js"></script></helmet>
+<helmet><script src="yuzplus-data.js"></script></helmet>
 <div data-screen-label="{{ screenLabel }}" style="display:flex;flex-direction:column;gap:16px;min-width:0;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
   <dc-import name="DocumentHeader" parent-label="{{ L.iv_title }}" on-parent="{{ back }}" title="{{ title }}" number="{{ dNumber }}" badge="{{ dBadge }}" status="{{ dStatus }}" steps="{{ dSteps }}" sub="{{ dSub }}" autosave="{{ autosave }}" primary="{{ dPrimary }}" secondary="{{ dSecondary }}" more="{{ dMore }}" more-label="{{ L.p_more }}" hint-size="100%,88px"></dc-import>
   <sc-for list="{{ banners }}" as="b"><dc-import name="StatusBanner" tone="{{ b.tone }}" icon="{{ b.icon }}" title="{{ b.title }}" text="{{ b.text }}" hint-size="100%,48px"></dc-import></sc-for>
@@ -122,7 +122,7 @@ const ini = n => String(n || '').split(' ').map(w => w[0]).join('').slice(0, 2);
 const reD = /^\d{2}\.\d{2}\.\d{4}$/;
 class Component extends DCLogic {
   state = { x: null, docTab: 'doc', lineTab: 'all', sel: {}, tried: false, vs: null, dlg: null, reason: '', reasonErr: '', save: null, savedAt: null, nb: null, nbTried: false };
-  get D() { return window.MedixData; }
+  get D() { return window.YuzplusData; }
   get L() { return this.props.dict || {}; }
   componentDidMount() {
     if (!this.D) this._p = setInterval(() => { if (this.D) { clearInterval(this._p); this.load(); } }, 60); else this.load();

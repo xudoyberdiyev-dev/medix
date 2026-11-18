@@ -7,7 +7,7 @@
 </head>
 <body>
 <x-dc>
-<helmet><script src="medix-data.js"></script></helmet>
+<helmet><script src="yuzplus-data.js"></script></helmet>
 <div style="display:flex;flex-direction:column;min-width:0;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
 <sc-if value="{{ isList }}" hint-placeholder-val="{{ true }}">
   <div data-screen-label="{{ listTitle }}" style="display:flex;flex-direction:column;gap:16px;min-width:0">
@@ -150,7 +150,7 @@ const KIND_ICON = { mt: 'arrow-down-left', yt: 'arrow-up-right', ko: 'banknote',
 const CLEAR = { q: '', fDir: [], fKind: [], fItem: [], range: { from: TODAY, to: TODAY } };
 class Component extends DCLogic {
   state = { view: 'list', acct: null, ...CLEAR, op: null, close: null, recon: null };
-  get D() { return window.MedixData; }
+  get D() { return window.YuzplusData; }
   get L() { return this.props.dict || {}; }
   get bank() { return this.props.mode === 'bank'; }
   componentDidMount() {

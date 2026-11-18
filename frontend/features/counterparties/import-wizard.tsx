@@ -358,7 +358,7 @@ export function CounterpartyImportWizard({ role }: { role: CpImportRole }) {
                   className={cn(
                     "flex size-6 flex-none items-center justify-center rounded-full text-caption font-semibold",
                     done
-                      ? "bg-primary text-white"
+                      ? "bg-primary text-on-solid"
                       : cur
                         ? "border-2 border-primary text-primary"
                         : "border border-border text-text-secondary",
@@ -533,7 +533,7 @@ export function CounterpartyImportWizard({ role }: { role: CpImportRole }) {
                           <span className="flex items-center gap-1 px-2 text-caption font-normal text-text-secondary">
                             {i + 1}
                             {isHdr ? (
-                              <span className="rounded-sm bg-primary px-1 text-[10px] leading-4 text-white">{t("hdrMark")}</span>
+                              <span className="rounded-sm bg-primary px-1 text-[10px] leading-4 text-on-solid">{t("hdrMark")}</span>
                             ) : null}
                           </span>
                           {Array.from({ length: pvN }, (_, j) => (
@@ -570,7 +570,7 @@ export function CounterpartyImportWizard({ role }: { role: CpImportRole }) {
               <div className="overflow-x-auto rounded-control border border-border">
                 <div className="min-w-[720px]">
                   <div className="grid h-9 grid-cols-[minmax(180px,0.9fr)_28px_minmax(220px,1fr)_minmax(200px,1fr)] items-center border-b border-border bg-table-header text-caption font-medium text-text-secondary">
-                    <span className="px-3.5">{t("fMedix")}</span>
+                    <span className="px-3.5">{t("fSystem")}</span>
                     <span />
                     <span className="px-3">{t("fFile")}</span>
                     <span className="px-3">{t("fSample")}</span>

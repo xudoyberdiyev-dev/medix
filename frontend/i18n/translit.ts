@@ -48,7 +48,6 @@ const VOWELS = new Set("aeiouAEIOU");
 const ABBR: Record<string, string> = { YB: "ЕБ", Online: "Онлайн", online: "онлайн", ONLINE: "ОНЛАЙН" };
 /** Oʻgirilmaydigan soʻzlar (brend, qisqartma, klavish). */
 const KEEP = new Set([
-  "MEDIX",
   "PDF",
   "JPG",
   "PNG",

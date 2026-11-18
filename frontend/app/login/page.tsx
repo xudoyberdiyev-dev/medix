@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { AuthShell, LocaleSegments } from "@/features/auth/auth-shell";
+import { LoginLayout } from "@/features/auth/login-layout";
 import { LoginForm } from "./login-form";
 
-export const metadata: Metadata = { title: "Kirish — MEDIX" };
+export const metadata: Metadata = { title: "Kirish — 100+" };
 
 export default function LoginPage() {
   return (
-    <AuthShell topRight={<LocaleSegments />}>
+    <LoginLayout>
       <Suspense>
         <LoginForm />
       </Suspense>
-    </AuthShell>
+    </LoginLayout>
   );
 }

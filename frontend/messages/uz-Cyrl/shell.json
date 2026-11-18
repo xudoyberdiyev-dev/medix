@@ -26,5 +26,7 @@
     "supplierDebtsDebts": "Қарзлар",
     "supplierDebtsBonus": "Бонус баланс"
   },
-  "searchPlaceholder": "Маҳсулот, мижоз ёки ҳужжат рақами…"
+  "searchPlaceholder": "Маҳсулот, мижоз ёки ҳужжат рақами…",
+  "themeToDark": "Қоронғи режимга ўтиш",
+  "themeToLight": "Ёруғ режимга ўтиш"
 }

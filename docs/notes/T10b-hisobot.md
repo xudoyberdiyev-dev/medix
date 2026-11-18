@@ -1,10 +1,10 @@
 # T10b — Operatorlar va Ta'minotchi bloklari, 3 hisobot, rollar bosh sahifalari
 
 ## O'zgargan fayllar
-- medix-data.js — `opSales`, `supGoods` (yagona manba: bosh sahifa bloklari = hisobotlar); seed: «Kim nomiga», IN-TSH-000001 qoralamasi.
+- yuzplus-data.js — `opSales`, `supGoods` (yagona manba: bosh sahifa bloklari = hisobotlar); seed: «Kim nomiga», IN-TSH-000001 qoralamasi.
 - Home.dc.html — «Eng ko'p sotilgan mahsulotlar» o'rniga Operatorlar / Ta'minotchi xodim / Ta'minotchi korxona; Xarid «O'z nomimdagi tovar»; Operator va Filial rahbari holat yorliqlari.
 - Reports.dc.html — `op`, `sg`, `sc` hisobotlari, katalogda «Xodimlar va ta'minot» guruhi, ?r=&from=&to=&who=, .xlsx eksport.
-- Medix ERP.dc.html — `tb_*` matnlari, Ctrl+K da 3 hisobot.
+- 100plus ERP.dc.html — `tb_*` matnlari, Ctrl+K da 3 hisobot.
 
 ## Hisob qoidalari
 - Operator: Savdo hisoboti manbasi (rptFacts) — QQSsiz, qaytarishlar ayirilgan, `op` bo'yicha; buyurtmalar = SV soni. Aktiv — oxirgi 30 kunda savdo bor.

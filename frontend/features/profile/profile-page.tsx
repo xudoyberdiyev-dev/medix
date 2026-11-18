@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowUpRight, CircleAlert, CircleCheck, Grid3x3, Info, KeyRound, Monitor, Pencil, Smartphone } from "lucide-react";
+import { ArrowUpRight, CircleAlert, CircleCheck, Grid3x3, Info, KeyRound, Monitor, Moon, Pencil, Smartphone, Sun } from "lucide-react";
 import Link from "next/link";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
@@ -17,7 +17,9 @@ import { can } from "@/features/auth/can";
 import { useChangePassword, useMe } from "@/features/auth/session";
 import { ACT, isObjectType } from "@/features/audit/audit-page";
 import { describeError } from "@/features/setup/form-error";
+import { cn } from "@/lib/cn";
 import { formatDateTime } from "@/lib/format";
+import { useTheme, type ThemePref } from "@/lib/theme";
 import { formatIsoDate, todayTashkent } from "@/features/counterparties/api";
 import { cleanLogin, formatPhone } from "@/features/employees/staff";
 import {
@@ -61,6 +63,7 @@ export function ProfilePage() {
         <div className="flex flex-col gap-4">
           <InfoCard profile={p} />
           <LanguageCard />
+          <ThemeCard />
           <PasswordCard profile={p} />
           <PinCard profile={p} />
         </div>
@@ -192,6 +195,44 @@ function InfoDrawer({ profile, onClose }: { profile: Profile; onClose: () => voi
         </div>
       </form>
     </Drawer>
+  );
+}
+
+const THEME_OPTIONS: { pref: ThemePref; icon: typeof Sun }[] = [
+  { pref: "light", icon: Sun },
+  { pref: "dark", icon: Moon },
+  { pref: "system", icon: Monitor },
+];
+
+/** O24 — mavzu: Yorugʻ / Qorongʻi / Tizim boʻyicha (standart — tizim). Tanlov shu brauzerda saqlanadi. */
+function ThemeCard() {
+  const t = useTranslations("profile.theme");
+  const { pref, setPref } = useTheme();
+  return (
+    <Card title={t("title")}>
+      <div role="radiogroup" aria-label={t("title")} className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+        {THEME_OPTIONS.map(({ pref: p, icon: Icon }) => {
+          const on = p === pref;
+          return (
+            <button
+              key={p}
+              type="button"
+              role="radio"
+              aria-checked={on}
+              onClick={() => setPref(p)}
+              className={cn(
+                "flex h-10 items-center gap-2 rounded-card border px-3 text-left transition-colors",
+                on ? "border-primary bg-primary-soft" : "border-border hover:border-text-secondary",
+              )}
+            >
+              <Icon size={16} strokeWidth={1.5} aria-hidden className={on ? "text-link" : "text-text-secondary"} />
+              {t(p)}
+            </button>
+          );
+        })}
+      </div>
+      <p className="mt-2 text-caption text-text-secondary">{t("note")}</p>
+    </Card>
   );
 }
 

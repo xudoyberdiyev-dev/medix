@@ -16,7 +16,7 @@ const row = (p: Partial<PayRowLike>): PayRowLike => ({
   id: 1,
   number: "MT-TSH-000001",
   paymentDate: "2026-11-09",
-  party: "Shifo Farm",
+  party: "Shifo Dori",
   partySub: "Toshkent",
   accountId: 10,
   account: "Asosiy kassa",
@@ -73,7 +73,7 @@ describe("toʻlovlar roʻyxati modeli", () => {
       ),
     ).toEqual([
       { value: "Nobel", label: "Nobel", count: 2 },
-      { value: "Shifo Farm", label: "Shifo Farm", count: 3 },
+      { value: "Shifo Dori", label: "Shifo Dori", count: 3 },
     ]);
   });
 

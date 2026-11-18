@@ -65,7 +65,7 @@ export function PickSheetPage() {
     <Shell ready>
       <header className="flex items-start justify-between gap-4 border-b border-text-primary pb-3">
         <div>
-          <div className="text-caption text-text-secondary">MEDIX</div>
+          <div className="text-caption text-text-secondary">100+</div>
           <h1 className="text-page-title">Terish varagʻi</h1>
           <div className="text-text-secondary">Ombor: {warehouses}</div>
         </div>

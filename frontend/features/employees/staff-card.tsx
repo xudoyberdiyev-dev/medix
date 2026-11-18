@@ -152,7 +152,7 @@ export function StaffCardPage({ id }: { id: number }) {
           title={t("notFoundT")}
           description={t("notFound")}
           action={
-            <Link href="/settings/employees" className="text-table font-medium text-primary-button hover:underline">
+            <Link href="/settings/employees" className="text-table font-medium text-link hover:underline">
               {t("pageT")}
             </Link>
           }
@@ -446,7 +446,7 @@ export function StaffCardPage({ id }: { id: number }) {
               {t("permHead", { n: P.length, m: perms.length, r: roleName(e.roleCode) })}
             </span>
             {!ro ? (
-              <Link href="/settings/roles" className="flex items-center gap-1 text-table font-medium text-primary-button hover:underline">
+              <Link href="/settings/roles" className="flex items-center gap-1 text-table font-medium text-link hover:underline">
                 {t("changeRoleLink")}
                 <Icon icon={ArrowUpRight} className="size-3.5" />
               </Link>
@@ -457,7 +457,7 @@ export function StaffCardPage({ id }: { id: number }) {
               <div key={g.g} className="flex flex-col gap-2 rounded-card border border-border bg-surface px-4 py-3.5">
                 <div className="flex justify-between gap-2">
                   <span className="text-table font-semibold">{g.name}</span>
-                  <span className="text-caption text-text-muted">{t("ofN", { a: g.items.length, b: g.total })}</span>
+                  <span className="text-caption text-text-secondary">{t("ofN", { a: g.items.length, b: g.total })}</span>
                 </div>
                 {g.items.map((x) => (
                   <div key={x} className="flex items-start gap-2 text-table">
@@ -465,7 +465,7 @@ export function StaffCardPage({ id }: { id: number }) {
                     <span>{x}</span>
                   </div>
                 ))}
-                {!g.items.length ? <span className="text-table text-text-muted">{t("noPerms")}</span> : null}
+                {!g.items.length ? <span className="text-table text-text-secondary">{t("noPerms")}</span> : null}
               </div>
             ))}
           </div>
@@ -481,7 +481,7 @@ export function StaffCardPage({ id }: { id: number }) {
           <>
             {tab === "acts" && canMe(me.data, "audit.view") ? (
               <div className="flex justify-end">
-                <Link href="/settings/audit" className="flex items-center gap-1 text-table font-medium text-primary-button hover:underline">
+                <Link href="/settings/audit" className="flex items-center gap-1 text-table font-medium text-link hover:underline">
                   {t("openInAudit")}
                   <Icon icon={ArrowUpRight} className="size-3.5" />
                 </Link>
@@ -550,7 +550,7 @@ export function StaffCardPage({ id }: { id: number }) {
                     )}
                   >
                     <span>{r.name + (r.code === e.roleCode ? ` · ${t("current")}` : "")}</span>
-                    <span className="text-caption text-text-muted">{t("permN", { n: permSet(r.code).length })}</span>
+                    <span className="text-caption text-text-secondary">{t("permN", { n: permSet(r.code).length })}</span>
                   </button>
                 ))}
             </div>
@@ -635,7 +635,7 @@ export function StaffCardPage({ id }: { id: number }) {
                   )}
                 >
                   <span>{b.name + (b.id === e.branchId ? ` · ${t("current")}` : "")}</span>
-                  <span className="text-caption text-text-muted">{b.code}</span>
+                  <span className="text-caption text-text-secondary">{b.code}</span>
                 </button>
               ))}
             </div>
@@ -792,7 +792,7 @@ export function StaffCardPage({ id }: { id: number }) {
                 [t("newPw"), creds.pw],
                 [ts("crUrl"), typeof window === "undefined" ? "" : `${window.location.origin}/login`],
               ].map(([k, v]) => (
-                <div key={k} className="flex justify-between gap-3 border-b border-border-subtle py-2 last:border-b-0">
+                <div key={k} className="flex justify-between gap-3 border-b border-border py-2 last:border-b-0">
                   <dt className="text-table text-text-secondary">{k}</dt>
                   <dd className="font-mono text-table font-medium break-all">{v}</dd>
                 </div>

@@ -174,7 +174,7 @@ export function OverviewPage({ role }: { role: CounterpartyRole }) {
   const block = useBlockCounterparty();
   const activate = useActivateCounterparty();
   const colKeys = (customers ? C_COLS : S_COLS) as readonly Col[];
-  const { cols, update: setCols, reset: resetCols } = useColumnPrefs(`medix-kt-${role}-cols`, [...colKeys]);
+  const { cols, update: setCols, reset: resetCols } = useColumnPrefs(`yuzplus-kt-${role}-cols`, [...colKeys]);
   const views = (customers ? VIEWS_C : VIEWS_S) as readonly View[];
   const initialView = (views as readonly string[]).includes(params.get("view") ?? "") ? (params.get("view") as View) : "all";
   const [f, setF] = useState<OverviewFilters>({
@@ -350,7 +350,7 @@ export function OverviewPage({ role }: { role: CounterpartyRole }) {
         return r.priceTypes.length ? <span className="text-text-secondary">{r.priceTypes.join(", ")}</span> : <Dash />;
       case "lastSale":
         return r.lastSaleDate && r.lastSaleOrderId ? (
-          <Link href={`/orders/${r.lastSaleOrderId}`} onClick={(e) => e.stopPropagation()} className="text-primary-button hover:underline">
+          <Link href={`/orders/${r.lastSaleOrderId}`} onClick={(e) => e.stopPropagation()} className="text-link hover:underline">
             {formatIsoDate(r.lastSaleDate)} · {r.lastSaleNumber}
           </Link>
         ) : (
@@ -358,7 +358,7 @@ export function OverviewPage({ role }: { role: CounterpartyRole }) {
         );
       case "lastIn":
         return r.lastReceiptDate && r.lastReceiptId ? (
-          <Link href={`/receipts/${r.lastReceiptId}`} onClick={(e) => e.stopPropagation()} className="text-primary-button hover:underline">
+          <Link href={`/receipts/${r.lastReceiptId}`} onClick={(e) => e.stopPropagation()} className="text-link hover:underline">
             {formatIsoDate(r.lastReceiptDate)} · {r.lastReceiptNumber}
           </Link>
         ) : (
@@ -575,11 +575,7 @@ export function OverviewPage({ role }: { role: CounterpartyRole }) {
             {t("f.more")}
           </Button>
           {hasFilters ? (
-            <button
-              type="button"
-              onClick={clearAll}
-              className="h-control-sm px-1.5 text-[13px] font-medium text-primary-button hover:underline"
-            >
+            <button type="button" onClick={clearAll} className="h-control-sm px-1.5 text-[13px] font-medium text-link hover:underline">
               {t("f.reset")}
             </button>
           ) : null}

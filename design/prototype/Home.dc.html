@@ -172,7 +172,7 @@ class Component extends DCLogic {
   state = { per: 'month', q: '', tip: null, tipB: null, w: 0, ptTab: 'sales', stF: 'all', cFrom: '01.10.2026', cTo: '04.10.2026' };
   measure(el) { if (!el) return; if (this._el !== el) { this._el = el; if (window.ResizeObserver) { this._ro && this._ro.disconnect(); this._ro = new ResizeObserver(es => { const w = Math.round(es[0].contentRect.width); if (Math.abs(w - this.state.w) > 8) this.setState({ w }); }); this._ro.observe(el); } } const w = Math.round(el.getBoundingClientRect().width); if (w && Math.abs(w - this.state.w) > 8) this.setState({ w }); }
   rootRef = el => this.measure(el);
-  componentDidMount() { if (!window.MedixData) this._p = setInterval(() => { if (window.MedixData) { clearInterval(this._p); this.forceUpdate(); } }, 60); this._v = setInterval(() => { const D = window.MedixData; if (D && D.store.v !== this._sv) { this._sv = D.store.v; this.forceUpdate(); } }, 400); this.applyDemo(); }
+  componentDidMount() { if (!window.YuzplusData) this._p = setInterval(() => { if (window.YuzplusData) { clearInterval(this._p); this.forceUpdate(); } }, 60); this._v = setInterval(() => { const D = window.YuzplusData; if (D && D.store.v !== this._sv) { this._sv = D.store.v; this.forceUpdate(); } }, 400); this.applyDemo(); }
   componentDidUpdate(pp) { const d = this.props.demo; if (d && (!pp.demo || pp.demo.n !== d.n)) this.applyDemo(); }
   componentWillUnmount() { clearInterval(this._p); clearInterval(this._v); this._ro && this._ro.disconnect(); }
   applyDemo() { const d = this.props.demo; if (d && d.k === 'bhNoCompare') this.setState({ per: 'week' }); }
@@ -201,7 +201,7 @@ class Component extends DCLogic {
     return { isChart: true, vb: '0 0 ' + vw + ' ' + H, vw, h: H + 'px', n, gridY: [0, 0.25, 0.5, 0.75].map(f => ({ y: Math.round(H * f) + 0.5 })), bars, voids, xl: days.map((x, i) => ({ t: n > 12 && i % 3 && i !== n - 1 ? '' : x.date.slice(0, 5) })),
       hasTip: !!t, tipX: t ? ((s.tip + 0.5) / n * 100) + '%' : '0', tip: t ? { date: t.date, sum: fM(t.sum) + ' so\'m', docs: fill(L.bh_docsN, { n: t.n }) } : {}, hasVoid: voids.length > 0, voidNote: L.bh_noData, hasLegend: false, legend: [] }; }
   renderVals() {
-    const L = this.L, p = this.props, s = this.state, D = window.MedixData, narrow = s.w < 920;
+    const L = this.L, p = this.props, s = this.state, D = window.YuzplusData, narrow = s.w < 920;
     const base = { rootRef: this.rootRef, greet: '', sub: '', periods: [], showPeriod: true, blocks: [], hdrSecondary: [], hasPrimary: false, primary: {} };
     if (!D || !D.bhAttention) return base;
     const role = p.role || 'director', B = p.branch || 'ALL', per = s.per, user = p.userName || '', demo = p.demo || {};

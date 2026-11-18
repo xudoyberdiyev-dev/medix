@@ -26,14 +26,14 @@ type Reconciliation = components["schemas"]["Reconciliation"];
 
 const money = (v: string) => <span className="tabular-nums">{formatMoney(v)}</span>;
 
-/** Bank va MEDIX qoldigʻi farqi (tiyinlarda, float yoʻq). Kiritilmagan yoki notoʻgʻri summa — null. */
-export function reconDiff(bankInput: string, medix: string): string | null {
+/** Bank va 100+ qoldigʻi farqi (tiyinlarda, float yoʻq). Kiritilmagan yoki notoʻgʻri summa — null. */
+export function reconDiff(bankInput: string, system: string): string | null {
   const bank = bankInput.trim();
   if (!/^\d+(\.\d{1,2})?$/.test(bank)) return null;
-  return fromCents(toCents(bank) - toCents(medix));
+  return fromCents(toCents(bank) - toCents(system));
 }
 
-/** Kassa → «Bank koʻchirmasi»: koʻchirma sanasidagi bank qoldigʻi MEDIX jurnali bilan solishtiriladi, bankda bor harakatlar belgilanadi. */
+/** Kassa → «Bank koʻchirmasi»: koʻchirma sanasidagi bank qoldigʻi 100+ jurnali bilan solishtiriladi, bankda bor harakatlar belgilanadi. */
 export function BankReconTab(props: { accounts: MoneyAccount[]; canEdit: boolean }) {
   const t = useTranslations("cash.bank");
   const tc = useTranslations("cash");
@@ -65,7 +65,7 @@ export function BankReconTab(props: { accounts: MoneyAccount[]; canEdit: boolean
   if (banks.length === 0) return <EmptyState icon={Landmark} title={t("noAccount.title")} description={t("noAccount.description")} />;
 
   const p = preview.data;
-  const diff = p ? reconDiff(bankBalance, p.medixBalance) : null;
+  const diff = p ? reconDiff(bankBalance, p.yuzplusBalance) : null;
 
   async function save() {
     if (!p || accountId == null || !iso) return;
@@ -115,7 +115,7 @@ export function BankReconTab(props: { accounts: MoneyAccount[]; canEdit: boolean
   const historyColumns: TableColumn<Reconciliation>[] = [
     { key: "statementDate", title: t("statementDate"), render: (r) => formatIsoDate(r.statementDate) },
     { key: "bankBalance", title: t("col.bank"), align: "right", render: (r) => money(r.bankBalance) },
-    { key: "medixBalance", title: "MEDIX", align: "right", render: (r) => money(r.medixBalance) },
+    { key: "yuzplusBalance", title: "100+", align: "right", render: (r) => money(r.yuzplusBalance) },
     {
       key: "difference",
       title: tc("col.diff"),
@@ -172,9 +172,9 @@ export function BankReconTab(props: { accounts: MoneyAccount[]; canEdit: boolean
         <>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             <Card>
-              <div className="text-caption text-text-secondary">{t("medixBalance", { date: formatIsoDate(p.date) })}</div>
+              <div className="text-caption text-text-secondary">{t("yuzplusBalance", { date: formatIsoDate(p.date) })}</div>
               <div className="mt-1 font-mono text-subtitle tabular-nums">
-                {formatMoney(p.medixBalance)} {tc("currency")}
+                {formatMoney(p.yuzplusBalance)} {tc("currency")}
               </div>
             </Card>
             <Card>

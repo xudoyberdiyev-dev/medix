@@ -7,7 +7,7 @@
 </head>
 <body>
 <x-dc>
-<helmet><script src="medix-data.js"></script></helmet>
+<helmet><script src="yuzplus-data.js"></script></helmet>
 <div ref="{{ rootRef }}" data-screen-label="Import ustasi" style="display:flex;flex-direction:column;gap:16px;min-width:0;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
   <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
     <div style="display:flex;flex-direction:column;gap:2px;min-width:0">
@@ -97,7 +97,7 @@
         <div style="border:1px solid #E2E8F0;border-radius:8px;overflow-x:auto">
           <div style="min-width:720px">
             <div style="display:grid;grid-template-columns:minmax(180px,0.9fr) 28px minmax(220px,1fr) minmax(200px,1fr);height:36px;align-items:center;background:#F8FAFA;border-bottom:1px solid #E2E8F0;font-size:12px;font-weight:500;color:#5B6B6A">
-              <span style="padding:0 14px">{{ L.bq_fMedix }}</span><span></span><span style="padding:0 12px">{{ L.bq_fFile }}</span><span style="padding:0 12px">{{ L.bq_fSample }}</span>
+              <span style="padding:0 14px">{{ L.bq_f100+ }}</span><span></span><span style="padding:0 12px">{{ L.bq_fFile }}</span><span style="padding:0 12px">{{ L.bq_fSample }}</span>
             </div>
             <sc-for list="{{ mapRows }}" as="m">
               <div style="display:grid;grid-template-columns:minmax(180px,0.9fr) 28px minmax(220px,1fr) minmax(200px,1fr);min-height:60px;align-items:center;border-bottom:1px solid #EEF2F4">
@@ -228,7 +228,7 @@ const download = (name, text) => { try { const b = new Blob([text], { type: 'tex
 class Component extends DCLogic {
   state = { step: 1, max: 1, file: null, drag: false, sheet: 0, hdr: 1, map: {}, mapNote: null, profSaved: false, fix: {}, pick: {}, merged: {}, filter: 'all', err: '', pk: null, pkErr: '', create: null };
   fileRef = React.createRef();
-  get D() { return window.MedixData; }
+  get D() { return window.YuzplusData; }
   get L() { return this.props.dict || {}; }
   rootRef = React.createRef();
   componentDidMount() { if (!this.D || !this.D.bqValidate) this._p = setInterval(() => { if (this.D && this.D.bqValidate) { clearInterval(this._p); this.init(); } }, 60); else this.init();
@@ -286,7 +286,7 @@ class Component extends DCLogic {
     const n = s.step + 1, extra = n === 3 && (s.max < 3 || !Object.keys(s.map).length) ? this.mapFor(s.file, s.sheet, s.hdr) : {};
     this.setState({ step: n, max: Math.max(s.max, n), err: '', ...extra }); }
   back() { const s = this.state; if (s.step === 1) return this.props.onCancel && this.props.onCancel(); this.setState({ step: s.step - 1, err: '' }); }
-  renderVals() { return Object.assign({ showDemo: !window.MedixData || !window.MedixData.demoUi || window.MedixData.demoUi() }, this._rv()); } // T11a: demo tugmalari faqat demo rejimida
+  renderVals() { return Object.assign({ showDemo: !window.YuzplusData || !window.YuzplusData.demoUi || window.YuzplusData.demoUi() }, this._rv()); } // T11a: demo tugmalari faqat demo rejimida
   _rv() {
     const L = this.L, s = this.state, D = this.D, p = this.props, narrow = !!p.narrow || !!s.compact || (typeof window !== 'undefined' && window.innerWidth <= 1100), type = p.type || 'goods';
     const base = { L, steps: [], sheetOpts: [], pvRows: [], mapRows: [], colOpts: [], kpis: [], vHead: [], vRows: [], resKpis: [], sims: [], pickOpts: [], createItems: [], pick: {}, isS1: true, noFile: true, gridCols: '1fr' };
@@ -360,7 +360,7 @@ class Component extends DCLogic {
       isS1: S1, isS2: s.step === 2, isS3: s.step === 3, isS4: s.step === 4, isS5: s.step === 5,
       noFile: !s.file, hasFile: !!s.file, fileRef: this.fileRef, browse: () => this.fileRef.current && this.fileRef.current.click(), onFile: e => this.handleFile(e.target.files && e.target.files[0]),
       dropBorder: s.drag ? '#0D9488' : '#CBD5D3', dropBg: s.drag ? '#F0FAF8' : '#FFFFFF', onDragOver: e => { e.preventDefault(); if (!this.state.drag) this.setState({ drag: true }); }, onDragLeave: () => this.setState({ drag: false }), onDrop: e => { e.preventDefault(); this.setState({ drag: false }); this.handleFile(e.dataTransfer.files && e.dataTransfer.files[0]); },
-      sampleName: D.bqSample(type, p.branch, p.wh).file, loadSample: () => this.loadSample(), dlTpl: () => { download(`MEDIX_shablon_${type}.csv`, csv([F.map(f => (L['bq_f_' + f.key] || L['kt_f_' + f.key] || L['nr_f_' + f.key]) + (f.req ? ' *' : ''))])); this.toast(L.bq_tTpl); },
+      sampleName: D.bqSample(type, p.branch, p.wh).file, loadSample: () => this.loadSample(), dlTpl: () => { download(`yuzplus_shablon_${type}.csv`, csv([F.map(f => (L['bq_f_' + f.key] || L['kt_f_' + f.key] || L['nr_f_' + f.key]) + (f.req ? ' *' : ''))])); this.toast(L.bq_tTpl); },
       fileName: s.file ? s.file.file : '', fileMeta: s.file ? `${(s.file.size / 1024).toFixed(1).replace('.', ',')} KB · ${fill(L.bq_sheetsN, { n: s.file.sheets.length })} · ${fill(L.bq_dataN, { n: dataN })}` : '', removeFile: () => this.setState({ file: null, max: 1, map: {}, fix: {}, pick: {}, merged: {} }),
       s2Cols: narrow ? 1 : 2, sheetOpts: s.file ? s.file.sheets.map((sh, i) => ({ value: i, label: sh.name, sub: fill(L.bq_dataN, { n: Math.max(0, sh.grid.length - 1) }) })) : [], sheetVal: s.sheet, setSheet: v => this.setState({ sheet: v, hdr: 1, map: {}, max: 2 }),
       hdrStr: String(s.hdr), onHdr: e => { const n = parseInt(e.target.value, 10); this.setState({ hdr: isNaN(n) ? 0 : n, map: {}, max: 2 }); }, hdrDec: () => this.setState(st => ({ hdr: Math.max(1, st.hdr - 1), map: {}, max: 2 })), hdrInc: () => this.setState(st => ({ hdr: Math.min(g.length, st.hdr + 1), map: {}, max: 2 })),
@@ -375,7 +375,7 @@ class Component extends DCLogic {
       pickOpen: !!pk, pick: pk || {}, pickTitle: (type === 'goods' || type === 'prices') ? L.bq_pickT : (type === 'cash' ? L.bq_f_acct : L.bq_f_party), hasSim: sims.length > 0, sims, pickOpts, setPickVal: v => this.setState(st => ({ pk: { ...st.pk, val: v }, pkErr: '' })), pickErr: s.pkErr,
       hasPickAll: nSame > 1, pickAllLabel: fill(L.bq_pickAll, { n: nSame }), paBg: pk && pk.all ? '#0F766E' : '#FFFFFF', paBorder: pk && pk.all ? '#0F766E' : '#647574', togglePickAll: () => this.setState(st => ({ pk: { ...st.pk, all: !st.pk.all } })),
       canCreate: (type === 'goods' || type === 'prices'), openCreate: () => this.setState(st => ({ create: { name: st.pk.name } })), closePick: () => this.setState({ pk: null }), applyPick: () => this.applyPick(), stop: e => e.stopPropagation(),
-      createOpen: !!s.create, createItems, closeCreate: () => this.setState({ create: null }), doCreate: () => { try { localStorage.setItem('medix-product-prefill', JSON.stringify({ name: crName, at: Date.now() })); window.open('Medix ERP.dc.html#products', '_blank'); } catch (e) {} this.toast(fill(L.bq_tCreate, { n: crName })); this.setState({ create: null }); }
+      createOpen: !!s.create, createItems, closeCreate: () => this.setState({ create: null }), doCreate: () => { try { localStorage.setItem('yuzplus-product-prefill', JSON.stringify({ name: crName, at: Date.now() })); window.open('100plus ERP.dc.html#products', '_blank'); } catch (e) {} this.toast(fill(L.bq_tCreate, { n: crName })); this.setState({ create: null }); }
     };
   }
 }

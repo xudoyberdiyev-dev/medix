@@ -3,16 +3,18 @@ import { expect, test } from "@playwright/test";
 /** Til tanlash (SPEC 10): cookie'ga yoziladi, URL oʻzgarmaydi, sahifa yangi tilda qayta chiziladi. */
 test("login sahifasida tilni almashtirish", async ({ page, context }) => {
   await page.goto("/login");
-  await expect(page.getByRole("heading", { name: "Tizimga kirish" })).toBeVisible();
+  await expect(page.getByText("Ishni davom ettirish uchun tizimga kiring")).toBeVisible();
 
-  // Prototip LoginScreen: yuqori oʻngda Oʻz / Ўз / Ру
-  await page.getByRole("radiogroup", { name: "Interfeys tili" }).getByRole("radio", { name: "Русский" }).click();
-  await expect(page.getByRole("heading", { name: "Вход в систему" })).toBeVisible();
+  // O20: yuqori oʻngda til menyusi (Oʻzbekcha / Ўзбекча / Русский)
+  await page.getByRole("button", { name: "Interfeys tili" }).click();
+  await page.getByRole("option", { name: "Русский" }).click();
+  await expect(page.getByText("Войдите в систему, чтобы продолжить работу")).toBeVisible();
   await expect(page).toHaveURL(/\/login$/);
-  expect((await context.cookies()).find((c) => c.name === "MEDIX_LOCALE")?.value).toBe("ru");
+  expect((await context.cookies()).find((c) => c.name === "YUZPLUS_LOCALE")?.value).toBe("ru");
 
-  await expect(page.getByRole("radio", { name: "Русский" })).toHaveAttribute("aria-checked", "true");
-  await page.getByRole("radiogroup", { name: "Язык интерфейса" }).getByRole("radio", { name: "Ўзбекча" }).click();
-  await expect(page.getByRole("heading", { name: "Тизимга кириш" })).toBeVisible();
+  await page.getByRole("button", { name: "Язык интерфейса" }).click();
+  await expect(page.getByRole("option", { name: "Русский" })).toHaveAttribute("aria-selected", "true");
+  await page.getByRole("option", { name: "Ўзбекча" }).click();
+  await expect(page.getByText("Ишни давом эттириш учун тизимга киринг")).toBeVisible();
   await expect(page.locator("html")).toHaveAttribute("lang", "uz-Cyrl");
 });

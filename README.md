@@ -1,4 +1,4 @@
-# MEDIX
+# 100+
 
 Farmatsevtika ulgurji distribyutsiyasi uchun ERP: kirim, qoldiqlar, buyurtma zanjiri, narxlar, mijozlar va yetkazib beruvchilar, pul, markirovka, hisobotlar.
 

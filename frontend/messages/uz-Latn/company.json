@@ -15,5 +15,15 @@
   "cancel": "Bekor qilish",
   "saved": "Kompaniya nomi saqlandi",
   "saveFailed": "Saqlanmadi. Qayta urinib koʻring.",
-  "required": "Majburiy maydon — nomni kiriting"
+  "required": "Majburiy maydon — nomni kiriting",
+  "supportCard": "Kirish sahifasidagi yordam",
+  "supportHint": "Kirish sahifasi pastida hamma koʻradi (tizimga kirmagan xodim ham).",
+  "supportPhone": "Yordam telefoni",
+  "supportPhonePh": "+998 71 200-00-00",
+  "supportHours": "Ish vaqti",
+  "supportHoursPh": "du–ju 09:00–18:00",
+  "supportEdit": "Yordamni tahrirlash",
+  "supportTitle": "Kirish sahifasidagi yordam",
+  "notSet": "Kiritilmagan",
+  "phoneInvalid": "Faqat raqam, «+», boʻsh joy, qavs va chiziqcha. Masalan: +998 71 200-00-00."
 }

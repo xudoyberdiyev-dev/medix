@@ -1,1 +1,1 @@
-rootProject.name = "medix-backend"
+rootProject.name = "yuzplus-backend"

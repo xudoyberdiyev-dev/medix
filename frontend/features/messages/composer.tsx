@@ -159,7 +159,7 @@ export function Composer({
           onClick={() => setAsTask((v) => !v)}
           className={cn(
             "flex h-control-md shrink-0 items-center gap-1 rounded-control px-2 text-table",
-            asTask ? "bg-primary-soft text-primary-button" : "text-text-secondary hover:bg-background",
+            asTask ? "bg-primary-soft text-link" : "text-text-secondary hover:bg-background",
           )}
         >
           <ClipboardList size={18} strokeWidth={1.5} aria-hidden />

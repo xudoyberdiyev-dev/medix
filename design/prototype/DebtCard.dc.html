@@ -7,7 +7,7 @@
 </head>
 <body>
 <x-dc>
-<helmet><script src="medix-data.js"></script></helmet>
+<helmet><script src="yuzplus-data.js"></script></helmet>
 <div style="display:flex;flex-direction:column;min-width:0;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
 <sc-if value="{{ isCard }}" hint-placeholder-val="{{ true }}">
 <div data-screen-label="Qarz kartochkasi" style="display:flex;flex-direction:column;gap:16px;min-width:0">
@@ -51,7 +51,7 @@ const ST = { ok: ['circle-check', '#15803D', '#F0FDF4'], overdue: ['clock-alert'
 const RS = { made: ['file-check-2', '#1D4ED8', '#EFF6FF'], sent: ['send', '#B45309', '#FFFBEB'], signed: ['circle-check', '#15803D', '#F0FDF4'], diff: ['triangle-alert', '#B91C1C', '#FEF2F2'] };
 class Component extends DCLogic {
   state = { tab: 'open', from: '01.07.2026', to: '04.10.2026', adv: null };
-  get D() { return window.MedixData; }
+  get D() { return window.YuzplusData; }
   get L() { return this.props.dict || {}; }
   componentDidMount() {
     this.initAdv();

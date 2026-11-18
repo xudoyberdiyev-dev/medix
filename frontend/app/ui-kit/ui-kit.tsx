@@ -103,7 +103,7 @@ export function UiKit() {
 
   return (
     <main className="mx-auto flex max-w-[1200px] flex-col gap-6 p-6">
-      <h1 className="text-page-title">Medix komponentlari</h1>
+      <h1 className="text-page-title">100+ komponentlari</h1>
 
       <Card title="Tugmalar va holatlar">
         <div className="flex flex-wrap items-center gap-2">

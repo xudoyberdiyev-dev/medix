@@ -120,7 +120,7 @@ export function DriverPage() {
             onClick={() => setTab(k)}
             className={cn(
               "h-control-lg rounded-control text-body font-semibold transition-colors",
-              tab === k ? "bg-surface text-primary-button shadow-sm" : "text-text-secondary hover:text-text-primary",
+              tab === k ? "bg-surface text-link shadow-sm" : "text-text-secondary hover:text-text-primary",
             )}
           >
             {label}
@@ -369,7 +369,7 @@ function TripView(props: {
             {s.phone ? (
               <a
                 href={`tel:${s.phone.replace(/[^\d+]/g, "")}`}
-                className="inline-flex min-h-12 items-center gap-2 self-start rounded-control border border-border px-3.5 font-semibold text-primary-button"
+                className="inline-flex min-h-12 items-center gap-2 self-start rounded-control border border-border px-3.5 font-semibold text-link"
               >
                 <Phone size={18} strokeWidth={1.5} aria-hidden />
                 {s.phone}
@@ -455,7 +455,7 @@ function TripView(props: {
             {transit && !s.outcome ? (
               <>
                 <div className="flex flex-wrap gap-2">
-                  <label className="inline-flex min-h-12 cursor-pointer items-center gap-2 rounded-control border border-border bg-surface px-3.5 font-semibold text-primary-button">
+                  <label className="inline-flex min-h-12 cursor-pointer items-center gap-2 rounded-control border border-border bg-surface px-3.5 font-semibold text-link">
                     <Camera size={18} strokeWidth={1.5} aria-hidden />
                     {s.photos > 0 ? tr("driver.photos", { count: s.photos }) : tr("driver.takePhoto")}
                     <input

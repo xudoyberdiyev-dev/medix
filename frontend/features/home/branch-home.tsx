@@ -128,7 +128,7 @@ function Approvals({ rows }: { rows: Approval[] }) {
       title: "",
       right: true,
       render: () => (
-        <span className="inline-flex items-center gap-1 whitespace-nowrap text-primary-button">
+        <span className="inline-flex items-center gap-1 whitespace-nowrap text-link">
           {t("review")} <ArrowRight size={14} strokeWidth={1.5} aria-hidden />
         </span>
       ),

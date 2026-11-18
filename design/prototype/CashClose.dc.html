@@ -7,7 +7,7 @@
 </head>
 <body>
 <x-dc>
-<helmet><script src="medix-data.js"></script></helmet>
+<helmet><script src="yuzplus-data.js"></script></helmet>
 <div data-screen-label="Kunni yopish" style="display:flex;flex-direction:column;gap:16px;min-width:0;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
   <dc-import name="DocumentHeader" parent-label="{{ acctName }}" on-parent="{{ back }}" title="{{ L.kb_closeT }}" number="{{ date }}" badge="{{ badge }}" steps="{{ steps }}" primary="{{ primary }}" hint-size="100%,88px"></dc-import>
   <sc-for list="{{ banners }}" as="b"><dc-import name="StatusBanner" tone="{{ b.tone }}" icon="{{ b.icon }}" title="{{ b.title }}" text="{{ b.text }}" hint-size="100%,48px"></dc-import></sc-for>
@@ -83,7 +83,7 @@ const NOM = [200000, 100000, 50000, 20000, 10000, 5000, 2000, 1000];
 const pinMsg = (L, r, n) => r.err === 'locked' ? fill(L.bh_pinLocked, { n, m: r.min }) : r.err === 'wrong' ? fill(L.bh_pinWrong, { n: r.left }) : r.err === 'perm' ? L.bh_pinPerm : L.bh_pinPick;
 class Component extends DCLogic {
   state = { mode: 'den', counts: {}, total: null, note: '', pin: '', tried: false, vs: null, dlg: null, done: null, adjNo: null };
-  get D() { return window.MedixData; }
+  get D() { return window.YuzplusData; }
   get L() { return this.props.dict || {}; }
   componentDidMount() { this.init(); }
   componentDidUpdate(pp) { if (pp.docKey !== this.props.docKey) this.init(); }
@@ -102,7 +102,7 @@ class Component extends DCLogic {
   submit() { const c = this.check(), D = this.D, s = this.state; this.setState({ tried: true }); if (c.errs.length) return this.setState({ vs: c });
     if (c.c != null && Math.abs(c.diff) > 0.004) { const a = D.accById(this.props.acct) || {}, r = D.pinCheck(s.appr, s.pin, 'cash.closeDiff', a.branch); if (!r.ok) return this.setState({ pin: '', pinMsg: pinMsg(this.L, r, s.appr) }); }
     this.setState({ dlg: true, pinMsg: '' }); }
-  renderVals() { return Object.assign({ showDemo: !window.MedixData || !window.MedixData.demoUi || window.MedixData.demoUi() }, this._rv()); } // T11a: demo tugmalari faqat demo rejimida
+  renderVals() { return Object.assign({ showDemo: !window.YuzplusData || !window.YuzplusData.demoUi || window.YuzplusData.demoUi() }, this._rv()); } // T11a: demo tugmalari faqat demo rejimida
   _rv() {
     const L = this.L, s = this.state, D = this.D, p = this.props, narrow = !!p.narrow;
     const base = { L, dens: [], modes: [], kpis: [], banners: [], totItems: [], vsErrors: [], vsWarnings: [], dlg: {}, steps: [] };

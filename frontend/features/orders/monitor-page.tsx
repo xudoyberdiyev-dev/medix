@@ -279,7 +279,7 @@ export function MonitorPage() {
                           {col.cards.length}
                         </span>
                         {late > 0 ? (
-                          <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-danger px-1.5 text-caption text-white tabular-nums">
+                          <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-danger px-1.5 text-caption text-on-solid tabular-nums">
                             {late}
                           </span>
                         ) : null}

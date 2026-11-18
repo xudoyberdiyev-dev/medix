@@ -358,7 +358,7 @@ export function Panel({ title, href, children, footer }: { title: string; href?:
       <header className="flex items-center justify-between gap-3 px-4 pt-4 pb-3">
         <h2 className="text-subtitle">{title}</h2>
         {href ? (
-          <Link href={href} className="inline-flex items-center gap-1 text-body text-primary-button hover:underline">
+          <Link href={href} className="inline-flex items-center gap-1 text-body text-link hover:underline">
             {t("all")} <ArrowRight size={14} strokeWidth={1.5} aria-hidden />
           </Link>
         ) : null}

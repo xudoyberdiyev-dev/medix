@@ -16,6 +16,9 @@ import { describeError } from "@/features/setup/form-error";
 import { api, unwrap } from "@/lib/api/client";
 import { formatDateTime, formatQuantity } from "@/lib/format";
 
+/** Yordam telefoni: raqam, «+», boʻsh joy, qavs, chiziqcha (backend bilan bir xil). */
+const SUPPORT_PHONE = /^[+0-9 ()-]*$/;
+
 /** Prototip AdminOrg «Kompaniya»: guruh maʼlumotlari va tizim holati; nom — company.edit bilan tahrirlanadi (audit). */
 export function CompanyPage() {
   const t = useTranslations("company");
@@ -26,6 +29,22 @@ export function CompanyPage() {
   const co = useQuery({ queryKey: ["company"], queryFn: () => unwrap(api.GET("/api/company")), enabled: allowed });
   const [editing, setEditing] = useState<string | null>(null);
   const [tried, setTried] = useState(false);
+  const [support, setSupport] = useState<{ phone: string; hours: string } | null>(null);
+  const saveSupport = useMutation({
+    mutationFn: async (v: { phone: string; hours: string }) => {
+      await ensureCsrf();
+      return unwrap(
+        api.PUT("/api/company/support", { body: { supportPhone: v.phone.trim() || undefined, supportHours: v.hours.trim() || undefined } }),
+      );
+    },
+    onSuccess: async (d) => {
+      qc.setQueryData(["company"], d);
+      await qc.invalidateQueries({ queryKey: ["auth", "login-info"] });
+      setSupport(null);
+      toast({ tone: "success", title: t("saved") });
+    },
+    onError: (e) => toast({ tone: "danger", title: t("saveFailed"), description: describeError(e).message ?? undefined }),
+  });
   const save = useMutation({
     mutationFn: async (name: string) => {
       await ensureCsrf();
@@ -52,6 +71,7 @@ export function CompanyPage() {
       ]
     : [];
   const empty = editing !== null && editing.trim() === "";
+  const phoneBad = support !== null && !SUPPORT_PHONE.test(support.phone.trim());
 
   return (
     <>
@@ -85,7 +105,71 @@ export function CompanyPage() {
             )}
           </Card>
         )}
+        {d ? (
+          <Card
+            className="mt-4"
+            title={t("supportCard")}
+            actions={
+              canEdit ? (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  icon={Pencil}
+                  onClick={() => setSupport({ phone: d.supportPhone ?? "", hours: d.supportHours ?? "" })}
+                >
+                  {t("supportEdit")}
+                </Button>
+              ) : null
+            }
+          >
+            <dl className="grid grid-cols-[minmax(160px,220px)_1fr] gap-x-6 gap-y-3 text-body">
+              {(
+                [
+                  [t("supportPhone"), d.supportPhone],
+                  [t("supportHours"), d.supportHours],
+                ] as const
+              ).map(([k, v]) => (
+                <div key={k} className="contents">
+                  <dt className="text-text-secondary">{k}</dt>
+                  <dd className={v ? "font-medium" : "text-text-secondary"}>{v || t("notSet")}</dd>
+                </div>
+              ))}
+            </dl>
+            <p className="mt-3 text-caption text-text-secondary">{t("supportHint")}</p>
+          </Card>
+        ) : null}
       </div>
+      <Modal
+        open={support !== null}
+        onClose={() => setSupport(null)}
+        title={t("supportTitle")}
+        primaryAction={{
+          label: t("save"),
+          loading: saveSupport.isPending,
+          disabled: phoneBad,
+          onClick: () => {
+            if (support && !phoneBad) saveSupport.mutate(support);
+          },
+        }}
+        secondaryAction={{ label: t("cancel"), onClick: () => setSupport(null) }}
+      >
+        <div className="flex flex-col gap-4">
+          <TextField
+            label={t("supportPhone")}
+            value={support?.phone ?? ""}
+            onChange={(v) => setSupport((s) => (s ? { ...s, phone: v } : s))}
+            placeholder={t("supportPhonePh")}
+            error={phoneBad ? t("phoneInvalid") : undefined}
+          />
+          <TextField
+            label={t("supportHours")}
+            value={support?.hours ?? ""}
+            onChange={(v) => setSupport((s) => (s ? { ...s, hours: v } : s))}
+            placeholder={t("supportHoursPh")}
+            hint={t("supportHint")}
+          />
+        </div>
+      </Modal>
       <Modal
         open={editing !== null}
         onClose={() => setEditing(null)}

@@ -2,7 +2,7 @@
   "openapi" : "3.1.0",
   "info" : {
     "description" : "Farmatsevtika ulgurji distribyutsiyasi ERP",
-    "title" : "MEDIX API",
+    "title" : "100+ API",
     "version" : "v1"
   },
   "servers" : [ {
@@ -785,6 +785,26 @@
         "tags" : [ "auth" ]
       }
     },
+    "/api/auth/login-info" : {
+      "get" : {
+        "description" : "Yordam telefoni, ish vaqti va faol rollar soni.",
+        "operationId" : "get_31",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LoginInfo"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Kirish sahifasi maʼlumoti (ommaviy)",
+        "tags" : [ "auth" ]
+      }
+    },
     "/api/auth/me" : {
       "get" : {
         "operationId" : "me",
@@ -917,7 +937,7 @@
             "description" : "OK"
           }
         },
-        "summary" : "Solishtirish oynasi: sanadagi MEDIX qoldigʻi, oxirgi solishtirish, hali belgilanmagan harakatlar",
+        "summary" : "Solishtirish oynasi: sanadagi 100+ qoldigʻi, oxirgi solishtirish, hali belgilanmagan harakatlar",
         "tags" : [ "bank-reconciliations" ]
       }
     },
@@ -2278,6 +2298,36 @@
           }
         },
         "summary" : "Kompaniya logotipi (PNG yoki SVG); yo'q bo'lsa — 404",
+        "tags" : [ "company" ]
+      }
+    },
+    "/api/company/support" : {
+      "put" : {
+        "description" : "Kirish sahifasi pastida ko'rsatiladi (O20). Audit: company.update.",
+        "operationId" : "saveSupport",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CompanySupportRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CompanyOverview"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Yordam telefoni va ish vaqti",
         "tags" : [ "company" ]
       }
     },
@@ -12924,6 +12974,29 @@
         "tags" : [ "profile" ]
       }
     },
+    "/api/profile/theme" : {
+      "put" : {
+        "description" : "Yorug'/qorong'i/tizim bo'yicha — har qurilmada bir xil bo'lishi uchun (O24).",
+        "operationId" : "setTheme",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ThemeRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          }
+        },
+        "summary" : "Interfeys mavzusini saqlash",
+        "tags" : [ "profile" ]
+      }
+    },
     "/api/receipts" : {
       "get" : {
         "description" : "Yorliqlar soni (holat filtrisiz), filtr variantlari va kartalar bilan.",
@@ -22886,6 +22959,12 @@
           "name" : {
             "type" : "string"
           },
+          "supportHours" : {
+            "type" : "string"
+          },
+          "supportPhone" : {
+            "type" : "string"
+          },
           "warehouses" : {
             "type" : "integer",
             "format" : "int32"
@@ -22907,6 +22986,22 @@
           }
         },
         "required" : [ "name" ]
+      },
+      "CompanySupportRequest" : {
+        "type" : "object",
+        "properties" : {
+          "supportHours" : {
+            "type" : "string",
+            "maxLength" : 60,
+            "minLength" : 0
+          },
+          "supportPhone" : {
+            "type" : "string",
+            "maxLength" : 32,
+            "minLength" : 0,
+            "pattern" : "^[+0-9 ()\\-]*$"
+          }
+        }
       },
       "CompareDetail" : {
         "type" : "object",
@@ -28110,6 +28205,22 @@
         },
         "required" : [ "at", "result" ]
       },
+      "LoginInfo" : {
+        "type" : "object",
+        "properties" : {
+          "roles" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "supportHours" : {
+            "type" : "string"
+          },
+          "supportPhone" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "roles" ]
+      },
       "LoginRequest" : {
         "type" : "object",
         "properties" : {
@@ -28968,7 +29079,7 @@
         "properties" : {
           "company" : {
             "type" : "string",
-            "description" : "Tashkilot nomi (sidebar sarlavhasida, MEDIX ostida)"
+            "description" : "Tashkilot nomi (sidebar sarlavhasida, 100+ ostida)"
           },
           "expiry" : {
             "$ref" : "#/components/schemas/Badge"
@@ -33412,9 +33523,14 @@
           },
           "roleName" : {
             "type" : "string"
+          },
+          "theme" : {
+            "type" : "string",
+            "description" : "Interfeys mavzusi: light, dark yoki system (O24)",
+            "enum" : [ "light", "dark", "system" ]
           }
         },
-        "required" : [ "fullName", "id", "login", "pinSet", "roleCode", "roleName" ]
+        "required" : [ "fullName", "id", "login", "pinSet", "roleCode", "roleName", "theme" ]
       },
       "PurchaserHomeView" : {
         "type" : "object",
@@ -34607,9 +34723,6 @@
             "type" : "string",
             "format" : "date"
           },
-          "medixBalance" : {
-            "type" : "string"
-          },
           "unmatched" : {
             "type" : "array",
             "items" : {
@@ -34618,9 +34731,12 @@
           },
           "unmatchedTotal" : {
             "type" : "string"
+          },
+          "yuzplusBalance" : {
+            "type" : "string"
           }
         },
-        "required" : [ "account", "accountId", "date", "medixBalance", "unmatched", "unmatchedTotal" ]
+        "required" : [ "account", "accountId", "date", "unmatched", "unmatchedTotal", "yuzplusBalance" ]
       },
       "ReconRequest" : {
         "type" : "object",
@@ -34760,9 +34876,6 @@
             "type" : "integer",
             "format" : "int64"
           },
-          "medixBalance" : {
-            "type" : "string"
-          },
           "moves" : {
             "type" : "integer",
             "format" : "int32"
@@ -34773,9 +34886,12 @@
           "statementDate" : {
             "type" : "string",
             "format" : "date"
+          },
+          "yuzplusBalance" : {
+            "type" : "string"
           }
         },
-        "required" : [ "account", "accountId", "bankBalance", "createdAt", "createdBy", "difference", "id", "medixBalance", "moves", "statementDate" ]
+        "required" : [ "account", "accountId", "bankBalance", "createdAt", "createdBy", "difference", "id", "moves", "statementDate", "yuzplusBalance" ]
       },
       "Ref" : {
         "type" : "object",
@@ -37733,6 +37849,18 @@
             "format" : "int64"
           }
         }
+      },
+      "ThemeRequest" : {
+        "type" : "object",
+        "properties" : {
+          "theme" : {
+            "type" : "string",
+            "enum" : [ "light", "dark", "system" ],
+            "minLength" : 1,
+            "pattern" : "^(light|dark|system)$"
+          }
+        },
+        "required" : [ "theme" ]
       },
       "ThreadDetail" : {
         "type" : "object",

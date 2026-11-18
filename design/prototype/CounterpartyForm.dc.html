@@ -7,7 +7,7 @@
 </head>
 <body>
 <x-dc>
-<helmet><script src="medix-data.js"></script></helmet>
+<helmet><script src="yuzplus-data.js"></script></helmet>
 <div data-screen-label="{{ screenLabel }}" style="display:flex;flex-direction:column;align-items:center;min-width:0;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
   <div style="width:100%;max-width:880px;display:flex;flex-direction:column;gap:16px">
     <div style="display:flex;flex-direction:column;gap:6px">
@@ -109,7 +109,7 @@ const pD = s => { const m = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(String(s || ''));
 const MONO = "'JetBrains Mono',monospace";
 class Component extends DCLogic {
   state = { f: null, base: '', tried: false, leave: null, stirTouched: false };
-  get D() { return window.MedixData; }
+  get D() { return window.YuzplusData; }
   get L() { return this.props.dict || {}; }
   mt() { return this.props.kind !== 'yt'; }
   componentDidMount() { if (!this.D || !this.D.ktByKey) this._p = setInterval(() => { if (this.D && this.D.ktByKey) { clearInterval(this._p); this.init(); } }, 60); else this.init(); }

@@ -1,17 +1,17 @@
-# MEDIX — lokal muhit (SPEC 15-bo'lim).
+# 100+ — lokal muhit (SPEC 15-bo'lim).
 # Ishga tushirish: docker compose up -d   →  http://localhost:3000
 services:
   postgres:
     image: postgres:18-alpine
     environment:
-      POSTGRES_DB: medix
-      POSTGRES_USER: medix
-      POSTGRES_PASSWORD: ${MEDIX_DB_PASSWORD:-medix}
+      POSTGRES_DB: yuzplus
+      POSTGRES_USER: yuzplus
+      POSTGRES_PASSWORD: ${YUZPLUS_DB_PASSWORD:-yuzplus}
       TZ: Asia/Tashkent
     ports: ["5432:5432"]
     volumes: [pgdata:/var/lib/postgresql]
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U medix -d medix"]
+      test: ["CMD-SHELL", "pg_isready -U yuzplus -d yuzplus"]
       interval: 5s
       retries: 10
 
@@ -19,22 +19,22 @@ services:
     image: minio/minio:latest
     command: server /data --console-address ":9001"
     environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-medix}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-medix-minio-secret}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-yuzplus}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-yuzplus-minio-secret}
     ports: ["9000:9000", "9001:9001"]
     volumes: [miniodata:/data]
 
   backend:
     build: ./backend
     environment:
-      MEDIX_DB_URL: jdbc:postgresql://postgres:5432/medix
-      MEDIX_DB_USER: medix
-      MEDIX_DB_PASSWORD: ${MEDIX_DB_PASSWORD:-medix}
+      YUZPLUS_DB_URL: jdbc:postgresql://postgres:5432/yuzplus
+      YUZPLUS_DB_USER: yuzplus
+      YUZPLUS_DB_PASSWORD: ${YUZPLUS_DB_PASSWORD:-yuzplus}
       # Lokal ishlab chiqish: http orqali (productionda Secure cookie yoqilgan).
-      MEDIX_COOKIE_SECURE: "false"
+      YUZPLUS_COOKIE_SECURE: "false"
       # Birinchi ishga tushirishdagi CEO hisobi (.env faylida beriladi, repoga yozilmaydi).
-      MEDIX_BOOTSTRAP_LOGIN: ${MEDIX_BOOTSTRAP_LOGIN:-}
-      MEDIX_BOOTSTRAP_PASSWORD: ${MEDIX_BOOTSTRAP_PASSWORD:-}
+      YUZPLUS_BOOTSTRAP_LOGIN: ${YUZPLUS_BOOTSTRAP_LOGIN:-}
+      YUZPLUS_BOOTSTRAP_PASSWORD: ${YUZPLUS_BOOTSTRAP_PASSWORD:-}
     depends_on:
       postgres: { condition: service_healthy }
     ports: ["8080:8080"]

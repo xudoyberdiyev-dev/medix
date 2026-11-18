@@ -149,7 +149,7 @@ export function ColumnsMenu({
               <button
                 type="button"
                 onClick={onReset}
-                className="flex h-8 w-full items-center gap-2 rounded-[6px] px-2 text-left text-[13px] font-medium text-primary-button hover:bg-table-header"
+                className="flex h-8 w-full items-center gap-2 rounded-[6px] px-2 text-left text-[13px] font-medium text-link hover:bg-table-header"
               >
                 <RotateCcw size={16} strokeWidth={1.5} aria-hidden />
                 {resetLabel}

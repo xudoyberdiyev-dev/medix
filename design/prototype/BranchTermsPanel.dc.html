@@ -58,18 +58,18 @@ const fN = n => String(Math.round(n || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, '.')
 const fM = n => { const [a, b] = (Math.round(Math.abs(n || 0) * 100) / 100).toFixed(2).split('.'); return (n < 0 ? '−' : '') + fN(+a) + ',' + b; };
 const fill = (t, o) => String(t || '').replace(/\{(\w+)\}/g, (_, k) => o[k] != null ? o[k] : '');
 // 0-b: ro'yxatlar EMPLOYEES dan
-const STAFF = new Proxy({}, { get: (t, br) => window.MedixData ? window.MedixData.empNames(['operator', 'keeper', 'branch'], br) : [] });
-const BUY = new Proxy({}, { get: (t, br) => window.MedixData ? window.MedixData.empNames(['purchase', 'operator', 'branch'], br) : [] });
+const STAFF = new Proxy({}, { get: (t, br) => window.YuzplusData ? window.YuzplusData.empNames(['operator', 'keeper', 'branch'], br) : [] });
+const BUY = new Proxy({}, { get: (t, br) => window.YuzplusData ? window.YuzplusData.empNames(['purchase', 'operator', 'branch'], br) : [] });
 class Component extends DCLogic {
   state = { f: null, tried: false };
-  get D() { return window.MedixData; }
+  get D() { return window.YuzplusData; }
   get L() { return this.props.dict || {}; }
   componentDidMount() { this.init(); this.onKey = e => { if (e.key === 'Escape') this.props.onClose && this.props.onClose(); }; window.addEventListener('keydown', this.onKey); }
   componentWillUnmount() { window.removeEventListener('keydown', this.onKey); }
   componentDidUpdate(pp) { if (pp.nonce !== this.props.nonce) this.init(); }
   mt() { return this.props.kind !== 'yt'; }
   init() { const p = this.props, card = p.card || {}, T = (this.mt() ? card.cTerms : card.sTerms) || {}, br = p.br || '', cur = br && T[br];
-    const def = this.mt() ? { br: '', active: true, limit: 0, days: 30, disc: 0, price: (window.MedixData && window.MedixData.ptBase ? window.MedixData.ptBase().code : 'base'), minMonths: 0, operator: '', addr: card.address || '' } : { br: '', active: true, days: 30, buyer: '', lead: 3 };
+    const def = this.mt() ? { br: '', active: true, limit: 0, days: 30, disc: 0, price: (window.YuzplusData && window.YuzplusData.ptBase ? window.YuzplusData.ptBase().code : 'base'), minMonths: 0, operator: '', addr: card.address || '' } : { br: '', active: true, days: 30, buyer: '', lead: 3 };
     const f = { ...def, ...(cur || {}), br: br || (p.userBranch && p.userBranch !== 'ALL' && !T[p.userBranch] ? p.userBranch : ''), ...(p.prefill || {}) };
     if (!cur && f.br && this.mt() && !f.operator) f.operator = (STAFF[f.br] || [''])[0]; if (!cur && f.br && !this.mt() && !f.buyer) f.buyer = (BUY[f.br] || [''])[0];
     ['days', 'disc', 'minMonths', 'lead'].forEach(k => { if (f[k] != null) f[k] = String(f[k]); });

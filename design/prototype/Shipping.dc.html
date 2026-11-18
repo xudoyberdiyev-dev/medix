@@ -7,7 +7,7 @@
 </head>
 <body>
 <x-dc>
-<helmet><script src="medix-data.js"></script></helmet>
+<helmet><script src="yuzplus-data.js"></script></helmet>
 <div style="display:flex;flex-direction:column;min-width:0;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
 <sc-if value="{{ isList }}" hint-placeholder-val="{{ true }}">
 <div data-screen-label="Jo'natish" style="display:flex;flex-direction:column;gap:16px;min-width:0">
@@ -104,10 +104,10 @@ const TRIP_ST = { draft: ['file-pen', '#5B6B6A', '#F8FAFA'], planned: ['calendar
 const DEMO_HAND = { h_normal: 'BY-TSH-000332', h_ctrl: 'BY-TSH-000317', h_limit: 'BY-TSH-000316' };
 const DEMO_TRIP = { t_planned: 'RS-TSH-000045', t_load: 'RS-TSH-000045', t_transit: 'RS-TSH-000044', t_partial: 'RS-TSH-000044', t_done: 'RS-TSH-000042' };
 class Component extends DCLogic {
-  state = { view: 'list', tab: 'ready', sel: {}, handId: null, tripNo: null, tripPreset: null, tripDemo: null, empty: false, ready: !!window.MedixData };
-  get D() { return window.MedixData; }
+  state = { view: 'list', tab: 'ready', sel: {}, handId: null, tripNo: null, tripPreset: null, tripDemo: null, empty: false, ready: !!window.YuzplusData };
+  get D() { return window.YuzplusData; }
   get L() { return this.props.dict || {}; }
-  applyUrl() { const D = window.MedixData, u = D && D.store.urlF; if (!u || u.page !== 'shipments' || u.n === this._un) return; this._un = u.n; const P = u.params || {}; if (P.tab) this.setState({ tab: P.tab, sel: {} }); if (P.open && /^RS-/.test(P.open)) this.setState({ tab: 'trips', tripNo: P.open }); }
+  applyUrl() { const D = window.YuzplusData, u = D && D.store.urlF; if (!u || u.page !== 'shipments' || u.n === this._un) return; this._un = u.n; const P = u.params || {}; if (P.tab) this.setState({ tab: P.tab, sel: {} }); if (P.open && /^RS-/.test(P.open)) this.setState({ tab: 'trips', tripNo: P.open }); }
   componentDidMount() {
     this._url = setInterval(() => this.applyUrl(), 250);
     if (!this.D) this._p = setInterval(() => { if (this.D) { clearInterval(this._p); this.setState({ ready: true }); this.applyDemo(); } }, 60);

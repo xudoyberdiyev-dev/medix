@@ -56,11 +56,11 @@ export function MessagesButton() {
     >
       <MessagesSquare size={20} strokeWidth={1.5} aria-hidden />
       {messages > 0 ? (
-        <span className="absolute top-1 right-1 min-w-4 rounded-full bg-danger px-1 text-center text-caption leading-4 text-white">
+        <span className="absolute top-1 right-1 min-w-4 rounded-full bg-danger px-1 text-center text-caption leading-4 text-on-solid">
           {messages > 99 ? "99+" : messages}
         </span>
       ) : tasks > 0 ? (
-        <span className="absolute top-1 right-1 min-w-4 rounded-full bg-warning px-1 text-center text-caption leading-4 text-white">
+        <span className="absolute top-1 right-1 min-w-4 rounded-full bg-warning px-1 text-center text-caption leading-4 text-on-solid">
           {tasks > 99 ? "99+" : tasks}
         </span>
       ) : null}

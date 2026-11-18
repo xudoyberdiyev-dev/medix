@@ -122,7 +122,7 @@ function DocumentView({ d, branchName, back }: { d: PriceChangeDetail; branchNam
         d.receiptId && d.receiptNumber ? (
           <>
             {t("srcReceipt")} ·{" "}
-            <Link href={`/receipts/${d.receiptId}`} className="text-primary underline underline-offset-2 hover:text-primary-hover">
+            <Link href={`/receipts/${d.receiptId}`} className="text-primary underline underline-offset-2 hover:text-link">
               {d.receiptNumber}
             </Link>
           </>

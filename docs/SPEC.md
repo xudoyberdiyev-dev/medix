@@ -1,9 +1,9 @@
-# MEDIX — loyihaning to'liq tavsifi va texnologiyalar
+# 100+ — loyihaning to'liq tavsifi va texnologiyalar
 
 **Versiya:** 1.0 · **Sana:** 01.11.2026 · **Til:** o'zbek (lotin)
 **Holat:** prototip (Claude Design) loyiha egasining barcha o'zgarishlari bilan qurib bo'lindi (T1–T12, Y0–Y4). Keyingi bosqich — haqiqiy dastur: V1, Claude Code bilan.
 
-Bu hujjat loyihaning yagona umumiy tavsifi. Batafsil qarorlar tarixi `claude/MEDIX_ozgarishlar.md` da (25-bo'lim — amaldagi holat). Prototipdagi aniq ma'lumot tuzilmalari, 131 ruxsat kaliti va komponentlar Claude Design'dagi `notes/T12-topshirish.md` da. Bu hujjat bilan ziddiyat bo'lsa, eng keyingi sanali qaror ustun turadi.
+Bu hujjat loyihaning yagona umumiy tavsifi. Batafsil qarorlar tarixi `claude/yuzplus_ozgarishlar.md` da (25-bo'lim — amaldagi holat). Prototipdagi aniq ma'lumot tuzilmalari, 131 ruxsat kaliti va komponentlar Claude Design'dagi `notes/T12-topshirish.md` da. Bu hujjat bilan ziddiyat bo'lsa, eng keyingi sanali qaror ustun turadi.
 
 ---
 
@@ -32,7 +32,7 @@ Bu hujjat loyihaning yagona umumiy tavsifi. Batafsil qarorlar tarixi `claude/MED
 
 ## 1. Loyiha haqida
 
-**MEDIX** — farmatsevtika ulgurji distribyutsiya kompaniyasi uchun ERP tizimi. U bitta tizimda quyidagilarni boshqaradi:
+**100+** — farmatsevtika ulgurji distribyutsiya kompaniyasi uchun ERP tizimi. U bitta tizimda quyidagilarni boshqaradi:
 - tovar kirimi (yetkazib beruvchidan) va chiqimi (mijozga sotuv);
 - partiya va yaroqlilik muddati bo'yicha qoldiqlar, zonalar, ko'chirishlar, inventarizatsiya;
 - buyurtmani kiritishdan yetkazib berishgacha bo'lgan zanjir: yig'ish, markirovka, tekshiruv, hujjatlashtirish, yetkazish;
@@ -42,7 +42,7 @@ Bu hujjat loyihaning yagona umumiy tavsifi. Batafsil qarorlar tarixi `claude/MED
 - markirovka (2D kod, GS1 DataMatrix);
 - bosh sahifalar, rol panellari, hisobotlar.
 
-**Nimaning o'rnini bosadi:** hozir ish 1C, SmartUp va Excel'da yuritiladi. MEDIX ularning o'rnini bosadi; boshlang'ich ma'lumot SmartUp'dan ko'chiriladi.
+**Nimaning o'rnini bosadi:** hozir ish 1C, SmartUp va Excel'da yuritiladi. 100+ ularning o'rnini bosadi; boshlang'ich ma'lumot SmartUp'dan ko'chiriladi.
 
 **Kim quradi:** bitta dasturchi (loyiha egasi). Dizayn Claude Design'da, kod Claude Code'da yaratiladi.
 
@@ -58,7 +58,7 @@ Bu hujjat loyihaning yagona umumiy tavsifi. Batafsil qarorlar tarixi `claude/MED
 
 | Tushuncha | Qaror |
 |---|---|
-| Kompaniya | «Medix Group» — kompaniyalar guruhi |
+| Kompaniya | «Shifo Dori» — kompaniyalar guruhi |
 | Filiallar | 4 ta: Toshkent (TSH), Samarqand (SMQ), Buxoro (BXR), Farg'ona (FRG). Har biri alohida yuridik shaxs (o'z STIR) |
 | Omborlar | ~10 ta, har biri bitta filialga tegishli |
 | Zonalar | Har omborda: Qabul, Asosiy saqlash, Karantin, Jo'natish; kerak bo'lsa Sovuq, Seyf (nazoratdagi). Javon va yacheyka hisobi yo'q |
@@ -187,7 +187,7 @@ Eslatma: oldingi «Omborchi» va «Ombor nazoratchisi» («Ombor menejeri») rol
 | — | Rad etilgan | Tasdiqlovchi | «Tasdiqlashda» bosqichida, sabab bilan |
 | — | Bekor qilingan | Ruxsat bo'yicha | Sabab majburiy; zahira va kodlar bo'shaydi, yig'ilgan tovar saqlash zonasiga qaytadi. «Yo'lda» va undan keyin bekor qilinmaydi |
 
-**Parallel faktura holati (egasi 13.11.2026, O10d–e):** buyurtma «Yuklanmoqda» ga oʻtganda, kodlar «Mijoz nomiga» yoki toʻlov Perechisleniye boʻlsa, Buxgalterda «Faktura yuborilishi kerak» → «Yuborildi» (e-faktura № va sanasi; e-faktura va imzolangan TTN fayllari ≤ 10 MB) holati ochiladi — buyurtma zanjirini toʻxtatmaydi. Navbat: Pul → «Fakturalar» va Buxgalter bosh sahifasi; natija — «Buxgalter natijasi» hisoboti. TTN (yuk xati) PDF ni MEDIX oʻzi chop etadi (buyurtma, reys, faktura boʻyicha).
+**Parallel faktura holati (egasi 13.11.2026, O10d–e):** buyurtma «Yuklanmoqda» ga oʻtganda, kodlar «Mijoz nomiga» yoki toʻlov Perechisleniye boʻlsa, Buxgalterda «Faktura yuborilishi kerak» → «Yuborildi» (e-faktura № va sanasi; e-faktura va imzolangan TTN fayllari ≤ 10 MB) holati ochiladi — buyurtma zanjirini toʻxtatmaydi. Navbat: Pul → «Fakturalar» va Buxgalter bosh sahifasi; natija — «Buxgalter natijasi» hisoboti. TTN (yuk xati) PDF ni 100+ oʻzi chop etadi (buyurtma, reys, faktura boʻyicha).
 
 **Qoidalar:**
 - **Qoralamaga qaytarish** faqat «Tasdiqlashda» holatidan mumkin.
@@ -351,7 +351,7 @@ Eslatma: oldingi «Omborchi» va «Ombor nazoratchisi» («Ombor menejeri») rol
 
 ## 9. Dizayn tizimi va UX qoidalari
 
-Manba — Claude Design'dagi **«Medix» dizayn tizimi** (tokens.json, README). Uslub: Linear, Stripe Dashboard kabi toza va jiddiy. Qimmat ko'rinish bezakdan emas, intizomdan keladi.
+Manba — Claude Design'dagi **«100+» dizayn tizimi** (tokens.json, README). Uslub: Linear, Stripe Dashboard kabi toza va jiddiy. Qimmat ko'rinish bezakdan emas, intizomdan keladi.
 
 **Ranglar (tokenlar):**
 
@@ -397,7 +397,7 @@ Manba — Claude Design'dagi **«Medix» dizayn tizimi** (tokens.json, README). 
 
 Tanlov mezonlari: uzoq muddatli qo'llab-quvvatlash (LTS), pul va qoldiqda xatosizlik, bitta dasturchi + Claude Code uchun qulaylik, katta ekotizim.
 
-> Loyiha egasi qarori: backend — **Java + Spring Boot**, ma'lumotlar bazasi — **PostgreSQL**, frontend — **Next.js + TypeScript**. Bu oldingi taklifni (`MEDIX_texnologiyalar.md`: TypeScript/NestJS) almashtiradi.
+> Loyiha egasi qarori: backend — **Java + Spring Boot**, ma'lumotlar bazasi — **PostgreSQL**, frontend — **Next.js + TypeScript**. Bu oldingi taklifni (`yuzplus_texnologiyalar.md`: TypeScript/NestJS) almashtiradi.
 
 ### 10.1 Asosiy stek
 
@@ -427,8 +427,8 @@ Tanlov mezonlari: uzoq muddatli qo'llab-quvvatlash (LTS), pul va qoldiqda xatosi
 | Mahalliy holat | **Zustand** | 5.x | Faqat kichik global holat: filial tanlovi, ochiq hujjat, UI sozlamalari |
 | Jadvallar | **TanStack Table** | v8 | Ustunlar, saralash, guruhlash, ochiladigan qatorlar, virtualizatsiya |
 | Formalar | **React Hook Form** + **Zod** | — | Tez formalar, sxema bilan tekshiruv |
-| Stil | **Tailwind CSS** | **4.x** | Medix tokenlari CSS o'zgaruvchilari sifatida |
-| Komponentlar | **shadcn/ui** (Radix asosida) — Medix dizayniga moslab | — | Kirish imkoniyati (a11y) tayyor; kod loyiha ichida |
+| Stil | **Tailwind CSS** | **4.x** | 100+ tokenlari CSS o'zgaruvchilari sifatida |
+| Komponentlar | **shadcn/ui** (Radix asosida) — 100+ dizayniga moslab | — | Kirish imkoniyati (a11y) tayyor; kod loyiha ichida |
 | Ikonkalar | **lucide-react** | — | Dizayn tizimi talabi |
 | Tillar | **next-intl** | — | uz-Latn, uz-Cyrl, ru; kalitli lug'atlar |
 | Grafiklar | **Recharts** | — | Kassir paneli dinamikasi, bosh sahifa |
@@ -436,7 +436,7 @@ Tanlov mezonlari: uzoq muddatli qo'llab-quvvatlash (LTS), pul va qoldiqda xatosi
 | Paket menejeri | **pnpm** | — | Tez va tejamkor |
 | Node.js | **24 LTS** | — | Next.js uchun |
 
-**Nega Redux emas, React Query?** MEDIX ma'lumotining deyarli hammasi serverda yashaydi: hujjatlar, qoldiqlar, qarzlar. React Query aynan shu uchun yaratilgan: keshlash, eskirganini yangilash, xatolarni boshqarish. Redux bu ishlar uchun ko'p qo'shimcha kod talab qiladi. Haqiqiy global holat kam (filial, ochiq hujjat, UI), uning uchun yengil Zustand yetarli.
+**Nega Redux emas, React Query?** 100+ ma'lumotining deyarli hammasi serverda yashaydi: hujjatlar, qoldiqlar, qarzlar. React Query aynan shu uchun yaratilgan: keshlash, eskirganini yangilash, xatolarni boshqarish. Redux bu ishlar uchun ko'p qo'shimcha kod talab qiladi. Haqiqiy global holat kam (filial, ochiq hujjat, UI), uning uchun yengil Zustand yetarli.
 
 **Nega Next.js?** Next.js katta ekotizimga ega va marshrutlash tayyor. U `/api` so'rovlarini Spring'ga proksi qiladi, shuning uchun sahifa va API bir domenda ishlaydi (cookie va xavfsizlik oddiy). ERP login ortida ishlaydi, shuning uchun sahifalar asosan mijoz tomonda chiziladi (client components). Server tomonda chizish (SSR) faqat login va qobiq uchun kerak.
 
@@ -465,9 +465,9 @@ Tanlov mezonlari: uzoq muddatli qo'llab-quvvatlash (LTS), pul va qoldiqda xatosi
 **Modulli monolit** — bitta Spring Boot ilovasi, ichida aniq modullar bor. Mikroservislar ishlatilmaydi: bitta dasturchi uchun ular ortiqcha murakkablik.
 
 ```
-medix/
+yuzplus/
 ├── backend/                 # Spring Boot 4.1, Java 25, Gradle
-│   └── src/main/java/uz/medix/
+│   └── src/main/java/uz/yuzplus/
 │       ├── shared/          # pul, sana, raqamlash, audit, xatolar
 │       ├── identity/        # login, xodimlar, rollar, ruxsatlar, filiallar
 │       ├── catalog/         # mahsulotlar, ma'lumotnomalar, kontragentlar
@@ -483,7 +483,7 @@ medix/
 │       └── integration/     # import (SmartUp), keyin: e-faktura, «Asl belgisi», bank
 ├── frontend/                # Next.js 16, TypeScript
 │   ├── app/                 # sahifalar (marshrutlar)
-│   ├── components/ui/       # Medix komponentlari (shadcn asosida)
+│   ├── components/ui/       # 100+ komponentlari (shadcn asosida)
 │   ├── features/            # modullar bo'yicha (orders, receipts, stock …)
 │   ├── lib/api/             # OpenAPI'dan yaratilgan mijoz
 │   └── messages/            # uz-Latn, uz-Cyrl, ru
@@ -557,8 +557,8 @@ To'liq maydonlar va bog'lanishlar dasturlashdan oldin alohida «Ma'lumotlar mode
 
 - **Muhitlar:** lokal (Docker Compose), sinov (staging), ishchi (production).
 - **Server tarkibi (V1 uchun yetarli):**
-  - `medix-backend` (Spring Boot, Java 25);
-  - `medix-frontend` (Next.js, Node 24);
+  - `yuzplus-backend` (Spring Boot, Java 25);
+  - `yuzplus-frontend` (Next.js, Node 24);
   - PostgreSQL 18;
   - MinIO (fayllar);
   - **Caddy** (HTTPS, teskari proksi);
@@ -573,7 +573,7 @@ To'liq maydonlar va bog'lanishlar dasturlashdan oldin alohida «Ma'lumotlar mode
 
 | Versiya | Maqsad | Tarkib |
 |---|---|---|
-| **V1** | Toshkent filialida kundalik ish to'liq MEDIX'da (SmartUp bilan parallel) | Poydevor (login, usta, 11 rol, xodimlar, audit) · Ma'lumotnomalar (mahsulotlar, kontragentlar, narxlar) · Kirim, Qoldiqlar, Muddat · Buyurtma zanjiri va 4 panel · Pul (MT, YT, kassa, Terminal, bank, qarzlar, bonus) · Bosh sahifalar · Asosiy hisobotlar · Chop etish · SmartUp'dan import |
+| **V1** | Toshkent filialida kundalik ish to'liq 100+'da (SmartUp bilan parallel) | Poydevor (login, usta, 11 rol, xodimlar, audit) · Ma'lumotnomalar (mahsulotlar, kontragentlar, narxlar) · Kirim, Qoldiqlar, Muddat · Buyurtma zanjiri va 4 panel · Pul (MT, YT, kassa, Terminal, bank, qarzlar, bonus) · Bosh sahifalar · Asosiy hisobotlar · Chop etish · SmartUp'dan import |
 | **V2** | Barcha filiallar va ombor nazorati | Qolgan 3 filial · Ko'chirishlar (ZK, OK, FS) · Inventarizatsiya · Hisobdan chiqarish · QY · **Akt sverka (to'liq, SmartUp shakli)** · To'liq hisobotlar · **Kirill va rus tillari** |
 | **V3** | Tashqi tizimlar | E-faktura · «Asl belgisi» API · Bank integratsiyasi · 1C |
 | **V4** | Kengaytmalar | To'liq buxgalteriya · Harorat datchiklari · Xarid buyurtmasi · Xarajatlar batafsil · SmartUp'dan boshqa qismlar |
@@ -582,7 +582,7 @@ To'liq maydonlar va bog'lanishlar dasturlashdan oldin alohida «Ma'lumotlar mode
 
 | № | Bosqich | Natija |
 |---|---|---|
-| 0 | Loyiha poydevori | Repozitoriy, Docker Compose, CI, CLAUDE.md, Flyway, OpenAPI → TS, Medix UI komponentlari asosi |
+| 0 | Loyiha poydevori | Repozitoriy, Docker Compose, CI, CLAUDE.md, Flyway, OpenAPI → TS, 100+ UI komponentlari asosi |
 | 1 | Identifikatsiya | Login, sessiya, xodimlar, rollar, ruxsatlar matritsasi, filiallar, sozlash ustasi, audit |
 | 2 | Katalog | Mahsulotlar (kod, pro jadval, import), ma'lumotnomalar, kontragentlar va filial shartlari |
 | 3 | Narxlar | Narx turlari, Narx o'rnatish (2 rejim), NO, tarix, narx tanlash qoidasi |
@@ -605,7 +605,7 @@ Har bosqich: kichik vazifalar → kod → testlar → loyiha egasi ko'rib chiqad
    - TZ'ni yangilash: Claude Docs + Word;
    - **Ma'lumotlar modeli** (12-bo'lim asosida, `notes/T12-topshirish.md` bilan);
    - **CLAUDE.md**: stek, papkalar tuzilmasi, kod qoidalari, test qoidalari, «qilinmaydigan» narsalar, ishlash tartibi.
-2. **Manbalar:** `MEDIX_loyiha_toliq.md` (shu hujjat), `MEDIX_ozgarishlar.md` (qarorlar tarixi), Claude Design prototipi (har ekranning namunasi), `notes/T12-topshirish.md` va `notes/T12-audit.md` (V1 da tuzatiladigan 23 ta kamchilik).
+2. **Manbalar:** `yuzplus_loyiha_toliq.md` (shu hujjat), `yuzplus_ozgarishlar.md` (qarorlar tarixi), Claude Design prototipi (har ekranning namunasi), `notes/T12-topshirish.md` va `notes/T12-audit.md` (V1 da tuzatiladigan 23 ta kamchilik).
 3. **Har vazifa uchun tartib:** reja → loyiha egasi tasdiqlaydi → kod va testlar → build/test yashil → qisqa hisobot → keyingi vazifa.
 4. **Qoidalar:**
    - bir vaqtda bitta modul;

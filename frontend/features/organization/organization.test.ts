@@ -16,7 +16,7 @@ const branch = (id: number, over: Partial<Branch> = {}): Branch => ({
   id,
   code: "TSH",
   name: "Toshkent",
-  legalName: "Medix TSH MChJ",
+  legalName: "Shifo Dori TSH MChJ",
   tin: "301234567",
   vatPayer: true,
   bankAccounts: [],
@@ -34,7 +34,7 @@ const warehouse = (id: number, branchId: number, types: Warehouse["zones"][numbe
 });
 
 describe("filterBranches", () => {
-  const list = [branch(1), branch(2, { code: "SMQ", name: "Samarqand", tin: "302222222", legalName: "Medix SMQ" })];
+  const list = [branch(1), branch(2, { code: "SMQ", name: "Samarqand", tin: "302222222", legalName: "Shifo Dori SMQ" })];
   it("nom, kod va STIR boʻyicha qidiradi", () => {
     expect(filterBranches(list, "smq").map((b) => b.id)).toEqual([2]);
     expect(filterBranches(list, "30123").map((b) => b.id)).toEqual([1]);

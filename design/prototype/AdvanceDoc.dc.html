@@ -7,7 +7,7 @@
 </head>
 <body>
 <x-dc>
-<helmet><script src="medix-data.js"></script></helmet>
+<helmet><script src="yuzplus-data.js"></script></helmet>
 <div data-screen-label="Avansni hisobga olish" style="display:flex;flex-direction:column;gap:16px;min-width:0;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
   <dc-import name="DocumentHeader" parent-label="{{ parentLabel }}" on-parent="{{ back }}" title="{{ L.qz_ahTitle }}" number="{{ number }}" badge="{{ badge }}" steps="{{ steps }}" secondary="{{ secondary }}" primary="{{ primary }}" more-label="{{ L.p_more }}" hint-size="100%,88px"></dc-import>
   <sc-for list="{{ banners }}" as="b"><dc-import name="StatusBanner" tone="{{ b.tone }}" icon="{{ b.icon }}" title="{{ b.title }}" text="{{ b.text }}" hint-size="100%,52px"></dc-import></sc-for>
@@ -42,7 +42,7 @@ const ini = n => String(n || '').split(' ').map(x => x[0] || '').join('').slice(
 const SB = { draft: ['file-pen', '#5B6B6A', '#F8FAFA'], posted: ['circle-check', '#15803D', '#F0FDF4'], cancelled: ['circle-x', '#5B6B6A', '#EEF2F4'] };
 class Component extends DCLogic {
   state = { d: null, manual: false, dlg: false, reason: '', reasonErr: '', showErr: false };
-  get D() { return window.MedixData; }
+  get D() { return window.YuzplusData; }
   get L() { return this.props.dict || {}; }
   componentDidMount() {
     if (!this.D) this._p = setInterval(() => { if (this.D) { clearInterval(this._p); this.init(); } }, 60); else this.init();

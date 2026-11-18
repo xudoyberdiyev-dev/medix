@@ -1,5 +1,6 @@
 "use client";
 
+import "@/lib/legacy-storage";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
@@ -19,6 +20,6 @@ export const useSidebarStore = create<SidebarState>()(
       setCollapsed: (collapsed) => set({ collapsed }),
       toggleGroup: (key, current) => set((s) => ({ open: { ...s.open, [key]: !current } })),
     }),
-    { name: "medix-sidebar", storage: createJSONStorage(() => localStorage) },
+    { name: "yuzplus-sidebar", storage: createJSONStorage(() => localStorage) },
   ),
 );

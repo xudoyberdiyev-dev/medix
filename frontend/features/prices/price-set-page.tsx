@@ -274,7 +274,7 @@ export function PriceSetPage() {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex flex-col gap-1.5">
           <nav className="flex items-center gap-1.5 text-caption">
-            <button type="button" onClick={() => guard(() => router.push("/prices"))} className="text-primary-button hover:underline">
+            <button type="button" onClick={() => guard(() => router.push("/prices"))} className="text-link hover:underline">
               {t("crumb")}
             </button>
             <span className="text-text-secondary">/</span>
@@ -423,7 +423,7 @@ export function PriceSetPage() {
             <button
               type="button"
               onClick={() => (setFilter(EMPTY_SET_FILTER), setView("all"))}
-              className="h-control-sm px-1.5 text-[13px] font-medium text-primary-button hover:underline"
+              className="h-control-sm px-1.5 text-[13px] font-medium text-link hover:underline"
             >
               {t("clear")}
             </button>

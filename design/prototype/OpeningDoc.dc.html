@@ -7,7 +7,7 @@
 </head>
 <body>
 <x-dc>
-<helmet><script src="medix-data.js"></script></helmet>
+<helmet><script src="yuzplus-data.js"></script></helmet>
 <div data-screen-label="{{ screenLabel }}" style="display:flex;flex-direction:column;gap:16px;min-width:0;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
 <sc-if value="{{ wizOpen }}" hint-placeholder-val="{{ false }}">
   <dc-import name="ImportWizard" type="{{ x.type }}" branch="{{ x.branch }}" wh="{{ x.wh }}" cutoff="{{ x.cutoff }}" place="{{ place }}" preset="{{ wizPreset }}" dict="{{ L }}" narrow="{{ narrow }}" on-done="{{ wizDone }}" on-cancel="{{ wizCancel }}" on-toast="{{ toastFn }}" hint-size="100%,720px"></dc-import>
@@ -79,7 +79,7 @@ const ini = n => String(n || '').split(' ').map(w => w[0]).join('').slice(0, 2);
 const reD = /^\d{2}\.\d{2}\.\d{4}$/;
 class Component extends DCLogic {
   state = { x: null, tab: 'doc', wiz: null, tried: false, vs: null, dlg: null, reason: '', reasonErr: '', save: null, savedAt: null };
-  get D() { return window.MedixData; }
+  get D() { return window.YuzplusData; }
   get L() { return this.props.dict || {}; }
   componentDidMount() {
     if (!this.D || !this.D.bqSum) this._p = setInterval(() => { if (this.D && this.D.bqSum) { clearInterval(this._p); this.load(); } }, 60); else this.load();

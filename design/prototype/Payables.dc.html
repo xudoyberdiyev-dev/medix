@@ -7,7 +7,7 @@
 </head>
 <body>
 <x-dc>
-<helmet><script src="medix-data.js"></script></helmet>
+<helmet><script src="yuzplus-data.js"></script></helmet>
 <div style="display:flex;flex-direction:column;min-width:0;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
 <sc-if value="{{ isList }}" hint-placeholder-val="{{ true }}">
 <div data-screen-label="Yetkazib beruvchilar qarzi" style="display:flex;flex-direction:column;gap:16px;min-width:0">
@@ -68,7 +68,7 @@ const CLEAR = { q: '', fSup: [], fBr: [], fPay: [], fOwner: [], date: { from: nu
 const BST = { wait: ['hourglass', '#B45309', '#FFFBEB'], ok: ['circle-check', '#15803D', '#F0FDF4'], no: ['circle-x', '#5B6B6A', '#F1F5F4'] };
 class Component extends DCLogic {
   state = { main: 'debt', tab: 'all', btab: 'all', ...CLEAR, sort: { key: 'due', dir: 'asc' }, page: 1, per: 25, view: 'list', card: null, dlg: null, reason: '', reasonErr: '' };
-  get D() { return window.MedixData; }
+  get D() { return window.YuzplusData; }
   get L() { return this.props.dict || {}; }
   componentDidMount() {
     this._poll = setInterval(() => { const D = this.D; if (!D) return; this.applyUrl(); if (D.store.debtReq && D.store.debtReq.kind === 'yt') { const r = D.store.debtReq; D.store.debtReq = null; this.openCard(r.party, r.branch); } if (D.store.v !== this._v) { this._v = D.store.v; this.forceUpdate(); } }, 300);

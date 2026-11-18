@@ -1,7 +1,7 @@
-# Medix dizayn tizimi (Claude Design'dan nusxa)
+# 100+ dizayn tizimi (Claude Design'dan nusxa)
 
-Manba: Claude Design → «Medix» dizayn tizimi (artifact slug `0d2b9f01-6b42-4ace-b640-776421274a90`).
-Tokenlar: `tokens.json`. Komponentlar API: `components.d.ts`. Har komponentning batafsil qoidalari: `components/<Nomi>/README.md`, asl uslublar: `components/bundle.css` (01.11.2026 nusxasi). React komponentlari: `frontend/components/ui/`, koʻrgazma: `MEDIX_UI_KIT=1 pnpm build && pnpm start` → `/ui-kit`.
+Manba: Claude Design → «100+» dizayn tizimi (artifact slug `0d2b9f01-6b42-4ace-b640-776421274a90`).
+Tokenlar: `tokens.json`. Komponentlar API: `components.d.ts`. Har komponentning batafsil qoidalari: `components/<Nomi>/README.md`, asl uslublar: `components/bundle.css` (01.11.2026 nusxasi). React komponentlari: `frontend/components/ui/`, koʻrgazma: `YUZPLUS_UI_KIT=1 pnpm build && pnpm start` → `/ui-kit`.
 
 Uslub: Linear, Stripe Dashboard, Dynamics 365 kabi toza va jiddiy — **qimmat koʻrinish intizomdan keladi, bezakdan emas**.
 
@@ -53,7 +53,7 @@ Uslub: Linear, Stripe Dashboard, Dynamics 365 kabi toza va jiddiy — **qimmat k
 Faqat Lucide, `stroke-width: 1.5`, `currentColor`. 16px (jadval, tugma, badge), 20px (menyu). Qoldiqlar `boxes`, Kirim `package-plus`, Koʻchirish `arrow-left-right`, Filial `building-2`, Ombor `warehouse`, Excel `file-spreadsheet`, qator menyusi `ellipsis`.
 
 ## Logotip
-Hali yoʻq. Sidebarda `primary-button` kvadratda «M» + «MEDIX» (Inter 600).
+Hali yoʻq. Sidebarda `primary-button` kvadratda «M» + «100+» (Inter 600).
 
 ## Komponentlar roʻyxati
 Button, TextField, Select, DatePicker, SelectionControls, Badge, **Table** (eng muhim), Card, Tabs, Modal, Drawer, Toast, Alert, Stepper, Sidebar, TopBar, BranchSwitcher, Pagination, Avatar, Tooltip, SystemStates (yuklanish, boʻsh, xato, ruxsat yoʻq), LengthTest.

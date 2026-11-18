@@ -18,6 +18,8 @@ export interface ModalProps {
   primaryAction: { label: string; onClick: () => void; loading?: boolean; disabled?: boolean };
   /** Standart: «Ortga» (bekor qilish soʻzi hujjatni bekor qilish bilan adashtirilmasin). */
   secondaryAction?: { label: string; onClick: () => void };
+  /** Faqat maʼlumot oynasi (masalan, kirish sahifasidagi yordam): ikkinchi tugma koʻrsatilmaydi. */
+  hideSecondary?: boolean;
 }
 
 const sizes = { sm: "max-w-modal-sm", md: "max-w-modal-md", lg: "max-w-modal-lg" };
@@ -26,7 +28,17 @@ const sizes = { sm: "max-w-modal-sm", md: "max-w-modal-md", lg: "max-w-modal-lg"
  * Oyna (design/system: Modal). Tugmalar oʻngda: «Ortga», keyin asosiy.
  * Xavfli oyna (`tone="danger"`) parda bosilganda yopilmaydi; asosiy tugma `danger`.
  */
-export function Modal({ open, onClose, title, size = "md", tone = "default", children, primaryAction, secondaryAction }: ModalProps) {
+export function Modal({
+  open,
+  onClose,
+  title,
+  size = "md",
+  tone = "default",
+  children,
+  primaryAction,
+  secondaryAction,
+  hideSecondary = false,
+}: ModalProps) {
   const t = useTranslations("ui");
   const ref = useDialog(open, onClose);
   const danger = tone === "danger";
@@ -60,9 +72,11 @@ export function Modal({ open, onClose, title, size = "md", tone = "default", chi
       </div>
       <div className="overflow-auto px-6 pb-6">{children}</div>
       <div className="flex flex-wrap justify-end gap-2 border-t border-border px-6 py-4">
-        <Button variant="secondary" autoFocus={danger} onClick={secondaryAction?.onClick ?? onClose}>
-          {secondaryAction?.label ?? "Ortga"}
-        </Button>
+        {hideSecondary ? null : (
+          <Button variant="secondary" autoFocus={danger} onClick={secondaryAction?.onClick ?? onClose}>
+            {secondaryAction?.label ?? "Ortga"}
+          </Button>
+        )}
         <Button
           variant={danger ? "danger" : "primary"}
           loading={primaryAction.loading}

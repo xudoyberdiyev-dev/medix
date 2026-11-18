@@ -16,7 +16,7 @@ import {
 const row = (p: Partial<OverviewLike>): OverviewLike => ({
   id: 1,
   tin: "302118447",
-  name: "Shifo Farm",
+  name: "Shifo Dori",
   branches: ["TSH"],
   inScope: true,
   controlledAllowed: false,

@@ -1,33 +1,56 @@
 "use client";
 
-import { ArrowRight, CircleAlert, Clock, Info, Lock, RotateCcw, User, WifiOff } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { CircleAlert, CircleCheck, Clock, Info, Lock, Phone, RotateCcw, User, WifiOff } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Icon, type LucideIcon } from "@/components/ui/icon";
+import { Modal } from "@/components/ui/modal";
 import { Spinner } from "@/components/ui/spinner";
-import { toast } from "@/components/ui/toast";
 import { AuthInput, CapsWarning, useCapsLock } from "@/features/auth/auth-input";
+import { useLoginInfo } from "@/features/auth/login-layout";
+import { greetingKey, longDate } from "@/features/auth/login-greeting";
 import { safeNext, useLogin } from "@/features/auth/session";
 import { rememberTempPassword } from "@/features/auth/temp-password";
 import { ApiError } from "@/lib/api/client";
 import { cn } from "@/lib/cn";
 
-type AlertKind = "danger" | "warning" | "info" | "offline";
+type AlertKind = "danger" | "warning" | "info" | "offline" | "success";
+
+/** «Loginni eslab qolish» — faqat login saqlanadi (parol hech qachon). */
+const REMEMBER_KEY = "yuzplus-login-remember";
+
+function readRemembered(): string | null {
+  try {
+    return window.localStorage.getItem(REMEMBER_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function writeRemembered(login: string | null) {
+  try {
+    if (login) window.localStorage.setItem(REMEMBER_KEY, login);
+    else window.localStorage.removeItem(REMEMBER_KEY);
+  } catch {
+    // saqlash ruxsat etilmagan — eʼtiborsiz
+  }
+}
 
 const ALERTS: Record<AlertKind, { icon: LucideIcon; box: string; iconClass: string; text: string }> = {
   danger: { icon: CircleAlert, box: "border-danger/25 bg-danger-bg", iconClass: "text-danger", text: "text-danger" },
   warning: { icon: Clock, box: "border-warning/25 bg-warning-bg", iconClass: "text-warning", text: "text-warning" },
   info: { icon: Info, box: "border-info/25 bg-info-bg", iconClass: "text-info", text: "text-info" },
   offline: { icon: WifiOff, box: "border-border bg-table-header", iconClass: "text-danger", text: "text-text-primary" },
+  success: { icon: CircleCheck, box: "border-success/25 bg-success-bg", iconClass: "text-success", text: "text-success" },
 };
 
 function LoginAlert({ kind, text, onRetry, retryLabel }: { kind: AlertKind; text: string; onRetry?: () => void; retryLabel: string }) {
   const a = ALERTS[kind];
   return (
     <div
-      role={kind === "info" ? "status" : "alert"}
-      className={cn("mt-[24px] flex gap-[10px] rounded-card border px-[14px] py-[12px]", a.box)}
+      role={kind === "info" || kind === "success" ? "status" : "alert"}
+      className={cn("mb-[20px] flex gap-[10px] rounded-card border px-[14px] py-[12px]", a.box)}
     >
       <Icon icon={a.icon} className={cn("mt-px shrink-0", a.iconClass)} />
       <div className="flex min-w-0 flex-1 flex-col items-start gap-[10px]">
@@ -47,7 +70,10 @@ function LoginAlert({ kind, text, onRetry, retryLabel }: { kind: AlertKind; text
   );
 }
 
-/** Kirish formasi (prototip LoginScreen): sarlavha, xabar, Login/Parol ikonka bilan, Caps Lock, «Kirish →». */
+/**
+ * Kirish formasi (O22 yakuniy dizayn): sana, vaqtga qarab salom, Login/Parol (44 px), «Loginni eslab qolish»,
+ * «Parolni unutdingizmi?», «Kirish», «Kira olmayapman»; chiqqandan keyin «Siz tizimdan chiqdingiz» — forma tepasida.
+ */
 export function LoginForm() {
   const t = useTranslations("login");
   const router = useRouter();
@@ -60,12 +86,33 @@ export function LoginForm() {
   const loginRef = useRef<HTMLInputElement>(null);
   const passRef = useRef<HTMLInputElement>(null);
   const reason = params.get("reason");
-
+  const locale = useLocale();
+  const info = useLoginInfo();
+  const [help, setHelp] = useState<"forgot" | "cant" | null>(null);
+  const [remember, setRemember] = useState(true);
+  const loggedOut = params.get("out") === "1";
+  // Sana va salom faqat brauzerda (server vaqti bilan gidratsiya farqi boʻlmasin)
+  const [now, setNow] = useState<Date | null>(null);
   useEffect(() => {
-    if (params.get("out") === "1") toast({ tone: "success", title: t("loggedOut") });
-    loginRef.current?.focus();
-    // faqat birinchi ochilishda
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const tick = () => setNow(new Date());
+    const first = window.setTimeout(tick, 0);
+    const id = window.setInterval(tick, 60_000);
+    return () => {
+      window.clearTimeout(first);
+      window.clearInterval(id);
+    };
+  }, []);
+
+  // Faqat birinchi ochilishda: eslab qolingan login (brauzer xotirasidan — gidratsiyadan keyin)
+  useEffect(() => {
+    const id = window.setTimeout(() => {
+      const saved = readRemembered();
+      if (saved) {
+        setValues((v) => (v.login ? v : { ...v, login: saved }));
+        passRef.current?.focus();
+      } else loginRef.current?.focus();
+    }, 0);
+    return () => window.clearTimeout(id);
   }, []);
 
   function submit() {
@@ -79,6 +126,7 @@ export function LoginForm() {
     const body = { login: values.login.trim(), password: values.password };
     login.mutate(body, {
       onSuccess: (me) => {
+        writeRemembered(remember ? body.login : null);
         rememberTempPassword(me.mustChangePassword ? body.password : null);
         router.replace(me.mustChangePassword ? "/password" : safeNext(params.get("next")));
       },
@@ -109,15 +157,17 @@ export function LoginForm() {
       alert = { kind: error.code === "auth.locked" ? "warning" : "danger", text: error.message };
   } else if (error) alert = { kind: "offline", text: t("offline") };
   else if (reason === "session") alert = { kind: "info", text: t("session") };
+  else if (loggedOut) alert = { kind: "success", text: t("loggedOut") };
 
   return (
     <>
-      <h1 className="text-[26px] leading-8 font-semibold tracking-[-0.01em]">{t("title")}</h1>
-      <p className="mt-[8px] text-body text-text-secondary">{t("subtitle")}</p>
+      <p className="min-h-[20px] text-body text-text-secondary">{now ? longDate(now, locale) : null}</p>
+      <h1 className="my-[4px] text-[36px] leading-[44px] font-semibold tracking-[-0.5px]">{t(now ? greetingKey(now) : "title")}</h1>
+      <p className="mb-[28px] text-[15px] leading-[22px] text-text-secondary">{t("continue")}</p>
       {alert ? (
         <LoginAlert kind={alert.kind} text={alert.text} retryLabel={t("retry")} onRetry={alert.kind === "offline" ? submit : undefined} />
       ) : null}
-      <form onSubmit={onSubmit} noValidate className="mt-[32px] flex flex-col">
+      <form onSubmit={onSubmit} noValidate className="flex flex-col">
         <AuthInput
           id="mx-login"
           name="login"
@@ -134,12 +184,13 @@ export function LoginForm() {
           autoCapitalize="none"
           spellCheck={false}
           placeholder={t("loginPlaceholder")}
+          large={{ show: t("show"), hide: t("hide") }}
           error={errors.login}
         />
         <AuthInput
           id="mx-pass"
           name="password"
-          className="mt-[16px]"
+          className="mt-[18px]"
           label={t("password")}
           icon={Lock}
           password
@@ -154,16 +205,36 @@ export function LoginForm() {
           disabled={busy}
           autoComplete="current-password"
           placeholder={t("passwordPlaceholder")}
+          large={{ show: t("show"), hide: t("hide") }}
           error={errors.password}
         >
           <CapsWarning show={caps.caps && !busy} />
         </AuthInput>
+        <div className="mt-[14px] flex flex-wrap items-center justify-between gap-[12px]">
+          <label className="flex cursor-pointer items-center gap-[8px] text-body text-text-primary">
+            <input
+              type="checkbox"
+              checked={remember}
+              onChange={(e) => setRemember(e.target.checked)}
+              disabled={busy}
+              className="m-0 size-[16px] accent-primary-button"
+            />
+            {t("remember")}
+          </label>
+          <button
+            type="button"
+            onClick={() => setHelp("forgot")}
+            className="rounded-control text-body font-medium text-link hover:underline"
+          >
+            {t("forgotLink")}
+          </button>
+        </div>
         <button
           type="submit"
           disabled={busy || locked}
           aria-busy={busy || undefined}
           className={cn(
-            "mt-[24px] flex h-[44px] w-full items-center justify-center gap-[8px] rounded-card text-subtitle font-medium transition-colors duration-150 ease-out",
+            "mt-[24px] flex h-[44px] w-full items-center justify-center gap-[8px] rounded-control text-[15px] font-semibold transition-colors duration-150 ease-out",
             locked
               ? "cursor-not-allowed bg-background text-text-secondary"
               : "bg-primary-button text-white hover:bg-primary-button-hover active:bg-brand-900",
@@ -176,14 +247,41 @@ export function LoginForm() {
               {t("checking")}
             </>
           ) : (
-            <>
-              {t("submit")}
-              <Icon icon={ArrowRight} />
-            </>
+            t("submit")
           )}
         </button>
       </form>
-      <p className="mt-[20px] text-center text-table text-pretty text-text-secondary">{t("forgot")}</p>
+      <p className="mt-[16px] text-center text-table leading-5 text-pretty text-text-secondary">
+        {t("noAccess")}
+        <br />
+        <button type="button" onClick={() => setHelp("cant")} className="rounded-control font-medium text-link hover:underline">
+          {t("cantLogin")}
+        </button>
+      </p>
+      <Modal
+        open={help !== null}
+        onClose={() => setHelp(null)}
+        title={help === "cant" ? t("cantTitle") : t("forgotTitle")}
+        size="sm"
+        hideSecondary
+        primaryAction={{ label: t("close"), onClick: () => setHelp(null) }}
+      >
+        {help === "cant" ? (
+          <ul className="flex list-disc flex-col gap-[8px] pl-[18px] text-body text-text-primary">
+            {(["t1", "t2", "t3", "t4"] as const).map((k) => (
+              <li key={k}>{t(`cantTip.${k}`)}</li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-body text-pretty text-text-primary">{t("forgotText")}</p>
+        )}
+        {info.data?.supportPhone ? (
+          <p className="mt-[14px] flex items-center gap-[8px] text-body font-medium text-text-primary">
+            <Icon icon={Phone} className="text-link" />
+            {t("contactPhone", { phone: info.data.supportPhone })}
+          </p>
+        ) : null}
+      </Modal>
     </>
   );
 }

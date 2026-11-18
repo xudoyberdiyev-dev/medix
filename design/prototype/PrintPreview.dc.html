@@ -167,7 +167,7 @@ class Component extends DCLogic {
   componentWillUnmount() { window.removeEventListener('resize', this._r); window.removeEventListener('keydown', this._k); }
   close() { this.props.onClose && this.props.onClose(); }
   docs(x) { return x.form === 'trip' || x.form === 'picks' ? x.docs : [x]; }
-  doPrint(x) { const D = window.MedixData, p = this.props, L = this.L, s = this.state, who = p.userName || D.DIRECTOR; this.docs(x).forEach(d => D.prLog(d.src, d.form, +s.copies, who, d.kind, PAGE[d.kind] || 'shipments', d.branch)); this.setState({ dlg: null }); setTimeout(() => window.print(), 50); p.onToast && p.onToast(fill(L.ch_tPrinted, { n: s.copies })); }
+  doPrint(x) { const D = window.YuzplusData, p = this.props, L = this.L, s = this.state, who = p.userName || D.DIRECTOR; this.docs(x).forEach(d => D.prLog(d.src, d.form, +s.copies, who, d.kind, PAGE[d.kind] || 'shipments', d.branch)); this.setState({ dlg: null }); setTimeout(() => window.print(), 50); p.onToast && p.onToast(fill(L.ch_tPrinted, { n: s.copies })); }
   tryPrint(x, pdf) { const L = this.L; if (x.status === 'draft') return this.setState({ dlg: { title: L.ch_draftT, text: L.ch_draftD, cancel: L.ch_ok, hasOk: false } });
     if (x.status === 'other') return this.setState({ dlg: { title: L.ch_pickNeedT, text: L.ch_pickNeed, cancel: L.ch_ok, hasOk: false } });
     if (x.status === 'cancelled') return this.setState({ dlg: { title: L.ch_cancT, text: L.ch_cancD, cancel: L.ch_cancel, hasOk: true, okLabel: L.ch_print, okBg: '#B91C1C', ok: () => this.doPrint(x) } });
@@ -178,7 +178,7 @@ class Component extends DCLogic {
   signs(list, stampEach) { return blk('Signs', { cols: list.length, items: list.map(g => ({ role: g[0], name: g[1] || BL, hasStamp: !!stampEach })), h: 22 + (stampEach ? 36 : 0) }); }
   table(cols, rows, o) { return Object.assign({ grid: cols.map(c => c[2]).join(' '), heads: cols.map(c => ({ t: c[0], align: c[1] ? 'right' : 'left', just: c[1] ? 'flex-end' : 'flex-start' })), hasSupers: false, supers: [], rows, hH: 8 }, o || {}); }
   // ---- shakllar ----
-  secNak(x, variant) { const L = this.L, D = window.MedixData, nak = x.form === 'nak', priced = !nak || variant === 'price';
+  secNak(x, variant) { const L = this.L, D = window.YuzplusData, nak = x.form === 'nak', priced = !nak || variant === 'price';
     const cols = nak ? (priced ? [['№', 1, '6mm'], [L.ch_c_prodMaker, 0, '1fr'], [L.ch_c_batch, 0, '18mm'], [L.ch_c_exp, 0, '17mm'], [L.ch_c_unit, 0, '10mm'], [L.ch_c_qty, 1, '11mm'], [L.ch_c_price, 1, '17mm'], [L.ch_c_sum, 1, '21mm'], [L.ch_c_vatP, 1, '8mm'], [L.ch_c_vat, 1, '19mm'], [L.ch_c_total, 1, '21mm']] : [['№', 1, '7mm'], [L.ch_c_prod, 0, '1fr'], [L.ch_c_maker, 0, '28mm'], [L.ch_c_batch, 0, '24mm'], [L.ch_c_exp, 0, '18mm'], [L.ch_c_unit, 0, '12mm'], [L.ch_c_qty, 1, '16mm']])
       : [['№', 1, '6mm'], [L.ch_c_prod, 0, '1fr'], [L.ch_c_mxik, 0, '18mm'], [L.ch_c_unit, 0, '10mm'], [L.ch_c_qty, 1, '11mm'], [L.ch_c_price, 1, '16mm'], [L.ch_c_supply, 1, '20mm'], [L.ch_c_vatRate, 1, '9mm'], [L.ch_c_vatSum, 1, '18mm'], [L.ch_c_withVat, 1, '20mm']];
     const flags = l => [l.ctrl && L.ch_ctrl, l.mark && fill(L.ch_mark, { n: fN(l.qty) })].filter(Boolean).join(' · '), sm = { fs: '7.5pt' };
@@ -204,7 +204,7 @@ class Component extends DCLogic {
     const cols = [[L.ch_pk_c_code, 0, '18mm'], [L.ch_c_prod, 0, '1fr'], [L.ch_pk_c_batch, 0, '24mm'], [L.ch_c_exp, 0, '17mm'], [L.ch_pk_c_zone, 0, '22mm'], [L.ch_c_qty, 1, '14mm'], [L.ch_pk_c_picked, 0, '15mm']];
     const pre = [this.hdr(x, L.ch_f_pick, x.no, x.date), blk('Barcode', { h: 27, big: x.no, vb: '0 0 ' + x.bar.w + ' 40', wmm: (x.bar.w * 0.3).toFixed(1) + 'mm', bars: x.bar.bars, lines: [{ k: L.ch_pk_cust, v: v(x.cust) }, { k: L.ch_pk_del, v: x.delivery === 'pickup' ? L.ch_dl_pickup : L.ch_dl_deliver }, { k: L.ch_pk_trip, v: v(x.trip) }, { k: L.ch_pk_ready, v: v(x.ready) }] })];
     return { doc: x, pre, table: this.table(cols, rows), post: [this.text(fill(L.ch_pk_total, { r: x.tot.rows, q: fN(x.tot.qty) }), { fg: '#444' }), this.signs(x.signs)] }; }
-  secCash(x) { const L = this.L, D = window.MedixData, inn = x.form === 'kio', words = D.sumInWordsUz(x.sum);
+  secCash(x) { const L = this.L, D = window.YuzplusData, inn = x.form === 'kio', words = D.sumInWordsUz(x.sum);
     const pre = [this.hdr(x, L['ch_f_' + x.form], x.no, x.date), this.info(L.ch_cs_acct, x.acct, { mt: '8pt' }), this.info(inn ? L.ch_cs_from : L.ch_cs_to, x.who), this.info(L.ch_cs_basis, x.basisText)];
     let table = null; if (x.basis.length) { pre.push(this.text(L.ch_cs_alloc, { w: 600, fs: '9.5pt', mt: '8pt' })); table = this.table([[L.ch_cs_c_doc, 0, '1fr'], [L.ch_cs_c_sum, 1, '40mm']], x.basis.map(b => row([cell(b.no, { font: MONO }), R(fM(b.sum))]))); }
     const post = [blk('Totals', { left: '', rows: [{ k: L.ch_cs_sum, v: fM(x.sum) + " so'm", w: 600, fs: '11pt' }].concat(x.vat ? [{ k: L.ch_cs_vat, v: fM(x.vat), w: 400, fs: '9pt' }] : []), h: 10 }), blk('Words', { k: L.ch_inWords, t: words, h: 9 })];
@@ -212,17 +212,17 @@ class Component extends DCLogic {
     post.push(this.signs(x.signs));
     if (inn) post.push(blk('Cut', { t: L.ch_cs_rcpt, h: 10 }), blk('Receipt', { h: 62, title: L.ch_cs_rcpt, sub: L.ch_cs_rcptTo + ' № ' + x.no, rows: [{ k: L.ch_cs_org, v: x.seller.name, font: SANS, fs: '9pt', w: 400 }, { k: L.ch_cs_order, v: x.no, font: MONO, fs: '8.5pt', w: 400 }, { k: L.ch_cs_from, v: v(x.who), font: SANS, fs: '9pt', w: 400 }, { k: L.ch_cs_sum, v: fM(x.sum) + " so'm", font: SANS, fs: '9pt', w: 600 }, { k: L.ch_cs_date, v: x.date, font: SANS, fs: '9pt', w: 400 }], wordsK: L.ch_inWords, words, signRole: L.ch_cs_cashier, signName: x.signs[1][1] || BL }));
     return { doc: x, pre, table, post }; }
-  secAkt(x) { const L = this.L, D = window.MedixData, T = { sv: 'sale', arch: 'arch', mt: 'pay', yt: 'pay', qm: 'ret', qy: 'ret', ah: 'adv', kr: 'rc', bq: 'arch' }, sm = { fs: '8pt' };
+  secAkt(x) { const L = this.L, D = window.YuzplusData, T = { sv: 'sale', arch: 'arch', mt: 'pay', yt: 'pay', qm: 'ret', qy: 'ret', ah: 'adv', kr: 'rc', bq: 'arch' }, sm = { fs: '8pt' };
     const side = n => [cell(n.date, { fs: '7pt', ws: 'nowrap' }), cell(n.no, { font: MONO, fs: '7.5pt', hasSub: !!n.sub, sub: n.sub || '' }), R(n.dr, sm), R(n.cr, sm), cell(''), cell(''), cell(''), cell('')];
     const our = x.mt ? x.close > 0 : x.close < 0, abs = Math.abs(x.close), oursOpen = x.mt ? x.open >= 0 : x.open <= 0;
     const rows = [row(side({ date: x.from, no: '', sub: L.ch_ak_open, dr: oursOpen ? fM(Math.abs(x.open)) : '', cr: !oursOpen ? fM(Math.abs(x.open)) : '' }), { w: 600 })]
       .concat(x.rows.map(m => row(side({ date: m.date, no: m.no || '', sub: L['ch_ak_t_' + (T[m.t] || 'sale')] || m.t, dr: m.dr ? fM(m.dr) : '', cr: m.cr ? fM(m.cr) : '' }), { h: 9.4 })))
       .concat([row(side({ date: '', no: '', sub: L.ch_ak_turn, dr: fM(x.dr), cr: fM(x.cr) }), { w: 600 }), row(side({ date: x.to, no: '', sub: L.ch_ak_close, dr: our ? fM(abs) : '', cr: !our && abs ? fM(abs) : '' }), { w: 600 })]);
-    const brName = (x.signs[0][0] || '').replace(/^Medix Group /, ''), cols = [[L.ch_ak_c_date, 0, '17.5mm'], [L.ch_ak_c_doc, 0, '1fr'], [L.ch_ak_c_dr, 1, '22mm'], [L.ch_ak_c_cr, 1, '22mm'], [L.ch_ak_c_date, 0, '13mm'], [L.ch_ak_c_doc, 0, '0.7fr'], [L.ch_ak_c_dr, 1, '16mm'], [L.ch_ak_c_cr, 1, '16mm']];
-    const res = !abs ? fill(L.ch_ak_zero, { d: x.to }) : fill(L.ch_ak_res, { d: x.to, f: our ? 'Medix Group ' + brName : x.partyName, s: fM(abs), w: D.sumInWordsUz(abs) });
+    const brName = (x.signs[0][0] || '').replace(/^Shifo Dori /, ''), cols = [[L.ch_ak_c_date, 0, '17.5mm'], [L.ch_ak_c_doc, 0, '1fr'], [L.ch_ak_c_dr, 1, '22mm'], [L.ch_ak_c_cr, 1, '22mm'], [L.ch_ak_c_date, 0, '13mm'], [L.ch_ak_c_doc, 0, '0.7fr'], [L.ch_ak_c_dr, 1, '16mm'], [L.ch_ak_c_cr, 1, '16mm']];
+    const res = !abs ? fill(L.ch_ak_zero, { d: x.to }) : fill(L.ch_ak_res, { d: x.to, f: our ? 'Shifo Dori ' + brName : x.partyName, s: fM(abs), w: D.sumInWordsUz(abs) });
     const pre = [this.hdr(x, L.ch_ak_title, x.no, x.date), this.text(fill(L.ch_ak_period, { a: x.from, b: x.to }), { w: 600 }), blk('Parties', { h: 18, cols: [{ title: L.ch_ak_sideA, rows: [{ k: L.ch_r_name, v: x.seller.name, font: SANS, fs: '9pt' }, { k: 'STIR', v: v(x.seller.stir), font: MONO, fs: '8.5pt' }] }, { title: L.ch_ak_sideB, rows: [{ k: L.ch_r_name, v: v(x.partyName), font: SANS, fs: '9pt' }, { k: 'STIR', v: BL, font: MONO, fs: '8.5pt' }] }] })];
-    return { doc: x, pre, table: this.table(cols, rows, { hasSupers: true, supers: [{ t: fill(L.ch_ak_ours, { n: 'Medix Group ' + brName }), span: 4 }, { t: L.ch_ak_theirs, span: 4 }], hH: 13 }), post: [this.text(res, { w: 600, mt: '8pt', h: 14 }), this.signs(x.signs, true)] }; }
-  secNo(x) { const L = this.L, D = window.MedixData, pc = (n, o) => o ? (n - o) / o * 100 : null, fp = v => v == null ? '—' : (v > 0 ? '+' : v < 0 ? '−' : '') + (Math.round(Math.abs(v) * 10) / 10).toString().replace('.', ',') + '%';
+    return { doc: x, pre, table: this.table(cols, rows, { hasSupers: true, supers: [{ t: fill(L.ch_ak_ours, { n: 'Shifo Dori ' + brName }), span: 4 }, { t: L.ch_ak_theirs, span: 4 }], hH: 13 }), post: [this.text(res, { w: 600, mt: '8pt', h: 14 }), this.signs(x.signs, true)] }; }
+  secNo(x) { const L = this.L, D = window.YuzplusData, pc = (n, o) => o ? (n - o) / o * 100 : null, fp = v => v == null ? '—' : (v > 0 ? '+' : v < 0 ? '−' : '') + (Math.round(Math.abs(v) * 10) / 10).toString().replace('.', ',') + '%';
     const st = L['nq_st_' + x.st] || x.st, srcL = (L['nq_src_' + x.srcKind] || x.srcKind) + (x.rc ? ' · ' + x.rc : '');
     const pre = [this.hdr(x, L.nq_pr_title, x.no, x.date), this.info(L.nq_i_type, x.type, { mt: '8pt' }), this.info(L.nq_i_br, x.seller.short || x.branch), this.info(L.nq_i_eff, x.eff), this.info(L.nq_i_src, srcL), this.info(L.nq_ch_st, st)].concat(x.note ? [this.info(L.nq_i_note, x.note)] : []);
     const rows = x.lines.map((l, i) => row([cell(String(i + 1)), cell(l.code, { font: MONO, fs: '8pt' }), cell(l.name), cell(l.batch || '—', { font: MONO, fs: '8pt' }), R(l.old ? fM(l.old) : '—'), R(fM(l.price), { w: 600 }), R(fp(pc(l.price, l.old)))]));
@@ -240,7 +240,7 @@ class Component extends DCLogic {
       sec.post.forEach(put); });
     return pages; }
   renderVals() {
-    const L = this.L, p = this.props, s = this.state, D = window.MedixData, req = p.req || {};
+    const L = this.L, p = this.props, s = this.state, D = window.YuzplusData, req = p.req || {};
     const base = { L, pages: [], zooms: [], copyOpts: [], variants: [], banners: [], hasBanners: false, dlg: {}, dlgOpen: false, scale: 1, formName: '', docNo: '', pageInfo: '', hasVariant: false, footL: '', close: () => this.close(), closeDlg: () => this.setState({ dlg: null }), stop: e => e.stopPropagation(), pdf: () => {}, print: () => {}, copies: s.copies, setCopies: () => {} };
     if (!D || !D.printData) return base;
     let x = D.printData(req.form, req.no, req.q);

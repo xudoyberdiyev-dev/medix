@@ -11,7 +11,7 @@
   <header style="height:64px;flex:none;background:#FFFFFF;border-bottom:1px solid #E2E8F0;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:16px;padding:0 24px">
     <div style="display:flex;align-items:center;gap:10px">
       <div style="width:28px;height:28px;border-radius:7px;background:#0D9488;color:#FFFFFF;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600">M</div>
-      <span style="font-size:15px;font-weight:600;letter-spacing:0.02em">MEDIX</span>
+      <span style="font-size:15px;font-weight:600;letter-spacing:0.02em">100+</span>
     </div>
     <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
       <div style="display:flex;align-items:center">
@@ -393,11 +393,11 @@
 </div>
 </x-dc>
 <script type="text/x-dc" data-dc-script>
-const KEY = 'medix-wizard-v1';
+const KEY = 'yuzplus-wizard-v1';
 const W = {
   uz: { later: 'Keyinroq davom ettirish', stepOf: n => `${n}-qadam · 6 tadan`, steps: ['Kompaniya', 'Filiallar', 'Omborlar va zonalar', 'Rollar va ruxsatlar', 'Xodimlar', 'Yakun'],
     t1: "Kompaniya ma'lumotlari", d1: "Kompaniyangiz nomi tizim sarlavhasida, hisobotlarda va chop etiladigan hujjatlarda ko'rinadi. Bularni keyinroq ham o'zgartirish mumkin.",
-    name: 'Kompaniya nomi', namePh: 'masalan, Medix Group', nameHelp: "Bu guruhning umumiy nomi. Filiallarning yuridik nomlari keyingi qadamda kiritiladi.",
+    name: 'Kompaniya nomi', namePh: 'masalan, Shifo Dori', nameHelp: "Bu guruhning umumiy nomi. Filiallarning yuridik nomlari keyingi qadamda kiritiladi.",
     logo: 'Logotip', drop1: 'Faylni shu yerga tashlang yoki ', drop2: 'tanlang', dropHelp: 'PNG yoki SVG, 2 MB gacha. Kvadrat shakl tavsiya etiladi.', uploading: 'Yuklanmoqda…',
     replace: 'Almashtirish', remove: "O'chirish", tooBig: 'Fayl hajmi 2 MB dan oshmasligi kerak.', badType: 'Faqat PNG yoki SVG fayl yuklash mumkin.',
     lang: 'Tizimning asosiy tili', langHelp: "Har bir xodim o'z tilini keyin profilida alohida tanlashi mumkin.", cur: 'Valyuta', curVal: "So'm (UZS)", curHelp: "Barcha hisob-kitoblar so'mda, tiyinlari bilan yuritiladi.",
@@ -406,7 +406,7 @@ const W = {
     mTitle: 'Sozlashni keyinroq davom ettirasizmi?', mText: "Kiritilgan ma'lumotlar saqlangan. Keyingi kirishda shu qadamdan boshlaysiz.", stay: 'Qolish', exit: 'Chiqish', phSub: 'Bu qadam keyingi promptda quriladi' },
   cy: { later: 'Кейинроқ давом эттириш', stepOf: n => `${n}-қадам · 6 тадан`, steps: ['Компания', 'Филиаллар', 'Омборлар ва зоналар', 'Роллар', 'Ходимлар', 'Yakun'],
     t1: 'Компания маълумотлари', d1: 'Компаниянгиз номи тизим сарлавҳасида, ҳисоботларда ва чоп этиладиган ҳужжатларда кўринади. Буларни кейинроқ ҳам ўзгартириш мумкин.',
-    name: 'Компания номи', namePh: 'масалан, Medix Group', nameHelp: 'Бу гуруҳнинг умумий номи. Филиалларнинг юридик номлари кейинги қадамда киритилади.',
+    name: 'Компания номи', namePh: 'масалан, Shifo Dori', nameHelp: 'Бу гуруҳнинг умумий номи. Филиалларнинг юридик номлари кейинги қадамда киритилади.',
     logo: 'Логотип', drop1: 'Файлни шу ерга ташланг ёки ', drop2: 'танланг', dropHelp: 'PNG ёки SVG, 2 МБ гача. Квадрат шакл тавсия этилади.', uploading: 'Юкланмоқда…',
     replace: 'Алмаштириш', remove: 'Ўчириш', tooBig: 'Файл ҳажми 2 МБ дан ошмаслиги керак.', badType: 'Фақат PNG ёки SVG файл юклаш мумкин.',
     lang: 'Тизимнинг асосий тили', langHelp: 'Ҳар бир ходим ўз тилини кейин профилида алоҳида танлаши мумкин.', cur: 'Валюта', curVal: 'Сўм (UZS)', curHelp: 'Барча ҳисоб-китоблар сўмда, тийинлари билан юритилади.',
@@ -415,7 +415,7 @@ const W = {
     mTitle: 'Созлашни кейинроқ давом эттирасизми?', mText: 'Киритилган маълумотлар сақланган. Кейинги киришда шу қадамдан бошлайсиз.', stay: 'Қолиш', exit: 'Чиқиш', phSub: 'Бу қадам кейинги промптда қурилади' },
   ru: { later: 'Продолжить позже', stepOf: n => `Шаг ${n} из 6`, steps: ['Компания', 'Филиалы', 'Склады и зоны', 'Rollar va ruxsatlar', 'Сотрудники', 'Yakun'],
     t1: 'Данные компании', d1: 'Название компании отображается в заголовке системы, в отчётах и печатных документах. Всё это можно изменить позже.',
-    name: 'Название компании', namePh: 'например, Medix Group', nameHelp: 'Общее название группы. Юридические названия филиалов вводятся на следующем шаге.',
+    name: 'Название компании', namePh: 'например, Shifo Dori', nameHelp: 'Общее название группы. Юридические названия филиалов вводятся на следующем шаге.',
     logo: 'Логотип', drop1: 'Перетащите файл сюда или ', drop2: 'выберите', dropHelp: 'PNG или SVG, до 2 МБ. Рекомендуется квадратная форма.', uploading: 'Загрузка…',
     replace: 'Заменить', remove: 'Удалить', tooBig: 'Размер файла не должен превышать 2 МБ.', badType: 'Можно загрузить только PNG или SVG.',
     lang: 'Основной язык системы', langHelp: 'Каждый сотрудник позже может выбрать свой язык в профиле.', cur: 'Валюта', curVal: 'Сум (UZS)', curHelp: 'Все расчёты ведутся в сумах, с точностью до тийина.',
@@ -445,10 +445,10 @@ const W2 = {
 };
 ['uz', 'cy', 'ru'].forEach(k => Object.assign(W[k], W2[k]));
 const MOCK = [
-  { id: 'b1', name: 'Toshkent filiali', code: 'TSH', legal: '"Medix Toshkent" MChJ', stir: '305482117', vat: true, vatNo: '326030012345', region: 'Toshkent shahri', address: "Chilonzor tumani, Bunyodkor ko'chasi, 12-uy", same: true, actual: '', phone: '712005040', banks: [{ bank: 'Kapitalbank', acc: '20208000400123456001', main: true }, { bank: 'Hamkorbank', acc: '20208000900765432002', main: false }], director: 'Karimov Akmal Rustamovich', accountant: 'Yo\'ldosheva Gulnora Botirovna' },
-  { id: 'b2', name: 'Samarqand filiali', code: 'SMQ', legal: '"Medix Samarqand" MChJ', stir: '306117248', vat: true, vatNo: '326030022871', region: 'Samarqand viloyati', address: "Samarqand sh., Amir Temur ko'chasi, 45-uy", same: true, actual: '', phone: '662331820', banks: [{ bank: 'Ipoteka bank', acc: '20208000300456789011', main: true }], director: 'Usmonov Farrux Ilhomovich', accountant: 'Rahimova Malika Sobirovna' },
-  { id: 'b3', name: 'Buxoro filiali', code: 'BXR', legal: '"Medix Buxoro" MChJ', stir: '307905361', vat: false, vatNo: '', region: 'Buxoro viloyati', address: "Buxoro sh., Piridastgir ko'chasi, 7-uy", same: true, actual: '', phone: '652214455', banks: [{ bank: 'Asakabank', acc: '20208000200987654021', main: true }], director: 'Jo\'rayev Sanjar Akramovich', accountant: 'Qodirova Dildora Anvarovna' },
-  { id: 'b4', name: "Farg'ona filiali", code: 'FRG', legal: '"Medix Farg\'ona" MChJ', stir: '308224590', vat: true, vatNo: '326030034409', region: "Farg'ona viloyati", address: "Farg'ona sh., Al-Farg'oniy ko'chasi, 21-uy", same: true, actual: '', phone: '732447090', banks: [{ bank: 'Agrobank', acc: '20208000600112233031', main: true }, { bank: "O'zmilliybank", acc: '20208000700445566032', main: false }], director: 'Nazarov Otabek Yusufovich', accountant: 'Mirzayeva Feruza Toxirovna' }
+  { id: 'b1', name: 'Toshkent filiali', code: 'TSH', legal: '"100+ Toshkent" MChJ', stir: '305482117', vat: true, vatNo: '326030012345', region: 'Toshkent shahri', address: "Chilonzor tumani, Bunyodkor ko'chasi, 12-uy", same: true, actual: '', phone: '712005040', banks: [{ bank: 'Kapitalbank', acc: '20208000400123456001', main: true }, { bank: 'Hamkorbank', acc: '20208000900765432002', main: false }], director: 'Karimov Akmal Rustamovich', accountant: 'Yo\'ldosheva Gulnora Botirovna' },
+  { id: 'b2', name: 'Samarqand filiali', code: 'SMQ', legal: '"100+ Samarqand" MChJ', stir: '306117248', vat: true, vatNo: '326030022871', region: 'Samarqand viloyati', address: "Samarqand sh., Amir Temur ko'chasi, 45-uy", same: true, actual: '', phone: '662331820', banks: [{ bank: 'Ipoteka bank', acc: '20208000300456789011', main: true }], director: 'Usmonov Farrux Ilhomovich', accountant: 'Rahimova Malika Sobirovna' },
+  { id: 'b3', name: 'Buxoro filiali', code: 'BXR', legal: '"100+ Buxoro" MChJ', stir: '307905361', vat: false, vatNo: '', region: 'Buxoro viloyati', address: "Buxoro sh., Piridastgir ko'chasi, 7-uy", same: true, actual: '', phone: '652214455', banks: [{ bank: 'Asakabank', acc: '20208000200987654021', main: true }], director: 'Jo\'rayev Sanjar Akramovich', accountant: 'Qodirova Dildora Anvarovna' },
+  { id: 'b4', name: "Farg'ona filiali", code: 'FRG', legal: '"100+ Farg\'ona" MChJ', stir: '308224590', vat: true, vatNo: '326030034409', region: "Farg'ona viloyati", address: "Farg'ona sh., Al-Farg'oniy ko'chasi, 21-uy", same: true, actual: '', phone: '732447090', banks: [{ bank: 'Agrobank', acc: '20208000600112233031', main: true }, { bank: "O'zmilliybank", acc: '20208000700445566032', main: false }], director: 'Nazarov Otabek Yusufovich', accountant: 'Mirzayeva Feruza Toxirovna' }
 ];
 const W3 = {
   uz: { t3: 'Omborlar va zonalar', d3: "Har bir filialga uning omborlarini qo'shing. Har bir omborda kamida bitta zona bo'ladi — tizim tovarning aynan qayerda turganini shu orqali biladi.",
@@ -503,7 +503,7 @@ const PH_ICONS = [null, null, 'warehouse', 'shield-check', 'users-round'];
 const SPIN = React.createElement('span', { style: { width: 12, height: 12, flex: 'none', borderRadius: '50%', border: '2px solid #E2E8F0', borderTopColor: '#0D9488', animation: 'mx-spin 700ms linear infinite', boxSizing: 'border-box' } });
 const fmtSize = b => b < 1024 * 1024 ? `${Math.max(1, Math.round(b / 1024))} KB` : `${(b / 1048576).toFixed(1).replace('.', ',')} MB`;
 
-const RESET_DATA = () => ({ step: 1, done: 3, name: 'Medix Group', logo: null, sysLang: 'uz', branches: JSON.parse(JSON.stringify(MOCK)), warehouses: JSON.parse(JSON.stringify(MOCK_WH)) });
+const RESET_DATA = () => ({ step: 1, done: 3, name: 'Shifo Dori', logo: null, sysLang: 'uz', branches: JSON.parse(JSON.stringify(MOCK)), warehouses: JSON.parse(JSON.stringify(MOCK_WH)) });
 const loadSaved = () => { try { const v = JSON.parse(localStorage.getItem(KEY)) || {}; return v.reset ? RESET_DATA() : v; } catch (e) { return {}; } };
 const DEMO_LOGO = 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#0D9488"/><text x="32" y="43" font-family="Inter,Arial" font-size="32" font-weight="600" fill="#FFFFFF" text-anchor="middle">M</text></svg>');
 
@@ -564,20 +564,20 @@ class Component extends DCLogic {
     if (k === 'reset') { this.persist({ ...RESET_DATA(), panel: null, del: null, menu: null, whPanel: null, whDel: null, whMenu: null, up: null, modal: false, miss: false, tried: false, step2Err: false, step3Err: false }); return; }
     if (k === 'co-up') {
       clearInterval(this._ui);
-      this.persist({ step: 1, done: 0, name: 'Medix Group', logo: null, tried: false, panel: null, whPanel: null, modal: false });
+      this.persist({ step: 1, done: 0, name: 'Shifo Dori', logo: null, tried: false, panel: null, whPanel: null, modal: false });
       this._url = DEMO_LOGO;
-      this.setState({ logoErr: '', up: { name: 'medix-logo.svg', pct: 6 } });
+      this.setState({ logoErr: '', up: { name: 'yuzplus-logo.svg', pct: 6 } });
       this._ui = setInterval(() => {
         const u = this.state.up; if (!u) return clearInterval(this._ui);
         const pct = u.pct + 3;
-        if (pct >= 100) { clearInterval(this._ui); this.touch({ up: null, logo: { name: 'medix-logo.svg', size: 18432, url: DEMO_LOGO } }); this._url = null; }
+        if (pct >= 100) { clearInterval(this._ui); this.touch({ up: null, logo: { name: 'yuzplus-logo.svg', size: 18432, url: DEMO_LOGO } }); this._url = null; }
         else this.setState({ up: { ...u, pct } });
       }, 120);
       return;
     }
-    if (k && /^(rl|xd|yk)/.test(k)) { const st = k.startsWith('rl') ? 4 : k.startsWith('xd') ? 5 : 6; this.persist({ step: st, done: Math.max(this.state.done || 0, st - 1, 3), name: this.state.name || 'Medix Group', name: 'Medix Group', branches: JSON.parse(JSON.stringify(MOCK)), warehouses: k === 'ykBlock' ? JSON.parse(JSON.stringify(MOCK_WH)).filter(x => x.branchId !== 'b3') : JSON.parse(JSON.stringify(MOCK_WH)), panel: null, whPanel: null, modal: false, childDemo: { k, n: Date.now() } }); return; }
+    if (k && /^(rl|xd|yk)/.test(k)) { const st = k.startsWith('rl') ? 4 : k.startsWith('xd') ? 5 : 6; this.persist({ step: st, done: Math.max(this.state.done || 0, st - 1, 3), name: this.state.name || 'Shifo Dori', name: 'Shifo Dori', branches: JSON.parse(JSON.stringify(MOCK)), warehouses: k === 'ykBlock' ? JSON.parse(JSON.stringify(MOCK_WH)).filter(x => x.branchId !== 'b3') : JSON.parse(JSON.stringify(MOCK_WH)), panel: null, whPanel: null, modal: false, childDemo: { k, n: Date.now() } }); return; }
     if (k && k.startsWith('wh')) {
-      const b3 = { step: 3, done: 2, name: this.state.name || 'Medix Group', branches: JSON.parse(JSON.stringify(MOCK)), panel: null, del: null, menu: null, whPanel: null, whDel: null, whMenu: null, step3Err: false, miss: false, modal: false };
+      const b3 = { step: 3, done: 2, name: this.state.name || 'Shifo Dori', branches: JSON.parse(JSON.stringify(MOCK)), panel: null, del: null, menu: null, whPanel: null, whDel: null, whMenu: null, step3Err: false, miss: false, modal: false };
       const full = JSON.parse(JSON.stringify(MOCK_WH));
       if (k === 'wh-empty') this.persist({ ...b3, warehouses: [] });
       if (k === 'wh-full') this.persist({ ...b3, warehouses: full });
@@ -586,7 +586,7 @@ class Component extends DCLogic {
       return;
     }
     if (!k || !k.startsWith('br')) return;
-    const base = { step: 2, done: 1, name: this.state.name || 'Medix Group', panel: null, del: null, menu: null, step2Err: false, modal: false };
+    const base = { step: 2, done: 1, name: this.state.name || 'Shifo Dori', panel: null, del: null, menu: null, step2Err: false, modal: false };
     if (k === 'br-empty') this.persist({ ...base, branches: [] });
     if (k === 'br-4') this.persist({ ...base, branches: JSON.parse(JSON.stringify(MOCK)) });
     if (k === 'br-err') { this.persist({ ...base, branches: JSON.parse(JSON.stringify(MOCK)) }); this.setState({ panel: { id: null, errors: true, initial: { name: 'Navoiy filiali', code: 'TSH', legal: '', stir: '30744', region: 'Navoiy viloyati', address: "Navoiy sh., Galaba shoh ko'chasi, 3-uy", banks: [{ bank: 'Kapitalbank', acc: '20208000400111222333', main: true }] }, n: Date.now() } }); }
@@ -695,7 +695,7 @@ class Component extends DCLogic {
       cancelDel: () => this.setState({ del: null, whDel: null }),
       confirmDel: () => { if (s.whDel) { const x = s.warehouses.find(v => v.id === s.whDel); this.touch({ warehouses: s.warehouses.filter(v => v.id !== s.whDel), whDel: null }); x && this.flash(w.deleted(x.name)); return; } const b = s.branches.find(x => x.id === s.del); this.touch({ branches: s.branches.filter(x => x.id !== s.del), del: null }); b && this.flash(w.deleted(b.name)); },
       toastOpen: !!s.toast, toastText: s.toast || '',
-      companyName: s.name.trim() || 'Medix Group',
+      companyName: s.name.trim() || 'Shifo Dori',
       diagram: s.branches.length ? s.branches.map(b => ({ real: true, ghost: false, code: b.code, name: b.name })) : [{ real: false, ghost: true }, { real: false, ghost: true }],
       nextPrimary: !(s.step === 2 && !s.branches.length) && !(s.step === 3 && !s.warehouses.length), nextSecondary: (s.step === 2 && !s.branches.length) || (s.step === 3 && !s.warehouses.length),
       ...this.whVals(w),

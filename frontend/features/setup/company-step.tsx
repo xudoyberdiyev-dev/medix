@@ -148,7 +148,7 @@ export function CompanyStep({ status, nav, onDone }: { status: SetupStatus; nav:
                 // eslint-disable-next-line @next/next/no-img-element -- server logotipi (PNG/SVG), optimallashtirish kerak emas
                 <img src={logo} alt="" className="size-[24px] rounded-control bg-white object-contain" />
               ) : (
-                <span className="flex size-[24px] items-center justify-center rounded-control bg-primary text-caption font-semibold text-white">
+                <span className="flex size-[24px] items-center justify-center rounded-control bg-primary text-caption font-semibold text-on-solid">
                   M
                 </span>
               )}
@@ -239,7 +239,7 @@ export function CompanyStep({ status, nav, onDone }: { status: SetupStatus; nav:
                 <>
                   <p className="text-table">
                     {tc("drop1")}
-                    <button type="button" className="text-primary-button hover:underline" onClick={() => fileRef.current?.click()}>
+                    <button type="button" className="text-link hover:underline" onClick={() => fileRef.current?.click()}>
                       {tc("drop2")}
                     </button>
                   </p>

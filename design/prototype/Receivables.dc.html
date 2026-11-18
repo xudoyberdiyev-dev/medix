@@ -7,7 +7,7 @@
 </head>
 <body>
 <x-dc>
-<helmet><script src="medix-data.js"></script></helmet>
+<helmet><script src="yuzplus-data.js"></script></helmet>
 <div style="display:flex;flex-direction:column;min-width:0;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
 <sc-if value="{{ isList }}" hint-placeholder-val="{{ true }}">
 <div data-screen-label="{{ title }}" style="display:flex;flex-direction:column;gap:16px;min-width:0">
@@ -106,10 +106,10 @@ const mln = n => { const v = n / 1e6; return v >= 10 ? Math.round(v) + ' mln' : 
 const CLEAR = { fRegion: [], fStatus: [], fAge: [], date: { from: null, to: null }, q: '', calDay: null };
 class Component extends DCLogic {
   state = { view: 'list', tab: 'all', ...CLEAR, card: null, empty: false, page: 1, per: 25 };
-  get D() { return window.MedixData; }
+  get D() { return window.YuzplusData; }
   get L() { return this.props.dict || {}; }
   get K() { return this.props.kind === 'yt' ? 'yt' : 'mt'; }
-  applyUrl() { const D = window.MedixData, u = D && D.store.urlF; if (!u || u.page !== 'cdebt' || u.n === this._un) return; this._un = u.n; const P = u.params || {}; const A = { current: 0, '1-30': 1, '31-60': 2, '61-90': 3, '90plus': 4 }; setTimeout(() => this.setState({ view: 'list', tab: 'all', ...CLEAR, fAge: P.aging in A ? [A[P.aging]] : [], page: 1, ...(pD(P.dueFrom) != null ? { date: { from: P.dueFrom, to: pD(P.dueTo) != null ? P.dueTo : P.dueFrom } } : {}) }), 0); if (P.open) { const D2 = this.D, c = D2.CUSTOMERS.find(x => String(x.id) === P.open || x.name === P.open || String(x.stir || '').replace(/\D/g, '') === P.open.replace(/\D/g, '')); if (c) setTimeout(() => this.openCard(c.id, P.branch && P.branch !== 'ALL' ? P.branch : D2.custBrs(c)[0]), 10); } }
+  applyUrl() { const D = window.YuzplusData, u = D && D.store.urlF; if (!u || u.page !== 'cdebt' || u.n === this._un) return; this._un = u.n; const P = u.params || {}; const A = { current: 0, '1-30': 1, '31-60': 2, '61-90': 3, '90plus': 4 }; setTimeout(() => this.setState({ view: 'list', tab: 'all', ...CLEAR, fAge: P.aging in A ? [A[P.aging]] : [], page: 1, ...(pD(P.dueFrom) != null ? { date: { from: P.dueFrom, to: pD(P.dueTo) != null ? P.dueTo : P.dueFrom } } : {}) }), 0); if (P.open) { const D2 = this.D, c = D2.CUSTOMERS.find(x => String(x.id) === P.open || x.name === P.open || String(x.stir || '').replace(/\D/g, '') === P.open.replace(/\D/g, '')); if (c) setTimeout(() => this.openCard(c.id, P.branch && P.branch !== 'ALL' ? P.branch : D2.custBrs(c)[0]), 10); } }
   componentDidMount() {
     this._url = setInterval(() => this.applyUrl(), 250);
     if (!this.D) this._p = setInterval(() => { if (this.D) { clearInterval(this._p); this.boot(); } }, 60); else this.boot();

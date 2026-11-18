@@ -7,7 +7,7 @@
 </head>
 <body>
 <x-dc>
-<helmet><script src="medix-data.js"></script></helmet>
+<helmet><script src="yuzplus-data.js"></script></helmet>
 <div style="display:flex;flex-direction:column;min-width:0;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
 <sc-if value="{{ isList }}" hint-placeholder-val="{{ true }}">
 <div data-screen-label="Boshlang'ich qoldiq" style="display:flex;flex-direction:column;gap:16px;min-width:0">
@@ -83,7 +83,7 @@ const TICON = { goods: 'boxes', mt: 'hand-coins', yt: 'truck', cash: 'banknote' 
 const SHORT = w => String(w).replace(/ ombori$/, '').replace(/^Asosiy ombor$/, 'Asosiy');
 class Component extends DCLogic {
   state = { view: 'list', tab: 'all', q: '', doc: null, empty: false, dlg: null };
-  get D() { return window.MedixData; }
+  get D() { return window.YuzplusData; }
   get L() { return this.props.dict || {}; }
   componentDidMount() {
     if (!this.D || !this.D.bqStatus) this._p = setInterval(() => { if (this.D && this.D.bqStatus) { clearInterval(this._p); this.boot(); } }, 60); else this.boot();

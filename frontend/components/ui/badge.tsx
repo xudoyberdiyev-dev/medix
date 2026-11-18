@@ -16,7 +16,7 @@ const tones: Record<Tone, string> = {
   danger: "bg-danger-bg text-danger",
   info: "bg-info-bg text-info",
   neutral: "bg-background text-text-secondary",
-  primary: "bg-primary-soft text-primary-button",
+  primary: "bg-primary-soft text-link",
 };
 
 /** Tayyor holatlar — nomlar hamma joyda bir xil (design/system: Badge). */

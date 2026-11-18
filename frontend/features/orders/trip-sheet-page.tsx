@@ -63,7 +63,7 @@ export function TripSheetPage() {
     <Shell ready>
       <header className="flex items-start justify-between gap-4 border-b border-text-primary pb-3">
         <div>
-          <div className="text-caption text-text-secondary">MEDIX</div>
+          <div className="text-caption text-text-secondary">100+</div>
           <h1 className="text-page-title">
             Yoʻl varaqasi <span className="font-mono">{t.number}</span>
           </h1>

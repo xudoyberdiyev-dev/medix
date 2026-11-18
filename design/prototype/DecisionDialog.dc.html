@@ -7,7 +7,7 @@
 </head>
 <body>
 <x-dc>
-<helmet><script src="medix-data.js"></script></helmet>
+<helmet><script src="yuzplus-data.js"></script></helmet>
 <div onClick="{{ close }}" style="position:fixed;inset:0;z-index:180;background:rgba(18,43,42,0.30);display:flex;align-items:center;justify-content:center;padding:24px;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-variant-numeric:tabular-nums">
   <div role="alertdialog" aria-modal="true" onClick="{{ stop }}" style="width:480px;max-width:100%;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;box-shadow:0 8px 24px rgba(18,60,58,0.12);padding:24px;display:flex;flex-direction:column">
     <h2 style="margin:0;font-size:17px;line-height:24px;font-weight:600;text-wrap:pretty">{{ title }}</h2>
@@ -52,9 +52,9 @@ class Component extends DCLogic {
   get L() { return this.props.dict || {}; }
   componentDidMount() { this.onKey = e => { if (e.key === 'Escape') this.props.onClose && this.props.onClose(); }; window.addEventListener('keydown', this.onKey); setTimeout(() => this.taRef.current && this.props.kind !== 'reject' && this.taRef.current.focus(), 60); }
   componentWillUnmount() { window.removeEventListener('keydown', this.onKey); }
-  order() { const D = window.MedixData; return D && D.store.orders.find(o => o.id === this.props.orderId); }
+  order() { const D = window.YuzplusData; return D && D.store.orders.find(o => o.id === this.props.orderId); }
   confirm() {
-    const D = window.MedixData, L = this.L, k = this.props.kind, o = this.order(), s = this.state; if (!o) return;
+    const D = window.YuzplusData, L = this.L, k = this.props.kind, o = this.order(), s = this.state; if (!o) return;
     const txt = s.txt.trim(), who = this.props.userName || 'Akmal Karimov';
     let reason = '';
     if (k === 'reject') { if (!s.preset || (s.preset === 'other' && !txt)) return this.setState({ tried: true }); reason = s.preset === 'other' ? txt : (L['bk_rs' + s.preset] + (txt ? '. ' + txt : '')); }
@@ -69,7 +69,7 @@ class Component extends DCLogic {
     this.props.onDone && this.props.onDone(n, k);
   }
   renderVals() {
-    const L = this.L, D = window.MedixData, k = this.props.kind, s = this.state, o = this.order();
+    const L = this.L, D = window.YuzplusData, k = this.props.kind, s = this.state, o = this.order();
     const base = { L, close: () => this.props.onClose && this.props.onClose(), stop: e => e.stopPropagation(), confirm: () => this.confirm(), taRef: this.taRef, txt: s.txt, onTxt: e => this.setState({ txt: e.target.value }) };
     if (!D || !o) return { ...base, items: [], presets: [] };
     const cr = D.creditCheck(o), t = cr.t, b = D.BRANCHES.find(x => x.code === o.branch) || D.BRANCHES[0];

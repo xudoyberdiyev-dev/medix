@@ -130,7 +130,7 @@ const PG = { qm: 'creturns', hc: 'writeoff', qy: 'sreturns', adv: 'cdebt' };
 class Component extends DCLogic {
   state = { sel: 'branch', q: '', onlyChanged: false, onlySpecial: false, collapsed: {}, panel: null, dlg: null, err: null, tip: null, shake: null, hl: null, toast: null, base: null, draft: null };
   mxRef = React.createRef();
-  get D() { return window.MedixData; }
+  get D() { return window.YuzplusData; }
   get L() { return this.props.dict || {}; }
   componentDidMount() { this.init(); }
   onMxScroll = e => { const y = e.currentTarget.scrollTop, hgt = e.currentTarget.clientHeight; if (this._raf) return; this._raf = requestAnimationFrame(() => { this._raf = null; if (Math.abs(y - (this.state.sy || 0)) > 40 || hgt !== this.state.vh) this.setState({ sy: y, vh: hgt }); }); };

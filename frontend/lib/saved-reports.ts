@@ -11,7 +11,7 @@ export interface SavedReport {
   href: string;
 }
 
-export const SAVED_REPORTS_KEY = "medix-saved-reports";
+export const SAVED_REPORTS_KEY = "yuzplus-saved-reports";
 export const MAX_REPORTS = 20;
 export const MAX_REPORT_NAME = 60;
 

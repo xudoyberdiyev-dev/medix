@@ -105,7 +105,7 @@ function Tile({ label, value, sub, tone, href }: { label: string; value: ReactNo
       className={cn("text-[17px] leading-6 font-semibold tabular-nums", href && "whitespace-nowrap", tone === "danger" && "text-danger")}
     >
       {value}
-      {href ? <ArrowUpRight size={14} strokeWidth={1.5} className="ml-1 inline text-primary-button" aria-hidden /> : null}
+      {href ? <ArrowUpRight size={14} strokeWidth={1.5} className="ml-1 inline text-link" aria-hidden /> : null}
     </span>
   );
   return (

@@ -596,7 +596,9 @@ function DraftDoc({ doc }: { doc: InventoryCountDetail | null }) {
                   <I size={14} strokeWidth={1.5} aria-hidden />
                   {m.name}
                   {on && f.chairId === m.id ? (
-                    <span className="rounded-[4px] bg-primary px-1.5 text-[11px] leading-4 font-medium text-white">{t("doc.chair")}</span>
+                    <span className="rounded-[4px] bg-primary px-1.5 text-[11px] leading-4 font-medium text-on-solid">
+                      {t("doc.chair")}
+                    </span>
                   ) : null}
                 </button>
               );
@@ -615,7 +617,9 @@ function DraftDoc({ doc }: { doc: InventoryCountDetail | null }) {
                     onClick={() => upd({ chairId: mid })}
                     className={cn(
                       "h-[26px] rounded-[6px] border px-2 text-[12.5px]",
-                      on ? "border-primary bg-primary text-white" : "border-border bg-surface text-text-primary hover:border-text-disabled",
+                      on
+                        ? "border-primary bg-primary text-on-solid"
+                        : "border-border bg-surface text-text-primary hover:border-text-disabled",
                     )}
                   >
                     {o?.staff.find((s) => s.id === mid)?.name ?? doc?.members.find((s) => s.id === mid)?.name ?? mid}

@@ -60,7 +60,7 @@ test("CEO: birinchi kirish, sozlash ustasi, xodim qoʻshish", async ({ page }) =
   await expect(page.getByRole("heading", { name: "Kompaniya maʼlumotlari" })).toBeVisible();
   await page.getByRole("button", { name: "Keyingi qadam" }).click();
   await expect(page.getByText("Kompaniya nomini kiriting")).toBeVisible();
-  await field(page, "Kompaniya nomi").fill("Medix Group");
+  await field(page, "Kompaniya nomi").fill("Shifo Dori");
   await page.getByRole("radio", { name: /Oʻzbekcha \(lotin\)/ }).click();
   await page.getByRole("button", { name: "Keyingi qadam" }).click();
 
@@ -72,14 +72,14 @@ test("CEO: birinchi kirish, sozlash ustasi, xodim qoʻshish", async ({ page }) =
   await expect(page.getByText("6 ta maydonni toʻgʻrilang")).toBeVisible();
   await field(page, "Filial nomi").fill("Toshkent");
   await expect(field(page, "Qisqa belgi")).toHaveValue("TSH");
-  await field(page, "Yuridik nomi").fill("Medix TSH MChJ");
+  await field(page, "Yuridik nomi").fill("Shifo Dori TSH MChJ");
   await field(page, "STIR").fill("301234567");
   await choose(page, "Viloyat / shahar", /Toshkent shahri/);
   await field(page, "Yuridik manzil").fill("Chilonzor tumani, 1-uy");
   await choose(page, "Bank", /Kapitalbank/);
   await field(page, "Hisob raqami").fill("20208000900100001010");
   await page.getByRole("button", { name: "Filialni saqlash" }).click();
-  await expect(page.getByText("Medix TSH MChJ")).toBeVisible();
+  await expect(page.getByText("Shifo Dori TSH MChJ")).toBeVisible();
   await expect(page.getByText("1 ta hisob")).toBeVisible();
   await page.getByRole("button", { name: "Keyingi qadam" }).click();
 
@@ -925,7 +925,7 @@ test("CEO: Kompaniya — tizim holati va nomni tahrirlash", async ({ page }) => 
   await page.goto("/company");
   await expect(page.getByRole("heading", { name: "Kompaniya", level: 1 })).toBeVisible();
   await expect(page.getByText("Tizim ishga tushirilgan")).toBeVisible();
-  await page.getByRole("button", { name: "Tahrirlash" }).click();
+  await page.getByRole("button", { name: "Tahrirlash", exact: true }).click();
   const modal = page.getByRole("dialog", { name: "Kompaniyani tahrirlash" });
   const name = modal.getByLabel(/^Guruh nomi\s*\*?$/);
   const old = await name.inputValue();

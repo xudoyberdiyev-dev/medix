@@ -32,13 +32,13 @@ class Component extends DCLogic {
   componentDidMount() { this.boot(); }
   componentDidUpdate(pp) { if (this.props.demo !== pp.demo) this.boot(); }
   boot() { const k = this.props.demo; if (k === 'weak') this.setState({ cur: '', p1: '1111', p2: '1111', tried: true }); else this.setState({ cur: '', p1: '', p2: '', tried: false }); }
-  errs() { const L = this.L, s = this.state, D = window.MedixData, e = {}, ch = this.props.mode === 'change';
+  errs() { const L = this.L, s = this.state, D = window.YuzplusData, e = {}, ch = this.props.mode === 'change';
     if (ch && s.cur.length < 4) e.cur = L.bs_pinE4; else if (ch && s.cur !== (this.props.current || '1234')) e.cur = L.bs_pinWrong;
     const w = D ? D.pinWeak(s.p1) : null; if (w === 'format') e.p1 = L.bs_pinE4; else if (w === 'same') e.p1 = L.bs_pinWeakSame; else if (w === 'seq') e.p1 = L.bs_pinWeakSeq; else if (ch && s.p1 === s.cur) e.p1 = L.bs_pinSame;
     if (!e.p1 && s.p2 !== s.p1) e.p2 = L.bs_pinMismatch; return e; }
   renderVals() {
     const L = this.L, s = this.state, p = this.props, ch = p.mode === 'change', e = s.tried ? this.errs() : {};
-    const live = s.p1.length === 4 && window.MedixData && window.MedixData.pinWeak(s.p1) ? this.errs().p1 : null; if (live && !e.p1) e.p1 = live;
+    const live = s.p1.length === 4 && window.YuzplusData && window.YuzplusData.pinWeak(s.p1) ? this.errs().p1 : null; if (live && !e.p1) e.p1 = live;
     const grp = (k, label) => ({ id: 'pin-' + k, label, value: s[k], hasErr: !!e[k], err: e[k] || '', on: ev => this.setState({ [k]: ev.target.value.replace(/\D/g, '').slice(0, 4) }), focus: () => this.setState({ focus: k }), blur: () => this.setState({ focus: null }),
       cells: [0, 1, 2, 3].map(i => { const on = s.focus === k && i === Math.min(s[k].length, 3); return { t: s[k][i] ? '•' : '', bd: e[k] ? '#B91C1C' : on ? '#0D9488' : '#CBD5D3', sh: on ? '0 0 0 3px rgba(13,148,136,0.15)' : 'none' }; }) });
     const groups = (ch ? [grp('cur', L.bs_pinCur)] : []).concat([grp('p1', L.bs_pinNew), grp('p2', L.bs_pinRep)]);

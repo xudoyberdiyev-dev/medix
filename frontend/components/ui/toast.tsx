@@ -72,8 +72,12 @@ function ToastCard({ item }: { item: ToastItem }) {
   const autoDismiss = item.tone !== "danger";
   const duration = item.duration ?? DEFAULT_TOAST_DURATION;
 
+  // Sichqoncha ustida toʻxtash — faqat amal tugmasi boʻlsa (unga yetib olish uchun). Oddiy xabar sarlavhadagi
+  // tugmalar ustida qolib ketmasin (O23: qobiq endi aylanmaydi — toast hujjat sarlavhasi amallari ustiga tushadi).
+  const pauseOnHover = Boolean(item.action);
+
   function start() {
-    if (autoDismiss) timer.current = setTimeout(() => dismissToast(item.id), duration);
+    if (autoDismiss && pauseOnHover) timer.current = setTimeout(() => dismissToast(item.id), duration);
   }
   function stop() {
     clearTimeout(timer.current);
@@ -88,8 +92,8 @@ function ToastCard({ item }: { item: ToastItem }) {
   return (
     <div
       role={item.tone === "danger" ? "alert" : "status"}
-      onMouseEnter={stop}
-      onMouseLeave={start}
+      onMouseEnter={pauseOnHover ? stop : undefined}
+      onMouseLeave={pauseOnHover ? start : undefined}
       className="pointer-events-auto flex items-start gap-3 rounded-card border border-border bg-surface py-3 pr-3 pl-4 shadow-overlay"
     >
       <Icon icon={t.icon} size="md" className={t.className} />

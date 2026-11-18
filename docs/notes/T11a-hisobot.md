@@ -1,9 +1,9 @@
 # T11a — yakuniy tekshiruv (1-qism): ma'lumot va mantiq
 
-Boshlashdan oldin: medix-data.js (sintaksis to'g'ri, eksport bloki to'liq) va Medix ERP.dc.html (hujjat oxirigacha yopilgan) butun.
+Boshlashdan oldin: yuzplus-data.js (sintaksis to'g'ri, eksport bloki to'liq) va 100plus ERP.dc.html (hujjat oxirigacha yopilgan) butun.
 
 ## O'zgargan fayllar
-medix-data.js, Medix ERP.dc.html, Home.dc.html, Reports.dc.html, Prices.dc.html, OrderCard.dc.html, PickerPanel.dc.html, MarkerPanel.dc.html, SupervisorPanel.dc.html, DriverPanel.dc.html, ImportWizard.dc.html, CashClose.dc.html.
+yuzplus-data.js, 100plus ERP.dc.html, Home.dc.html, Reports.dc.html, Prices.dc.html, OrderCard.dc.html, PickerPanel.dc.html, MarkerPanel.dc.html, SupervisorPanel.dc.html, DriverPanel.dc.html, ImportWizard.dc.html, CashClose.dc.html.
 
 ## 1. Operatorlar — QQS bilan
 - Avval: opSales QQSsiz edi (rptFacts.net). Bosh sahifa bloki davrni hafta/oy boshidan olardi, kesish sanasigacha bo'lgan sotuvlar ham kirardi.
@@ -98,7 +98,7 @@ Shu oy (01–04.10):
 - «Qoldiq yetmaydi: N» — seed'da shunday holatdagi buyurtmalar bor (navbatda): BY-TSH-000319 Paracetamol 60, 338 Ketorolak 40, 334 Analgin 50, 320 Analgin 60, 318 Lorotadin 30. Ekranni verifier tekshiradi.
 - Narx hujjati: «Manba: Kirim bo'yicha · KR-…» — kirim raqami havola (#receipt?open=). Chop etishda oddiy matn qoldi.
 - Ta'minotchi hisobotlari, hujjatlar ro'yxati: Jami qatorida «Kirim N · Sotildi N» (soni va summa), xlsx da ham.
-- Demo rejimi: Medix ERP da yangi «demoMode» sozlamasi (Tweaks, standart — yoqilgan). O'chirilganda quyidagilar yashirinadi:
+- Demo rejimi: 100plus ERP da yangi «demoMode» sozlamasi (Tweaks, standart — yoqilgan). O'chirilganda quyidagilar yashirinadi:
   1. «Demo soat» va +5 / +15 tugmalari — Buyurtma kartochkasi, Yig'uvchi paneli, Markirovkachi paneli, Ombor mudiri paneli
   2. «Demo skaner» tugmalari — Markirovkachi paneli
   3. «Namuna rasm» — Haydovchi paneli
@@ -127,4 +127,4 @@ Shu oy (01–04.10):
 - Mijozlar qarzi sahifasining yuqori jami (filiallararo qarz bilan yoki usiz) ekranda solishtirilmadi.
 
 ## Sinov izlari
-Hisob-kitoblar alohida nusxada bajarildi: localStorage va foydalanuvchi holatiga yozilmadi. Oraliq nusxa (notes/_t11a_before_medix-data.js) o'chirildi. Seed'ga faqat yuqoridagi tuzatishlar kiritildi.
+Hisob-kitoblar alohida nusxada bajarildi: localStorage va foydalanuvchi holatiga yozilmadi. Oraliq nusxa (notes/_t11a_before_yuzplus-data.js) o'chirildi. Seed'ga faqat yuqoridagi tuzatishlar kiritildi.

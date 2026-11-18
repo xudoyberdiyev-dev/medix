@@ -12,11 +12,12 @@ import { useBranchStore } from "@/lib/stores/branch";
 import { useNavBadges, type NavBadge } from "./nav-badges";
 import { LOCALE_NAMES, LOCALES, writeLocaleCookie, type Locale } from "@/i18n/config";
 import { useSidebarStore } from "@/lib/stores/sidebar";
+import { BrandSquare } from "./brand-logo";
 import { LANG_CODE } from "./language-chip";
 import { isNavActive, navigationFor } from "./nav";
 
 /**
- * Sidebar (prototip `Medix ERP`): fon brand-900; guruhlar yigʻiladi (chevron), faol band — sidebar-active rangli ikonka va chap chiziq.
+ * Sidebar (prototip `100plus ERP`): fon brand-900; guruhlar yigʻiladi (chevron), faol band — sidebar-active rangli ikonka va chap chiziq.
  * Kenglik: ≥1280 px — 240 px (yoki «Sidebarʼni yigʻish» bilan 64 px); 768–1279 px — 64 px (faqat ikonka, nom — `title`);
  * <768 px — yashirin, menyu yuqori paneldagi tugma orqali chapdan ochiladi (`MobileNav`). Pastda — foydalanuvchi menyusi.
  */
@@ -77,12 +78,10 @@ export function SidebarContent({ variant, onNavigate }: { variant: "rail" | "she
           // eslint-disable-next-line @next/next/no-img-element -- kompaniya logotipi serverdan (PNG/SVG)
           <img src={logo} alt="" className="size-8 shrink-0 rounded-control bg-white object-contain" />
         ) : (
-          <span className="flex size-8 shrink-0 items-center justify-center rounded-control bg-primary-button font-semibold text-white">
-            M
-          </span>
+          <BrandSquare size={32} onDark />
         )}
         <span className={cn("flex min-w-0 flex-col", compact("hidden", "max-xl:hidden"))}>
-          <span className="text-subtitle leading-5 text-white">MEDIX</span>
+          <span className="text-subtitle leading-5 text-white">100+</span>
           {company ? <span className="truncate text-[11px] leading-[14px] text-sidebar-text/75">{company}</span> : null}
         </span>
       </div>
@@ -198,7 +197,7 @@ export function SidebarContent({ variant, onNavigate }: { variant: "rail" | "she
                     onClick={() => setLocale(l)}
                     className={cn(
                       "h-6 rounded-sm px-1.5 text-caption",
-                      l === locale ? "bg-primary-soft font-medium text-primary-button" : "text-text-secondary hover:bg-table-header",
+                      l === locale ? "bg-primary-soft font-medium text-link" : "text-text-secondary hover:bg-table-header",
                     )}
                   >
                     {LANG_CODE[l]}

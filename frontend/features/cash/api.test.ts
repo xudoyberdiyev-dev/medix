@@ -44,7 +44,7 @@ describe("kassir faqat oʻz kassasida", () => {
 });
 
 describe("bank koʻchirmasi farqi", () => {
-  it("bank − MEDIX, tiyinlarda", async () => {
+  it("bank − 100+, tiyinlarda", async () => {
     const { reconDiff } = await import("./bank-recon");
     expect(reconDiff("1500000.00", "1300000.00")).toBe("200000.00");
     expect(reconDiff("1000000", "1000000.00")).toBe("0.00");

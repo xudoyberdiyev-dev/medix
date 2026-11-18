@@ -468,7 +468,7 @@ export function ReconViewPage({ id }: { id: number }) {
     );
   };
   const dc = (v: string) => (v === "0.00" ? "" : formatMoney(v));
-  // Medix nuqtai nazaridan: mijozga sotuv — debet; YB dan kirim — kredit (jurnalda musbat = qarz oshdi)
+  // 100+ nuqtai nazaridan: mijozga sotuv — debet; YB dan kirim — kredit (jurnalda musbat = qarz oshdi)
   const ourDebit = (l: { debit: string; credit: string }) => (h.side === "CUSTOMER" ? l.debit : l.credit);
   const ourCredit = (l: { debit: string; credit: string }) => (h.side === "CUSTOMER" ? l.credit : l.debit);
   const openNeg = d.act.opening.startsWith("-");

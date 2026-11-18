@@ -72,10 +72,10 @@ export function WizardFrame({
     <div className="min-h-dvh bg-background text-text-primary">
       <header className="sticky top-0 z-20 flex h-[64px] items-center gap-[24px] border-b border-border bg-surface px-[24px]">
         <div className="flex flex-none items-center gap-[12px]">
-          <span className="flex size-[28px] items-center justify-center rounded-card bg-primary text-[15px] font-semibold text-white">
+          <span className="flex size-[28px] items-center justify-center rounded-card bg-primary text-[15px] font-semibold text-on-solid">
             M
           </span>
-          <span className="text-[17px] font-semibold tracking-[0.02em] text-brand-900">MEDIX</span>
+          <span className="text-[17px] font-semibold tracking-[0.02em] text-brand-900 [.theme-dark_&]:text-text-primary">100+</span>
         </div>
         <nav aria-label={t("wizard")} className="flex min-w-0 flex-1 justify-center">
           <ol className="flex items-center gap-[12px]">
@@ -92,12 +92,12 @@ export function WizardFrame({
                       disabled={!can}
                       aria-current={active ? "step" : undefined}
                       onClick={() => onStep(i)}
-                      className={cn("flex items-center gap-[8px] rounded-control text-table", can && "hover:text-primary-button")}
+                      className={cn("flex items-center gap-[8px] rounded-control text-table", can && "hover:text-link")}
                     >
                       <span
                         className={cn(
                           "flex size-[22px] flex-none items-center justify-center rounded-full border text-caption font-medium",
-                          active && "border-primary-button text-primary-button",
+                          active && "border-primary-button text-link",
                           done && "border-primary-button bg-primary-button text-white",
                           !active && !done && "border-border text-text-secondary",
                         )}
@@ -130,7 +130,7 @@ export function WizardFrame({
           {me.data ? (
             <span
               title={me.data.fullName}
-              className="flex size-[28px] items-center justify-center rounded-full bg-primary-soft text-[11px] font-semibold text-primary-button"
+              className="flex size-[28px] items-center justify-center rounded-full bg-primary-soft text-[11px] font-semibold text-link"
             >
               {initials(me.data.fullName)}
             </span>
@@ -144,7 +144,7 @@ export function WizardFrame({
         <>
           <main className="mx-auto grid max-w-[1088px] grid-cols-1 gap-[40px] px-[24px] pt-[40px] pb-[120px] lg:grid-cols-[minmax(0,1fr)_320px]">
             <section className="min-w-0">
-              <p className="text-table text-primary-button">{t("stepOf", { n: step + 1, total: SETUP_STEPS.length })}</p>
+              <p className="text-table text-link">{t("stepOf", { n: step + 1, total: SETUP_STEPS.length })}</p>
               <h1 className="mt-[6px] text-[26px] leading-[32px] font-semibold tracking-[-0.01em]">{t(`titles.${key}`)}</h1>
               <p className="mt-[8px] max-w-[560px] text-body text-pretty text-text-secondary">{t(`descriptions.${key}`)}</p>
               <div className="mt-[24px]">{children}</div>

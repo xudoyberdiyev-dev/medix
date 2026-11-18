@@ -357,7 +357,7 @@ function MoneyOpForm({ onDone }: { onDone: () => void }) {
                     onChange={(e) => setNote(e.target.value)}
                     rows={2}
                     maxLength={500}
-                    className="min-h-[56px] resize-y rounded-control border border-border bg-surface px-3 py-2 text-body outline-none hover:border-border-strong focus:border-primary focus:shadow-[0_0_0_3px_var(--color-focus-ring)]"
+                    className="min-h-[56px] resize-y rounded-control border border-border bg-surface px-3 py-2 text-body outline-none hover:border-text-disabled focus:border-primary focus:shadow-[0_0_0_3px_var(--color-focus-ring)]"
                   />
                 </label>
               </div>

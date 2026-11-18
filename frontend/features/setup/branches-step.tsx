@@ -45,7 +45,7 @@ export function BranchesStep({ status, nav, onBack, onDone }: { status: SetupSta
           <p className="text-table font-semibold">{t("whatTitle")}</p>
           <div className="mt-[12px] flex flex-col">
             <span className="self-start rounded-card bg-brand-900 px-[12px] py-[6px] text-table font-semibold text-white">
-              {status.company?.name ?? "MEDIX"}
+              {status.company?.name ?? "100+"}
             </span>
             <div className="ml-[16px] flex flex-col gap-[8px] border-l border-border pt-[8px] pl-[12px]">
               {(branches.length ? branches.slice(0, 3) : [null, null]).map((b, i) => (
@@ -89,7 +89,7 @@ export function BranchesStep({ status, nav, onBack, onDone }: { status: SetupSta
 
       {branches.length === 0 ? (
         <div className="flex flex-col items-center rounded-modal border border-border bg-surface px-[24px] py-[48px] text-center">
-          <span className="flex size-[48px] items-center justify-center rounded-full bg-primary-soft text-primary-button">
+          <span className="flex size-[48px] items-center justify-center rounded-full bg-primary-soft text-link">
             <Building2 size={22} strokeWidth={1.5} aria-hidden />
           </span>
           <p className="mt-[16px] text-subtitle">{t("emptyTitle")}</p>
@@ -157,7 +157,7 @@ export function BranchesStep({ status, nav, onBack, onDone }: { status: SetupSta
               <button
                 type="button"
                 onClick={() => setPanel({ branch: null })}
-                className="flex h-full min-h-[132px] w-full items-center justify-center gap-[8px] rounded-modal border border-dashed border-border text-table text-text-secondary transition-colors hover:border-primary-button hover:bg-primary-soft hover:text-primary-button"
+                className="flex h-full min-h-[132px] w-full items-center justify-center gap-[8px] rounded-modal border border-dashed border-border text-table text-text-secondary transition-colors hover:border-primary-button hover:bg-primary-soft hover:text-link"
               >
                 <Plus size={20} strokeWidth={1.5} aria-hidden />
                 {t("add")}

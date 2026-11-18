@@ -120,7 +120,7 @@ export function WarehousesStep({ status, nav, onBack, onDone }: { status: SetupS
               {list.length === 0 ? (
                 <div className="flex h-[72px] flex-wrap items-center justify-center gap-[8px] text-table text-text-secondary">
                   {t("none")}
-                  <button type="button" onClick={add} className="flex items-center gap-[4px] font-medium text-primary-button">
+                  <button type="button" onClick={add} className="flex items-center gap-[4px] font-medium text-link">
                     <Icon icon={Plus} size="sm" />
                     {t("add")}
                   </button>

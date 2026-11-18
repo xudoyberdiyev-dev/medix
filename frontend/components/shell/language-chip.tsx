@@ -52,10 +52,7 @@ export function LanguageChip() {
                   writeLocaleCookie(l);
                   startTransition(() => router.refresh());
                 }}
-                className={cn(
-                  "flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-background",
-                  l === locale && "text-primary-button",
-                )}
+                className={cn("flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-background", l === locale && "text-link")}
               >
                 <span className="w-7 font-mono text-caption text-text-secondary">{LANG_CODE[l]}</span>
                 {LOCALE_NAMES[l]}

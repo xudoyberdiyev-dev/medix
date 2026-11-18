@@ -216,7 +216,7 @@ export function OrdersPage() {
   const params = useSearchParams();
   const filters = parseOrderFilters(new URLSearchParams(params.toString()), { customer: t("list.customer"), operator: t("list.operator") });
   const [search, setSearch] = useState(filters.q);
-  const [hidden, setHidden] = useHiddenColumns("medix-orders-columns");
+  const [hidden, setHidden] = useHiddenColumns("yuzplus-orders-columns");
   const [columnsOpen, setColumnsOpen] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
   const [now, setNow] = useState(() => Date.now());
@@ -504,18 +504,14 @@ export function OrdersPage() {
           <FilterChip label={soldLabel(soldNow, t)} what={t("list.soldPeriod")} onClear={() => apply({ soldFrom: null, soldTo: null })} />
         ) : null}
         {hasChips ? (
-          <button
-            type="button"
-            onClick={clearAll}
-            className="h-control-sm px-1.5 text-[13px] font-medium text-primary-button hover:underline"
-          >
+          <button type="button" onClick={clearAll} className="h-control-sm px-1.5 text-[13px] font-medium text-link hover:underline">
             {t("list.clearFilters")}
           </button>
         ) : null}
         <div className="ml-auto flex items-center gap-2">
           {canCreate ? <Checkbox label={t("list.mine")} checked={filters.mine} onChange={(v) => apply({ mine: v })} /> : null}
           <SavedViews
-            storageKey="medix-orders-views"
+            storageKey="yuzplus-orders-views"
             query={serializeOrderFilters({ ...filters, page: 1 })}
             hidden={hidden}
             onApply={(v) => {

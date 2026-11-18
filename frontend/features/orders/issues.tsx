@@ -149,7 +149,7 @@ export function IssuesList({ onOpenOrder }: { onOpenOrder: (id: number) => void 
                   <Badge tone="danger" icon={TriangleAlert}>
                     {i.reasonLabel}
                   </Badge>
-                  <button type="button" className="font-mono text-primary-button hover:underline" onClick={() => onOpenOrder(i.orderId)}>
+                  <button type="button" className="font-mono text-link hover:underline" onClick={() => onOpenOrder(i.orderId)}>
                     {i.orderNumber}
                   </button>
                   <span className="text-text-secondary">{t(`status.${i.stage}`)}</span>

@@ -63,7 +63,7 @@ export function MultiFilter<V extends string | number>({
   return (
     <div ref={box} className="relative">
       {selected.length > 0 ? (
-        <div className="flex h-control-sm items-center rounded-card border border-primary bg-primary-soft text-primary-button">
+        <div className="flex h-control-sm items-center rounded-card border border-primary bg-primary-soft text-link">
           <button
             type="button"
             onClick={toggleOpen}
@@ -209,7 +209,7 @@ export function DateChip({
   return (
     <div ref={box} className="relative">
       {summary ? (
-        <div className="flex h-control-sm items-center rounded-card border border-primary bg-primary-soft text-primary-button">
+        <div className="flex h-control-sm items-center rounded-card border border-primary bg-primary-soft text-link">
           <button
             type="button"
             onClick={() => setOpen(!open)}
@@ -250,7 +250,7 @@ export function DateChip({
                 key={k}
                 type="button"
                 onClick={() => (onChange(f, tt), setOpen(false))}
-                className={`h-7 rounded-control px-2.5 text-[12.5px] ${f === from && tt === to ? "bg-primary-soft font-medium text-primary-button" : "bg-background text-text-primary hover:bg-table-header"}`}
+                className={`h-7 rounded-control px-2.5 text-[12.5px] ${f === from && tt === to ? "bg-primary-soft font-medium text-link" : "bg-background text-text-primary hover:bg-table-header"}`}
               >
                 {t(`date.${k}`)}
               </button>

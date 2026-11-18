@@ -7,7 +7,7 @@
 </head>
 <body>
 <x-dc>
-<helmet><script src="medix-data.js"></script></helmet>
+<helmet><script src="yuzplus-data.js"></script></helmet>
 <div style="display:flex;flex-direction:column;min-width:0;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
 <sc-if value="{{ isTabs }}" hint-placeholder-val="{{ true }}">
 <div data-screen-label="Narxlar" style="display:flex;flex-direction:column;gap:16px;min-width:0">
@@ -277,7 +277,7 @@ const RND = [0, 100, 500, 1000];
 class Component extends DCLogic {
   state = { view: 'types', scrBr: null, selType: null, sort: { key: 'name', dir: 'asc' }, edit: null, attach: null, deact: null, typeHist: null, set: null, saveDlg: false, banner: null, hist: null,
     ch: { tab: 'all', q: '', fType: [], fBr: [], from: null, to: null, page: 1 }, doc: null, reason: null };
-  get D() { return window.MedixData; }
+  get D() { return window.YuzplusData; }
   get L() { return this.props.dict || {}; }
   componentDidMount() {
     const ready = () => this.D && this.D.ptStats;
@@ -485,7 +485,7 @@ class Component extends DCLogic {
     if (x) { const st = NST[x.status] || NST.posted, T0 = pD(D.TODAY), fut = pD(x.eff) > T0, canBelow = this.can('prices.below'), who = this.who();
       const lastLog = k => [...(x.log || [])].reverse().find(l => l.kind === k) || {};
       const btn = (label, icon, pick, kind) => ({ label, icon, pick, bg: kind === 'pri' ? '#0F766E' : '#FFFFFF', fg: kind === 'pri' ? '#FFFFFF' : kind === 'dng' ? '#B91C1C' : '#172B2A', border: kind === 'pri' ? '#0F766E' : '#E2E8F0' });
-      const acts = [btn(L.nq_d_print, 'printer', () => window.medixPrint && window.medixPrint('no', x.no))];
+      const acts = [btn(L.nq_d_print, 'printer', () => window.yuzplusPrint && window.yuzplusPrint('no', x.no))];
       if (x.status === 'pending') { acts.push(btn(L.nq_d_reject, 'x', () => { if (!canBelow) return this.toast(this.whoCan('prices.below')); this.setState({ reason: { title: fill(L.nq_rejT, { n: x.no }), text: L.nq_rejD, ok: L.nq_d_reject, reason: '', err: '', run: r => { const res = D.nrReject(x, who, r, p.role); this.setState({ reason: null }); if (res.err) return this.toast(this.whoCan('prices.below')); this.toast(fill(L.nq_tRejected, { n: x.no })); } } }); }, 'dng'));
         acts.push(btn(L.nq_d_approve, 'circle-check', () => { if (!canBelow) return this.toast(this.whoCan('prices.below')); const res = D.nrApprove(x, who, p.role); if (res.err) return this.toast(this.whoCan('prices.below')); this.toast(fill(L.nq_tApproved, { n: x.no })); }, 'pri')); }
       if (x.status === 'posted' && fut) acts.push(btn(L.nq_d_cancel, 'ban', () => { if (!this.can('prices.create')) return this.toast(this.whoCan('prices.create')); this.setState({ reason: { title: fill(L.nq_cxlT, { n: x.no }), text: L.nq_cxlD, ok: L.nq_d_cancel, reason: '', err: '', run: r => { const res = D.nrCancel(x, who, r); this.setState({ reason: null }); if (res.err) return this.toast(L.nr_bnLocked); this.toast(fill(L.nq_tCancelled, { n: x.no })); } } }); }, 'dng'));

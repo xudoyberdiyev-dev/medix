@@ -334,7 +334,7 @@ function BranchPanelInner({
                 onClick={() => setForm((f) => ({ ...f, banks: [...f.banks, emptyBank(false)] }))}
                 className={cn(
                   "flex h-[40px] items-center justify-center gap-[8px] rounded-card border border-dashed border-border text-table text-text-secondary",
-                  "transition-colors duration-150 ease-out hover:border-primary-button hover:bg-primary-soft hover:text-primary-button",
+                  "transition-colors duration-150 ease-out hover:border-primary-button hover:bg-primary-soft hover:text-link",
                 )}
               >
                 <Icon icon={Plus} />

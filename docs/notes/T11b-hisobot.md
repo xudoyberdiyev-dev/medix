@@ -1,10 +1,10 @@
 # T11b — yakuniy tekshiruv (2-qism)
 
-Boshlashdan oldin: medix-data.js (sintaksis to'g'ri, eksport to'liq) va Medix ERP.dc.html (bitta x-dc, hujjat yopilgan) butun.
+Boshlashdan oldin: yuzplus-data.js (sintaksis to'g'ri, eksport to'liq) va 100plus ERP.dc.html (bitta x-dc, hujjat yopilgan) butun.
 
 ## A qismi — T11a dan qolgan qarorlar
 
-O'zgargan fayllar: medix-data.js, Reports.dc.html, Orders.dc.html, Medix ERP.dc.html.
+O'zgargan fayllar: yuzplus-data.js, Reports.dc.html, Orders.dc.html, 100plus ERP.dc.html.
 
 ### A1. Savdo kartasi — sof savdo
 - Avval: bhSalesPT `sale.sum − sale.ret` hisoblardi. `sale.ret` hech qayerda yozilmasdi, natijada QM va yetkazilmagan buyurtmalar ayirilmasdi.

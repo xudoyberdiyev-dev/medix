@@ -169,7 +169,7 @@ const ST = { new: ['key-round', '#EFF6FF', '#1D4ED8'], active: ['circle-check', 
 class Component extends DCLogic {
   state = { q: '', view: 'all', fRole: [], fBranch: [], fStatus: [], panel: null, vs: null, dlg: null, reason: '', reasonTried: false, creds: null, showPw: false, toast: null, v: 0 };
   bodyRef = React.createRef();
-  get D() { return window.MedixData; }
+  get D() { return window.YuzplusData; }
   get L() { return this.props.dict || {}; }
   componentDidMount() { this.boot(); }
   componentDidUpdate(pp) { const d = this.props.demo; if (d && (!pp.demo || pp.demo.n !== d.n)) this.boot(); }
