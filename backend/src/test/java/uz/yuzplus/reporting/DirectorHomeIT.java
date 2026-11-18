@@ -165,6 +165,8 @@ class DirectorHomeIT {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.from").value(t.toString()))
                 .andExpect(jsonPath("$.sales.total").value("0.00"))
+                .andExpect(jsonPath("$.salesPrev").value("0.00"))
+                .andExpect(jsonPath("$.expensesPrev").isString())
                 .andExpect(jsonPath("$.expenses.total").value("500000.00"))
                 .andExpect(jsonPath("$.expenses.cash").value("500000.00"))
                 .andExpect(jsonPath("$.expenses.transfer").value("0.00"))

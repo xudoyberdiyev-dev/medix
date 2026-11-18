@@ -7,6 +7,7 @@ import java.sql.Timestamp;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -88,7 +89,9 @@ class DirectorHome {
             @Schema(description = "Filiallararo (guruh ichidagi) ochiq qarz — jamilarga kirmaydi") String groupDebt,
             int staleDays, List<StatusCell> orderStatuses, List<OperatorRow> operators,
             @Schema(nullable = true, description = "Faqat tannarx ko'rish ruxsati (prices.cost) bilan") SupplierBlock supplierStaff,
-            @Schema(nullable = true, description = "Faqat tannarx ko'rish ruxsati (prices.cost) bilan") SupplierBlock supplierCompanies) {}
+            @Schema(nullable = true, description = "Faqat tannarx ko'rish ruxsati (prices.cost) bilan") SupplierBlock supplierCompanies,
+            @Schema(description = "Oldingi teng davr sof savdosi (U9: ↑/↓ %)") String salesPrev,
+            @Schema(description = "Oldingi teng davr xarajatlari") String expensesPrev) {}
 
     private final JdbcClient jdbc;
     private final DebtSummaries debts;
@@ -130,29 +133,16 @@ class DirectorHome {
         }
 
         // Sof savdo: o'tkazilgan sotuv (bekor qilingan — yetkazilmagan — kirmaydi) − qaytarishlar, davr sanasi bo'yicha
-        List<Amount> sales = jdbc.sql("""
-                SELECT branch_id, kind, sum(amount) AS amount FROM (
-                    SELECT s.branch_id, o.payment_type AS kind, s.total AS amount
-                    FROM sale s JOIN sales_order o ON o.id = s.order_id
-                    WHERE s.status = 'POSTED' AND s.sale_date BETWEEN :f AND :t AND (CAST(:b AS BIGINT) IS NULL OR s.branch_id = :b)
-                    UNION ALL
-                    SELECT r.branch_id, o.payment_type, -r.total
-                    FROM sales_return r JOIN sales_order o ON o.id = r.order_id
-                    WHERE r.cancelled_at IS NULL AND r.return_date BETWEEN :f AND :t AND (CAST(:b AS BIGINT) IS NULL OR r.branch_id = :b)
-                ) x GROUP BY branch_id, kind""")
-                .param("f", Date.valueOf(f)).param("t", Date.valueOf(t)).param("b", branchId)
-                .query(Amount.class).list();
+        List<Amount> sales = salesByPayment(f, t, branchId);
         // Xarajatlar: o'tkazilgan chiqim (KO/BO, OUT); hisob turi → to'lov turi
-        List<Amount> expenses = jdbc.sql("""
-                SELECT c.branch_id,
-                       CASE a.kind WHEN 'CASH' THEN 'CASH' WHEN 'BANK' THEN 'TRANSFER' ELSE 'ONLINE' END AS kind,
-                       sum(c.amount) AS amount
-                FROM cash_op c JOIN money_account a ON a.id = c.account_id
-                WHERE c.direction = 'OUT' AND c.status = 'POSTED' AND c.op_date BETWEEN :f AND :t
-                  AND (CAST(:b AS BIGINT) IS NULL OR c.branch_id = :b)
-                GROUP BY 1, 2""")
-                .param("f", Date.valueOf(f)).param("t", Date.valueOf(t)).param("b", branchId)
-                .query(Amount.class).list();
+        List<Amount> expenses = expensesByPayment(f, t, branchId);
+
+        // U9: oldingi teng davr (masalan, 1–18.11 → 14–31.10) — asosiy raqamlarda ↑/↓ %
+        long days = ChronoUnit.DAYS.between(f, t) + 1;
+        LocalDate pf = f.minusDays(days);
+        LocalDate pt = f.minusDays(1);
+        String salesPrev = byPaymentTotal(salesByPayment(pf, pt, branchId)).toString();
+        String expensesPrev = byPaymentTotal(expensesByPayment(pf, pt, branchId)).toString();
 
         DebtSummaries.Summary customers = debts.summary(actor, Side.CUSTOMER, branchId, TOP);
         DebtSummaries.Summary suppliers = debts.summary(actor, Side.SUPPLIER, branchId, 0);
@@ -226,7 +216,37 @@ class DirectorHome {
                 byPayment(supplierOpen), rows, attention, top, daily, salesDocs, avgSale, m(group).toString(),
                 staleDays(), statuses(branchId, null, f, t, today), operators(branchId, f, t, today),
                 canSeeCost ? suppliers(branchId, f, t, "owner_id", "employee", "full_name") : null,
-                canSeeCost ? suppliers(branchId, f, t, "supplier_id", "counterparty", "name") : null);
+                canSeeCost ? suppliers(branchId, f, t, "supplier_id", "counterparty", "name") : null, salesPrev, expensesPrev);
+    }
+
+    /** Sof savdo: o'tkazilgan sotuv (bekor qilingan — yetkazilmagan — kirmaydi) − qaytarishlar, davr sanasi bo'yicha. */
+    private List<Amount> salesByPayment(LocalDate f, LocalDate t, Long branchId) {
+        return jdbc.sql("""
+                SELECT branch_id, kind, sum(amount) AS amount FROM (
+                    SELECT s.branch_id, o.payment_type AS kind, s.total AS amount
+                    FROM sale s JOIN sales_order o ON o.id = s.order_id
+                    WHERE s.status = 'POSTED' AND s.sale_date BETWEEN :f AND :t AND (CAST(:b AS BIGINT) IS NULL OR s.branch_id = :b)
+                    UNION ALL
+                    SELECT r.branch_id, o.payment_type, -r.total
+                    FROM sales_return r JOIN sales_order o ON o.id = r.order_id
+                    WHERE r.cancelled_at IS NULL AND r.return_date BETWEEN :f AND :t AND (CAST(:b AS BIGINT) IS NULL OR r.branch_id = :b)
+                ) x GROUP BY branch_id, kind""")
+                .param("f", Date.valueOf(f)).param("t", Date.valueOf(t)).param("b", branchId)
+                .query(Amount.class).list();
+    }
+
+    /** Xarajatlar: o'tkazilgan chiqim (KO/BO, OUT); hisob turi → to'lov turi. */
+    private List<Amount> expensesByPayment(LocalDate f, LocalDate t, Long branchId) {
+        return jdbc.sql("""
+                SELECT c.branch_id,
+                       CASE a.kind WHEN 'CASH' THEN 'CASH' WHEN 'BANK' THEN 'TRANSFER' ELSE 'ONLINE' END AS kind,
+                       sum(c.amount) AS amount
+                FROM cash_op c JOIN money_account a ON a.id = c.account_id
+                WHERE c.direction = 'OUT' AND c.status = 'POSTED' AND c.op_date BETWEEN :f AND :t
+                  AND (CAST(:b AS BIGINT) IS NULL OR c.branch_id = :b)
+                GROUP BY 1, 2""")
+                .param("f", Date.valueOf(f)).param("t", Date.valueOf(t)).param("b", branchId)
+                .query(Amount.class).list();
     }
 
     /** Buyurtma kechikishi (kun) — Sozlamalar → Savdo ({@code orderLateDays}). */

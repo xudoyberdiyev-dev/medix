@@ -155,7 +155,7 @@ function Approvals({ rows }: { rows: Approval[] }) {
   );
 }
 
-export function Delta({ cur, prev }: { cur: string; prev: string | null | undefined }) {
+export function Delta({ cur, prev, invert = false }: { cur: string; prev: string | null | undefined; invert?: boolean }) {
   const t = useTranslations("home.br");
   const d = prev == null ? null : pctDelta(cur, prev);
   if (!d)
@@ -166,7 +166,7 @@ export function Delta({ cur, prev }: { cur: string; prev: string | null | undefi
     );
   const Icon = d.up ? TrendingUp : TrendingDown;
   return (
-    <span className={cn("flex items-center gap-1 text-caption", d.up ? "text-success" : "text-danger")}>
+    <span className={cn("flex items-center gap-1 text-caption", d.up !== invert ? "text-success" : "text-danger")}>
       <Icon size={14} strokeWidth={1.5} aria-hidden /> {d.text} <span className="text-text-secondary">{t("vsPrev")}</span>
     </span>
   );

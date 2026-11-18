@@ -26227,6 +26227,10 @@
           "expenses" : {
             "$ref" : "#/components/schemas/ByPayment"
           },
+          "expensesPrev" : {
+            "type" : "string",
+            "description" : "Oldingi teng davr xarajatlari"
+          },
           "from" : {
             "type" : "string",
             "format" : "date"
@@ -26253,6 +26257,10 @@
           "salesDocs" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "salesPrev" : {
+            "type" : "string",
+            "description" : "Oldingi teng davr sof savdosi (U9: ↑/↓ %)"
           },
           "staleDays" : {
             "type" : "integer",
@@ -26287,7 +26295,7 @@
             }
           }
         },
-        "required" : [ "attention", "avgSale", "branches", "customerDebt", "customerDebtBy", "daily", "expenses", "from", "groupDebt", "operators", "orderStatuses", "sales", "salesDocs", "staleDays", "supplierDebt", "supplierDebtBy", "to", "today", "topDebtors" ]
+        "required" : [ "attention", "avgSale", "branches", "customerDebt", "customerDebtBy", "daily", "expenses", "expensesPrev", "from", "groupDebt", "operators", "orderStatuses", "sales", "salesDocs", "salesPrev", "staleDays", "supplierDebt", "supplierDebtBy", "to", "today", "topDebtors" ]
       },
       "HomeAccount" : {
         "type" : "object",

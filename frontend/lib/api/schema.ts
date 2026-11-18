@@ -11182,6 +11182,8 @@ export interface components {
             customerDebtBy: components["schemas"]["ByPayment"];
             daily: components["schemas"]["SalesDay"][];
             expenses: components["schemas"]["ByPayment"];
+            /** @description Oldingi teng davr xarajatlari */
+            expensesPrev: string;
             /** Format: date */
             from: string;
             /** @description Filiallararo (guruh ichidagi) ochiq qarz — jamilarga kirmaydi */
@@ -11191,6 +11193,8 @@ export interface components {
             sales: components["schemas"]["ByPayment"];
             /** Format: int32 */
             salesDocs: number;
+            /** @description Oldingi teng davr sof savdosi (U9: ↑/↓ %) */
+            salesPrev: string;
             /** Format: int32 */
             staleDays: number;
             /** @description Faqat tannarx ko'rish ruxsati (prices.cost) bilan */
