@@ -59,8 +59,8 @@ class SettingsIT {
                 .andExpect(status().isOk())
                 .andReturn();
         for (String h : r.getResponse().getHeaders("Set-Cookie")) {
-            if (h.startsWith("MEDIX_SESSION=")) {
-                return new Cookie("MEDIX_SESSION", h.substring("MEDIX_SESSION=".length(), h.indexOf(';')));
+            if (h.startsWith("YUZPLUS_SESSION=")) {
+                return new Cookie("YUZPLUS_SESSION", h.substring("YUZPLUS_SESSION=".length(), h.indexOf(';')));
             }
         }
         throw new AssertionError("sessiya yo'q");
@@ -146,7 +146,7 @@ class SettingsIT {
                         .content("{\"login\":\"" + login + "\",\"password\":\"" + PASSWORD + "\"}"))
                 .andExpect(status().isOk())
                 .andReturn();
-        assertThat(r.getResponse().getHeaders("Set-Cookie")).anyMatch(h -> h.startsWith("MEDIX_SESSION="));
+        assertThat(r.getResponse().getHeaders("Set-Cookie")).anyMatch(h -> h.startsWith("YUZPLUS_SESSION="));
         // Spring Session JDBC: oxirgi yaratilgan sessiya — shu kirish
         assertThat(jdbc.sql("SELECT max_inactive_interval FROM spring_session ORDER BY creation_time DESC LIMIT 1").query(Integer.class).single())
                 .isEqualTo(settings.intValue(SettingKey.sessionMin) * 60);

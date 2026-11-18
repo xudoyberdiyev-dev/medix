@@ -16,7 +16,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import uz.yuzplus.TestcontainersConfig;
 
-/** Xato matni foydalanuvchi tanlagan tilda (MEDIX_LOCALE cookie); cookie yo'q yoki noto'g'ri — o'zbek (lotin). */
+/** Xato matni foydalanuvchi tanlagan tilda (YUZPLUS_LOCALE cookie); cookie yo'q yoki noto'g'ri — o'zbek (lotin). */
 @SpringBootTest
 @AutoConfigureMockMvc
 @Import(TestcontainersConfig.class)
@@ -39,20 +39,29 @@ class LocaleIT {
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.code").value("auth.badCredentialsLeft"))
                 .andExpect(jsonPath("$.detail").value("Login yoki parol notoʻgʻri. Qolgan urinishlar: 4."));
-        mvc.perform(badLogin("til-sinovi-2").cookie(new Cookie("MEDIX_LOCALE", "uz-Cyrl")))
+        mvc.perform(badLogin("til-sinovi-2").cookie(new Cookie("YUZPLUS_LOCALE", "uz-Cyrl")))
                 .andExpect(jsonPath("$.detail").value("Логин ёки парол нотўғри. Қолган уринишлар: 4."));
-        mvc.perform(badLogin("til-sinovi-3").cookie(new Cookie("MEDIX_LOCALE", "ru")))
+        mvc.perform(badLogin("til-sinovi-3").cookie(new Cookie("YUZPLUS_LOCALE", "ru")))
                 .andExpect(jsonPath("$.detail").value("Неверный логин или пароль. Осталось попыток: 4."));
         // Brauzer tili hisobga olinmaydi, qo'llanmaydigan til — asosiy til.
-        mvc.perform(badLogin("til-sinovi-4").header("Accept-Language", "ru").cookie(new Cookie("MEDIX_LOCALE", "de")))
+        mvc.perform(badLogin("til-sinovi-4").header("Accept-Language", "ru").cookie(new Cookie("YUZPLUS_LOCALE", "de")))
                 .andExpect(jsonPath("$.detail").value("Login yoki parol notoʻgʻri. Qolgan urinishlar: 4."));
+    }
+
+    @Test
+    void legacyLocaleCookieStillRead() throws Exception {
+        // O21 mos kelish davri: eski nomdagi cookie (yangi nomlisi yo'q) — hali ham o'qiladi; yangisi ustun.
+        mvc.perform(badLogin("til-sinovi-5").cookie(new Cookie("MEDIX_LOCALE", "ru")))
+                .andExpect(jsonPath("$.detail").value("Неверный логин или пароль. Осталось попыток: 4."));
+        mvc.perform(badLogin("til-sinovi-6").cookie(new Cookie("MEDIX_LOCALE", "ru"), new Cookie("YUZPLUS_LOCALE", "uz-Cyrl")))
+                .andExpect(jsonPath("$.detail").value("Логин ёки парол нотўғри. Қолган уринишлар: 4."));
     }
 
     @Test
     void validationMessagesFollowLocaleCookie() throws Exception {
         mvc.perform(post("/api/auth/login")
                         .with(csrf())
-                        .cookie(new Cookie("MEDIX_LOCALE", "ru"))
+                        .cookie(new Cookie("YUZPLUS_LOCALE", "ru"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"login\":\"\",\"password\":\"\"}"))
                 .andExpect(status().isBadRequest())

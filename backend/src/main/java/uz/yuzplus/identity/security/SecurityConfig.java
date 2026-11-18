@@ -34,7 +34,7 @@ import uz.yuzplus.shared.error.YuzplusException;
 @EnableMethodSecurity
 class SecurityConfig {
 
-    static final String SESSION_COOKIE = "MEDIX_SESSION";
+    static final String SESSION_COOKIE = "YUZPLUS_SESSION";
 
     @Bean
     SecurityFilterChain api(

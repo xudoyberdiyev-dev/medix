@@ -58,12 +58,12 @@ class AuthIT {
     /** Spring Session cookie'ni Set-Cookie sarlavhasi orqali yozadi. */
     private static Cookie sessionCookie(MvcResult result) {
         for (String header : result.getResponse().getHeaders("Set-Cookie")) {
-            if (header.startsWith("MEDIX_SESSION=")) {
-                String value = header.substring("MEDIX_SESSION=".length(), header.indexOf(';'));
-                return new Cookie("MEDIX_SESSION", value);
+            if (header.startsWith("YUZPLUS_SESSION=")) {
+                String value = header.substring("YUZPLUS_SESSION=".length(), header.indexOf(';'));
+                return new Cookie("YUZPLUS_SESSION", value);
             }
         }
-        throw new AssertionError("MEDIX_SESSION cookie yo'q");
+        throw new AssertionError("YUZPLUS_SESSION cookie yo'q");
     }
 
     private Cookie login(String login) throws Exception {
@@ -90,7 +90,7 @@ class AuthIT {
                 .andReturn();
 
         String setCookie = String.join("\n", result.getResponse().getHeaders("Set-Cookie"));
-        assertThat(setCookie).contains("MEDIX_SESSION=").contains("HttpOnly").containsIgnoringCase("SameSite=Lax");
+        assertThat(setCookie).contains("YUZPLUS_SESSION=").contains("HttpOnly").containsIgnoringCase("SameSite=Lax");
 
         mvc.perform(get("/api/auth/me").cookie(sessionCookie(result)))
                 .andExpect(status().isOk())

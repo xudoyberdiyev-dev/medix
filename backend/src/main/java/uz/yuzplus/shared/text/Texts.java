@@ -23,7 +23,7 @@ public class Texts {
     private final MessageSource messages;
 
     /**
-     * Joriy so'rov tili ({@code MEDIX_LOCALE} cookie, {@code LocaleConfig}) — faqat so'rov yuborgan foydalanuvchiga
+     * Joriy so'rov tili ({@code YUZPLUS_LOCALE} cookie, {@code LocaleConfig}) — faqat so'rov yuborgan foydalanuvchiga
      * qaytadigan matnlar uchun (xatolar). Bazaga yoziladigan matnlar (bildirishnomalar) — {@link #UZ}.
      * So'rovdan tashqarida (hodisa, rejali ish) — o'zbek (lotin), tizim tili emas.
      */

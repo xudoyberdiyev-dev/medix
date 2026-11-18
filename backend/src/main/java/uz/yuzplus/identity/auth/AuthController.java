@@ -93,8 +93,8 @@ class AuthController {
     }
 
     /** Sessiya atributlari (Profil → Faol sessiyalar). */
-    static final String SESSION_DEVICE = "medix.device";
-    static final String SESSION_IP = "medix.ip";
+    static final String SESSION_DEVICE = "yuzplus.device";
+    static final String SESSION_IP = "yuzplus.ip";
 
     private void establish(UsernamePasswordAuthenticationToken authentication, HttpServletRequest request, HttpServletResponse response) {
         sessionStrategy.onAuthentication(authentication, request, response);

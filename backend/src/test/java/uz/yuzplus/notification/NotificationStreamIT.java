@@ -99,8 +99,8 @@ class NotificationStreamIT {
                 .andExpect(status().isOk())
                 .andReturn();
         for (String h : r.getResponse().getHeaders("Set-Cookie")) {
-            if (h.startsWith("MEDIX_SESSION=")) {
-                return new Session(new Cookie("MEDIX_SESSION", h.substring("MEDIX_SESSION=".length(), h.indexOf(';'))), id);
+            if (h.startsWith("YUZPLUS_SESSION=")) {
+                return new Session(new Cookie("YUZPLUS_SESSION", h.substring("YUZPLUS_SESSION=".length(), h.indexOf(';'))), id);
             }
         }
         throw new AssertionError("sessiya yo'q");

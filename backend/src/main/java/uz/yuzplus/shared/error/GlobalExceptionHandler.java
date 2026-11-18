@@ -21,7 +21,7 @@ import uz.yuzplus.shared.text.Texts;
 
 /**
  * Barcha API xatolari RFC 9457 ProblemDetail ko'rinishida: {@code detail} — foydalanuvchi tilidagi matn
- * (nima bo'ldi + nima qilish kerak; til — {@code MEDIX_LOCALE} cookie), {@code code} — i18n kaliti, {@code errors} — maydon xatolari.
+ * (nima bo'ldi + nima qilish kerak; til — {@code YUZPLUS_LOCALE} cookie), {@code code} — i18n kaliti, {@code errors} — maydon xatolari.
  * Texnik tafsilot faqat jurnalga yoziladi.
  */
 @RestControllerAdvice

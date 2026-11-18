@@ -43,7 +43,7 @@ for (const [locale, loginLabel, passwordLabel, submit] of [
 ] as const) {
   test(`asosiy sahifalar ${locale} tilida`, async ({ page, context, baseURL }) => {
     test.setTimeout(180_000);
-    await context.addCookies([{ name: "MEDIX_LOCALE", value: locale, url: baseURL ?? "http://localhost:3000" }]);
+    await context.addCookies([{ name: "YUZPLUS_LOCALE", value: locale, url: baseURL ?? "http://localhost:3000" }]);
     const problems: string[] = [];
     page.on("pageerror", (e) => problems.push(`${page.url()}: ${e.message}`));
     page.on("console", (m) => {

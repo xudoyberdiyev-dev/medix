@@ -10,7 +10,7 @@ test("login sahifasida tilni almashtirish", async ({ page, context }) => {
   await page.getByRole("option", { name: "Русский" }).click();
   await expect(page.getByText("Войдите в систему, чтобы продолжить работу")).toBeVisible();
   await expect(page).toHaveURL(/\/login$/);
-  expect((await context.cookies()).find((c) => c.name === "MEDIX_LOCALE")?.value).toBe("ru");
+  expect((await context.cookies()).find((c) => c.name === "YUZPLUS_LOCALE")?.value).toBe("ru");
 
   await page.getByRole("button", { name: "Язык интерфейса" }).click();
   await expect(page.getByRole("option", { name: "Русский" })).toHaveAttribute("aria-selected", "true");

@@ -33,8 +33,8 @@ import uz.yuzplus.shared.security.CurrentActor;
 class ProfileSessionsController {
 
     /** AuthController kirishda yozadigan sessiya atributlari. */
-    static final String SESSION_DEVICE = "medix.device";
-    static final String SESSION_IP = "medix.ip";
+    static final String SESSION_DEVICE = "yuzplus.device";
+    static final String SESSION_IP = "yuzplus.ip";
 
     record SessionInfo(boolean current, @Schema(nullable = true) String device, @Schema(nullable = true) String ip, Instant createdAt,
             Instant lastAccessAt) {}

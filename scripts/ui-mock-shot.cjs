@@ -29,7 +29,7 @@ const defaults = {
   const keys = Object.keys(mocks).sort((a, b) => b.length - a.length);
   const b = await chromium.launch();
   const ctx = await b.newContext({ viewport: { width: w, height: h }, locale: "uz-UZ", timezoneId: "Asia/Tashkent" });
-  await ctx.addCookies([{ name: "MEDIX_SESSION", value: "mock", url: BASE }]);
+  await ctx.addCookies([{ name: "YUZPLUS_SESSION", value: "mock", url: BASE }]);
   const p = await ctx.newPage();
   const misses = new Set();
   await p.route("**/api/**", (r) => {

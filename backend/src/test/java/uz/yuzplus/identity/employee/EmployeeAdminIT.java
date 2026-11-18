@@ -61,8 +61,8 @@ class EmployeeAdminIT {
                 .andExpect(status().isOk())
                 .andReturn();
         for (String h : r.getResponse().getHeaders("Set-Cookie")) {
-            if (h.startsWith("MEDIX_SESSION=")) {
-                return new Cookie("MEDIX_SESSION", h.substring("MEDIX_SESSION=".length(), h.indexOf(';')));
+            if (h.startsWith("YUZPLUS_SESSION=")) {
+                return new Cookie("YUZPLUS_SESSION", h.substring("YUZPLUS_SESSION=".length(), h.indexOf(';')));
             }
         }
         throw new AssertionError("sessiya yo'q");

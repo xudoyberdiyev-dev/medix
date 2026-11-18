@@ -3,7 +3,9 @@ export const LOCALES = ["uz-Latn", "uz-Cyrl", "ru"] as const;
 export type Locale = (typeof LOCALES)[number];
 
 export const DEFAULT_LOCALE: Locale = "uz-Latn";
-export const LOCALE_COOKIE = "MEDIX_LOCALE";
+export const LOCALE_COOKIE = "YUZPLUS_LOCALE";
+/** O21 mos kelish davri: eski nomdagi cookie — yangisi boʻlmasa oʻqiladi, til tanlanganda oʻchiriladi. */
+export const LEGACY_LOCALE_COOKIE = "MEDIX_LOCALE";
 export const TIME_ZONE = "Asia/Tashkent";
 
 /** Til tanlagichida koʻrsatiladigan nom — har til oʻz yozuvida. */
@@ -32,4 +34,5 @@ export function resolveLocale(value: string | undefined | null): Locale {
 /** Tanlangan tilni brauzerda saqlaydi (1 yil). Server keyingi soʻrovda shu cookie'dan oʻqiydi. */
 export function writeLocaleCookie(locale: Locale): void {
   document.cookie = `${LOCALE_COOKIE}=${locale}; path=/; max-age=31536000; samesite=lax`;
+  document.cookie = `${LEGACY_LOCALE_COOKIE}=; path=/; max-age=0; samesite=lax`;
 }
