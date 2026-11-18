@@ -192,6 +192,9 @@
     "discardNew": "Yangi buyurtma hali saqlanmagan — yopsangiz, qoʻshilgan qatorlar yoʻqoladi. Saqlash uchun «Ortga qaytish» ni bosing va «Qoralamani saqlash» ni tanlang.",
     "discardChanged": "Qatorlardagi oʻzgarishlar saqlanmagan — yopsangiz, ular yoʻqoladi. Saqlash uchun «Ortga qaytish» ni bosing va qoralamani saqlang.",
     "discardAction": "Saqlamasdan yopish",
+    "draftRestored": "Qoralama tiklandi",
+    "draftRestoredHint": "{at} dagi saqlanmagan oʻzgarishlar qaytarildi. Kerak boʻlmasa — tashlang.",
+    "draftRestoredDrop": "Tashlash",
     "discardKeep": "Ortga qaytish"
   },
   "docs": {

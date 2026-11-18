@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { OPEN_DRAFT_TTL_MS, draftFormFor, parseOpenDraft } from "./open-draft";
+import {
+  DRAFT_BACKUP_TTL_MS,
+  OPEN_DRAFT_TTL_MS,
+  draftBackupKey,
+  draftFormFor,
+  parseDraftBackup,
+  parseOpenDraft,
+  readDraftBackup,
+  writeDraftBackup,
+} from "./open-draft";
 
 const form = {
   warehouseId: "1",
@@ -39,5 +48,30 @@ describe("ochiq hujjat (SPEC 208)", () => {
   it("notoʻgʻri qatorlar olib tashlanadi", () => {
     const bad = { ...form, lines: [...form.lines, { productId: "x", qty: 1 }] };
     expect(parseOpenDraft(JSON.stringify({ id: null, form: bad, at: now }), now)?.form?.lines).toHaveLength(1);
+  });
+});
+
+describe("qoralama zaxirasi (U11, localStorage)", () => {
+  it("kalit foydalanuvchi va hujjat boʻyicha alohida", () => {
+    expect(draftBackupKey(3, null)).toBe("yuzplus-order-backup:3:new");
+    expect(draftBackupKey(3, 12)).not.toBe(draftBackupKey(4, 12));
+  });
+
+  it("yangi zaxira tiklanadi, eskisi va buzugʻi tashlanadi", () => {
+    expect(parseDraftBackup(JSON.stringify({ form, at: now - 1000 }), now)?.form.lines).toHaveLength(1);
+    expect(parseDraftBackup(JSON.stringify({ form, at: now - DRAFT_BACKUP_TTL_MS - 1 }), now)).toBeNull();
+    expect(parseDraftBackup(JSON.stringify({ form: { a: 1 }, at: now }), now)).toBeNull();
+    expect(parseDraftBackup("{", now)).toBeNull();
+    expect(parseDraftBackup(null, now)).toBeNull();
+  });
+
+  it("yozish, oʻqish va oʻchirish — boshqa foydalanuvchiga koʻrinmaydi", () => {
+    localStorage.clear();
+    writeDraftBackup(5, 9, form);
+    expect(readDraftBackup(5, 9)?.form.customer).toBe("4");
+    expect(readDraftBackup(6, 9)).toBeNull();
+    expect(readDraftBackup(5, null)).toBeNull();
+    writeDraftBackup(5, 9, null);
+    expect(readDraftBackup(5, 9)).toBeNull();
   });
 });

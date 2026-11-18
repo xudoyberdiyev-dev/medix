@@ -44,7 +44,7 @@ import { useWarehouses } from "@/features/organization/api";
 import { searchProducts } from "@/features/prices/api";
 import { describeError } from "@/features/setup/form-error";
 import { api, unwrap } from "@/lib/api/client";
-import { formatMoney, formatQuantity } from "@/lib/format";
+import { formatDateTime, formatMoney, formatQuantity } from "@/lib/format";
 import {
   APPROVE_BRANCH,
   APPROVE_DIRECTOR,
@@ -75,7 +75,7 @@ import { FORM_TYPES, InvoiceFormsModal, type FormType } from "./invoice-forms";
 import { formatPct, parsePct, pctText } from "./discount";
 import { OrderCardAside, OrderCardBody, OrderStepper } from "./order-card";
 import { CustomerStateRow, RecentOrders, useCustomerCredit, type PreviousOrder } from "./customer-state";
-import { clearOpenDraft, draftFormFor, readOpenDraft, writeOpenDraft } from "./open-draft";
+import { clearOpenDraft, draftFormFor, readDraftBackup, readOpenDraft, writeDraftBackup, writeOpenDraft } from "./open-draft";
 import { OrderStatusBadge, day } from "./orders-page";
 
 const PAYMENT_VALUES = ["TRANSFER", "CASH", "ONLINE"] as const;
@@ -182,7 +182,15 @@ function Editor({
   const cancel = useCancelOrder();
   const editable = can(me.data, ORDER_CREATE) && (!doc || doc.status === "DRAFT");
   // Ochiq hujjat (SPEC 208): boshqa sahifadan qaytganda saqlanmagan forma tiklanadi
-  const [restored] = useState(() => (editable ? draftFormFor(readOpenDraft(), doc?.id ?? null) : null));
+  // Qoralama zaxirasi (U11): sessiyada yoʻq boʻlsa — brauzer xotirasidagi (oyna yopilgan/yangilangan) saqlanmagan forma
+  const userId = me.data?.id ?? null;
+  const [{ form: restored, backupAt }] = useState(() => {
+    if (!editable) return { form: null, backupAt: null };
+    const open = draftFormFor(readOpenDraft(), doc?.id ?? null);
+    if (open) return { form: open, backupAt: null };
+    const b = userId === null ? null : readDraftBackup(userId, doc?.id ?? null);
+    return b ? { form: b.form, backupAt: b.at } : { form: null, backupAt: null };
+  });
   const [warehouseId, setWarehouseId] = useState<string | null>(restored ? restored.warehouseId : doc ? String(doc.warehouseId) : null);
   const [customer, setCustomer] = useState<string | null>(
     restored ? restored.customer : doc ? String(doc.customerId) : preset ? String(preset.customerId) : null,
@@ -257,6 +265,46 @@ function Editor({
     return () => window.removeEventListener("beforeunload", warn);
   }, [unsaved]);
   const requestClose = () => (unsaved ? setDialog("discard") : onClose());
+  const discard = () => {
+    if (userId !== null) writeDraftBackup(userId, doc?.id ?? null, null);
+    onClose();
+  };
+  // Zaxiradan tiklangan qoralama — bir marta xabar; «Tashlash» formani hujjat holatiga qaytaradi
+  const backupToastShown = useRef(false);
+  useEffect(() => {
+    if (backupAt === null || backupToastShown.current) return;
+    backupToastShown.current = true;
+    toast({
+      tone: "info",
+      title: t("drawer.draftRestored"),
+      description: t("drawer.draftRestoredHint", { at: formatDateTime(new Date(backupAt)) }),
+      action: {
+        label: t("drawer.draftRestoredDrop"),
+        onClick: () => {
+          if (userId !== null) writeDraftBackup(userId, doc?.id ?? null, null);
+          setWarehouseId(doc ? String(doc.warehouseId) : null);
+          setCustomer(doc ? String(doc.customerId) : preset ? String(preset.customerId) : null);
+          setCustomerLabel(doc?.customer ?? preset?.customerLabel ?? "");
+          setDeliveryType(doc?.deliveryType ?? "DELIVERY");
+          setDeliveryDate(doc ? formatIsoDate(doc.deliveryDate) : formatIsoDate(tashkentDay(1)));
+          setAddress(doc?.address ?? "");
+          setPaymentType(doc?.paymentType ?? "TRANSFER");
+          setNote(doc?.note ?? "");
+          setLines(
+            doc
+              ? doc.lines.map((l) => ({
+                  productId: l.productId,
+                  productCode: l.productCode,
+                  productName: l.productName,
+                  qty: String(l.qty),
+                  discount: pctText(l.discountPct),
+                }))
+              : [],
+          );
+        },
+      },
+    });
+  }, [backupAt, userId, doc, preset, t]);
   // Sahifada Esc — roʻyxatga qaytish (ochiq oyna yoki roʻyxat tanlovi boʻlmasa; saqlanmagan boʻlsa soʻraydi)
   const requestCloseRef = useRef(requestClose);
   useEffect(() => {
@@ -281,7 +329,22 @@ function Editor({
     // Faqat tahrirlanadigan qoralama eslab qolinadi; jarayondagi hujjat — roʻyxatdan qayta ochiladi
     if (!editable || (docId === null && !form)) clearOpenDraft();
     else writeOpenDraft({ id: docId, form });
-  }, [editable, docId, unsaved, warehouseId, customer, customerLabel, deliveryType, deliveryDate, address, paymentType, note, lines]);
+    if (editable && userId !== null) writeDraftBackup(userId, docId, form);
+  }, [
+    editable,
+    docId,
+    userId,
+    unsaved,
+    warehouseId,
+    customer,
+    customerLabel,
+    deliveryType,
+    deliveryDate,
+    address,
+    paymentType,
+    note,
+    lines,
+  ]);
 
   function body(): OrderRequest | null {
     if (!warehouseId) return (setLocal(t("drawer.errWarehouse")), null);
@@ -309,7 +372,10 @@ function Editor({
     const b = body();
     if (!b) return null;
     try {
-      return await save.mutateAsync({ id: doc?.id, body: b });
+      const d = await save.mutateAsync({ id: doc?.id, body: b });
+      // Serverda saqlandi — brauzerdagi zaxira endi kerak emas (yangi buyurtma zaxirasi keyingi yangisiga oʻtmasin)
+      if (userId !== null) writeDraftBackup(userId, doc?.id ?? null, null);
+      return d;
     } catch {
       return null;
     }
@@ -527,7 +593,7 @@ function Editor({
           tone="danger"
           title={t("drawer.discardTitle")}
           onClose={() => setDialog(null)}
-          primaryAction={{ label: t("drawer.discardAction"), onClick: onClose }}
+          primaryAction={{ label: t("drawer.discardAction"), onClick: discard }}
           secondaryAction={{ label: t("drawer.discardKeep"), onClick: () => setDialog(null) }}
         >
           <p>{t(doc ? "drawer.discardChanged" : "drawer.discardNew")}</p>

@@ -110,3 +110,54 @@ export function clearOpenDraft() {
 export function draftFormFor(d: OpenDraft | null, id: number | null): OpenDraftForm | null {
   return d && d.id === id ? d.form : null;
 }
+
+/**
+ * Qoralama zaxirasi (U11): saqlanmagan forma brauzer xotirasida (localStorage) ham turadi — oyna yopilsa, brauzer
+ * qulasa yoki sahifa yangilansa ham keyingi ochilishda «Qoralama tiklandi» bilan qaytadi. Foydalanuvchi va hujjat
+ * boʻyicha alohida kalit (umumiy kompyuterda boshqa xodimga oʻtmaydi); 7 kundan eskisi tashlanadi.
+ */
+export const DRAFT_BACKUP_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+const BACKUP_PREFIX = "yuzplus-order-backup";
+
+export function draftBackupKey(userId: number, id: number | null): string {
+  return `${BACKUP_PREFIX}:${userId}:${id ?? "new"}`;
+}
+
+export interface DraftBackup {
+  form: OpenDraftForm;
+  at: number;
+}
+
+export function parseDraftBackup(raw: string | null, now = Date.now()): DraftBackup | null {
+  if (!raw) return null;
+  try {
+    const v = JSON.parse(raw) as Record<string, unknown>;
+    if (typeof v.at !== "number" || now - v.at > DRAFT_BACKUP_TTL_MS || v.at > now + 60_000) return null;
+    const form = parseForm(v.form);
+    return form ? { form, at: v.at } : null;
+  } catch {
+    return null;
+  }
+}
+
+export function readDraftBackup(userId: number, id: number | null): DraftBackup | null {
+  try {
+    const key = draftBackupKey(userId, id);
+    const b = parseDraftBackup(localStorage.getItem(key));
+    if (!b) localStorage.removeItem(key);
+    return b;
+  } catch {
+    return null;
+  }
+}
+
+/** form null — zaxira oʻchiriladi (saqlandi yoki oʻzgarishlar tashlandi). */
+export function writeDraftBackup(userId: number, id: number | null, form: OpenDraftForm | null) {
+  try {
+    const key = draftBackupKey(userId, id);
+    if (form) localStorage.setItem(key, JSON.stringify({ form, at: Date.now() }));
+    else localStorage.removeItem(key);
+  } catch {
+    /* xotira yopiq — zaxirasiz ishlaydi */
+  }
+}
