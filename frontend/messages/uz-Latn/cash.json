@@ -276,7 +276,7 @@
     "match": "Mos",
     "account": "Bank hisobi",
     "dateExample": "Masalan: 04.10.2026",
-    "medixBalance": "100+ qoldigʻi {date} holatiga",
+    "yuzplusBalance": "100+ qoldigʻi {date} holatiga",
     "last": "Oxirgi solishtirish",
     "never": "Hali solishtirilmagan",
     "unmatched": "Belgilanmagan harakatlar",

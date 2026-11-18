@@ -34695,9 +34695,6 @@
             "type" : "string",
             "format" : "date"
           },
-          "medixBalance" : {
-            "type" : "string"
-          },
           "unmatched" : {
             "type" : "array",
             "items" : {
@@ -34706,9 +34703,12 @@
           },
           "unmatchedTotal" : {
             "type" : "string"
+          },
+          "yuzplusBalance" : {
+            "type" : "string"
           }
         },
-        "required" : [ "account", "accountId", "date", "medixBalance", "unmatched", "unmatchedTotal" ]
+        "required" : [ "account", "accountId", "date", "unmatched", "unmatchedTotal", "yuzplusBalance" ]
       },
       "ReconRequest" : {
         "type" : "object",
@@ -34848,9 +34848,6 @@
             "type" : "integer",
             "format" : "int64"
           },
-          "medixBalance" : {
-            "type" : "string"
-          },
           "moves" : {
             "type" : "integer",
             "format" : "int32"
@@ -34861,9 +34858,12 @@
           "statementDate" : {
             "type" : "string",
             "format" : "date"
+          },
+          "yuzplusBalance" : {
+            "type" : "string"
           }
         },
-        "required" : [ "account", "accountId", "bankBalance", "createdAt", "createdBy", "difference", "id", "medixBalance", "moves", "statementDate" ]
+        "required" : [ "account", "accountId", "bankBalance", "createdAt", "createdBy", "difference", "id", "moves", "statementDate", "yuzplusBalance" ]
       },
       "Ref" : {
         "type" : "object",

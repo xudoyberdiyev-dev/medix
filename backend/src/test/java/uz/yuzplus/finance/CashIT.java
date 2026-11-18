@@ -526,7 +526,7 @@ class CashIT {
         mvc.perform(get("/api/bank-reconciliations/preview").param("accountId", "" + k).cookie(acct))
                 .andExpect(jsonPath("$.code").value("bankRecon.onlyBank"));
         MvcResult pv = mvc.perform(get("/api/bank-reconciliations/preview").param("accountId", "" + bank).param("date", yesterday.toString()).cookie(acct))
-                .andExpect(jsonPath("$.medixBalance").value("1000000.00"))
+                .andExpect(jsonPath("$.yuzplusBalance").value("1000000.00"))
                 .andExpect(jsonPath("$.unmatched.length()").value(1))
                 .andExpect(jsonPath("$.lastDate").doesNotExist())
                 .andReturn();
@@ -541,7 +541,7 @@ class CashIT {
                 .andExpect(jsonPath("$.code").value("bankRecon.dateNotAfterLast"));
 
         MvcResult pv2 = mvc.perform(get("/api/bank-reconciliations/preview").param("accountId", "" + bank).cookie(acct))
-                .andExpect(jsonPath("$.medixBalance").value("1300000.00"))
+                .andExpect(jsonPath("$.yuzplusBalance").value("1300000.00"))
                 .andExpect(jsonPath("$.unmatched.length()").value(2))
                 .andExpect(jsonPath("$.unmatchedTotal").value("300000.00"))
                 .andExpect(jsonPath("$.lastBankBalance").value("1000000.00"))

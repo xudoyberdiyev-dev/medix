@@ -38,3 +38,6 @@ BEGIN
     RETURN NULL;
 END
 $$;
+
+-- Bank solishtirish: tizimdagi qoldiq ustuni (CHECK cheklovi ustun bilan birga qayta nomlanadi).
+ALTER TABLE bank_reconciliation RENAME COLUMN medix_balance TO yuzplus_balance;

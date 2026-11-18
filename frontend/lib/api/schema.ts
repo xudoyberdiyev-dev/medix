@@ -14634,9 +14634,9 @@ export interface components {
             lastBankBalance?: string;
             /** Format: date */
             lastDate?: string;
-            medixBalance: string;
             unmatched: components["schemas"]["Move"][];
             unmatchedTotal: string;
+            yuzplusBalance: string;
         };
         ReconRequest: {
             /** Format: int64 */
@@ -14691,12 +14691,12 @@ export interface components {
             difference: string;
             /** Format: int64 */
             id: number;
-            medixBalance: string;
             /** Format: int32 */
             moves: number;
             note?: string;
             /** Format: date */
             statementDate: string;
+            yuzplusBalance: string;
         };
         Ref: {
             /** Format: int64 */

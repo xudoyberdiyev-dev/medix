@@ -31,7 +31,7 @@ import uz.yuzplus.shared.security.Actor;
 @Service
 class BankReconciliations {
 
-    record ReconPreview(long accountId, String account, LocalDate date, String medixBalance, @Schema(nullable = true) LocalDate lastDate,
+    record ReconPreview(long accountId, String account, LocalDate date, String yuzplusBalance, @Schema(nullable = true) LocalDate lastDate,
             @Schema(nullable = true) String lastBankBalance, List<Move> unmatched, String unmatchedTotal) {}
 
     record ReconRequest(@NotNull(message = "{validation.required}") Long accountId,
@@ -40,7 +40,7 @@ class BankReconciliations {
             @Schema(nullable = true, description = "Bank ko'chirmasida bor harakatlar (money_move id)") List<Long> moveIds,
             @Schema(nullable = true) @Size(max = 500) String note) {}
 
-    record Reconciliation(long id, long accountId, String account, LocalDate statementDate, String bankBalance, String medixBalance,
+    record Reconciliation(long id, long accountId, String account, LocalDate statementDate, String bankBalance, String yuzplusBalance,
             String difference, int moves, @Schema(nullable = true) String note, String createdBy, Instant createdAt) {}
 
     private final JdbcClient jdbc;
@@ -135,18 +135,18 @@ class BankReconciliations {
         if (!open.containsAll(ids)) {
             throw YuzplusException.badRequest("bankRecon.moveUnknown");
         }
-        Money medix = balanceThrough(acc.id(), d);
+        Money yuzplus = balanceThrough(acc.id(), d);
         String note = r.note() == null || r.note().isBlank() ? null : r.note().strip();
-        if (bankBalance.compareTo(medix) != 0 && note == null) {
-            throw YuzplusException.badRequest("bankRecon.noteRequired", bankBalance.minus(medix).format());
+        if (bankBalance.compareTo(yuzplus) != 0 && note == null) {
+            throw YuzplusException.badRequest("bankRecon.noteRequired", bankBalance.minus(yuzplus).format());
         }
         long id = jdbc.sql("""
-                INSERT INTO bank_reconciliation (account_id, statement_date, bank_balance, medix_balance, note, created_by)
+                INSERT INTO bank_reconciliation (account_id, statement_date, bank_balance, yuzplus_balance, note, created_by)
                 VALUES (:a, :d, :bb, :mb, :n, :by) RETURNING id""")
                 .param("a", acc.id())
                 .param("d", Date.valueOf(d))
                 .param("bb", bankBalance.amount())
-                .param("mb", medix.amount())
+                .param("mb", yuzplus.amount())
                 .param("n", note)
                 .param("by", actor.employeeId())
                 .query(Long.class)
@@ -155,20 +155,20 @@ class BankReconciliations {
             jdbc.sql("INSERT INTO bank_reconciliation_move (reconciliation_id, move_id) VALUES (:r, :m)").param("r", id).param("m", m).update();
         }
         audit.record(AuditEntry.of("bank.reconcile", "money_account", acc.id())
-                .change(null, Map.of("date", d.toString(), "bank", bankBalance.toString(), "medix", medix.toString(), "moves", ids.size())));
+                .change(null, Map.of("date", d.toString(), "bank", bankBalance.toString(), "yuzplus", yuzplus.toString(), "moves", ids.size())));
         return id;
     }
 
     private static final String SELECT = """
-            SELECT b.id, b.account_id, a.name AS account, b.statement_date, b.bank_balance, b.medix_balance, b.note, e.full_name AS created_by,
+            SELECT b.id, b.account_id, a.name AS account, b.statement_date, b.bank_balance, b.yuzplus_balance, b.note, e.full_name AS created_by,
                    b.created_at, (SELECT count(*) FROM bank_reconciliation_move m WHERE m.reconciliation_id = b.id)::int AS moves
             FROM bank_reconciliation b JOIN money_account a ON a.id = b.account_id JOIN employee e ON e.id = b.created_by""";
 
     private static Reconciliation map(java.sql.ResultSet rs, int n) throws java.sql.SQLException {
         Money bank = new Money(rs.getBigDecimal("bank_balance"));
-        Money medix = new Money(rs.getBigDecimal("medix_balance"));
+        Money yuzplus = new Money(rs.getBigDecimal("yuzplus_balance"));
         return new Reconciliation(rs.getLong("id"), rs.getLong("account_id"), rs.getString("account"), rs.getDate("statement_date").toLocalDate(),
-                bank.toString(), medix.toString(), bank.minus(medix).toString(), rs.getInt("moves"), rs.getString("note"), rs.getString("created_by"),
+                bank.toString(), yuzplus.toString(), bank.minus(yuzplus).toString(), rs.getInt("moves"), rs.getString("note"), rs.getString("created_by"),
                 rs.getTimestamp("created_at").toInstant());
     }
 
