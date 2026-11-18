@@ -690,7 +690,9 @@ export function OrdersPage() {
           }
         />
       )}
-      {preview !== null ? <OrderPreview id={preview} onClose={() => setPreview(null)} onOpen={openOrder} /> : null}
+      {preview !== null ? (
+        <OrderPreview id={preview} onClose={() => setPreview(null)} onOpen={(id) => (setPreview(null), openOrder(id))} />
+      ) : null}
     </>
   );
 }

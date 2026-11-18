@@ -431,7 +431,9 @@ export function ReceiptsPage() {
           }
         />
       )}
-      {preview !== null ? <ReceiptPreview id={preview} onClose={() => setPreview(null)} onOpen={(id) => setEditor({ id })} /> : null}
+      {preview !== null ? (
+        <ReceiptPreview id={preview} onClose={() => setPreview(null)} onOpen={(id) => (setPreview(null), setEditor({ id }))} />
+      ) : null}
     </>
   );
 }

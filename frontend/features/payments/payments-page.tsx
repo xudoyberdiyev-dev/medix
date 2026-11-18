@@ -469,7 +469,7 @@ export function PaymentsPage() {
             </Badge>
           }
           onClose={() => setPreview(null)}
-          onOpen={open}
+          onOpen={(r) => (setPreview(null), open(r))}
         />
       ) : null}
     </>
