@@ -224,7 +224,10 @@
 /* Asosiy kontent (har sahifaning <main>) — vertikal aylantirish chizigʻi koʻrinmaydi, aylantirish ishlaydi (egasi talabi 10.11 13:51).
    scrollbar-width meros boʻlmaydi: ichki jadvallarning gorizontal aylantirish chizigʻi oʻz holicha qoladi. */
 @layer base {
+  /* O23: main — joylashuv konteyneri. Aks holda ichidagi absolute elementlar (sr-only, tooltip) hujjat (ICB) ga nisbatan
+     joylashib, butun sahifani choʻzadi: pastda boʻsh joy, sidebar tugab qoladi, oyna scrollbar chiqadi. */
   [data-app-content] main {
+    position: relative;
     scrollbar-width: none;
     -ms-overflow-style: none;
   }
