@@ -67,7 +67,7 @@ const DIRECTOR_PAGES = [
   "/prices",
   "/cash",
   "/payments",
-  "/debts",
+  "/debts/customers",
   "/reports",
   "/messages",
   "/approvals",
@@ -82,7 +82,7 @@ test("direktor: asosiy sahifalar qorongʻi rejimda (O24)", async ({ page }) => {
   await login(page, "director.1");
   for (const path of DIRECTOR_PAGES) {
     await page.goto(path);
-    await expect(page.locator("main")).toBeVisible();
+    await expect(page.locator("main"), path).toBeVisible();
     await expectDark(page, path);
   }
 });
