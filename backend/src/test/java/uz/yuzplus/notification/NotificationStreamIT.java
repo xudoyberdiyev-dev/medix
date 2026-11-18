@@ -178,10 +178,10 @@ class NotificationStreamIT {
 
         // Bekor qilingan tranzaksiyadagi signal yetkazilmaydi (PostgreSQL NOTIFY semantikasi).
         tx.executeWithoutResult(s -> {
-            jdbc.sql("SELECT pg_notify('medix_live', :p)").param("p", "trips:" + b).query(String.class).single();
+            jdbc.sql("SELECT pg_notify('yuzplus_live', :p)").param("p", "trips:" + b).query(String.class).single();
             s.setRollbackOnly();
         });
-        jdbc.sql("SELECT pg_notify('medix_live', :p)").param("p", "orders:" + b).query(String.class).single();
+        jdbc.sql("SELECT pg_notify('yuzplus_live', :p)").param("p", "orders:" + b).query(String.class).single();
         waitUntil(() -> content(mine).contains("event:orders"));
 
         assertThat(content(mine)).contains("event:orders\ndata:" + b);

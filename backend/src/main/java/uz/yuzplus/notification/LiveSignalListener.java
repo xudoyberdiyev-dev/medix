@@ -12,14 +12,14 @@ import org.springframework.context.SmartLifecycle;
 import org.springframework.stereotype.Component;
 
 /**
- * PostgreSQL {@code LISTEN medix_live} (V32 triggerlari): hujjat tranzaksiyasi yakunlangach keladigan «mavzu:filial»
+ * PostgreSQL {@code LISTEN yuzplus_live} (V32 triggerlari): hujjat tranzaksiyasi yakunlangach keladigan «mavzu:filial»
  * signallarini ochiq oynalarga uzatadi. Alohida ulanishda; uzilsa 5 soniyadan keyin qayta ulanadi. Signal yo'qolsa
  * ham sahifalar so'rov oralig'i bilan yangilanadi (zaxira).
  */
 @Component
 class LiveSignalListener implements SmartLifecycle {
 
-    static final String CHANNEL = "medix_live";
+    static final String CHANNEL = "yuzplus_live";
     private static final int POLL_MS = 5_000;
     private static final long RETRY_MS = 5_000;
     private static final Logger log = LoggerFactory.getLogger(LiveSignalListener.class);
