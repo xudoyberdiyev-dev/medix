@@ -50,6 +50,13 @@
     "soldTo": "Сотув: {date} гача",
     "create": "Янги буюртма",
     "statusTabs": "Буюртма ҳолатлари",
+    "moreStatuses": "Яна {n}",
+    "quickViews": "Тез кўринишлар",
+    "quick": {
+      "mine": "Менинг",
+      "today": "Бугун",
+      "overdue": "Кечикканлар"
+    },
     "search": "Қидириш",
     "searchPlaceholder": "Рақам, мижоз ёки СТИР",
     "mine": "Менинг буюртмаларим",

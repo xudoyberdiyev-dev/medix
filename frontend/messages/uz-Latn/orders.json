@@ -50,6 +50,13 @@
     "soldTo": "Sotuv: {date} gacha",
     "create": "Yangi buyurtma",
     "statusTabs": "Buyurtma holatlari",
+    "moreStatuses": "Yana {n}",
+    "quickViews": "Tez koʻrinishlar",
+    "quick": {
+      "mine": "Mening",
+      "today": "Bugun",
+      "overdue": "Kechikkanlar"
+    },
     "search": "Qidirish",
     "searchPlaceholder": "Raqam, mijoz yoki STIR",
     "mine": "Mening buyurtmalarim",

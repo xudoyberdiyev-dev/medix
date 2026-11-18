@@ -50,6 +50,13 @@
     "soldTo": "Продажа: по {date}",
     "create": "Новый заказ",
     "statusTabs": "Статусы заказов",
+    "moreStatuses": "Ещё {n}",
+    "quickViews": "Быстрые представления",
+    "quick": {
+      "mine": "Мои",
+      "today": "Сегодня",
+      "overdue": "Просроченные"
+    },
     "search": "Поиск",
     "searchPlaceholder": "Номер, клиент или ИНН",
     "mine": "Мои заказы",

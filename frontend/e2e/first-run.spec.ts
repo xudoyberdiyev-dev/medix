@@ -549,9 +549,11 @@ test("CEO: buyurtma — mijoz, mahsulot, muammolar paneli, navbatga yuborish", a
   const tabs = page.getByRole("tablist", { name: "Buyurtma holatlari" });
   await tabs.getByRole("tab", { name: /^Hujjatlashtirilmoqda/ }).click();
   await expect(tabs.getByRole("tab", { name: /^Hujjatlashtirilmoqda/ })).toHaveAttribute("aria-selected", "true");
-  // Prototip holat kartasi: nomi + soni + summasi
+  // U5: ixcham holat chizigʻi — tanlangan segmentda nomi + soni + summasi
   await expect(tabs.getByRole("tab", { name: /^Hujjatlashtirilmoqda/ })).toContainText(/[\d.]+,\d\d/);
   await expect(page.getByRole("cell", { name: "Shifo Dorixona E2E" }).first()).toBeVisible();
+  // Soni yoʻq holat «Yana» menyusida boʻlishi mumkin
+  if (!(await tabs.getByRole("tab", { name: /^Qoralama/ }).isVisible())) await tabs.getByRole("button", { name: /^Yana/ }).click();
   await tabs.getByRole("tab", { name: /^Qoralama/ }).click();
   await expect(page.getByRole("cell", { name: "Shifo Dorixona E2E" })).toHaveCount(0);
   await tabs.getByRole("tab", { name: /^Hammasi/ }).click();

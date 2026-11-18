@@ -3,6 +3,7 @@
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   Ban,
+  ChevronDown,
   CircleCheck,
   CircleX,
   ClipboardList,
@@ -43,6 +44,8 @@ import { ORDER_CREATE, useOrders, type OrderStatus, type OrderSummary } from "./
 import type { OrdersT } from "./i18n";
 import { readOpenDraft } from "./open-draft";
 import { shortName, stageHint } from "./stage-hint";
+import { QUICK_VIEWS, quickOn, quickPatch, splitStatuses } from "./status-strip";
+import { todayTashkent } from "@/features/counterparties/api";
 import {
   DELIVERY_TYPES,
   DEFAULT_ORDER_FILTERS,
@@ -148,8 +151,11 @@ export function creditText(c: components["schemas"]["CreditFlag"], t: OrdersT): 
     .join(" · ");
 }
 
-/** Holat kartalari (prototip): nomi + soni (nishon) + summasi; «Tasdiqlashda» — sariq, «Yetkazilmadi»/«Rad etildi» — qizil. */
-function StatusCards({
+/**
+ * U5: holatlar — ixcham chiziq (13 ta karta oʻrniga): segment = nomi + soni; tanlangan segmentda summasi ham.
+ * Soni yoʻq holatlar «Yana» menyusida. «Tasdiqlashda» — sariq, «Yetkazilmadi»/«Rad etildi» — qizil nishon.
+ */
+function StatusStrip({
   counts,
   value,
   onChange,
@@ -162,41 +168,81 @@ function StatusCards({
   label: string;
   t: OrdersT;
 }) {
+  const [moreOpen, setMoreOpen] = useState(false);
+  const moreRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!moreOpen) return;
+    const close = (e: MouseEvent) => moreRef.current && !moreRef.current.contains(e.target as Node) && setMoreOpen(false);
+    const esc = (e: KeyboardEvent) => e.key === "Escape" && setMoreOpen(false);
+    document.addEventListener("mousedown", close);
+    document.addEventListener("keydown", esc);
+    return () => (document.removeEventListener("mousedown", close), document.removeEventListener("keydown", esc));
+  }, [moreOpen]);
+  const { shown, more } = splitStatuses(counts, value, ALL);
+  const name = (c: StatusCount) => (c.status ? t(`status.${c.status}`) : t("list.all"));
+  const badge = (key: string, n: number, on: boolean) =>
+    on
+      ? "bg-primary-button text-white"
+      : WARN.includes(key) && n > 0
+        ? "bg-warning-bg text-warning"
+        : BAD.includes(key) && n > 0
+          ? "bg-danger-bg text-danger"
+          : "bg-background text-text-secondary";
+  const segment = (c: StatusCount, inMenu: boolean) => {
+    const key = c.status ?? ALL;
+    const on = key === value;
+    return (
+      <button
+        key={key}
+        type="button"
+        role="tab"
+        aria-selected={on}
+        onClick={() => (onChange(key), setMoreOpen(false))}
+        className={
+          inMenu
+            ? "flex w-full items-center justify-between gap-3 rounded-control px-2 py-1.5 text-left text-[13px] hover:bg-primary-soft"
+            : `flex h-control-sm items-center gap-1.5 rounded-control px-2.5 text-[13px] whitespace-nowrap transition-colors ${
+                on
+                  ? "bg-surface font-semibold shadow-sm ring-1 ring-primary-button"
+                  : "font-medium text-text-secondary hover:bg-surface hover:text-text-primary"
+              }`
+        }
+      >
+        {name(c)}
+        <span
+          className={`h-[18px] min-w-5 rounded-full px-1.5 text-center text-[11.5px] leading-[18px] font-semibold tabular-nums ${badge(key, c.count, on)}`}
+        >
+          {formatQuantity(c.count)}
+        </span>
+        {on && !inMenu ? <span className="text-caption font-normal text-text-secondary tabular-nums">{formatMoney(c.total)}</span> : null}
+      </button>
+    );
+  };
   return (
-    <div role="tablist" aria-label={label} className="flex min-w-0 flex-wrap gap-1.5">
-      {counts.map((c) => {
-        const key = c.status ?? ALL;
-        const on = key === value;
-        const badge = on
-          ? "bg-primary-button text-white"
-          : WARN.includes(key) && c.count > 0
-            ? "bg-warning-bg text-warning"
-            : BAD.includes(key) && c.count > 0
-              ? "bg-danger-bg text-danger"
-              : "bg-background text-text-secondary";
-        return (
+    <div
+      role="tablist"
+      aria-label={label}
+      className="flex min-w-0 flex-wrap items-center gap-0.5 rounded-card border border-border bg-background p-0.5"
+    >
+      {shown.map((c) => segment(c, false))}
+      {more.length > 0 ? (
+        <div ref={moreRef} className="relative">
           <button
-            key={key}
             type="button"
-            role="tab"
-            aria-selected={on}
-            onClick={() => onChange(key)}
-            className={`flex min-w-[108px] flex-col items-start gap-0.5 rounded-card border px-3 py-[7px] text-left transition-colors hover:border-primary/50 ${
-              on
-                ? "border-primary-button bg-primary-soft/40 shadow-[inset_0_0_0_1px_var(--color-primary-button)]"
-                : "border-border bg-surface"
-            }`}
+            onClick={() => setMoreOpen((o) => !o)}
+            aria-expanded={moreOpen}
+            className="flex h-control-sm items-center gap-1 rounded-control px-2.5 text-[13px] font-medium text-text-secondary hover:bg-surface hover:text-text-primary"
           >
-            <span className={`flex items-center gap-1.5 text-[12.5px] leading-4 whitespace-nowrap ${on ? "font-semibold" : "font-medium"}`}>
-              {c.status ? t(`status.${c.status}`) : t("list.all")}
-              <span className={`h-[18px] min-w-5 rounded-full px-1.5 text-center text-[11.5px] leading-[18px] font-semibold ${badge}`}>
-                {formatQuantity(c.count)}
-              </span>
-            </span>
-            <span className="text-caption whitespace-nowrap text-text-secondary tabular-nums">{formatMoney(c.total)}</span>
+            {t("list.moreStatuses", { n: more.length })}
+            <ChevronDown size={14} strokeWidth={1.5} aria-hidden />
           </button>
-        );
-      })}
+          {moreOpen ? (
+            <div className="absolute left-0 z-30 mt-1 flex w-64 flex-col gap-0.5 rounded-control border border-border bg-surface p-1.5 shadow-overlay">
+              {more.map((c) => segment(c, true))}
+            </div>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -389,8 +435,10 @@ export function OrdersPage() {
     filters.orderFrom ||
     filters.orderTo ||
     filters.mine ||
+    filters.overdue ||
     soldNow;
   const rows = orders.data?.items ?? [];
+  const today = todayTashkent();
   const printable = rows.filter((o) => selected.includes(String(o.id)) && (o.status === "QUEUED" || o.status === "PICKING"));
   return (
     <>
@@ -422,7 +470,7 @@ export function OrdersPage() {
       </div>
       {orders.data ? (
         <div className="mb-3">
-          <StatusCards
+          <StatusStrip
             counts={orders.data.statuses}
             value={filters.status ?? ALL}
             onChange={(k) => apply({ status: k === ALL ? null : (k as OrderStatus) })}
@@ -509,7 +557,26 @@ export function OrdersPage() {
           </button>
         ) : null}
         <div className="ml-auto flex items-center gap-2">
-          {canCreate ? <Checkbox label={t("list.mine")} checked={filters.mine} onChange={(v) => apply({ mine: v })} /> : null}
+          <div role="group" aria-label={t("list.quickViews")} className="flex items-center gap-1">
+            {QUICK_VIEWS.filter((v) => v !== "mine" || canCreate).map((v) => {
+              const on = quickOn(v, filters, today);
+              return (
+                <button
+                  key={v}
+                  type="button"
+                  aria-pressed={on}
+                  onClick={() => apply(quickPatch(v, on, today))}
+                  className={`h-control-sm rounded-full border px-3 text-[13px] font-medium whitespace-nowrap transition-colors ${
+                    on
+                      ? "border-primary-button bg-primary-soft text-primary"
+                      : "border-border bg-surface text-text-secondary hover:border-primary/50"
+                  }`}
+                >
+                  {t(`list.quick.${v}`)}
+                </button>
+              );
+            })}
+          </div>
           <SavedViews
             storageKey="yuzplus-orders-views"
             query={serializeOrderFilters({ ...filters, page: 1 })}
