@@ -89,8 +89,7 @@
     "errDate": "Sana notoʻgʻri. KK.OO.YYYY koʻrinishida kiriting.",
     "errRequired": "Ombor, yetkazib beruvchi, yuk xati № va sanasini kiriting.",
     "errNoLines": "Kamida bitta qator qoʻshing.",
-    "importExcel": "Excelʼdan yuklash",
-    "imported": "{n} ta qator qoʻshildi — tekshirib saqlang"
+    "importExcel": "Excelʼdan yuklash"
   },
   "doc": {
     "loading": "Hujjat yuklanmoqda",

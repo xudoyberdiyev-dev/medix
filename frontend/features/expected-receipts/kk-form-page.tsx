@@ -117,7 +117,6 @@ function Form({ doc }: { doc: KkDetail | null }) {
         expiry: formatIsoDate(l.expiryDate),
       })),
     ]);
-    toast({ tone: "success", title: tf("imported", { n: imported.length }) });
   };
 
   const options = (warehouses.data ?? [])
