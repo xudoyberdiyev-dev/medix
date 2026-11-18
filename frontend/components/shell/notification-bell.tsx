@@ -10,6 +10,7 @@ import { api, unwrap } from "@/lib/api/client";
 import { cn } from "@/lib/cn";
 import { formatDateTime } from "@/lib/format";
 import { LIVE_POLL_MS, useLive } from "@/lib/live";
+import { unreadCounts, urgency, type Urgency } from "./notification-urgency";
 
 const KEY = ["notifications"] as const;
 
@@ -19,6 +20,7 @@ export function NotificationBell() {
   const me = useMe();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [filter, setFilter] = useState<"all" | Urgency>("all");
   const rootRef = useRef<HTMLDivElement>(null);
   const live = useLive(["notifications"], () => void qc.invalidateQueries({ queryKey: KEY }), Boolean(me.data));
   const list = useQuery({
@@ -50,7 +52,11 @@ export function NotificationBell() {
   }, [open]);
 
   const unread = list.data?.unread ?? 0;
-  const items = list.data?.items ?? [];
+  const all = list.data?.items ?? [];
+  const counts = unreadCounts(all);
+  const items = filter === "all" ? all : all.filter((n) => urgency(n.kind) === filter);
+  // U10: qizil — faqat harakat talab qiladiganlar; qolgan oʻqilmaganlar — kulrang son.
+  const badge = counts.action > 0 ? counts.action : unread;
   return (
     <div ref={rootRef} className="relative">
       <button
@@ -61,9 +67,14 @@ export function NotificationBell() {
         className="relative flex size-control-md items-center justify-center rounded-control hover:bg-background"
       >
         <Bell size={20} strokeWidth={1.5} aria-hidden />
-        {unread > 0 ? (
-          <span className="absolute top-1 right-1 min-w-4 rounded-full bg-danger px-1 text-center text-caption leading-4 text-on-solid">
-            {unread > 99 ? "99+" : unread}
+        {badge > 0 ? (
+          <span
+            className={cn(
+              "absolute top-1 right-1 min-w-4 rounded-full px-1 text-center text-caption leading-4",
+              counts.action > 0 ? "bg-danger text-on-solid" : "bg-border text-text-primary",
+            )}
+          >
+            {badge > 99 ? "99+" : badge}
           </span>
         ) : null}
       </button>
@@ -77,12 +88,42 @@ export function NotificationBell() {
               </button>
             ) : null}
           </div>
+          <div role="radiogroup" aria-label={t("filterAria")} className="flex gap-1 border-b border-border px-3 py-2">
+            {(["all", "action", "info"] as const).map((f) => {
+              const n = f === "all" ? counts.action + counts.info : counts[f];
+              return (
+                <button
+                  key={f}
+                  type="button"
+                  role="radio"
+                  aria-checked={filter === f}
+                  onClick={() => setFilter(f)}
+                  className={cn(
+                    "inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-table",
+                    filter === f ? "bg-primary-soft text-link" : "text-text-secondary hover:bg-background",
+                  )}
+                >
+                  {t(`filter.${f}`)}
+                  {n > 0 ? (
+                    <span
+                      className={cn(
+                        "tabular inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-caption",
+                        f === "action" ? "bg-danger text-on-solid" : "bg-background text-text-secondary",
+                      )}
+                    >
+                      {n}
+                    </span>
+                  ) : null}
+                </button>
+              );
+            })}
+          </div>
           {list.error ? (
             <p className="px-4 py-6 text-center text-text-secondary">{t("loadError")}</p>
           ) : items.length === 0 ? (
             <div className="flex flex-col items-center gap-2 px-4 py-8 text-center text-text-secondary">
               <BellOff size={20} strokeWidth={1.5} aria-hidden />
-              <span>{t("empty")}</span>
+              <span>{all.length === 0 ? t("empty") : t("emptyFilter")}</span>
             </div>
           ) : (
             <ul className="max-h-96 overflow-y-auto">
@@ -93,9 +134,16 @@ export function NotificationBell() {
                     onClick={() => (!n.readAt && read.mutate(n.id), setOpen(false))}
                     className="flex flex-col gap-1 px-4 py-3 hover:bg-background"
                   >
-                    <span className={cn(!n.readAt && "font-medium")}>{n.title}</span>
-                    {n.body ? <span className="text-caption text-text-secondary">{n.body}</span> : null}
-                    <span className="text-caption text-text-disabled">{formatDateTime(new Date(n.createdAt))}</span>
+                    <span className="flex items-start gap-2">
+                      {urgency(n.kind) === "action" ? (
+                        <span aria-label={t("actionNeeded")} role="img" className="mt-1.5 size-2 shrink-0 rounded-full bg-danger" />
+                      ) : (
+                        <span aria-hidden className="mt-1.5 size-2 shrink-0 rounded-full bg-border" />
+                      )}
+                      <span className={cn(!n.readAt && "font-medium")}>{n.title}</span>
+                    </span>
+                    {n.body ? <span className="pl-4 text-caption text-text-secondary">{n.body}</span> : null}
+                    <span className="pl-4 text-caption text-text-disabled">{formatDateTime(new Date(n.createdAt))}</span>
                   </Link>
                 </li>
               ))}

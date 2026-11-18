@@ -3,5 +3,13 @@
   "unread": "Bildirishnomalar: {count} ta oʻqilmagan",
   "markAll": "Hammasini oʻqildi deb belgilash",
   "loadError": "Bildirishnomalarni yuklab boʻlmadi. Birozdan keyin qayta oching.",
-  "empty": "Hozircha bildirishnoma yoʻq"
+  "empty": "Hozircha bildirishnoma yoʻq",
+  "filter": {
+    "all": "Hammasi",
+    "action": "Harakat kerak",
+    "info": "Xabarlar"
+  },
+  "filterAria": "Bildirishnoma turi",
+  "actionNeeded": "Harakat talab qiladi",
+  "emptyFilter": "Bu turda bildirishnoma yoʻq"
 }
