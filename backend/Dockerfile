@@ -8,9 +8,9 @@ RUN ./gradlew --no-daemon bootJar -x test
 
 FROM eclipse-temurin:25-jre
 WORKDIR /app
-RUN useradd --system --uid 1001 medix
+RUN useradd --system --uid 1001 yuzplus
 COPY --from=build /src/build/libs/*.jar app.jar
-USER medix
+USER yuzplus
 ENV TZ=Asia/Tashkent
 EXPOSE 8080
 ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75", "-jar", "/app/app.jar"]
