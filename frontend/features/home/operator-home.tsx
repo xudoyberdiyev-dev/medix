@@ -13,7 +13,7 @@ import { useBranches } from "@/features/employees/api";
 import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
 import { cn } from "@/lib/cn";
-import { formatMoney } from "@/lib/format";
+import { formatMoney, formatMoneyOrDash } from "@/lib/format";
 import { Flow } from "./branch-home";
 import { type AttentionRow, type MiniCol, MiniTable, Panel } from "./director-home";
 import { firstName, greetKey, share, tashkentHour, toCents, waitParts } from "./director-view";
@@ -155,7 +155,7 @@ function Recent({ rows }: { rows: RecentOrder[] }) {
   const cols: MiniCol<RecentOrder>[] = [
     { key: "no", title: t("br.c.doc"), render: (r) => <span className="font-mono text-caption">{r.number}</span> },
     { key: "cust", title: t("director.customer"), render: (r) => <span className="line-clamp-1">{r.customer}</span> },
-    { key: "sum", title: t("br.c.sum"), right: true, render: (r) => formatMoney(r.total) },
+    { key: "sum", title: t("br.c.sum"), right: true, render: (r) => formatMoneyOrDash(r.total) },
     { key: "st", title: t("br.c.status"), render: (r) => (isStatus(r.status) ? t(`orderStatus.${r.status}`) : r.status) },
   ];
   return (
@@ -301,7 +301,7 @@ function CustomerCard({ c }: { c: CustomerStatus }) {
         </div>
         <div>
           <div className="text-text-secondary">{t("custOver")}</div>
-          <div className={cn("tabular-nums", toCents(c.overdue) > 0n ? "text-danger" : "")}>{formatMoney(c.overdue)}</div>
+          <div className={cn("tabular-nums", toCents(c.overdue) > 0n ? "text-danger" : "")}>{formatMoneyOrDash(c.overdue)}</div>
         </div>
       </div>
       <Link
