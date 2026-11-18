@@ -26,5 +26,7 @@
     "supplierDebtsDebts": "Долги",
     "supplierDebtsBonus": "Бонусный баланс"
   },
-  "searchPlaceholder": "Товар, клиент или номер документа…"
+  "searchPlaceholder": "Товар, клиент или номер документа…",
+  "themeToDark": "Включить тёмную тему",
+  "themeToLight": "Включить светлую тему"
 }

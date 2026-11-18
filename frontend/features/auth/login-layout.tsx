@@ -10,6 +10,7 @@ import { Modal } from "@/components/ui/modal";
 import { LOCALE_NAMES, LOCALES, writeLocaleCookie } from "@/i18n/config";
 import { api, unwrap } from "@/lib/api/client";
 import { cn } from "@/lib/cn";
+import { useTheme } from "@/lib/theme";
 import { BrandMark } from "./auth-shell";
 import { LoginShowcase } from "./login-showcase";
 
@@ -29,46 +30,6 @@ export function useLoginInfo() {
 export function helpLine(info: Pick<LoginInfo, "supportPhone" | "supportHours"> | undefined): string | null {
   const parts = [info?.supportPhone?.trim(), info?.supportHours?.trim()].filter(Boolean);
   return parts.length ? parts.join(" · ") : null;
-}
-
-const THEME_KEY = "yuzplus-login-theme";
-type Theme = "light" | "dark";
-
-function readTheme(): Theme {
-  try {
-    const v = window.localStorage.getItem(THEME_KEY);
-    if (v === "dark" || v === "light") return v;
-  } catch {
-    // saqlash ruxsat etilmagan — tizim sozlamasi
-  }
-  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-}
-
-/** Yorugʻ/qorongʻi rejim: `theme-dark` sinfi <html> ga (dialoglar ham qamraladi), sahifadan chiqilganda olib tashlanadi. */
-function useLoginTheme(): [Theme, () => void] {
-  const [theme, setTheme] = useState<Theme>("light");
-  useEffect(() => {
-    const id = window.setTimeout(() => setTheme(readTheme()), 0);
-    return () => window.clearTimeout(id);
-  }, []);
-  useEffect(() => {
-    const root = document.documentElement;
-    root.classList.toggle("theme-dark", theme === "dark");
-    return () => root.classList.remove("theme-dark");
-  }, [theme]);
-  return [
-    theme,
-    () =>
-      setTheme((cur) => {
-        const next = cur === "dark" ? "light" : "dark";
-        try {
-          window.localStorage.setItem(THEME_KEY, next);
-        } catch {
-          // eʼtiborsiz
-        }
-        return next;
-      }),
-  ];
 }
 
 const topButton =
@@ -149,7 +110,7 @@ export function LocaleMenu() {
 export function LoginLayout({ children }: { children: ReactNode }) {
   const t = useTranslations("login");
   const info = useLoginInfo();
-  const [theme, toggleTheme] = useLoginTheme();
+  const { resolved: theme, toggle: toggleTheme } = useTheme();
   const [doc, setDoc] = useState<"privacy" | "security" | null>(null);
   const help = helpLine(info.data);
   const footLink = "rounded-control text-table text-text-secondary transition-colors duration-150 ease-out hover:text-text-primary";

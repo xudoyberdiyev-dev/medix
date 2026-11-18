@@ -14,6 +14,7 @@ import { MobileNav } from "./mobile-nav";
 import { isNavActive, navigation } from "./nav";
 import { NotificationBell } from "./notification-bell";
 import { SearchButton } from "./search-button";
+import { ThemeButton } from "./theme-button";
 
 export type PageTitleKey = keyof typeof pages;
 
@@ -53,6 +54,7 @@ export function TopBar(props: TitleProps) {
         <LiveSync />
         <MessagesButton />
         <NotificationBell />
+        <ThemeButton />
         <LanguageChip />
         <UserAvatar />
       </div>

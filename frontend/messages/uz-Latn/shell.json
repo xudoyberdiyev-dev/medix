@@ -26,5 +26,7 @@
     "supplierDebtsDebts": "Qarzlar",
     "supplierDebtsBonus": "Bonus balans"
   },
-  "searchPlaceholder": "Mahsulot, mijoz yoki hujjat raqami…"
+  "searchPlaceholder": "Mahsulot, mijoz yoki hujjat raqami…",
+  "themeToDark": "Qorongʻi rejimga oʻtish",
+  "themeToLight": "Yorugʻ rejimga oʻtish"
 }

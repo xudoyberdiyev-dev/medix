@@ -152,31 +152,37 @@
   }
 }
 
-/* Qorongʻi rejim (O20 — hozircha kirish sahifasi): tokenlar shu sinf ichida qayta belgilanadi, komponentlar oʻzgarmaydi. */
-.theme-dark {
-  color-scheme: dark;
-  --color-brand-900: #0b2524;
-  --color-primary: #2dd4bf;
-  --color-primary-button: #0f766e;
-  --color-primary-button-hover: #0d9488;
-  --color-link: #2dd4bf;
-  --color-primary-soft: #133b38;
-  --color-surface: #13201f;
-  --color-background: #0c1716;
-  --color-table-header: #182826;
-  --color-text-primary: #e4efed;
-  --color-text-secondary: #9db2af;
-  --color-text-disabled: #627a77;
-  --color-border: #263d3b;
-  --color-success: #4ade80;
-  --color-success-bg: #10291a;
-  --color-warning: #fbbf24;
-  --color-warning-bg: #2c2210;
-  --color-danger: #f87171;
-  --color-danger-bg: #2e1414;
-  --color-info: #93c5fd;
-  --color-info-bg: #13213a;
-  --color-overlay: rgb(0 0 0 / 0.6);
+/* Qorongʻi rejim (O24 — butun ilova): tokenlar shu sinf ichida qayta belgilanadi, komponentlar oʻzgarmaydi. */
+/* O24: qorongʻi mavzu faqat ekranda — chop etiladigan hujjatlar (PDF, chop etish) har doim yorugʻ. */
+@media screen {
+  .theme-dark {
+    color-scheme: dark;
+    --color-brand-900: #0b2524;
+    --color-primary: #2dd4bf;
+    --color-primary-button: #0f766e;
+    --color-primary-button-hover: #0d9488;
+    --color-link: #2dd4bf;
+    --color-primary-soft: #133b38;
+    --color-surface: #13201f;
+    --color-background: #0c1716;
+    --color-table-header: #182826;
+    --color-text-primary: #e4efed;
+    --color-text-secondary: #9db2af;
+    --color-text-disabled: #627a77;
+    --color-border: #263d3b;
+    --color-success: #4ade80;
+    --color-success-bg: #10291a;
+    --color-warning: #fbbf24;
+    --color-warning-bg: #2c2210;
+    --color-danger: #f87171;
+    --color-danger-bg: #2e1414;
+    --color-info: #93c5fd;
+    --color-info-bg: #13213a;
+    --color-overlay: rgb(0 0 0 / 0.6);
+    --color-sidebar-text: #a9c7c3;
+    --color-sidebar-item-active-bg: rgb(255 255 255 / 0.06);
+    --shadow-overlay: 0 4px 16px rgb(0 0 0 / 0.4);
+  }
 }
 
 @layer base {
