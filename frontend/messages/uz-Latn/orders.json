@@ -340,7 +340,8 @@
     "resLate": "Kechikdi: {n} daqiqa",
     "doneTodayHint": "Bugun yakunlangan buyurtmalar shu yerda chiqadi.",
     "location": "Joyi",
-    "byPlace": "Joy boʻyicha saralash (ombor boʻylab bir marta aylanish)"
+    "byPlace": "Joy boʻyicha saralash (ombor boʻylab bir marta aylanish)",
+    "doneTodayShort": "Bugun"
   },
   "otherBatch": {
     "title": "Boshqa partiyadan oldim",
@@ -467,7 +468,10 @@
     "counterMixed": "{boxes} quti ({boxUnits} dona) + {units} dona = {scanned} / {needed}",
     "boxUnits": "SSCC · quti ({n} dona)",
     "pickBoxProduct": "Quti kodi qaysi mahsulotniki? Mahsulotni tanlang — quti shu qatorga yoziladi.",
-    "scanHint": "Butun qutilar uchun faqat quti (SSCC) kodini, ochiq donalar uchun har bir dona kodini skanerlang."
+    "scanHint": "Butun qutilar uchun faqat quti (SSCC) kodini, ochiq donalar uchun har bir dona kodini skanerlang.",
+    "tabMineShort": "Mening",
+    "tabTodayShort": "Bugun",
+    "tabCodesShort": "Kodlar"
   },
   "monitor": {
     "forbidden": "Monitor Ombor mudiri, Filial rahbari va Direktor uchun.",

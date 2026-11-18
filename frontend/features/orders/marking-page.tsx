@@ -159,9 +159,9 @@ export function MarkingPage() {
           onChange={setTab}
           items={[
             { key: "queue", label: t("marking.tabQueue"), count: waiting || undefined },
-            { key: "mine", label: t("marking.tabMine"), count: mine.data ? 1 : undefined },
-            { key: "today", label: t("marking.tabToday") },
-            { key: "codes", label: t("marking.tabCodes") },
+            { key: "mine", label: t("marking.tabMine"), short: t("marking.tabMineShort"), count: mine.data ? 1 : undefined },
+            { key: "today", label: t("marking.tabToday"), short: t("marking.tabTodayShort") },
+            { key: "codes", label: t("marking.tabCodes"), short: t("marking.tabCodesShort") },
           ]}
         />
       </div>

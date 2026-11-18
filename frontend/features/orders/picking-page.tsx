@@ -137,7 +137,7 @@ export function PickingPage() {
         items={[
           { key: "queue", label: t("picking.queue"), count: others.filter((o) => o.status !== "PICKING").length || undefined },
           { key: "mine", label: t("picking.mine"), count: mine ? 1 : undefined },
-          { key: "done", label: t("picking.doneToday"), count: done.data?.length || undefined },
+          { key: "done", label: t("picking.doneToday"), short: t("picking.doneTodayShort"), count: done.data?.length || undefined },
         ]}
       />
       <div className="mt-4">
