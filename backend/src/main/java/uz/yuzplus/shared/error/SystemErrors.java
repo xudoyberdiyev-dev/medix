@@ -26,11 +26,11 @@ public class SystemErrors {
     private static final Logger log = LoggerFactory.getLogger(SystemErrors.class);
     static final int KEEP_DAYS = 30;
 
-    public record ErrorRow(Instant occurredAt, String method, String path, String exception, String message) {}
+    public record SystemErrorRow(Instant occurredAt, String method, String path, String exception, String message) {}
 
-    public record Group(String exception, String path, long count) {}
+    public record SystemErrorGroup(String exception, String path, long count) {}
 
-    public record Status(Instant startedAt, long last24h, long last7d, List<Group> top24h, List<ErrorRow> recent) {}
+    public record SystemErrorStatus(Instant startedAt, long last24h, long last7d, List<SystemErrorGroup> top24h, List<SystemErrorRow> recent) {}
 
     private final JdbcClient jdbc;
     private final String botToken;
@@ -58,19 +58,19 @@ public class SystemErrors {
         }
     }
 
-    public Status status() {
+    public SystemErrorStatus status() {
         long day = count("24 hours");
         long week = count("7 days");
-        List<Group> top = jdbc.sql("""
+        List<SystemErrorGroup> top = jdbc.sql("""
                 SELECT exception, path, count(*) AS n FROM system_error WHERE occurred_at > now() - interval '24 hours'
                 GROUP BY exception, path ORDER BY n DESC, max(occurred_at) DESC LIMIT 5""")
-                .query((rs, n) -> new Group(rs.getString("exception"), rs.getString("path"), rs.getLong("n")))
+                .query((rs, n) -> new SystemErrorGroup(rs.getString("exception"), rs.getString("path"), rs.getLong("n")))
                 .list();
-        List<ErrorRow> recent = jdbc.sql("SELECT occurred_at, method, path, exception, message FROM system_error ORDER BY occurred_at DESC, id DESC LIMIT 20")
-                .query((rs, n) -> new ErrorRow(rs.getTimestamp("occurred_at").toInstant(), rs.getString("method"), rs.getString("path"),
+        List<SystemErrorRow> recent = jdbc.sql("SELECT occurred_at, method, path, exception, message FROM system_error ORDER BY occurred_at DESC, id DESC LIMIT 20")
+                .query((rs, n) -> new SystemErrorRow(rs.getTimestamp("occurred_at").toInstant(), rs.getString("method"), rs.getString("path"),
                         rs.getString("exception"), rs.getString("message")))
                 .list();
-        return new Status(startedAt, day, week, top, recent);
+        return new SystemErrorStatus(startedAt, day, week, top, recent);
     }
 
     private long count(String interval) {
@@ -87,17 +87,17 @@ public class SystemErrors {
         if (botToken.isBlank() || chatId.isBlank()) {
             return;
         }
-        Status s = status();
+        SystemErrorStatus s = status();
         if (s.last24h() == 0) {
             return;
         }
         send(summaryText(s));
     }
 
-    static String summaryText(Status s) {
+    static String summaryText(SystemErrorStatus s) {
         StringBuilder text = new StringBuilder("⚠️ 100+: oxirgi 24 soatda ").append(s.last24h()).append(" ta server xatosi (7 kunda ")
                 .append(s.last7d()).append(").");
-        for (Group g : s.top24h()) {
+        for (SystemErrorGroup g : s.top24h()) {
             String type = g.exception().substring(g.exception().lastIndexOf('.') + 1);
             text.append("\n• ").append(g.count()).append(" × ").append(type).append(" — ").append(g.path().replaceAll("/\\d+", "/{id}"));
         }

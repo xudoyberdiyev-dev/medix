@@ -23,7 +23,7 @@ class SystemStatusController {
     @GetMapping
     @PreAuthorize("hasAuthority('settings.security')")
     @Operation(summary = "Tizim holati: server xatolari (24 soat, 7 kun), eng koʻp uchraganlari va oxirgi 20 tasi")
-    SystemErrors.Status status() {
+    SystemErrors.SystemErrorStatus status() {
         return errors.status();
     }
 }

@@ -39,9 +39,9 @@ class SystemErrorsTest {
 
     @Test
     void summaryHasCountsTypesAndMaskedIds() {
-        var s = new SystemErrors.Status(Instant.now(), 3, 5,
-                List.of(new SystemErrors.Group("java.lang.IllegalStateException", "/api/orders/15/pick/start", 2),
-                        new SystemErrors.Group("org.springframework.dao.DataIntegrityViolationException", "/api/receipts", 1)),
+        var s = new SystemErrors.SystemErrorStatus(Instant.now(), 3, 5,
+                List.of(new SystemErrors.SystemErrorGroup("java.lang.IllegalStateException", "/api/orders/15/pick/start", 2),
+                        new SystemErrors.SystemErrorGroup("org.springframework.dao.DataIntegrityViolationException", "/api/receipts", 1)),
                 List.of());
         String text = SystemErrors.summaryText(s);
         assertThat(text).startsWith("⚠️ 100+: oxirgi 24 soatda 3 ta server xatosi (7 kunda 5).")

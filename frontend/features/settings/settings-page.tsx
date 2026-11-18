@@ -35,6 +35,7 @@ import type { components } from "@/lib/api/schema";
 import { maskUzDate } from "@/lib/date-mask";
 import { cn } from "@/lib/cn";
 import { formatDate } from "@/lib/format";
+import { SystemStatusSection } from "./system-status";
 import { displaySetting, settingChanges, settingError, vatRateValid, type SettingKind } from "./settings-form";
 
 type View = components["schemas"]["SettingsView"];
@@ -214,6 +215,7 @@ export function SettingsPage() {
                 {sec === "VAT" ? <VatSection view={d} onSaved={onSaved} onFail={onFail} /> : null}
                 {sec === "PRINT" ? <PrintSection view={d} onSaved={onSaved} onFail={onFail} onRo={() => showRo("print")} /> : null}
                 {sec === "DOCS" ? <DocsSection view={d} /> : null}
+                {sec === "SEC" && d.canSecurity ? <SystemStatusSection /> : null}
                 {sec === "BQ" ? (
                   <SettingRow
                     name={t("cfg.bqCut.name")}

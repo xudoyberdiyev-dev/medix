@@ -19901,6 +19901,25 @@
         "summary" : "Qoralamani o'tkazish",
         "tags" : [ "zone-transfer" ]
       }
+    },
+    "/api/settings/system-status" : {
+      "get" : {
+        "operationId" : "systemStatus",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SystemErrorStatus"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Tizim holati: server xatolari (24 soat, 7 kun), eng koʻp uchraganlari va oxirgi 20 tasi",
+        "tags" : [ "settings" ]
+      }
     }
   },
   "components" : {
@@ -37671,6 +37690,74 @@
           }
         },
         "required" : [ "brought", "id", "left", "name", "sold" ]
+      },
+      "SystemErrorGroup" : {
+        "type" : "object",
+        "properties" : {
+          "count" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "exception" : {
+            "type" : "string"
+          },
+          "path" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "count", "exception", "path" ]
+      },
+      "SystemErrorRow" : {
+        "type" : "object",
+        "properties" : {
+          "exception" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          },
+          "method" : {
+            "type" : "string"
+          },
+          "occurredAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "path" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "exception", "method", "occurredAt", "path" ]
+      },
+      "SystemErrorStatus" : {
+        "type" : "object",
+        "properties" : {
+          "last24h" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "last7d" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "recent" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SystemErrorRow"
+            }
+          },
+          "startedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "top24h" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SystemErrorGroup"
+            }
+          }
+        },
+        "required" : [ "last24h", "last7d", "recent", "startedAt", "top24h" ]
       },
       "TargetWarehouse" : {
         "type" : "object",

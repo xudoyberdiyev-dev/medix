@@ -8708,6 +8708,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/settings/system-status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Tizim holati: server xatolari (24 soat, 7 kun), eng koʻp uchraganlari va oxirgi 20 tasi */
+        get: operations["systemStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -15860,6 +15877,30 @@ export interface components {
             left: string;
             name: string;
             sold: string;
+        };
+        SystemErrorGroup: {
+            /** Format: int64 */
+            count: number;
+            exception: string;
+            path: string;
+        };
+        SystemErrorRow: {
+            exception: string;
+            message?: string;
+            method: string;
+            /** Format: date-time */
+            occurredAt: string;
+            path: string;
+        };
+        SystemErrorStatus: {
+            /** Format: int64 */
+            last24h: number;
+            /** Format: int64 */
+            last7d: number;
+            recent: components["schemas"]["SystemErrorRow"][];
+            /** Format: date-time */
+            startedAt: string;
+            top24h: components["schemas"]["SystemErrorGroup"][];
         };
         TargetWarehouse: {
             branch: components["schemas"]["BranchRef"];
@@ -29411,6 +29452,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ZoneTransferDetail"];
+                };
+            };
+        };
+    };
+    systemStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SystemErrorStatus"];
                 };
             };
         };
