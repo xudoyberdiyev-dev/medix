@@ -85,7 +85,6 @@ public class Organization {
                 .optional();
     }
 
-    @Transactional
     /** Kirish sahifasidagi yordam aloqasi (O20); kompaniya bo'lmasa — bo'sh. */
     public record SupportContact(@Schema(nullable = true) String phone, @Schema(nullable = true) String hours) {}
 
@@ -115,6 +114,7 @@ public class Organization {
         audit.record(AuditEntry.of("company.update", "company", companyId).change(before, after));
     }
 
+    @Transactional
     public Company saveCompany(String name) {
         return saveCompany(name, company().map(Company::defaultLocale).orElse("uz-Latn"));
     }
