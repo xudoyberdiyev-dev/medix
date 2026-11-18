@@ -144,7 +144,7 @@ export function KkImportModal({
           .map((p) => t(`problem.${p}`))
           .join(" · ");
         return (
-          <span className="flex flex-col gap-1">
+          <span className="flex flex-col items-start gap-1">
             {tone === "ok" ? (
               <Badge tone="success" icon={CircleCheck}>
                 {t("tone.ok")}

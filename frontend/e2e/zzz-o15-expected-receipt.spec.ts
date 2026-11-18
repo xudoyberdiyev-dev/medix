@@ -50,7 +50,7 @@ test("O15: KK → tasdiq (qarz darhol, Yoʻlda) → qabul qilish — kirim qoral
   });
   await imp.getByRole("button", { name: "Mahsulotlarni topish" }).click();
   await expect(imp.getByText("Qoʻshiladi: 1 ta qator. Oʻtkazib yuboriladi: 1 ta", { exact: false })).toBeVisible();
-  await expect(imp.getByText("Topilmadi")).toBeVisible();
+  await expect(imp.getByText("Topilmadi", { exact: true })).toBeVisible();
   await imp.getByRole("button", { name: "1 ta qatorni qoʻshish" }).click();
   await expect(page.getByText("1 ta qator qoʻshildi — tekshirib saqlang")).toBeVisible();
   await expect(page.getByRole("cell", { name: /Paracetamol E2E/ })).toBeVisible();
