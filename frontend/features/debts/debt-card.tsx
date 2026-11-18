@@ -1,5 +1,6 @@
 "use client";
 
+import { centsToMoney } from "@/features/expected-receipts/api";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { AlarmClock, ArrowDownLeft, ArrowUpRight, CircleCheck, FileCheck2 } from "lucide-react";
@@ -90,6 +91,13 @@ export function DebtCardPage({ side, id, name }: { side: Side; id: number; name:
   }
 
   const row: DebtRow | undefined = report.data?.rows.find((r) => r.counterpartyId === id);
+  // O15: shundan yoʻldagi tovar (KK) uchun — KK hujjatlarining ochiq qoldigʻi
+  const transitOpen = (docs.data ?? [])
+    .filter((d) => d.docType === "KK" && !d.open.startsWith("-"))
+    .reduce((sum, d) => {
+      const [i, f = ""] = d.open.split(".");
+      return sum + BigInt(i) * 100n + BigInt((f + "00").slice(0, 2));
+    }, 0n);
   const open: CardDoc[] = (docs.data ?? []).filter((d) => !d.open.startsWith("-") && d.open !== "0.00");
   const myRecons = (recons.data?.rows ?? []).filter((r) => r.counterpartyId === id && r.side === side);
   const title = row?.name ?? name ?? party.data?.name ?? "";
@@ -108,6 +116,10 @@ export function DebtCardPage({ side, id, name }: { side: Side; id: number; name:
       render: (d) =>
         d.docType === "KR" ? (
           <Link href={`/receipts/${d.docId}`} className="text-primary hover:underline">
+            {d.docNumber}
+          </Link>
+        ) : d.docType === "KK" ? (
+          <Link href={`/expected-receipts/${d.docId}`} className="text-primary hover:underline">
             {d.docNumber}
           </Link>
         ) : (
@@ -259,6 +271,9 @@ export function DebtCardPage({ side, id, name }: { side: Side; id: number; name:
         </div>
         <aside className="grid grid-cols-1 content-start gap-3 max-md:grid-cols-2 md:max-[1099px]:grid-cols-5" aria-label={t("summary")}>
           <Kpi label={yt ? t("kOur") : t("kDebt")} value={formatMoney(debt)} />
+          {yt && transitOpen > 0n ? (
+            <Kpi label={t("kTransit")} value={formatMoney(centsToMoney(transitOpen))} tone="info" note={t("kTransitNote")} />
+          ) : null}
           <Kpi
             label={t("kOverdue")}
             value={formatMoney(overdue)}

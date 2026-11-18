@@ -93,6 +93,7 @@ class ReconActDoc {
         t("SV_HF", "Sotuv №{0}, {1} (Hisob-faktura №{2}, {3})", "Продажа №{0} от {1} (Счет-фактура №{2} от {3})");
         t("KR", "Kirim №{0}, {1}", "Поступление №{0} от {1}");
         t("KR_HF", "Kirim №{0}, {1} (Hisob-faktura №{2}, {3})", "Поступление №{0} от {1} (Счет-фактура №{2} от {3})");
+        t("KK", "Yuk xati №{0}, {1} ({2})", "Товарная накладная №{0} от {1} ({2})");
         t("PAY_BANK", "Toʻlov topshiriqnomasi №{0}, {1}", "Платежное поручение №{0} от {1}");
         t("PAY_CASH_IN", "Kirim kassa orderi №{0}, {1}", "Приходный кассовый ордер №{0} от {1}");
         t("PAY_CASH_OUT", "Chiqim kassa orderi №{0}, {1}", "Расходный кассовый ордер №{0} от {1}");
@@ -261,6 +262,12 @@ class ReconActDoc {
                                 rs.getDate("invoice_date") == null ? d : DMY.format(rs.getDate("invoice_date").toLocalDate())})
                         .optional();
                 return inv.filter(x -> x[0] != null && !x[0].isBlank()).map(x -> tr(lang, "KR_HF", n, d, x[0], x[1])).orElse(tr(lang, "KR", n, d));
+            }
+            case "KK" -> {
+                Optional<String[]> wb = jdbc.sql("SELECT waybill_number, waybill_date FROM expected_receipt WHERE id = :i").param("i", l.docId())
+                        .query((rs, i) -> new String[] {rs.getString("waybill_number"), DMY.format(rs.getDate("waybill_date").toLocalDate())})
+                        .optional();
+                return wb.map(x -> tr(lang, "KK", x[0], x[1], n)).orElse(n);
             }
             case "MT", "YT" -> {
                 String table = "MT".equals(l.docType()) ? "customer_payment" : "supplier_payment";

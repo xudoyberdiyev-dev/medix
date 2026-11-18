@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="uz">
+<head>
+    <meta charset="UTF-8"/>
+    <title th:text="${doc.number}">KK</title>
+    <style th:replace="~{_base :: css}"></style>
+</head>
+<body>
+<div class="head">
+    <div class="caption" th:text="${legalName}">MChJ</div>
+    <h1>Farq dalolatnomasi — kutilayotgan kirim <span class="mono" th:text="${doc.number}">KK-TSH-000001</span></h1>
+    <div class="muted">Sana: <span th:text="${date}">18.11.2026</span> · Filial: <span th:text="${branchName}">Toshkent</span> · Ombor: <span th:text="${doc.warehouse}">Markaziy</span></div>
+    <div class="muted">Yetkazib beruvchi: <span th:text="${doc.supplier}">YB</span>
+        <span th:if="${doc.supplierTin != null}" th:text="' · STIR ' + ${doc.supplierTin}"></span></div>
+    <div class="muted">Yuk xati №: <span th:text="${doc.waybill}">TTN</span>
+        <span th:if="${doc.invoice != null}" th:text="' · Hisob-faktura №' + ${doc.invoice}"></span></div>
+    <div class="muted" th:if="${!#strings.isEmpty(doc.receipts)}">Qabul qilingan kirimlar: <span th:text="${doc.receipts}">KR</span></div>
+</div>
+<table>
+    <thead>
+    <tr>
+        <th class="num">№</th>
+        <th>Mahsulot</th>
+        <th class="r">Yuk xatida</th>
+        <th class="r">Keldi (yaroqli)</th>
+        <th class="r">Shikastlangan</th>
+        <th class="r">Kam</th>
+        <th class="r">Ortiqcha</th>
+        <th class="r">Hali kutilmoqda</th>
+        <th class="r" th:if="${withAmount}">Narx</th>
+        <th class="r" th:if="${withAmount}">Farq summasi</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="l, it : ${lines}">
+        <td class="num" th:text="${it.count}">1</td>
+        <td><span class="mono muted" th:text="${l.code}">0001</span> <span th:text="${l.name}">Mahsulot</span></td>
+        <td class="r" th:text="${l.expected}">1</td>
+        <td class="r" th:text="${l.good}">1</td>
+        <td class="r" th:text="${l.damaged}">—</td>
+        <td class="r" th:text="${l.short}">—</td>
+        <td class="r" th:text="${l.excess}">—</td>
+        <td class="r" th:text="${l.remaining}">—</td>
+        <td class="r" th:if="${withAmount}" th:text="${l.price}">0,00</td>
+        <td class="r" th:if="${withAmount}" th:text="${l.amount}">—</td>
+    </tr>
+    </tbody>
+</table>
+<p class="caption" th:if="${!anyDiff}">Farq yoʻq: tovar yuk xatiga muvofiq qabul qilindi.</p>
+<p class="caption" th:if="${anyDiff and withAmount}" th:text="'Farq summasi jami: ' + ${diffTotal} + ' soʻm (manfiy — yetkazib beruvchiga qarzimiz kamaydi; shikastlangan tovar qaytarilganda hisobdan chiqariladi).'">Jami</p>
+<table class="signs">
+    <tr>
+        <td>Ombor mudiri: ____________________</td>
+        <td>Yetkazib beruvchi vakili: ____________________</td>
+        <td>Tasdiqladi: ____________________</td>
+    </tr>
+</table>
+</body>
+</html>

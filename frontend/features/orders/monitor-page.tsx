@@ -43,6 +43,7 @@ import { BranchSaleDrawer } from "@/features/branch-sales/branch-sale-drawer";
 import type { OrderStatus } from "./api";
 import type { OrdersT } from "./i18n";
 import { DocsTab } from "./docs-tab";
+import { KkHomeCard } from "@/features/expected-receipts/kk-home-card";
 import { IssuesList } from "./issues";
 import { ReturnsList } from "./returns";
 import { OrderDrawer } from "./order-drawer";
@@ -205,6 +206,9 @@ export function MonitorPage() {
 
   return (
     <>
+      <div className="mb-4 empty:hidden">
+        <KkHomeCard branchId={null} />
+      </div>
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-page-title">{t("monitor.title")}</h1>

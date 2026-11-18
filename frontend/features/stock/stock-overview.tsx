@@ -60,6 +60,7 @@ import { BatchPanel } from "./batch-panel";
 import { ExpiryCell, Flags, day } from "./stock-cells";
 import { BATCH_COLUMN_KEYS, BATCH_COST_KEYS, StockBatches, batchColumnLabels } from "./stock-batches";
 import { StockTransit } from "./stock-transit";
+import { SupplierTransit } from "@/features/expected-receipts/supplier-transit";
 import { StockTree } from "./stock-tree";
 
 type ProductRow = components["schemas"]["ProductStockRow"];
@@ -539,7 +540,10 @@ export function StockOverview() {
       </div>
 
       {f.transit ? (
-        <StockTransit branchId={branchId} />
+        <div className="flex flex-col gap-4">
+          <StockTransit branchId={branchId} />
+          <SupplierTransit branchId={branchId} />
+        </div>
       ) : f.view === "wh" ? (
         <StockTree
           branchId={branchId}

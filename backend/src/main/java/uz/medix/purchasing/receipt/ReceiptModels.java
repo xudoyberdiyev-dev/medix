@@ -232,5 +232,7 @@ final class ReceiptModels {
             @Schema(nullable = true) Instant cancelledAt,
             @Schema(nullable = true) String cancelReason,
             List<ReceiptLine> lines,
-            @Schema(nullable = true, description = "Hisob-faktura raqami") String facturaNumber) {}
+            @Schema(nullable = true, description = "Hisob-faktura raqami") String facturaNumber,
+            @Schema(nullable = true, description = "O15: kutilayotgan kirimdan tuzilgan — qatorlar tahrirlanmaydi, faqat qabul qilinadi") Long expectedReceiptId,
+            @Schema(nullable = true) String expectedReceiptNumber) {}
 }

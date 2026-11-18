@@ -1,6 +1,8 @@
 "use client";
 
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { inTransitOf, useInTransit } from "@/features/expected-receipts/api";
+import { InTransitNote } from "@/features/expected-receipts/supplier-transit";
 import { ArrowLeft, Check, Lock, ScanBarcode, ToggleLeft, ToggleRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
@@ -89,6 +91,8 @@ export function CatalogView({
     placeholderData: keepPreviousData,
   });
   const rows = catalog.data?.items ?? [];
+  // O15: yoʻldagi tovar (KK) — faqat maʼlumot, sotuvga olinmaydi
+  const transit = useInTransit(rows.length ? rows.map((r) => r.productId) : [], rows.length > 0);
   const facets = catalog.data?.facets;
   const hasFilters = fMaker.length + fCat.length + fCountry.length + fFlags.length > 0 || search.trim() !== "";
   const remember = (list: CatalogFacet[] | undefined) =>
@@ -262,6 +266,7 @@ export function CatalogView({
                             <ScanBarcode size={13} strokeWidth={1.5} className="text-text-secondary" aria-label={t("catalog.marked")} />
                           ) : null}
                         </span>
+                        <InTransitNote row={inTransitOf(transit.data, r.productId)} />
                       </td>
                       <td className="px-3 py-2.5 text-text-secondary">{r.manufacturer ?? "—"}</td>
                       <td className="px-3 py-2.5 text-right tabular-nums">{formatQuantity(r.available)}</td>

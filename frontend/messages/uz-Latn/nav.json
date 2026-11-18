@@ -8,6 +8,7 @@
   "approvals": "Tasdiqlash",
   "shipments": "Joʻnatish",
   "receipts": "Kirim",
+  "expectedReceipts": "Kutilayotgan kirim",
   "stock": "Qoldiqlar",
   "expiry": "Muddat nazorati",
   "transfers": "Koʻchirish",

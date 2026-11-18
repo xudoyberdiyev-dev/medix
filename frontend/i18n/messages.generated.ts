@@ -14,6 +14,7 @@ import uzLatn_customerReturns from "@/messages/uz-Latn/customerReturns.json";
 import uzLatn_debts from "@/messages/uz-Latn/debts.json";
 import uzLatn_dictionaries from "@/messages/uz-Latn/dictionaries.json";
 import uzLatn_employees from "@/messages/uz-Latn/employees.json";
+import uzLatn_expectedReceipts from "@/messages/uz-Latn/expectedReceipts.json";
 import uzLatn_home from "@/messages/uz-Latn/home.json";
 import uzLatn_inventoryCounts from "@/messages/uz-Latn/inventoryCounts.json";
 import uzLatn_invoices from "@/messages/uz-Latn/invoices.json";
@@ -66,6 +67,7 @@ import uzCyrl_customerReturns from "@/messages/uz-Cyrl/customerReturns.json";
 import uzCyrl_debts from "@/messages/uz-Cyrl/debts.json";
 import uzCyrl_dictionaries from "@/messages/uz-Cyrl/dictionaries.json";
 import uzCyrl_employees from "@/messages/uz-Cyrl/employees.json";
+import uzCyrl_expectedReceipts from "@/messages/uz-Cyrl/expectedReceipts.json";
 import uzCyrl_home from "@/messages/uz-Cyrl/home.json";
 import uzCyrl_inventoryCounts from "@/messages/uz-Cyrl/inventoryCounts.json";
 import uzCyrl_invoices from "@/messages/uz-Cyrl/invoices.json";
@@ -118,6 +120,7 @@ import ru_customerReturns from "@/messages/ru/customerReturns.json";
 import ru_debts from "@/messages/ru/debts.json";
 import ru_dictionaries from "@/messages/ru/dictionaries.json";
 import ru_employees from "@/messages/ru/employees.json";
+import ru_expectedReceipts from "@/messages/ru/expectedReceipts.json";
 import ru_home from "@/messages/ru/home.json";
 import ru_inventoryCounts from "@/messages/ru/inventoryCounts.json";
 import ru_invoices from "@/messages/ru/invoices.json";
@@ -172,6 +175,7 @@ export const uzLatn = {
   "debts": uzLatn_debts,
   "dictionaries": uzLatn_dictionaries,
   "employees": uzLatn_employees,
+  "expectedReceipts": uzLatn_expectedReceipts,
   "home": uzLatn_home,
   "inventoryCounts": uzLatn_inventoryCounts,
   "invoices": uzLatn_invoices,
@@ -227,6 +231,7 @@ export const uzCyrl = {
   "debts": uzCyrl_debts,
   "dictionaries": uzCyrl_dictionaries,
   "employees": uzCyrl_employees,
+  "expectedReceipts": uzCyrl_expectedReceipts,
   "home": uzCyrl_home,
   "inventoryCounts": uzCyrl_inventoryCounts,
   "invoices": uzCyrl_invoices,
@@ -282,6 +287,7 @@ export const ru = {
   "debts": ru_debts,
   "dictionaries": ru_dictionaries,
   "employees": ru_employees,
+  "expectedReceipts": ru_expectedReceipts,
   "home": ru_home,
   "inventoryCounts": ru_inventoryCounts,
   "invoices": ru_invoices,

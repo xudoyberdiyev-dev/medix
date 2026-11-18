@@ -68,11 +68,13 @@ class Receipts {
     private final AuditLog audit;
     private final DocumentSequenceService numbers;
     private final Clock clock;
+    private final ExpectedReceiptLinks kkLinks;
     private final SupplierBonuses bonuses;
     private final Notifications notifications;
 
     Receipts(JdbcClient jdbc, StockLedger stock, PartyLedger parties, AuditLog audit, DocumentSequenceService numbers, Clock clock,
-            SupplierBonuses bonuses, Notifications notifications) {
+            SupplierBonuses bonuses, Notifications notifications, ExpectedReceiptLinks kkLinks) {
+        this.kkLinks = kkLinks;
         this.bonuses = bonuses;
         this.notifications = notifications;
         this.jdbc = jdbc;
@@ -302,6 +304,8 @@ class Receipts {
         String bonusBalance = prices ? bonuses.balance(h.branchId(), h.supplierId()).toString() : null;
         record Bns(String number, BigDecimal amount, Timestamp createdAt) {}
         Optional<Bns> bns = jdbc.sql("SELECT number, amount, created_at FROM supplier_bonus WHERE receipt_id = :id").param("id", id).query(Bns.class).optional();
+        Optional<KkRef> kk = jdbc.sql("SELECT k.id, k.number FROM receipt r JOIN expected_receipt k ON k.id = r.expected_receipt_id WHERE r.id = :id")
+                .param("id", id).query(KkRef.class).optional();
         return Optional.of(new ReceiptDetail(h.id(), h.number(), h.branchId(), h.warehouseId(), h.warehouse(), h.supplierId(), h.supplier(),
                 h.receiptDate().toLocalDate(), h.invoiceNumber(), localDate(h.invoiceDate()), PaymentType.valueOf(h.paymentType()),
                 localDate(h.dueDate()), h.dueManual(), h.ownerId(), h.owner(), h.prepaid(), h.fromBonus(),
@@ -318,8 +322,11 @@ class Receipts {
                         .orElse(null),
                 qty, bonus, diff, h.createdBy(),
                 h.createdAt().toInstant(), h.acceptedBy(), instant(h.acceptedAt()), h.postedBy(), instant(h.postedAt()), h.cancelledBy(),
-                instant(h.cancelledAt()), h.cancelReason(), out, h.facturaNumber()));
+                instant(h.cancelledAt()), h.cancelReason(), out, h.facturaNumber(), kk.map(KkRef::id).orElse(null),
+                kk.map(KkRef::number).orElse(null)));
     }
+
+    private record KkRef(long id, String number) {}
 
     record LineRow(long id, int lineNo, long productId, String code, String name, boolean controlled, boolean marked, String manufacturer,
             BigDecimal vatRate, String batchNumber, Date producedOn,
@@ -379,6 +386,9 @@ class Receipts {
     void update(Actor actor, long id, ReceiptRequest r, boolean pricesVisible) {
         Head h = lock(id, actor);
         requireStatus(h, ReceiptStatus.DRAFT);
+        if (kkLinks.linked(id)) {
+            throw MedixException.conflict("receipt.kkLinkedEdit");
+        }
         if (!pricesVisible) {
             boolean priced = jdbc.sql("SELECT EXISTS (SELECT 1 FROM receipt_line WHERE receipt_id = :id AND price IS NOT NULL)")
                     .param("id", id).query(Boolean.class).single();
@@ -646,6 +656,7 @@ class Receipts {
         long quarantine = zoneOf(zones, ZoneType.QUARANTINE);
         List<Move> moves = new ArrayList<>();
         Money debt = Money.ZERO;
+        Money planned = Money.ZERO;
         for (LineRow l : rows) {
             if (!zones.containsKey(l.zoneId())) {
                 throw MedixException.conflict("receipt.zoneInvalid", l.lineNo());
@@ -667,7 +678,10 @@ class Receipts {
             }
             int paid = applied == Resolution.DOCUMENT ? l.qty() : arrived;
             debt = debt.plus(new Money(l.price()).times(paid));
+            planned = planned.plus(new Money(l.price()).times(l.qty()));
         }
+        // O15: KK dan tuzilgan kirim — «qarzga» KK da qarz allaqachon yozilgan, faqat farq (KK ga qo'llanadi).
+        Optional<ExpectedReceiptLinks.Link> kk = kkLinks.lockForReceipt(id);
         stock.post(new DocRef(DOC_TYPE, id, h.number()), moves);
         if (h.fromBonus()) {
             // Qarz yo'q — summa bonus balansdan ayriladi (yetmasa o'tkazilmaydi; balans bilan qarz yopilmaydi).
@@ -678,11 +692,15 @@ class Receipts {
             }
             bonuses.record(h.branchId(), h.supplierId(), Money.ZERO.minus(debt), DOC_TYPE, id, h.number(), null);
             debt = Money.ZERO;
+        } else if (kk.isPresent() && kk.get().credit()) {
+            kkLinks.adjustDebt(kk.get(), DOC_TYPE, id, h.number(), h.branchId(), h.supplierId(), debt.minus(planned));
+            debt = Money.ZERO;
         } else {
             Date due = jdbc.sql("SELECT due_date FROM receipt WHERE id = :id").param("id", id).query(Date.class).optional().orElse(null);
             parties.record(new PartyLedger.DocRef(DOC_TYPE, id, h.number()), h.branchId(), h.supplierId(), Side.SUPPLIER, debt,
                     localDate(due), null);
         }
+        kk.ifPresent(k -> kkLinks.applyReceived(k, id, applied != Resolution.DOCUMENT));
         jdbc.sql("""
                 UPDATE receipt SET status = 'POSTED', resolution = :res, debt_amount = :debt, posted_by = :by, posted_at = now(),
                        updated_at = now(), version = version + 1 WHERE id = :id""")
@@ -791,6 +809,10 @@ class Receipts {
         }
         if (h.status() == ReceiptStatus.POSTED && !canCancelPosted) {
             throw MedixException.forbidden("receipt.cancelPostedForbidden");
+        }
+        if (h.status() == ReceiptStatus.POSTED && kkLinks.linked(id)) {
+            // KK qatorlari va qarz tuzatishi bilan bog'langan — farq QY (qaytarish) bilan rasmiylashtiriladi.
+            throw MedixException.conflict("receipt.kkLinkedPosted");
         }
         if (h.status() != ReceiptStatus.POSTED && !canCancel) {
             throw MedixException.forbidden("receipt.cancelForbidden");

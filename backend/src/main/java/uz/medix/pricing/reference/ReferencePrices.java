@@ -20,6 +20,7 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uz.medix.pricing.PriceBook;
+import uz.medix.pricing.SupplierFiles;
 import uz.medix.pricing.reference.ReferenceModels.CompareDetail;
 import uz.medix.pricing.reference.ReferenceModels.CompareLine;
 import uz.medix.pricing.reference.ReferenceModels.CompareMode;
@@ -232,6 +233,21 @@ public class ReferencePrices {
             }
             return new Match(null, MatchBy.NONE, true);
         }
+    }
+
+    /** O15 ({@link uz.medix.pricing.SupplierFiles}): YB fayli qatorlari uchun mahsulot topish. */
+    public List<SupplierFiles.Found> matchAll(List<SupplierFiles.Query> queries) {
+        Catalog c = catalog();
+        return queries.stream().map(q -> {
+            Match m = c.match(q.name(), q.barcode(), q.ikpu(), q.code(), q.maker());
+            Product p = m.product();
+            return new SupplierFiles.Found(p == null ? null : p.id(), p == null ? null : p.code(),
+                    p == null ? null : p.name(), m.by().name(), m.confident());
+        }).toList();
+    }
+
+    public static String parsePriceText(String raw) {
+        return parsePrice(raw).map(BigDecimal::toPlainString).orElse(null);
     }
 
     Catalog catalog() {

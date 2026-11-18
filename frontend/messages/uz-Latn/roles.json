@@ -41,7 +41,8 @@
     "special": "Maxsus",
     "zcodes": "Zaxira kodlar",
     "invoices": "Fakturalar",
-    "messages": "Xabarlar"
+    "messages": "Xabarlar",
+    "kk": "Kutilayotgan kirim"
   },
   "forbidden": "Rollar va ruxsatlarni Direktor va Bosh administrator boshqaradi.",
   "title": "Rollar va ruxsatlar",
@@ -315,6 +316,9 @@
     "invoices_edit": "Fakturalar: chiqarishdan oldin qoʻlda tuzatish (faqat faylga)",
     "messages_use": "Xabarlar: yozish, javob berish, topshiriq berish va bajarish",
     "messages_broadcast": "Xabarlar: butun rol yoki filialga yuborish",
-    "prices_reference": "Narxlar: referent narx bilan solishtirish"
+    "prices_reference": "Narxlar: referent narx bilan solishtirish",
+    "kk_view": "Kutilayotgan kirim: koʻrish",
+    "kk_create": "Kutilayotgan kirim: yaratish va tahrirlash",
+    "kk_approve": "Kutilayotgan kirim: tasdiqlash (qarz yoziladi), bekor qilish"
   }
 }

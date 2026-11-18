@@ -255,7 +255,9 @@
     "limitUse": "Limitdan foydalanish: {p}%",
     "payMt": "Toʻlov qabul qilish",
     "payYt": "Toʻlash",
-    "mkRecon": "Akt sverka tuzish"
+    "mkRecon": "Akt sverka tuzish",
+    "kTransit": "Shundan yoʻldagi tovar uchun",
+    "kTransitNote": "Kutilayotgan kirimlar (yuk xati) boʻyicha"
   },
   "advanceDoc": {
     "title": "Avansni hisobga olish",

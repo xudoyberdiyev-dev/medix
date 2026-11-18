@@ -24,6 +24,7 @@ import {
   PackageCheck,
   PackageMinus,
   PackagePlus,
+  PackageSearch,
   Pill,
   ReceiptText,
   Scale,
@@ -178,6 +179,13 @@ export const navigation: NavGroup[] = [
     title: "Ombor",
     items: [
       { key: "receipts", label: "Kirim", href: "/receipts", icon: PackagePlus, anyOf: ["receipt.view"] },
+      {
+        key: "expectedReceipts",
+        label: "Kutilayotgan kirim",
+        href: "/expected-receipts",
+        icon: PackageSearch,
+        anyOf: ["kk.view", "kk.create", "kk.approve"],
+      },
       { key: "stock", label: "Qoldiqlar", href: "/stock", icon: Boxes, anyOf: ["stock.view"] },
       { key: "expiry", label: "Muddat nazorati", href: "/expiry", icon: CalendarClock, anyOf: ["expiry.view"] },
       {
