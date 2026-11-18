@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import java.time.Instant;
 import org.springframework.jdbc.core.simple.JdbcClient;
@@ -27,9 +28,15 @@ import uz.medix.shared.error.MedixException;
 class CompanyController {
 
     record CompanyOverview(long id, String name, String defaultLocale, @Schema(nullable = true) Long logoVersion, int branches,
-            int warehouses, int employees, @Schema(nullable = true) Instant launchedAt, @Schema(nullable = true) String launchedBy) {}
+            int warehouses, int employees, @Schema(nullable = true) Instant launchedAt, @Schema(nullable = true) String launchedBy,
+            @Schema(nullable = true) String supportPhone, @Schema(nullable = true) String supportHours) {}
 
     record CompanyNameRequest(@NotBlank(message = "{validation.required}") @Size(max = 200) String name) {}
+
+    /** Kirish sahifasidagi yordam aloqasi (O20); bo'sh — ko'rsatilmaydi. */
+    record CompanySupportRequest(
+            @Schema(nullable = true) @Size(max = 32) @Pattern(regexp = "^[+0-9 ()\\-]*$", message = "{company.supportPhoneInvalid}") String supportPhone,
+            @Schema(nullable = true) @Size(max = 60) String supportHours) {}
 
     private final Organization organization;
     private final JdbcClient jdbc;
@@ -54,8 +61,9 @@ class CompanyController {
                         WHERE a.action = 'setup.complete' ORDER BY a.occurred_at DESC LIMIT 1) AS launched_by""")
                 .query((rs, i) -> new Counts(rs.getInt("branches"), rs.getInt("warehouses"), rs.getInt("employees"), rs.getString("launched_by")))
                 .single();
+        Organization.SupportContact s = organization.supportContact();
         return new CompanyOverview(c.id(), c.name(), c.defaultLocale(), c.logoVersion(), n.branches(), n.warehouses(), n.employees(),
-                c.setupCompletedAt(), c.setupCompletedAt() == null ? null : n.launchedBy());
+                c.setupCompletedAt(), c.setupCompletedAt() == null ? null : n.launchedBy(), s.phone(), s.hours());
     }
 
     @PutMapping
@@ -64,6 +72,15 @@ class CompanyController {
     CompanyOverview rename(@Valid @RequestBody CompanyNameRequest r) {
         organization.company().orElseThrow(() -> MedixException.notFound("error.notFound"));
         organization.saveCompany(r.name());
+        return get();
+    }
+
+    @PutMapping("/support")
+    @PreAuthorize("hasAuthority('company.edit')")
+    @Operation(summary = "Yordam telefoni va ish vaqti", description = "Kirish sahifasi pastida ko'rsatiladi (O20). Audit: company.update.")
+    CompanyOverview saveSupport(@Valid @RequestBody CompanySupportRequest r) {
+        Organization.Company c = organization.company().orElseThrow(() -> MedixException.notFound("error.notFound"));
+        organization.saveSupportContact(c.id(), r.supportPhone(), r.supportHours());
         return get();
     }
 }

@@ -50,7 +50,7 @@ class SecurityConfig {
                 .logout(l -> l.logoutUrl("/api/auth/logout")
                         .logoutSuccessHandler((req, res, auth) -> res.setStatus(204))
                         .deleteCookies(SESSION_COOKIE))
-                .authorizeHttpRequests(a -> a.requestMatchers("/api/auth/login", "/api/auth/csrf")
+                .authorizeHttpRequests(a -> a.requestMatchers("/api/auth/login", "/api/auth/csrf", "/api/auth/login-info")
                         .permitAll()
                         .requestMatchers("/actuator/health/**", "/actuator/info")
                         .permitAll()

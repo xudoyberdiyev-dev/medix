@@ -91,4 +91,40 @@ class CompanyIT {
             jdbc.sql("UPDATE company SET name = :n").param("n", before).update();
         }
     }
+
+    @Test
+    void supportContactShownOnLoginPage() throws Exception {
+        jdbc.sql("INSERT INTO company (name) SELECT 'Shifo Dori' WHERE NOT EXISTS (SELECT 1 FROM company)").update();
+        long roles = jdbc.sql("SELECT count(*) FROM role WHERE active").query(Long.class).single();
+        Cookie director = loginAs("DIRECTOR");
+        Cookie picker = loginAs("PICKER");
+        try {
+            mvc.perform(put("/api/company/support").with(csrf()).cookie(picker).contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"supportPhone\":\"+998 71 200-00-00\"}"))
+                    .andExpect(status().isForbidden());
+            mvc.perform(put("/api/company/support").with(csrf()).cookie(director).contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"supportPhone\":\"tel: abc\"}"))
+                    .andExpect(status().isBadRequest());
+            mvc.perform(put("/api/company/support").with(csrf()).cookie(director).contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"supportPhone\":\" +998 71 200-00-00 \",\"supportHours\":\"du–ju 09:00–18:00\"}"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.supportPhone").value("+998 71 200-00-00"))
+                    .andExpect(jsonPath("$.supportHours").value("du–ju 09:00–18:00"));
+            // kirishsiz (sessiya cookie'siz) ommaviy
+            mvc.perform(get("/api/auth/login-info"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.supportPhone").value("+998 71 200-00-00"))
+                    .andExpect(jsonPath("$.supportHours").value("du–ju 09:00–18:00"))
+                    .andExpect(jsonPath("$.roles").value((int) roles));
+            assertThat(jdbc.sql("SELECT new_value->>'supportPhone' FROM audit_log WHERE action = 'company.update' ORDER BY id DESC LIMIT 1")
+                            .query(String.class).single())
+                    .isEqualTo("+998 71 200-00-00");
+            mvc.perform(put("/api/company/support").with(csrf()).cookie(director).contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"supportPhone\":\" \",\"supportHours\":null}"))
+                    .andExpect(status().isOk());
+            mvc.perform(get("/api/auth/login-info")).andExpect(jsonPath("$.supportPhone").isEmpty());
+        } finally {
+            jdbc.sql("UPDATE company SET support_phone = NULL, support_hours = NULL").update();
+        }
+    }
 }

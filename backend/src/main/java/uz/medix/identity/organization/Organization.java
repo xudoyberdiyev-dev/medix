@@ -86,6 +86,35 @@ public class Organization {
     }
 
     @Transactional
+    /** Kirish sahifasidagi yordam aloqasi (O20); kompaniya bo'lmasa — bo'sh. */
+    public record SupportContact(@Schema(nullable = true) String phone, @Schema(nullable = true) String hours) {}
+
+    public SupportContact supportContact() {
+        return jdbc.sql("SELECT support_phone, support_hours FROM company")
+                .query((rs, n) -> new SupportContact(rs.getString("support_phone"), rs.getString("support_hours")))
+                .optional()
+                .orElse(new SupportContact(null, null));
+    }
+
+    @Transactional
+    public void saveSupportContact(long companyId, String phone, String hours) {
+        SupportContact old = supportContact();
+        String p = blankToNull(phone);
+        String h = blankToNull(hours);
+        jdbc.sql("UPDATE company SET support_phone = :p, support_hours = :h, updated_at = now(), version = version + 1 WHERE id = :id")
+                .param("p", p)
+                .param("h", h)
+                .param("id", companyId)
+                .update();
+        var before = new HashMap<String, Object>();
+        before.put("supportPhone", old.phone());
+        before.put("supportHours", old.hours());
+        var after = new HashMap<String, Object>();
+        after.put("supportPhone", p);
+        after.put("supportHours", h);
+        audit.record(AuditEntry.of("company.update", "company", companyId).change(before, after));
+    }
+
     public Company saveCompany(String name) {
         return saveCompany(name, company().map(Company::defaultLocale).orElse("uz-Latn"));
     }
