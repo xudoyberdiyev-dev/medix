@@ -40,5 +40,5 @@ Ustani tugatgach, backend'dan `MEDIX_BOOTSTRAP_PASSWORD` ni o'chirib qo'yish mum
 Sinovdan keyin barqaror versiyada qolish uchun Branch'ni `main` ga o'zgartiring.
 
 ## Muammolar
-- Backend «Healthcheck failed»: Deploy Logs'da `Started MedixApplication` bormi; baza o'zgaruvchilari to'g'rimi.
+- Backend «Healthcheck failed»: Deploy Logs'da `Started YuzplusApplication` bormi; baza o'zgaruvchilari to'g'rimi.
 - Login'dan keyin `/api` 502: frontend'dagi `BACKEND_URL` ichki domen va 8080 portni ko'rsatishi, backend'da `SERVER_ADDRESS=::` bo'lishi kerak; o'zgaruvchi o'zgarsa frontend'ni **Redeploy** qiling (u build paytida o'qiladi).

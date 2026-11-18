@@ -1,7 +1,7 @@
 /**
  * GS1 markirovka kodi — O16 (egasi 17.11) haqiqiy format: dona kodi (01) GTIN · (21) seriya (13 belgi) [+ 91/92/93 kripto-dum],
  * (10) partiya va (17) yaroqlilik ixtiyoriy; quti (agregatsiya) kodi — (00) SSCC, 18 raqam. Serverdagi
- * `uz.medix.shared.gs1.Gs1Code` bilan bir xil qoidalar: frontendda tez tekshiruv, serverda yana bir bor.
+ * `uz.yuzplus.shared.gs1.Gs1Code` bilan bir xil qoidalar: frontendda tez tekshiruv, serverda yana bir bor.
  */
 export type Gs1Kind = "UNIT" | "AGGREGATE";
 

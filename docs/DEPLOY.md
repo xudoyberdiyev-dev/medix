@@ -24,7 +24,7 @@ git clone --depth 1 https://github.com/xudoyberdiyev-dev/medix.git src && cp -r 
 cp .env.example .env && chmod 600 .env && nano .env      # domen, MEDIX_DB_PASSWORD, CEO login/parol, MEDIX_VERSION
 docker compose pull
 docker compose up -d
-docker compose logs -f backend                           # «Started MedixApplication» kutiladi
+docker compose logs -f backend                           # «Started YuzplusApplication» kutiladi
 ./backup/backup.sh                                       # stanza yaratiladi va birinchi to'liq nusxa olinadi
 ```
 Brauzerda `https://<MEDIX_DOMAIN>` → CEO login → parolni almashtirish → sozlash ustasi.
