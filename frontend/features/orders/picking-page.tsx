@@ -46,6 +46,7 @@ import { useBranches } from "@/features/employees/api";
 import { describeError } from "@/features/setup/form-error";
 import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
+import { MobileActionBar, usePhone } from "@/components/ui/mobile-action-bar";
 import { cn } from "@/lib/cn";
 import { formatDateTime, formatQuantity } from "@/lib/format";
 import { useOrder } from "./api";
@@ -393,6 +394,7 @@ function ActivePick({ item, now }: { item: QueueItem; now: Date }) {
   const [other, setOther] = useState<Record<number, PickBatch>>({});
   const [choosing, setChoosing] = useState<{ id: number; name: string; qty: number } | null>(null);
   const [byPlace, setByPlace] = useState(readByPlace);
+  const phone = usePhone();
   if (order.error) return <ErrorState error={order.error} onRetry={() => order.refetch()} />;
   if (!order.data) return <Skeleton className="h-40 w-full" />;
   const d = order.data;
@@ -548,10 +550,19 @@ function ActivePick({ item, now }: { item: QueueItem; now: Date }) {
           </Button>
         ))}
         <IssueButton orderId={id} />
-        <Button icon={PackageCheck} disabled={!all} loading={pending} onClick={() => void finish()}>
-          {tr("picking.finish")}
-        </Button>
+        {phone ? null : (
+          <Button icon={PackageCheck} disabled={!all} loading={pending} onClick={() => void finish()}>
+            {tr("picking.finish")}
+          </Button>
+        )}
       </div>
+      {phone ? (
+        <MobileActionBar>
+          <Button size="lg" icon={PackageCheck} disabled={!all} loading={pending} onClick={() => void finish()}>
+            {tr("picking.finish")}
+          </Button>
+        </MobileActionBar>
+      ) : null}
       <OtherBatchModal
         orderId={id}
         line={choosing}

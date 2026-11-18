@@ -51,6 +51,7 @@ import { cn } from "@/lib/cn";
 import { formatDateTime, formatQuantity } from "@/lib/format";
 import { GS, parseGs1 } from "@/lib/gs1";
 import { scanFeedback } from "@/lib/scan-feedback";
+import { MobileActionBar, usePhone } from "@/components/ui/mobile-action-bar";
 import { codesExportUrl, useOrder, verifyExportUrl } from "./api";
 import { IssueButton } from "./issues";
 import { MarkImportButton } from "./mark-import";
@@ -539,6 +540,18 @@ function ActiveMarking({ work }: { work: MarkWork }) {
 
   const finishErr = describeError(finishError);
   const removeErr = describeError(removeError);
+  const phone = usePhone();
+  const finishButton = (
+    <Button
+      size={phone ? "lg" : "md"}
+      icon={CheckCircle2}
+      disabled={!work.complete || (hasCodes && (!exportedAt || !verified))}
+      loading={finishing}
+      onClick={() => void finish()}
+    >
+      {hasCodes ? tr("marking.verifyFinish") : tr("marking.finish")}
+    </Button>
+  );
   return (
     <div className="grid grid-cols-1 gap-6 xl:grid-cols-[2fr_1fr]">
       {flash ? (
@@ -730,15 +743,9 @@ function ActiveMarking({ work }: { work: MarkWork }) {
           <div className="mt-4 flex flex-wrap justify-end gap-2">
             <IssueButton orderId={work.id} />
             {hasMarked && !work.complete ? <MarkImportButton orderId={work.id} /> : null}
-            <Button
-              icon={CheckCircle2}
-              disabled={!work.complete || (hasCodes && (!exportedAt || !verified))}
-              loading={finishing}
-              onClick={() => void finish()}
-            >
-              {hasCodes ? tr("marking.verifyFinish") : tr("marking.finish")}
-            </Button>
+            {phone ? null : finishButton}
           </div>
+          {phone ? <MobileActionBar>{finishButton}</MobileActionBar> : null}
         </Card>
       </section>
       <section>
