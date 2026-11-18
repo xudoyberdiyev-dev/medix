@@ -8742,6 +8742,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/profile/favorites": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Sidebar sevimlilarini saqlash */
+        put: operations["setFavorites"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -11018,6 +11035,9 @@ export interface components {
             inactive: number;
             manufacturers: components["schemas"]["Facet"][];
             supplyEmployees: components["schemas"]["Facet"][];
+        };
+        FavoritesRequest: {
+            items: string[];
         };
         File: {
             fileName: string;
@@ -14179,6 +14199,8 @@ export interface components {
             birthDate?: string;
             branchName?: string;
             email?: string;
+            /** @description Sidebar sevimlilari — menyu kalitlari, tartib bilan (U7) */
+            favorites: string[];
             firstName?: string;
             fullName: string;
             /** Format: int64 */
@@ -29527,6 +29549,28 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["SetupChecklist"];
                 };
+            };
+        };
+    };
+    setFavorites: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FavoritesRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

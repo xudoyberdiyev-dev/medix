@@ -195,3 +195,30 @@ export function useSaveTheme() {
     onSuccess: (_d, theme) => qc.setQueryData<Profile>(KEY, (p) => (p ? { ...p, theme } : p)),
   });
 }
+
+/** U7: sidebar sevimlilari — darhol (optimistik) yangilanadi, serverda profilga saqlanadi. */
+export function useToggleFavorite() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (items: string[]) => {
+      await ensureCsrf();
+      await unwrap(api.PUT("/api/profile/favorites", { body: { items } }));
+    },
+    onMutate: (items) => {
+      const prev = qc.getQueryData<Profile>(KEY);
+      if (prev) qc.setQueryData<Profile>(KEY, { ...prev, favorites: items });
+      return { prev };
+    },
+    onError: (_e, _v, ctx) => {
+      if (ctx?.prev) qc.setQueryData(KEY, ctx.prev);
+    },
+  });
+}
+
+export const MAX_FAVORITES = 12;
+
+/** Yulduzcha: bor boʻlsa olib tashlaydi, yoʻq boʻlsa oxiriga qoʻshadi (koʻpi bilan 12). */
+export function toggleFavorite(list: string[], key: string): string[] {
+  if (list.includes(key)) return list.filter((k) => k !== key);
+  return list.length >= MAX_FAVORITES ? list : [...list, key];
+}

@@ -28,5 +28,8 @@
   },
   "searchPlaceholder": "Mahsulot, mijoz yoki hujjat raqami…",
   "themeToDark": "Qorongʻi rejimga oʻtish",
-  "themeToLight": "Yorugʻ rejimga oʻtish"
+  "themeToLight": "Yorugʻ rejimga oʻtish",
+  "favorites": "Sevimlilar",
+  "favAdd": "«{name}» — sevimlilarga qoʻshish",
+  "favRemove": "«{name}» — sevimlilardan olib tashlash"
 }

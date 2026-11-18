@@ -64,3 +64,13 @@ describe("profil shakli (O0)", () => {
     expect(checkProfile({ ...ok, birth: "21.03.1985" }, "2026-11-13")).toEqual([]);
   });
 });
+
+describe("sidebar sevimlilari (U7)", () => {
+  it("qoʻshish, olib tashlash va 12 ta chegara", async () => {
+    const { toggleFavorite, MAX_FAVORITES } = await import("./api");
+    expect(toggleFavorite([], "orders")).toEqual(["orders"]);
+    expect(toggleFavorite(["orders", "stock"], "orders")).toEqual(["stock"]);
+    const full = Array.from({ length: MAX_FAVORITES }, (_, i) => `k${i}`);
+    expect(toggleFavorite(full, "extra")).toEqual(full);
+  });
+});

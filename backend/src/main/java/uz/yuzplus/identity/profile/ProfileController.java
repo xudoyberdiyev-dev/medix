@@ -8,12 +8,14 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Past;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.simple.JdbcClient;
@@ -60,7 +62,8 @@ class ProfileController {
             @Schema(nullable = true) Instant pinSetAt,
             @Schema(nullable = true) Instant lastLoginAt,
             @Schema(nullable = true, description = "Oxirgi parol almashtirish (audit jurnalidan)") Instant passwordChangedAt,
-            @Schema(description = "Interfeys mavzusi: light, dark yoki system (O24)", allowableValues = {"light", "dark", "system"}) String theme) {}
+            @Schema(description = "Interfeys mavzusi: light, dark yoki system (O24)", allowableValues = {"light", "dark", "system"}) String theme,
+            @Schema(description = "Sidebar sevimlilari — menyu kalitlari, tartib bilan (U7)") List<String> favorites) {}
 
     record UpdateProfileRequest(
             @NotBlank(message = "{validation.required}") @Pattern(regexp = "^[A-Za-z0-9._-]{3,64}$", message = "{validation.login}") String login,
@@ -79,6 +82,10 @@ class ProfileController {
     record ThemeRequest(
             @NotBlank(message = "{validation.required}") @Pattern(regexp = "^(light|dark|system)$", message = "{validation.theme}")
             @Schema(allowableValues = {"light", "dark", "system"}) String theme) {}
+
+    record FavoritesRequest(
+            @NotNull(message = "{validation.required}") @Size(max = 12)
+            List<@NotBlank @Pattern(regexp = "^[A-Za-z0-9_-]{1,40}$", message = "{validation.required}") String> items) {}
 
     private final JdbcClient jdbc;
     private final PinService pins;
@@ -147,10 +154,20 @@ class ProfileController {
         jdbc.sql("UPDATE employee SET theme = :theme WHERE id = :id").param("theme", r.theme()).param("id", me()).update();
     }
 
+    @PutMapping("/favorites")
+    @PreAuthorize("isAuthenticated()")
+    @Transactional
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(summary = "Sidebar sevimlilarini saqlash", description = "Menyu kalitlari tartib bilan (koʻpi bilan 12) — har qurilmada bir xil (U7).")
+    void setFavorites(@Valid @RequestBody FavoritesRequest r) {
+        String[] items = r.items().stream().distinct().toArray(String[]::new);
+        jdbc.sql("UPDATE employee SET nav_favorites = :f WHERE id = :id").param("f", items).param("id", me()).update();
+    }
+
     private Profile load(long id) {
         return jdbc.sql("""
                 SELECT e.id, e.login, e.full_name, e.last_name, e.first_name, e.middle_name, e.phone, e.email, e.birth_date, e.position, r.code, r.name, b.name AS branch_name,
-                       e.pin_hash IS NOT NULL AS pin_set, e.pin_set_at, e.last_login_at, e.theme,
+                       e.pin_hash IS NOT NULL AS pin_set, e.pin_set_at, e.last_login_at, e.theme, e.nav_favorites,
                        (SELECT max(a.occurred_at) FROM audit_log a WHERE a.employee_id = e.id AND a.action = 'auth.passwordChanged') AS pw_at
                 FROM employee e JOIN role r ON r.id = e.role_id LEFT JOIN branch b ON b.id = e.branch_id
                 WHERE e.id = :id""")
@@ -159,7 +176,8 @@ class ProfileController {
                         rs.getString("last_name"), rs.getString("first_name"), rs.getString("middle_name"),
                         rs.getString("phone"), rs.getString("email"), rs.getObject("birth_date", LocalDate.class), rs.getString("position"), rs.getString("code"), rs.getString("name"),
                         rs.getString("branch_name"), rs.getBoolean("pin_set"), instant(rs.getTimestamp("pin_set_at")),
-                        instant(rs.getTimestamp("last_login_at")), instant(rs.getTimestamp("pw_at")), rs.getString("theme")))
+                        instant(rs.getTimestamp("last_login_at")), instant(rs.getTimestamp("pw_at")), rs.getString("theme"),
+                        List.of((String[]) rs.getArray("nav_favorites").getArray())))
                 .optional()
                 .orElseThrow(() -> YuzplusException.notFound("error.notFound"));
     }

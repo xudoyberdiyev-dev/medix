@@ -3,6 +3,7 @@ package uz.yuzplus.identity.security;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -158,5 +159,20 @@ class EndpointPermissionsIT {
                 .andExpect(jsonPath("$.items[1].step").value("BRANCHES"))
                 .andExpect(jsonPath("$.items[1].done").value(true));
         mvc.perform(get("/api/setup-checklist").cookie(loginAs("OPERATOR", b))).andExpect(status().isForbidden());
+    }
+
+    @Test
+    void navFavoritesAreSavedInProfile() throws Exception {
+        Cookie c = loginAs("OPERATOR", branch());
+        mvc.perform(put("/api/profile/favorites").with(csrf()).cookie(c).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"items\":[\"orders\",\"customers\",\"orders\"]}"))
+                .andExpect(status().isNoContent());
+        mvc.perform(get("/api/profile").cookie(c))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.favorites.length()").value(2))
+                .andExpect(jsonPath("$.favorites[0]").value("orders"));
+        mvc.perform(put("/api/profile/favorites").with(csrf()).cookie(c).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"items\":[\"<script>\"]}"))
+                .andExpect(status().isBadRequest());
     }
 }

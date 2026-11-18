@@ -19939,6 +19939,28 @@
         "summary" : "Sozlash roʻyxati",
         "tags" : [ "setup-checklist" ]
       }
+    },
+    "/api/profile/favorites" : {
+      "put" : {
+        "operationId" : "setFavorites",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/FavoritesRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          }
+        },
+        "summary" : "Sidebar sevimlilarini saqlash",
+        "tags" : [ "profile" ]
+      }
     }
   },
   "components" : {
@@ -25793,6 +25815,23 @@
           }
         },
         "required" : [ "active", "categories", "countries", "inactive", "manufacturers", "supplyEmployees" ]
+      },
+      "FavoritesRequest" : {
+        "type" : "object",
+        "properties" : {
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "maxLength" : 2147483647,
+              "minLength" : 1,
+              "pattern" : "^[A-Za-z0-9_-]{1,40}$"
+            },
+            "maxItems" : 12,
+            "minItems" : 0
+          }
+        },
+        "required" : [ "items" ]
       },
       "File" : {
         "type" : "object",
@@ -33543,6 +33582,13 @@
           "email" : {
             "type" : "string"
           },
+          "favorites" : {
+            "type" : "array",
+            "description" : "Sidebar sevimlilari — menyu kalitlari, tartib bilan (U7)",
+            "items" : {
+              "type" : "string"
+            }
+          },
           "firstName" : {
             "type" : "string"
           },
@@ -33596,7 +33642,7 @@
             "enum" : [ "light", "dark", "system" ]
           }
         },
-        "required" : [ "fullName", "id", "login", "pinSet", "roleCode", "roleName", "theme" ]
+        "required" : [ "favorites", "fullName", "id", "login", "pinSet", "roleCode", "roleName", "theme" ]
       },
       "PurchaserHomeView" : {
         "type" : "object",
