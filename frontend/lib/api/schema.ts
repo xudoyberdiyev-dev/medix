@@ -14264,6 +14264,12 @@ export interface components {
             /** Format: date */
             dueDate?: string;
             dueManual: boolean;
+            /**
+             * Format: int64
+             * @description O15: kutilayotgan kirimdan tuzilgan — qatorlar tahrirlanmaydi, faqat qabul qilinadi
+             */
+            expectedReceiptId?: number;
+            expectedReceiptNumber?: string;
             /** @description Hisob-faktura raqami */
             facturaNumber?: string;
             fromBonus: boolean;

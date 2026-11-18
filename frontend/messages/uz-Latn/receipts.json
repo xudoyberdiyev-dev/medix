@@ -202,7 +202,9 @@
       "posted": "Oʻtkazdi"
     },
     "copy": "Nusxa olish",
-    "copied": "{no} hujjatidan nusxa olindi — yuk xati raqami va sanasini kiriting"
+    "copied": "{no} hujjatidan nusxa olindi — yuk xati raqami va sanasini kiriting",
+    "kkLinked": "{n} kutilayotgan kirimidan tuzilgan — qatorlar oʻzgartirilmaydi. Tovarni sanab, «Qabul qilish» bosing.",
+    "kkOpen": "Kutilayotgan kirimni ochish"
   },
   "notes": {
     "cancelled": "Bekor qilindi: {reason}",

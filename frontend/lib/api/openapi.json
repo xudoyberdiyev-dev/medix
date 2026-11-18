@@ -33821,6 +33821,14 @@
           "dueManual" : {
             "type" : "boolean"
           },
+          "expectedReceiptId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "O15: kutilayotgan kirimdan tuzilgan — qatorlar tahrirlanmaydi, faqat qabul qilinadi"
+          },
+          "expectedReceiptNumber" : {
+            "type" : "string"
+          },
           "facturaNumber" : {
             "type" : "string",
             "description" : "Hisob-faktura raqami"

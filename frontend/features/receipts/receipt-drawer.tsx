@@ -219,7 +219,9 @@ function Editor({
   const canPost = can(me.data, RECEIPT_POST);
   // Narxni koʻrish — server bilan bir xil qoida: tannarx huquqi yoki qabul qilmaydigan xodim.
   const pricesVisible = doc ? doc.pricesVisible : can(me.data, "special.cost") || !canAccept;
-  const editable = canCreate && (!doc || doc.status === "DRAFT") && (pricesVisible || !doc?.hasPrices);
+  // O15: kutilayotgan kirimdan tuzilgan kirim — qatorlari KK ga bogʻlangan, server tahrirlashga ruxsat bermaydi (faqat qabul)
+  const kkLinked = doc?.expectedReceiptId != null;
+  const editable = canCreate && (!doc || doc.status === "DRAFT") && (pricesVisible || !doc?.hasPrices) && !kkLinked;
 
   const init = doc ?? source ?? null;
   const [warehouseId, setWarehouseId] = useState<string | null>(init ? String(init.warehouseId) : null);
@@ -677,6 +679,17 @@ function Editor({
         </div>
       ) : null}
 
+      {doc?.expectedReceiptId != null && doc.status === "DRAFT" ? (
+        <Alert
+          tone="info"
+          title={t("kkLinked", { n: doc.expectedReceiptNumber ?? "" })}
+          action={
+            <Link href={`/expected-receipts/${doc.expectedReceiptId}`} className="font-medium text-primary hover:underline">
+              {t("kkOpen")}
+            </Link>
+          }
+        />
+      ) : null}
       {local ? <Alert tone="danger" title={local} /> : null}
       {err.message ? <Alert tone="danger" title={err.message} /> : null}
 
