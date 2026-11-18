@@ -21,8 +21,17 @@ export interface TableColumn<T> {
   wrap?: boolean;
   /** Gorizontal aylantirishda chapda qoladi (faqat boshidagi ustunlar; `width` majburiy). */
   pinned?: boolean;
+  /**
+   * U1: ikkinchi darajali ustun — tor ekranda (shu kenglikdan kichikda) avtomatik yashiriladi; «Ustunlar» menyusida qoladi.
+   * Birinchi va pul ustunlariga qoʻyilmaydi.
+   */
+  hideBelow?: "xl" | "2xl";
   render?: (row: T) => ReactNode;
 }
+
+/** Tailwind sinflari toʻliq yoziladi (skaner topishi uchun). */
+const HIDE_BELOW: Record<NonNullable<TableColumn<unknown>["hideBelow"]>, string> = { xl: "max-xl:hidden", "2xl": "max-2xl:hidden" };
+const hideCls = (col: { hideBelow?: "xl" | "2xl" }) => (col.hideBelow ? HIDE_BELOW[col.hideBelow] : undefined);
 
 export type SortState = { key: string; dir: "asc" | "desc" };
 
@@ -235,6 +244,7 @@ export function Table<T>({
                       className={cn(
                         "sticky top-0 z-10 h-10 border-b border-border bg-table-header px-3 text-caption font-medium whitespace-nowrap text-text-secondary",
                         col.align === "right" ? "text-right" : "text-left",
+                        hideCls(col),
                         col.key in pinLeft && cn("z-20", pinCls(col.key)),
                         col.key === lastPinned && cn("border-r", leftShadow),
                       )}
@@ -275,7 +285,7 @@ export function Table<T>({
                 ? Array.from({ length: SKELETON_ROWS }, (_, i) => (
                     <tr key={`skeleton-${i}`}>
                       {Array.from({ length: colCount }, (_, j) => (
-                        <td key={j} className={cn("border-b border-border px-3", tdPad)}>
+                        <td key={j} className={cn("border-b border-border px-3", tdPad, hideCls(columns[j - (selectable ? 1 : 0)] ?? {}))}>
                           <Skeleton className={j % 3 === 0 ? "w-3/4" : "w-1/2"} />
                         </td>
                       ))}
@@ -322,6 +332,7 @@ export function Table<T>({
                               style={col.key in pinLeft ? pinStyle(col.key, col.width) : undefined}
                               className={cn(
                                 "border-b border-border px-3",
+                                hideCls(col),
                                 col.key in pinLeft && cn(stickyCls, "z-[1]", pinCls(col.key)),
                                 col.key === lastPinned && cn("border-r", leftShadow),
                                 col.wrap ? "min-w-40 break-words whitespace-normal" : "whitespace-nowrap",
@@ -373,6 +384,7 @@ export function Table<T>({
                       className={cn(
                         "sticky bottom-0 h-row-md bg-table-header px-3 font-semibold whitespace-nowrap",
                         col.align === "right" && "tabular text-right",
+                        hideCls(col),
                       )}
                     >
                       {totals[col.key] ?? (i === 0 ? "Jami" : null)}

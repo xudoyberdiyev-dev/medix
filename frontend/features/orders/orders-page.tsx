@@ -368,6 +368,7 @@ export function OrdersPage() {
     },
     {
       key: "paymentType",
+      hideBelow: "2xl",
       title: t("list.col.paymentType"),
       render: (o) => <span className="text-text-secondary">{t(`paymentType.${o.paymentType}`)}</span>,
     },
@@ -404,11 +405,13 @@ export function OrdersPage() {
     },
     {
       key: "holder",
+      hideBelow: "2xl",
       title: t("list.col.holder"),
       render: (o) => <span className={o.holder ? "" : "text-text-secondary"}>{o.holder ? shortName(o.holder) : "—"}</span>,
     },
     {
       key: "createdBy",
+      hideBelow: "2xl",
       title: t("list.col.operator"),
       render: (o) => <span className="text-text-secondary">{shortName(o.createdBy)}</span>,
     },

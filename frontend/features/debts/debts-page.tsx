@@ -158,9 +158,9 @@ export function DebtsPage({ side }: { side: Side }) {
     },
     { key: "debt", title: t("col.debt"), align: "right", render: (r) => money(r.buckets.debt) },
     { key: "notDue", title: t("col.notDue"), align: "right", render: (r) => money(r.buckets.notDue) },
-    { key: "d1to30", title: "1–30", align: "right", render: (r) => money(r.buckets.d1to30) },
-    { key: "d31to60", title: "31–60", align: "right", render: (r) => money(r.buckets.d31to60) },
-    { key: "d61to90", title: "61–90", align: "right", render: (r) => money(r.buckets.d61to90) },
+    { key: "d1to30", hideBelow: "2xl", title: "1–30", align: "right", render: (r) => money(r.buckets.d1to30) },
+    { key: "d31to60", hideBelow: "2xl", title: "31–60", align: "right", render: (r) => money(r.buckets.d31to60) },
+    { key: "d61to90", hideBelow: "2xl", title: "61–90", align: "right", render: (r) => money(r.buckets.d61to90) },
     {
       key: "d90plus",
       title: "90+",
@@ -188,7 +188,7 @@ export function DebtsPage({ side }: { side: Side }) {
           },
         ]
       : []),
-    { key: "lastPayment", title: t("col.lastPayment"), render: (r) => formatIsoDate(r.lastPayment) },
+    { key: "lastPayment", hideBelow: "2xl", title: t("col.lastPayment"), render: (r) => formatIsoDate(r.lastPayment) },
   ];
   const customerColumns: TableColumn<DebtRow>[] = [
     {
@@ -221,9 +221,9 @@ export function DebtsPage({ side }: { side: Side }) {
           <span className="text-text-secondary">—</span>
         ),
     },
-    { key: "d1to30", title: tr("age.d1to30"), align: "right", render: (r) => dangerMoney(r.buckets.d1to30) },
-    { key: "d31to60", title: tr("age.d31to60"), align: "right", render: (r) => dangerMoney(r.buckets.d31to60) },
-    { key: "d61to90", title: tr("age.d61to90"), align: "right", render: (r) => dangerMoney(r.buckets.d61to90) },
+    { key: "d1to30", hideBelow: "2xl", title: tr("age.d1to30"), align: "right", render: (r) => dangerMoney(r.buckets.d1to30) },
+    { key: "d31to60", hideBelow: "2xl", title: tr("age.d31to60"), align: "right", render: (r) => dangerMoney(r.buckets.d31to60) },
+    { key: "d61to90", hideBelow: "2xl", title: tr("age.d61to90"), align: "right", render: (r) => dangerMoney(r.buckets.d61to90) },
     { key: "d90plus", title: tr("age.d90plus"), align: "right", render: (r) => dangerMoney(r.buckets.d90plus) },
     {
       key: "creditLimit",
