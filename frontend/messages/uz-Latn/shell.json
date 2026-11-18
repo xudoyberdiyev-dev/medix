@@ -31,5 +31,7 @@
   "themeToLight": "Yorugʻ rejimga oʻtish",
   "favorites": "Sevimlilar",
   "favAdd": "«{name}» — sevimlilarga qoʻshish",
-  "favRemove": "«{name}» — sevimlilardan olib tashlash"
+  "favRemove": "«{name}» — sevimlilardan olib tashlash",
+  "offlineTitle": "Internet yoʻq.",
+  "offlineText": "Kiritganlaringiz saqlanib turadi va ulanish tiklangach yuboriladi."
 }

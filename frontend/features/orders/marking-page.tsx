@@ -51,6 +51,7 @@ import { cn } from "@/lib/cn";
 import { formatDateTime, formatQuantity } from "@/lib/format";
 import { GS, parseGs1 } from "@/lib/gs1";
 import { scanFeedback } from "@/lib/scan-feedback";
+import { isNetworkError, useOnline } from "@/lib/use-online";
 import { MobileActionBar, usePhone } from "@/components/ui/mobile-action-bar";
 import { codesExportUrl, useOrder, verifyExportUrl } from "./api";
 import { IssueButton } from "./issues";
@@ -411,6 +412,22 @@ function ActiveMarking({ work }: { work: MarkWork }) {
   // Skaner kodlarni ketma-ket tez yuboradi: oldingi soʻrov tugamaguncha kelgan kod tashlab yuborilmaydi — navbatga qoʻyiladi.
   const queue = useRef<Promise<void>>(Promise.resolve());
   const [queued, setQueued] = useState(0);
+  // U13: internet uzilganda yuborilmagan kodlar — ulanish tiklangach ketma-ket qayta yuboriladi (ish yoʻqolmaydi).
+  const offline = useRef<{ raw: string; lineId?: number }[]>([]);
+  const [offlineCount, setOfflineCount] = useState(0);
+  const online = useOnline();
+  useEffect(() => {
+    if (!online || offline.current.length === 0) return;
+    const pending = offline.current;
+    offline.current = [];
+    setOfflineCount(0);
+    for (const p of pending) {
+      setQueued((n) => n + 1);
+      queue.current = queue.current.then(() => scanOne(p.raw, p.lineId)).finally(() => setQueued((n) => n - 1));
+    }
+    // scanOne — har renderda yangi; navbat faqat ulanish tiklanganda ishga tushadi
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [online]);
 
   function scan(raw: string) {
     if (!raw.trim()) return;
@@ -440,6 +457,12 @@ function ActiveMarking({ work }: { work: MarkWork }) {
       qc.setQueryData(["marking", "mine"], r.work);
       show({ ok: true, title: tr("marking.accepted"), detail: `${r.accepted.productName} · ${counterText(r.work, tr)}` });
     } catch (e) {
+      if (!(e instanceof ApiError) && isNetworkError(e)) {
+        offline.current.push({ raw, lineId });
+        setOfflineCount(offline.current.length);
+        show({ ok: false, title: tr("marking.offlineQueued"), detail: tr("marking.offlineQueuedHint", { n: offline.current.length }) });
+        return;
+      }
       if (e instanceof ApiError && e.code === "marking.aggregateNeedProduct") setBoxPending(raw);
       show({ ok: false, title: tr("marking.rejected"), detail: e instanceof ApiError ? e.message : (describeError(e).message ?? "") });
     }
@@ -596,6 +619,11 @@ function ActiveMarking({ work }: { work: MarkWork }) {
               <span className="mb-1 flex items-center gap-2 text-caption text-text-secondary">
                 <ScanLine size={16} strokeWidth={1.5} aria-hidden /> {tr("marking.scanField")}
                 {queued > 1 ? <span aria-live="polite">{tr("marking.checking", { count: queued })}</span> : null}
+                {offlineCount > 0 ? (
+                  <span aria-live="polite" className="text-warning">
+                    {tr("marking.offlineQueuedHint", { n: offlineCount })}
+                  </span>
+                ) : null}
               </span>
               <input
                 ref={input}

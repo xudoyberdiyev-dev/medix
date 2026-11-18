@@ -471,7 +471,9 @@
     "scanHint": "Butun qutilar uchun faqat quti (SSCC) kodini, ochiq donalar uchun har bir dona kodini skanerlang.",
     "tabMineShort": "Mening",
     "tabTodayShort": "Bugun",
-    "tabCodesShort": "Kodlar"
+    "tabCodesShort": "Kodlar",
+    "offlineQueued": "Internet yoʻq — kod navbatda",
+    "offlineQueuedHint": "Navbatda {n} ta kod. Ulanish tiklangach avtomatik yuboriladi."
   },
   "monitor": {
     "forbidden": "Monitor Ombor mudiri, Filial rahbari va Direktor uchun.",
