@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import {
+  ChevronRight,
   AlarmClockOff,
   ArrowLeftRight,
   CalendarX,
@@ -34,6 +35,7 @@ import type { components } from "@/lib/api/schema";
 import { formatIsoDate } from "@/features/counterparties/api";
 import { formatDateTime, formatQuantity } from "@/lib/format";
 import { useBranchStore } from "@/lib/stores/branch";
+import { useMediaQuery } from "@/lib/use-media-query";
 import { ReceiptDrawer } from "@/features/receipts/receipt-drawer";
 import { RECEIPT_ACCEPT, useReceipts, type ReceiptSummary } from "@/features/receipts/api";
 import { TRANSFER_RECEIVE, useWarehouseTransfers, type WarehouseTransferSummary } from "@/features/warehouse-transfers/api";
@@ -146,6 +148,7 @@ export function MonitorPage() {
   const branchId = me.data?.allBranches ? (selectedBranch ?? null) : null;
   const [open, setOpen] = useState<number | null>(null);
   const [lateOnly, setLateOnly] = useState(false);
+  const phone = useMediaQuery("(max-width: 767px)");
   const branches = useBranches();
   const branchName = branches.data?.find((b) => b.id === (branchId ?? me.data?.branchId))?.name;
   const openIssues = useQuery({
@@ -234,7 +237,7 @@ export function MonitorPage() {
           </div>
           {tab !== "monitor" ? null : (
             <>
-              <section aria-label={t("monitor.stateAria")} className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <section aria-label={t("monitor.stateAria")} className="mb-4 grid grid-cols-3 gap-2 sm:gap-3">
                 <Stat label={t("monitor.active")} value={board.data.cards.length} />
                 <Stat label={t("monitor.lateCount")} value={board.data.late} tone={board.data.late ? "danger" : undefined} />
                 <Stat
@@ -261,8 +264,8 @@ export function MonitorPage() {
               <EmptyState icon={LayoutDashboard} title={t("monitor.emptyTitle")} description={t("monitor.emptyHint")} />
             </Card>
           ) : (
-            <div className="grid grid-flow-col auto-cols-[minmax(14rem,1fr)] gap-3 overflow-x-auto pb-2">
-              {boardColumns(board.data.cards, lateOnly).map((col) => {
+            <div className={phone ? "flex flex-col gap-2" : "grid grid-flow-col auto-cols-[minmax(14rem,1fr)] gap-3 overflow-x-auto pb-2"}>
+              {boardColumns(board.data.cards, lateOnly).map((col, i, all) => {
                 const late = col.cards.filter((c) => c.late || c.stale).length;
                 const title =
                   col.key === "WAIT"
@@ -270,6 +273,49 @@ export function MonitorPage() {
                     : col.key === "GIVEN"
                       ? t("monitor.colGiven")
                       : t(`status.${col.key as OrderStatus}`);
+                if (phone) {
+                  // U3: telefonda — holatlar boʻyicha yigʻiladigan roʻyxat; kechikkanli yoki birinchi toʻla boʻlim ochiq.
+                  const firstFull = all.findIndex((x) => x.cards.length > 0) === i;
+                  return (
+                    <details
+                      key={col.key}
+                      open={late > 0 || firstFull || undefined}
+                      aria-label={title}
+                      className="group rounded-card border border-border bg-surface"
+                    >
+                      <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-2 px-4 py-2 font-semibold [&::-webkit-details-marker]:hidden">
+                        <span className="flex items-center gap-2">
+                          <ChevronRight
+                            size={16}
+                            strokeWidth={1.5}
+                            aria-hidden
+                            className="text-text-secondary transition-transform group-open:rotate-90"
+                          />
+                          {title}
+                        </span>
+                        <span className="flex shrink-0 items-center gap-1">
+                          <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-background px-1.5 text-caption tabular-nums">
+                            {col.cards.length}
+                          </span>
+                          {late > 0 ? (
+                            <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-danger px-1.5 text-caption text-on-solid tabular-nums">
+                              {late}
+                            </span>
+                          ) : null}
+                        </span>
+                      </summary>
+                      {col.cards.length > 0 ? (
+                        <ul className="flex flex-col gap-2 px-2.5 pb-2.5">
+                          {col.cards.map((c) => (
+                            <li key={c.id}>
+                              <MonitorCardView card={c} now={now} onOpen={() => setOpen(c.id)} />
+                            </li>
+                          ))}
+                        </ul>
+                      ) : null}
+                    </details>
+                  );
+                }
                 return (
                   <section key={col.key} aria-label={title} className="rounded-card bg-border/40 p-2.5">
                     <h2 className="mb-2.5 flex items-start justify-between gap-2 px-1 text-table font-semibold">
@@ -359,10 +405,10 @@ export function MonitorPage() {
 
 function Stat({ label, value, tone }: { label: string; value: number; tone?: "warning" | "danger" }) {
   return (
-    <div className="rounded-card border border-border bg-surface px-4 py-3">
+    <div className="rounded-card border border-border bg-surface px-3 py-2 sm:px-4 sm:py-3">
       <div className="text-caption text-text-secondary">{label}</div>
       <div
-        className={`mt-1 text-[24px] leading-8 font-semibold tabular-nums ${tone === "danger" ? "text-danger" : tone === "warning" ? "text-warning" : ""}`}
+        className={`mt-1 text-[20px] leading-7 sm:text-[24px] sm:leading-8 font-semibold tabular-nums ${tone === "danger" ? "text-danger" : tone === "warning" ? "text-warning" : ""}`}
       >
         {formatQuantity(value)}
       </div>
