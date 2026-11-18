@@ -85,6 +85,7 @@ class WarehouseController {
     }
 
     @GetMapping
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Ko'rish mumkin bo'lgan omborlar va ularning zonalari")
     List<Warehouses.Warehouse> list() {
         Actor a = actor();
@@ -95,6 +96,7 @@ class WarehouseController {
     }
 
     @GetMapping("/overview")
+    @PreAuthorize("hasAnyAuthority('warehouses.view', 'stock.view')")
     @Operation(summary = "Omborlar va zonalar sahifasi: filial → ombor, omborchi, zonalar qoldig'i bilan")
     List<WarehouseOverview.WarehouseOverviewItem> overview() {
         Actor a = actor();

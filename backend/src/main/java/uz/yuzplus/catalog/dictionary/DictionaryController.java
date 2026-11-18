@@ -8,6 +8,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import java.util.List;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -58,12 +59,14 @@ class DictionaryController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyAuthority('lookups.view', 'products.view', 'clients.view', 'suppliers.view', 'prices.view', 'stock.view')")
     @Operation(summary = "Ma'lumotnoma yozuvlari (faollari birinchi)")
     List<Dictionaries.Entry> list(@PathVariable DictionaryKind kind) {
         return dictionaries.list(kind);
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyAuthority('lookups.makers', 'lookups.cats', 'lookups.units', 'lookups.regions')")
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Yozuv qo'shish")
     Dictionaries.Entry create(@PathVariable DictionaryKind kind, @Valid @RequestBody EntryRequest r, Authentication auth) {
@@ -72,6 +75,7 @@ class DictionaryController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('lookups.makers', 'lookups.cats', 'lookups.units', 'lookups.regions')")
     @Operation(summary = "Yozuvni tahrirlash")
     Dictionaries.Entry update(@PathVariable DictionaryKind kind, @PathVariable long id, @Valid @RequestBody EntryRequest r,
             Authentication auth) {
@@ -80,6 +84,7 @@ class DictionaryController {
     }
 
     @PostMapping("/{id}/deactivate")
+    @PreAuthorize("hasAnyAuthority('lookups.makers', 'lookups.cats', 'lookups.units', 'lookups.regions')")
     @Operation(summary = "Nofaol qilish", description = "Yozuv o'chirilmaydi; yangi hujjatlarda tanlanmaydi.")
     Dictionaries.Entry deactivate(@PathVariable DictionaryKind kind, @PathVariable long id, Authentication auth) {
         requireEdit(auth, kind);
@@ -87,6 +92,7 @@ class DictionaryController {
     }
 
     @PostMapping("/{id}/activate")
+    @PreAuthorize("hasAnyAuthority('lookups.makers', 'lookups.cats', 'lookups.units', 'lookups.regions')")
     @Operation(summary = "Faollashtirish")
     Dictionaries.Entry activate(@PathVariable DictionaryKind kind, @PathVariable long id, Authentication auth) {
         requireEdit(auth, kind);

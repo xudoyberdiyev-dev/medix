@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.springframework.jdbc.core.simple.JdbcClient;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -84,6 +85,7 @@ class ProductStockCardController {
     }
 
     @GetMapping("/{productId}")
+    @PreAuthorize("hasAnyAuthority('products.view', 'stock.view')")
     @Transactional(readOnly = true)
     @Operation(summary = "Mahsulot kartochkasi — qoldiq va harakatlar", description = "Filial doirasida; branchId — bitta filial.")
     ProductStockCard card(@PathVariable long productId, @Parameter(description = "Bitta filial") @RequestParam(required = false) Long branchId,

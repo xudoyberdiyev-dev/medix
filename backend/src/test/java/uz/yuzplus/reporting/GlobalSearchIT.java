@@ -114,6 +114,13 @@ class GlobalSearchIT {
         mvc.perform(get("/api/search").param("q", tin).cookie(operator))
                 .andExpect(jsonPath("$.hits[?(@.kind == 'CUSTOMER')].title", hasItem(customer)))
                 .andExpect(jsonPath("$.hits[?(@.kind == 'CUSTOMER')].link", hasItem("/customers?q=" + tin)));
+        // P1: mahsulot va mijozlar — faqat products.view / clients.view bilan (Yig'uvchida yo'q).
+        Cookie picker = login("PICKER", b, "Yigʻuvchi " + tag);
+        mvc.perform(get("/api/search").param("q", code).cookie(picker))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.hits[*].kind", not(hasItem("PRODUCT"))));
+        mvc.perform(get("/api/search").param("q", tin).cookie(picker))
+                .andExpect(jsonPath("$.hits[*].kind", not(hasItem("CUSTOMER"))));
 
         // Xodimlar — faqat staff.view bilan.
         mvc.perform(get("/api/search").param("q", tag).cookie(director))

@@ -53,6 +53,7 @@ class ExpenseItemController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyAuthority('lookups.view', 'lookups.items', 'cash.io', 'cash.view')")
     @Transactional(readOnly = true)
     @Operation(summary = "Moddalar")
     List<ExpenseItem> list() {

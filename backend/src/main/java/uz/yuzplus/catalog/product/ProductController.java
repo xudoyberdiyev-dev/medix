@@ -55,6 +55,7 @@ class ProductController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyAuthority('products.view', 'prices.view')")
     @Operation(summary = "Mahsulotlar ro'yxati", description = "Qidiruv lotin/kirill farqsiz: nom, kod, shtrix-kod, IKPU, Farm ID, "
             + "ishlab chiqaruvchi. Yorliqlar soni va filtr variantlari (soni bilan) bilan.")
     ProductPage list(
@@ -83,6 +84,7 @@ class ProductController {
     }
 
     @GetMapping("/export")
+    @PreAuthorize("hasAuthority('products.view')")
     @Operation(summary = "Excel'ga eksport (.xlsx)", description = "Jadvaldagi filtrlar bilan (yoki tanlanganlar — ids); ko'pi bilan 50 000 qator.")
     void export(
             @RequestParam(required = false) String q,
@@ -116,6 +118,7 @@ class ProductController {
     }
 
     @GetMapping("/import-template")
+    @PreAuthorize("hasAuthority('products.create')")
     @Operation(summary = "Import shabloni (.xlsx)")
     void importTemplate(HttpServletResponse response) throws IOException {
         xlsx(response, "mahsulotlar-shablon.xlsx");
@@ -200,12 +203,14 @@ class ProductController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('products.view', 'prices.view', 'stock.view')")
     @Operation(summary = "Mahsulot kartasi")
     ProductDetail get(@PathVariable long id) {
         return products.find(id).orElseThrow(() -> YuzplusException.notFound("error.notFound"));
     }
 
     @GetMapping("/{id}/history")
+    @PreAuthorize("hasAuthority('products.view')")
     @Operation(summary = "Mahsulot tarixi (kartochka «Tarix»)", description = "Yaratish, tahrir, kod va holat o'zgarishlari — yangilari birinchi.")
     List<ProductModels.HistoryRow> history(@PathVariable long id) {
         products.find(id).orElseThrow(() -> YuzplusException.notFound("error.notFound"));

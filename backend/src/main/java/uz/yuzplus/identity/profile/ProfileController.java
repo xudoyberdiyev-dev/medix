@@ -17,6 +17,7 @@ import java.time.LocalDate;
 import java.util.Optional;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.simple.JdbcClient;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.context.SecurityContextRepository;
@@ -99,6 +100,7 @@ class ProfileController {
     }
 
     @GetMapping
+    @PreAuthorize("isAuthenticated()")
     @Transactional(readOnly = true)
     @Operation(summary = "O'z profilim")
     Profile get() {
@@ -106,6 +108,7 @@ class ProfileController {
     }
 
     @PutMapping
+    @PreAuthorize("isAuthenticated()")
     @Transactional
     @Operation(summary = "O'z ma'lumotlarimni yangilash",
             description = "F.I.Sh., login (unikal), telefon, email, lavozim, tug'ilgan sana. Rol va filial o'zgarmaydi. "
@@ -128,6 +131,7 @@ class ProfileController {
     }
 
     @PutMapping("/pin")
+    @PreAuthorize("isAuthenticated()")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(summary = "PIN o'rnatish yoki almashtirish", description = "Joriy parol bilan tasdiqlanadi. PIN — 4–6 raqam.")
     void setPin(@Valid @RequestBody SetPinRequest r) {
@@ -135,6 +139,7 @@ class ProfileController {
     }
 
     @PutMapping("/theme")
+    @PreAuthorize("isAuthenticated()")
     @Transactional
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(summary = "Interfeys mavzusini saqlash", description = "Yorug'/qorong'i/tizim bo'yicha — har qurilmada bir xil bo'lishi uchun (O24).")

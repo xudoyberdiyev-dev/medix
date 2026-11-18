@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import org.springframework.jdbc.core.simple.JdbcClient;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -36,6 +37,7 @@ class BranchStatsController {
     }
 
     @GetMapping("/stats")
+    @PreAuthorize("hasAuthority('branches.view')")
     @Transactional(readOnly = true)
     @Operation(summary = "Filiallar ko'rsatkichlari")
     List<BranchStats> stats(Authentication auth) {

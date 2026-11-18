@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,6 +27,7 @@ class GlobalSearchController {
     }
 
     @GetMapping("/api/search")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Hujjat (raqam), mahsulot, kontragent, xodim qidiruvi — har guruhdan 5 tagacha; 2 belgidan qisqa so'rov — bo'sh")
     GlobalSearch.Result search(@RequestParam(defaultValue = "") String q, Authentication auth) {
         Set<String> permissions = auth.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.toSet());

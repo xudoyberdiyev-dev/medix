@@ -114,6 +114,7 @@ class CounterpartyController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyAuthority('clients.view', 'suppliers.view')")
     @Operation(summary = "Kontragentlar", description = "Qidiruv: nom, STIR, telefon, kontakt (lotin/kirill farqsiz).")
     CounterpartyPage list(
             @RequestParam(required = false) String q,
@@ -124,8 +125,25 @@ class CounterpartyController {
             @RequestParam(required = false) SortField sort,
             @RequestParam(defaultValue = "false") boolean desc,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "50") int size) {
-        return counterparties.search(q, role, status, regionId, sort(sort, sortByTin), desc, Math.max(page, 0), Math.clamp(size, 1, 200));
+            @RequestParam(defaultValue = "50") int size,
+            Authentication auth) {
+        return counterparties.search(q, scope(auth, role), status, regionId, sort(sort, sortByTin), desc, Math.max(page, 0),
+                Math.clamp(size, 1, 200));
+    }
+
+    /** P1: mijozlar — clients.view, YB — suppliers.view; ALL faqat ruxsat etilgan tomonga toraytiriladi. */
+    static Role scope(Authentication auth, Role role) {
+        boolean customers = has(auth, "clients.view");
+        boolean suppliers = has(auth, "suppliers.view");
+        Role scope = switch (role) {
+            case CUSTOMER -> customers ? Role.CUSTOMER : null;
+            case SUPPLIER -> suppliers ? Role.SUPPLIER : null;
+            case ALL -> customers && suppliers ? Role.ALL : customers ? Role.CUSTOMER : suppliers ? Role.SUPPLIER : null;
+        };
+        if (scope == null) {
+            throw YuzplusException.forbidden("auth.forbidden");
+        }
+        return scope;
     }
 
     private static SortField sort(SortField sort, boolean sortByTin) {
@@ -133,6 +151,7 @@ class CounterpartyController {
     }
 
     @GetMapping("/overview")
+    @PreAuthorize("hasAnyAuthority('clients.view', 'suppliers.view')")
     @Operation(summary = "Mijozlar / Yetkazib beruvchilar ro'yxati (prototip Counterparties)",
             description = "To'liq ro'yxat: filial shartlari, litsenziya, qarz, oxirgi sotuv/kirim. branchId — faqat barcha filiallarni ko'radiganlar uchun.")
     CounterpartyOverview.CounterpartyOverviewPage overview(
@@ -147,6 +166,7 @@ class CounterpartyController {
     }
 
     @GetMapping("/{id}/summary")
+    @PreAuthorize("hasAnyAuthority('clients.view', 'suppliers.view')")
     @Operation(summary = "Kartochka o'ng paneli: filiallar bo'yicha qarz, limit, oxirgi sotuv/kirim va to'lov")
     CounterpartyOverview.CounterpartySummary summary(@PathVariable long id, @RequestParam(defaultValue = "CUSTOMER") Role role,
             Authentication auth) {
@@ -159,6 +179,7 @@ class CounterpartyController {
     }
 
     @GetMapping("/{id}/documents")
+    @PreAuthorize("hasAnyAuthority('clients.view', 'suppliers.view')")
     @Operation(summary = "Kartochka hujjat yorliqlari: Buyurtmalar, Sotuvlar, To'lovlar, Qaytarishlar, Kirimlar (oxirgi 100 ta)",
             description = "Ruxsat: kartochka (clients.view / suppliers.view) + yorliq ruxsati — orders.view, shipments.view, payments.view, "
                     + "qm.view / qy.view, receipt.view, Bonus — sdebt.view yoki supplierBonus.confirm. Filial — xodim ko'radiganlari.")
@@ -183,6 +204,7 @@ class CounterpartyController {
     }
 
     @GetMapping("/{id}/products")
+    @PreAuthorize("hasAnyAuthority('clients.view', 'suppliers.view')")
     @Operation(summary = "YB kartochkasi «Mahsulotlar»: o'tkazilgan kirimlardagi mahsulotlar (oxirgi narx, sana, soni, kirimlar)",
             description = "Ruxsat: suppliers.view + receipt.view. days — oxirgi N kun (30, 90), bo'sh — hammasi. Narx — special.cost "
                     + "yoki kirimni qabul qilmaydigan xodim (kirim qoidasi bilan bir xil). Filial — xodim ko'radiganlari.")
@@ -199,6 +221,7 @@ class CounterpartyController {
     }
 
     @GetMapping("/{id}/history")
+    @PreAuthorize("hasAnyAuthority('clients.view', 'suppliers.view')")
     @Operation(summary = "Kartochka «Tarix»: yaratish, tahrir, shartlar, holat, litsenziya va shartnoma o'zgarishlari (yangisi birinchi)")
     List<CounterpartyDocuments.CounterpartyHistoryEvent> history(@PathVariable long id, @RequestParam(defaultValue = "CUSTOMER") Role role,
             Authentication auth) {
@@ -231,6 +254,7 @@ class CounterpartyController {
     }
 
     @GetMapping("/export")
+    @PreAuthorize("hasAnyAuthority('clients.view', 'suppliers.view')")
     @Operation(summary = "Excel'ga eksport (.xlsx)",
             description = "Jadvaldagi filtrlar va saralash bilan; ko'pi bilan 50 000 qator. Mijozlar — clients.view, YB — suppliers.view; "
                     + "telefon va kontakt — clients.contact / suppliers.contact bilan.")
@@ -244,16 +268,7 @@ class CounterpartyController {
             @Parameter(description = "Faqat shu kontragentlar (jadvalda tanlanganlar)") @RequestParam(required = false) List<Long> ids,
             Authentication auth,
             HttpServletResponse response) throws IOException {
-        boolean customers = has(auth, "clients.view");
-        boolean suppliers = has(auth, "suppliers.view");
-        Role scope = switch (role) {
-            case CUSTOMER -> customers ? Role.CUSTOMER : null;
-            case SUPPLIER -> suppliers ? Role.SUPPLIER : null;
-            case ALL -> customers && suppliers ? Role.ALL : customers ? Role.CUSTOMER : suppliers ? Role.SUPPLIER : null;
-        };
-        if (scope == null) {
-            throw YuzplusException.forbidden("auth.forbidden");
-        }
+        Role scope = scope(auth, role);
         boolean contacts = switch (scope) {
             case CUSTOMER -> has(auth, "clients.contact");
             case SUPPLIER -> has(auth, "suppliers.contact");
@@ -276,9 +291,16 @@ class CounterpartyController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('clients.view', 'suppliers.view')")
     @Operation(summary = "Kontragent kartasi")
-    CounterpartyDetail get(@PathVariable long id) {
-        return detail(id);
+    CounterpartyDetail get(@PathVariable long id, Authentication auth) {
+        CounterpartyDetail cp = detail(id);
+        // P1: faqat ko'rish ruxsati bor tomon (mijoz / YB) kartasi; aks holda — topilmadi.
+        boolean neither = !cp.customer() && !cp.supplier();
+        if (!((cp.customer() || neither) && has(auth, "clients.view")) && !((cp.supplier() || neither) && has(auth, "suppliers.view"))) {
+            throw YuzplusException.notFound("error.notFound");
+        }
+        return cp;
     }
 
     // ===== Import ustasi (prototip ImportWizard «cust» / «sup») =====
@@ -301,6 +323,7 @@ class CounterpartyController {
     }
 
     @PostMapping("/import/check")
+    @PreAuthorize("hasAnyAuthority('clients.create', 'suppliers.create')")
     @Operation(summary = "Import ustasi: qatorlarni tekshirish yoki yaratish",
             description = "role — CUSTOMER (clients.create) yoki SUPPLIER (suppliers.create). apply=false — har qator uchun holat va izohlar; "
                     + "apply=true — OK va ogohlantirishli qatorlar bitta tranzaksiyada yaratiladi, xato qatorlar o'tkazib yuboriladi. "
@@ -316,6 +339,7 @@ class CounterpartyController {
     }
 
     @GetMapping("/import/profile")
+    @PreAuthorize("hasAnyAuthority('clients.create', 'suppliers.create')")
     @Operation(summary = "Import ustasi: saqlangan moslashtirish profili", description = "Profil bo'lmasa — 204.")
     ResponseEntity<ProductImport.ImportProfile> importProfile(@RequestParam Role role, Authentication auth) {
         requireImport(auth, role);
@@ -323,6 +347,7 @@ class CounterpartyController {
     }
 
     @PutMapping("/import/profile")
+    @PreAuthorize("hasAnyAuthority('clients.create', 'suppliers.create')")
     @Operation(summary = "Import ustasi: moslashtirishni saqlash", description = "Keyingi safar avtomatik qo'llanadi.")
     ProductImport.ImportProfile saveImportProfile(@RequestParam Role role, @Valid @RequestBody ProductImport.ImportProfileRequest r,
             Authentication auth) {
@@ -331,6 +356,7 @@ class CounterpartyController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyAuthority('clients.create', 'suppliers.create')")
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Kontragent qo'shish")
     CounterpartyDetail create(@Valid @RequestBody CounterpartyRequest r, Authentication auth) {
@@ -339,6 +365,7 @@ class CounterpartyController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('clients.create', 'suppliers.create')")
     @Operation(summary = "Kartani tahrirlash")
     CounterpartyDetail update(@PathVariable long id, @Valid @RequestBody CounterpartyRequest r, Authentication auth) {
         CounterpartyDetail current = detail(id);
@@ -348,6 +375,7 @@ class CounterpartyController {
     }
 
     @PostMapping("/{id}/block")
+    @PreAuthorize("hasAnyAuthority('clients.block', 'suppliers.block')")
     @Operation(summary = "Bloklash", description = "Bloklangan mijozga buyurtma kiritilmaydi.")
     CounterpartyDetail block(@PathVariable long id, @Valid @RequestBody ReasonRequest r, Authentication auth) {
         requireBlock(auth, detail(id));
@@ -356,6 +384,7 @@ class CounterpartyController {
     }
 
     @PostMapping("/{id}/unblock")
+    @PreAuthorize("hasAnyAuthority('clients.block', 'suppliers.block')")
     @Operation(summary = "Blokdan chiqarish")
     CounterpartyDetail unblock(@PathVariable long id, Authentication auth) {
         requireBlock(auth, detail(id));
@@ -364,6 +393,7 @@ class CounterpartyController {
     }
 
     @PostMapping("/{id}/deactivate")
+    @PreAuthorize("hasAnyAuthority('clients.create', 'suppliers.create')")
     @Operation(summary = "Nofaol qilish")
     CounterpartyDetail deactivate(@PathVariable long id, @Valid @RequestBody ReasonRequest r, Authentication auth) {
         requireEdit(auth, detail(id));
@@ -372,6 +402,7 @@ class CounterpartyController {
     }
 
     @PostMapping("/{id}/activate")
+    @PreAuthorize("hasAnyAuthority('clients.create', 'suppliers.create')")
     @Operation(summary = "Faollashtirish")
     CounterpartyDetail activate(@PathVariable long id, Authentication auth) {
         requireEdit(auth, detail(id));
@@ -380,6 +411,7 @@ class CounterpartyController {
     }
 
     @PostMapping("/{id}/licenses")
+    @PreAuthorize("hasAuthority('clients.lic')")
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Litsenziya qo'shish")
     CounterpartyDetail addLicense(@PathVariable long id, @Valid @RequestBody LicenseRequest r, Authentication auth) {
@@ -389,6 +421,7 @@ class CounterpartyController {
     }
 
     @PutMapping("/{id}/licenses/{licenseId}")
+    @PreAuthorize("hasAuthority('clients.lic')")
     @Operation(summary = "Litsenziyani tahrirlash")
     CounterpartyDetail updateLicense(@PathVariable long id, @PathVariable long licenseId, @Valid @RequestBody LicenseRequest r,
             Authentication auth) {
@@ -398,6 +431,7 @@ class CounterpartyController {
     }
 
     @PostMapping("/{id}/contracts")
+    @PreAuthorize("hasAnyAuthority('clients.create', 'suppliers.create')")
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Shartnoma qo'shish")
     CounterpartyDetail addContract(@PathVariable long id, @Valid @RequestBody ContractRequest r, Authentication auth) {
@@ -407,6 +441,7 @@ class CounterpartyController {
     }
 
     @PutMapping("/{id}/contracts/{contractId}")
+    @PreAuthorize("hasAnyAuthority('clients.create', 'suppliers.create')")
     @Operation(summary = "Shartnomani tahrirlash")
     CounterpartyDetail updateContract(@PathVariable long id, @PathVariable long contractId, @Valid @RequestBody ContractRequest r,
             Authentication auth) {
@@ -416,6 +451,7 @@ class CounterpartyController {
     }
 
     @PutMapping("/{id}/terms/{branchId}")
+    @PreAuthorize("hasAnyAuthority('clients.terms', 'suppliers.terms')")
     @Operation(summary = "Filial shartlari", description = "Limit, to'lov muddati, narx turi, minimal yaroqlilik, operator; YB shartlari.")
     CounterpartyDetail saveTerms(@PathVariable long id, @PathVariable long branchId, @Valid @RequestBody TermsRequest r,
             Authentication auth) {

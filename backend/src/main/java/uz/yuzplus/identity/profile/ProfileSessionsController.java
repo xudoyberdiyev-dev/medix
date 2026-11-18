@@ -10,6 +10,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import org.springframework.jdbc.core.simple.JdbcClient;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.session.FindByIndexNameSessionRepository;
 import org.springframework.session.Session;
@@ -67,6 +68,7 @@ class ProfileSessionsController {
     }
 
     @GetMapping("/sessions")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Faol sessiyalarim (joriysi birinchi)")
     @Transactional(readOnly = true)
     List<SessionInfo> sessions(Authentication auth, HttpServletRequest request) {
@@ -106,6 +108,7 @@ class ProfileSessionsController {
     }
 
     @PostMapping("/sessions/end-others")
+    @PreAuthorize("isAuthenticated()")
     @Transactional
     @Operation(summary = "Boshqa qurilmalardagi sessiyalarni tugatish (joriysi qoladi)")
     EndSessionsResult endOthers(Authentication auth, HttpServletRequest request) {

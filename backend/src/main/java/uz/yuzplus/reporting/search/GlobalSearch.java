@@ -62,9 +62,11 @@ public class GlobalSearch {
                     WHERE (lower(r.number) LIKE :q ESCAPE '\\' OR lower(r.invoice_number) LIKE :q ESCAPE '\\')""", "r", raw,
                     id -> "/receipts?open=" + id));
         }
-        hits.addAll(documents(actor, Kind.PRICE_CHANGE, """
-                SELECT p.id, p.number, NULL AS sub FROM price_change p WHERE lower(p.number) LIKE :q ESCAPE '\\'""", "p", raw,
-                id -> "/prices?tab=documents&open=" + id));
+        if (permissions.contains("prices.view")) {
+            hits.addAll(documents(actor, Kind.PRICE_CHANGE, """
+                    SELECT p.id, p.number, NULL AS sub FROM price_change p WHERE lower(p.number) LIKE :q ESCAPE '\\'""", "p", raw,
+                    id -> "/prices?tab=documents&open=" + id));
+        }
         if (permissions.contains("shipments.view")) {
             hits.addAll(documents(actor, Kind.TRIP, """
                     SELECT t.id, t.number, d.full_name AS sub FROM trip t JOIN employee d ON d.id = t.driver_id
@@ -105,8 +107,14 @@ public class GlobalSearch {
                     WHERE lower(d.number) LIKE :q ESCAPE '\\'""", "d", raw, id -> "/payments/yt/" + id));
         }
         String[] words = SearchText.normalize(q).split(" ");
-        hits.addAll(products(q, words));
-        hits.addAll(counterparties(q, words));
+        if (permissions.contains("products.view")) {
+            hits.addAll(products(q, words));
+        }
+        boolean customers = permissions.contains("clients.view");
+        boolean suppliers = permissions.contains("suppliers.view");
+        if (customers || suppliers) {
+            hits.addAll(counterparties(q, words, customers, suppliers));
+        }
         if (permissions.contains("staff.view")) {
             hits.addAll(employees(actor, q.toLowerCase(java.util.Locale.ROOT).split("\\s+")));
         }
@@ -164,15 +172,17 @@ public class GlobalSearch {
                 .list();
     }
 
-    private List<Hit> counterparties(String q, String[] words) {
+    /** Ruxsat: mijozlar — clients.view, yetkazib beruvchilar — suppliers.view (P1). */
+    private List<Hit> counterparties(String q, String[] words, boolean customers, boolean suppliers) {
         Map<String, Object> params = new HashMap<>();
         params.put("exact", q);
-        String sql = "SELECT c.id, c.name, c.tin, c.is_customer FROM counterparty c WHERE (c.is_customer OR c.is_supplier) AND ("
+        String scope = customers && suppliers ? "(c.is_customer OR c.is_supplier)" : customers ? "c.is_customer" : "c.is_supplier";
+        String sql = "SELECT c.id, c.name, c.tin, c.is_customer FROM counterparty c WHERE " + scope + " AND ("
                 + wordsClause("c.search_text", words, params) + " OR c.tin = :exact) ORDER BY (c.tin = :exact) DESC, c.name LIMIT " + PER_GROUP;
         return jdbc.sql(sql)
                 .params(params)
                 .query((rs, n) -> {
-                    boolean customer = rs.getBoolean("is_customer");
+                    boolean customer = customers && rs.getBoolean("is_customer");
                     String name = rs.getString("name");
                     return new Hit(customer ? Kind.CUSTOMER : Kind.SUPPLIER, rs.getLong("id"), name, "STIR " + rs.getString("tin"),
                             (customer ? "/customers?q=" : "/suppliers?q=") + encode(rs.getString("tin")));

@@ -90,6 +90,7 @@ class BranchController {
     }
 
     @GetMapping
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Ko'rish mumkin bo'lgan filiallar")
     List<Organization.Branch> list() {
         Actor actor = actor();
