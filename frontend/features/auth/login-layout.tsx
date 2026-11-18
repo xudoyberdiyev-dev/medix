@@ -1,15 +1,16 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { Check, ChevronDown, Globe, Moon, Sun } from "lucide-react";
+import { Check, ChevronDown, Globe, Moon, Phone, Sun } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition, type ReactNode } from "react";
+import { BrandLogo } from "@/components/ui/brand-logo";
 import { Icon } from "@/components/ui/icon";
+import { Modal } from "@/components/ui/modal";
 import { LOCALE_NAMES, LOCALES, writeLocaleCookie } from "@/i18n/config";
 import { api, unwrap } from "@/lib/api/client";
 import { cn } from "@/lib/cn";
-import { BrandMark } from "./auth-shell";
 import { LoginShowcase } from "./login-showcase";
 
 export type LoginInfo = { supportPhone?: string | null; supportHours?: string | null; roles: number };
@@ -22,19 +23,6 @@ export function useLoginInfo() {
     staleTime: 10 * 60_000,
     retry: false,
   });
-}
-
-/** «Yordam: …» qatori — faqat toʻldirilgan qismlar. */
-export function helpLine(
-  t: (key: "help" | "helpPhone" | "helpBoth", v: Record<string, string>) => string,
-  info: Pick<LoginInfo, "supportPhone" | "supportHours"> | undefined,
-): string | null {
-  const phone = info?.supportPhone?.trim();
-  const hours = info?.supportHours?.trim();
-  if (phone && hours) return t("helpBoth", { phone, hours });
-  if (phone) return t("helpPhone", { phone });
-  if (hours) return t("help", { hours });
-  return null;
 }
 
 const THEME_KEY = "yuzplus-login-theme";
@@ -78,7 +66,7 @@ function useLoginTheme(): [Theme, () => void] {
 }
 
 const topButton =
-  "flex h-[44px] items-center gap-[8px] rounded-[12px] border border-border bg-surface px-[14px] text-body text-text-primary transition-colors duration-150 ease-out hover:bg-table-header";
+  "flex h-[40px] items-center gap-[8px] rounded-control border border-border bg-surface px-[12px] text-body text-text-primary transition-colors duration-150 ease-out hover:bg-table-header";
 
 /** Til tanlash — ochiladigan roʻyxat (Oʻzbekcha / Ўзбекча / Русский); til cookie'ga yoziladi. */
 export function LocaleMenu() {
@@ -114,7 +102,7 @@ export function LocaleMenu() {
         onClick={() => setOpen((o) => !o)}
         className={topButton}
       >
-        <Icon icon={Globe} className="text-link" />
+        <Icon icon={Globe} className="text-text-secondary" />
         {LOCALE_NAMES[locale as keyof typeof LOCALE_NAMES] ?? locale}
         <Icon icon={ChevronDown} className="text-text-secondary" />
       </button>
@@ -122,7 +110,7 @@ export function LocaleMenu() {
         <ul
           role="listbox"
           aria-label={t("languages")}
-          className="absolute right-0 z-10 mt-[6px] w-[180px] overflow-hidden rounded-[12px] border border-border bg-surface py-[4px] shadow-overlay"
+          className="absolute right-0 z-10 mt-[6px] w-[180px] overflow-hidden rounded-card border border-border bg-surface py-[4px] shadow-overlay"
         >
           {LOCALES.map((l) => (
             <li key={l} role="option" aria-selected={l === locale}>
@@ -147,39 +135,69 @@ export function LocaleMenu() {
   );
 }
 
+/** Pastki qator: yordam telefoni va ish vaqti (Kompaniya sozlamalari, V99) — faqat toʻldirilgan qismlar. */
+export function supportLine(info: Pick<LoginInfo, "supportPhone" | "supportHours"> | undefined): string | null {
+  const parts = [info?.supportPhone?.trim(), info?.supportHours?.trim()].filter((v): v is string => !!v);
+  return parts.length ? parts.join(" · ") : null;
+}
+
 /**
- * Kirish sahifasi (O20, egasi tanlagan A maket; prototip LoginScreen dan farq qiladi): ≥1024 px — chapda yumaloq panel
- * (logotip, illyustratsiya, almashuvchi modul kartasi), oʻngda til/rejim, forma va pastda yordam qatori; tor ekranda faqat forma.
+ * Kirish sahifasi (O22 — egasi tasdiqlagan yakuniy dizayn `docs/notes/login-100plus-yakuniy.dc.html`): ≥1024 px — chapda panel
+ * (logotip, modul sahnalari, pastki karta), oʻngda til/rejim, forma va pastda yordam telefoni + Maxfiylik/Xavfsizlik; tor ekranda faqat forma.
  */
 export function LoginLayout({ children }: { children: ReactNode }) {
   const t = useTranslations("login");
   const info = useLoginInfo();
   const [theme, toggleTheme] = useLoginTheme();
-  const help = helpLine(t, info.data);
+  const [note, setNote] = useState<"privacy" | "security" | null>(null);
+  const support = supportLine(info.data);
   return (
-    <main className="flex h-dvh gap-[20px] bg-surface p-0 text-text-primary lg:p-[20px]">
+    <main className="flex min-h-dvh gap-[16px] bg-surface p-0 text-text-primary lg:h-dvh lg:p-[16px]">
       <LoginShowcase roles={info.data?.roles ?? null} />
-      <div className="flex min-w-0 flex-1 flex-col overflow-y-auto px-[16px] py-[16px] sm:px-[40px] lg:py-[8px]">
-        <div className="flex items-center justify-between gap-[10px] lg:justify-end">
+      <div className="flex min-w-0 flex-[1_1_460px] flex-col overflow-y-auto px-[16px] pt-[16px] pb-[20px] sm:px-[40px]">
+        <div className="flex items-center justify-between gap-[8px] lg:justify-end">
           <div className="lg:hidden">
-            <BrandMark />
+            <BrandLogo size={32} />
           </div>
-          <div className="flex gap-[10px]">
+          <div className="flex gap-[8px]">
             <LocaleMenu />
             <button
               type="button"
               onClick={toggleTheme}
               aria-label={theme === "dark" ? t("themeLight") : t("themeDark")}
               title={theme === "dark" ? t("themeLight") : t("themeDark")}
-              className={cn(topButton, "w-[44px] justify-center px-0")}
+              className={cn(topButton, "w-[40px] justify-center px-0")}
             >
               <Icon icon={theme === "dark" ? Moon : Sun} />
             </button>
           </div>
         </div>
-        <div className="mx-auto my-auto flex w-[470px] max-w-full flex-col py-[32px]">{children}</div>
-        {help ? <p className="text-center text-caption text-text-secondary">{help}</p> : null}
+        <div className="mx-auto my-auto flex w-[400px] max-w-full flex-col py-[32px]">{children}</div>
+        <div className="flex flex-wrap items-center justify-center gap-x-[16px] gap-y-[4px] text-table text-text-secondary">
+          {support ? (
+            <span className="flex items-center gap-[6px]">
+              <Icon icon={Phone} />
+              {support}
+            </span>
+          ) : null}
+          <button type="button" onClick={() => setNote("privacy")} className="rounded-control hover:text-text-primary hover:underline">
+            {t("privacy")}
+          </button>
+          <button type="button" onClick={() => setNote("security")} className="rounded-control hover:text-text-primary hover:underline">
+            {t("security")}
+          </button>
+        </div>
       </div>
+      <Modal
+        open={note !== null}
+        onClose={() => setNote(null)}
+        title={note === "security" ? t("security") : t("privacy")}
+        size="sm"
+        hideSecondary
+        primaryAction={{ label: t("close"), onClick: () => setNote(null) }}
+      >
+        <p className="text-body text-pretty text-text-primary">{note === "security" ? t("securityText") : t("privacyText")}</p>
+      </Modal>
     </main>
   );
 }

@@ -7,6 +7,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Avatar } from "@/components/ui/avatar";
 import { cn } from "@/lib/cn";
+import { BrandGlyph } from "@/components/ui/brand-logo";
 import { useLogout, useMe } from "@/features/auth/session";
 import { useBranchStore } from "@/lib/stores/branch";
 import { useNavBadges, type NavBadge } from "./nav-badges";
@@ -77,9 +78,7 @@ export function SidebarContent({ variant, onNavigate }: { variant: "rail" | "she
           // eslint-disable-next-line @next/next/no-img-element -- kompaniya logotipi serverdan (PNG/SVG)
           <img src={logo} alt="" className="size-8 shrink-0 rounded-control bg-white object-contain" />
         ) : (
-          <span className="flex size-8 shrink-0 items-center justify-center rounded-control bg-primary-button font-semibold text-white">
-            M
-          </span>
+          <BrandGlyph size={32} onDark />
         )}
         <span className={cn("flex min-w-0 flex-col", compact("hidden", "max-xl:hidden"))}>
           <span className="text-subtitle leading-5 text-white">100+</span>

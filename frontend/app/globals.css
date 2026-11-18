@@ -96,6 +96,16 @@
   --animate-spin: spin 800ms linear infinite;
   --animate-progress: progress 3000ms linear forwards;
   --animate-shake: shake 320ms ease-in-out;
+  --animate-fade-in: fade-in 180ms ease-out;
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
 
   @keyframes skeleton {
     0%,

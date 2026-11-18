@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { greetingKey, longDate } from "./login-greeting";
-import { helpLine } from "./login-layout";
-import { SHOWCASE_MODULES, nextModule } from "./login-showcase";
+import { supportLine } from "./login-layout";
+import { SHOWCASE_MODULES, dataMatrixCells, nextModule } from "./login-showcase";
 
 // 18.11.2026 (chorshanba): UTC vaqti → Toshkent +5
 const at = (utcHour: number) => new Date(Date.UTC(2026, 10, 18, utcHour, 30));
@@ -23,18 +23,25 @@ describe("kirish sahifasi (O20)", () => {
   });
 
   it("yordam qatori — faqat toʻldirilgan qismlar", () => {
-    const t = (k: string, v: Record<string, string>) => `${k}|${v.hours ?? ""}|${v.phone ?? ""}`;
-    expect(helpLine(t, { supportPhone: "+998 71 200-00-00", supportHours: "du–ju 09:00–18:00" })).toBe(
-      "helpBoth|du–ju 09:00–18:00|+998 71 200-00-00",
+    expect(supportLine({ supportPhone: "+998 71 200-00-00", supportHours: "du–ju 09:00–18:00" })).toBe(
+      "+998 71 200-00-00 · du–ju 09:00–18:00",
     );
-    expect(helpLine(t, { supportPhone: " ", supportHours: "du–ju" })).toBe("help|du–ju|");
-    expect(helpLine(t, { supportPhone: "+998", supportHours: null })).toBe("helpPhone||+998");
-    expect(helpLine(t, undefined)).toBeNull();
+    expect(supportLine({ supportPhone: " ", supportHours: "du–ju" })).toBe("du–ju");
+    expect(supportLine({ supportPhone: "+998", supportHours: null })).toBe("+998");
+    expect(supportLine(undefined)).toBeNull();
   });
 
-  it("modul kartasi aylanma almashadi (7 ta)", () => {
-    expect(SHOWCASE_MODULES).toHaveLength(7);
+  it("modul sahnalari aylanma almashadi (O22: 5 ta)", () => {
+    expect(SHOWCASE_MODULES).toEqual(["orders", "stock", "marking", "delivery", "money"]);
     expect(nextModule("orders")).toBe("stock");
-    expect(nextModule("messages")).toBe("orders");
+    expect(nextModule("money")).toBe("orders");
+  });
+
+  it("DataMatrix namunasi deterministik, 14×14, chegarasi toʻliq", () => {
+    const a = dataMatrixCells();
+    expect(a).toHaveLength(196);
+    expect(dataMatrixCells()).toEqual(a);
+    for (let r = 0; r < 14; r++) expect(a[r * 14]).toBe(true); // chap ustun
+    for (let c = 0; c < 14; c++) expect(a[13 * 14 + c]).toBe(true); // past qator
   });
 });

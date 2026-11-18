@@ -4,7 +4,7 @@ import { expect, test } from "@playwright/test";
  * O20 — yangi kirish sahifasi «100+»: sana va salom, «Parolni unutdingizmi?» / «Kira olmayapman» oynalari, til menyusi,
  * qorongʻi rejim, maʼlumot kartasi (rollar soni ommaviy /api/auth/login-info dan).
  */
-test("kirish sahifasi 100+ (O20)", async ({ page }) => {
+test("kirish sahifasi 100+ (O20, O22 yakuniy dizayn)", async ({ page }) => {
   const info = page.waitForResponse((r) => r.url().includes("/api/auth/login-info") && r.status() === 200);
   await page.goto("/login");
   await expect(page).toHaveTitle(/100\+/);
@@ -13,9 +13,17 @@ test("kirish sahifasi 100+ (O20)", async ({ page }) => {
   const roles = (await (await info).json()) as { roles: number };
   expect(roles.roles).toBeGreaterThan(0);
   await expect(page.getByText("rol uchun panel")).toBeVisible();
-  await expect(page.getByRole("tab", { name: "Buyurtmalar" })).toHaveAttribute("aria-selected", "true");
+  // O22: 5 modul sahnasi, segment-yorliqlar (bosilsa almashish toʻxtaydi)
+  await expect(page.getByRole("tab", { name: "Savdo" })).toHaveAttribute("aria-selected", "true");
   await page.getByRole("tab", { name: "Markirovka" }).click();
-  await expect(page.getByText("Markirovka kodlari — skanerlab, xatosiz")).toBeVisible();
+  await expect(page.getByText("Quti va dona kodlari — bir zumda")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Davom ettirish" })).toBeVisible();
+  await page.getByRole("tab", { name: "Pul" }).click();
+  await expect(page.getByText("Qarz, kassa va akt sverka — avtomatik")).toBeVisible();
+  await expect(page.getByRole("checkbox", { name: "Loginni eslab qolish" })).toBeChecked();
+  await page.getByRole("button", { name: "Xavfsizlik" }).click();
+  await expect(page.getByRole("dialog", { name: "Xavfsizlik" }).getByText(/15 daqiqaga bloklanadi/)).toBeVisible();
+  await page.getByRole("dialog").getByRole("button", { name: "Yopish" }).last().click();
 
   await page.getByRole("button", { name: "Parolni unutdingizmi?" }).click();
   await expect(page.getByRole("dialog", { name: "Parolni tiklash" })).toBeVisible();

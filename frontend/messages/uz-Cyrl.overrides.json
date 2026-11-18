@@ -13,13 +13,14 @@
     "integrationText": "Маълумот 100+ да сақланди, улангандан кейин кўчирмалар автоматик олинади. Ҳозирча солиштириш қўлда."
   },
   "login": {
-    "loginPlaceholder": "масалан, a.karimov",
+    "loginPlaceholder": "a.karimov",
     "loginHint": "Масалан: a.karimov",
     "cantTip": {
       "t2": "Логинни администратор берган кўринишда ёзинг, масалан a.karimov."
     },
     "sc": {
-      "langsSub": "oʻzbek, ўзбек, русский"
+      "langsSub": "oʻzbek · ўзбек · русский",
+      "fefo": "FEFO: аввал {date}"
     }
   }
 }
