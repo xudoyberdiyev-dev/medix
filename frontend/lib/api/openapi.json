@@ -2,7 +2,7 @@
   "openapi" : "3.1.0",
   "info" : {
     "description" : "Farmatsevtika ulgurji distribyutsiyasi ERP",
-    "title" : "MEDIX API",
+    "title" : "100+ API",
     "version" : "v1"
   },
   "servers" : [ {
@@ -917,7 +917,7 @@
             "description" : "OK"
           }
         },
-        "summary" : "Solishtirish oynasi: sanadagi MEDIX qoldigʻi, oxirgi solishtirish, hali belgilanmagan harakatlar",
+        "summary" : "Solishtirish oynasi: sanadagi 100+ qoldigʻi, oxirgi solishtirish, hali belgilanmagan harakatlar",
         "tags" : [ "bank-reconciliations" ]
       }
     },
@@ -28968,7 +28968,7 @@
         "properties" : {
           "company" : {
             "type" : "string",
-            "description" : "Tashkilot nomi (sidebar sarlavhasida, MEDIX ostida)"
+            "description" : "Tashkilot nomi (sidebar sarlavhasida, 100+ ostida)"
           },
           "expiry" : {
             "$ref" : "#/components/schemas/Badge"

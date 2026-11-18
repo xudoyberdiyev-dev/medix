@@ -312,7 +312,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Solishtirish oynasi: sanadagi MEDIX qoldigʻi, oxirgi solishtirish, hali belgilanmagan harakatlar */
+        /** Solishtirish oynasi: sanadagi 100+ qoldigʻi, oxirgi solishtirish, hali belgilanmagan harakatlar */
         get: operations["preview_1"];
         put?: never;
         post?: never;
@@ -12269,7 +12269,7 @@ export interface components {
             warehouse: string;
         };
         NavBadgesView: {
-            /** @description Tashkilot nomi (sidebar sarlavhasida, MEDIX ostida) */
+            /** @description Tashkilot nomi (sidebar sarlavhasida, 100+ ostida) */
             company?: string;
             expiry?: components["schemas"]["Badge"];
             /**

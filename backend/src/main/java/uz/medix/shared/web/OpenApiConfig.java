@@ -20,7 +20,7 @@ class OpenApiConfig {
     @Bean
     OpenAPI medixOpenApi() {
         return new OpenAPI()
-                .info(new Info().title("MEDIX API").version("v1").description("Farmatsevtika ulgurji distribyutsiyasi ERP"))
+                .info(new Info().title("100+ API").version("v1").description("Farmatsevtika ulgurji distribyutsiyasi ERP"))
                 .servers(List.of(new Server().url("/")));
     }
 

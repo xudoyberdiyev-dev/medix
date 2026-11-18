@@ -40,7 +40,7 @@ class BankReconciliationController {
 
     @GetMapping("/api/bank-reconciliations/preview")
     @PreAuthorize(VIEW)
-    @Operation(summary = "Solishtirish oynasi: sanadagi MEDIX qoldigʻi, oxirgi solishtirish, hali belgilanmagan harakatlar")
+    @Operation(summary = "Solishtirish oynasi: sanadagi 100+ qoldigʻi, oxirgi solishtirish, hali belgilanmagan harakatlar")
     BankReconciliations.ReconPreview preview(@RequestParam long accountId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         return recons.preview(actor(), accountId, date);

@@ -27,7 +27,7 @@ class NavBadges {
 
     record NavBadgesView(@Schema(nullable = true) Badge orders, @Schema(nullable = true) Badge shipments,
             @Schema(nullable = true) Badge expiry,
-            @Schema(nullable = true, description = "Tashkilot nomi (sidebar sarlavhasida, MEDIX ostida)") String company,
+            @Schema(nullable = true, description = "Tashkilot nomi (sidebar sarlavhasida, 100+ ostida)") String company,
             @Schema(nullable = true, description = "Logotip versiyasi (epoch ms) — /api/company/logo?v=…; null — logotip yoʻq")
                     Long logoVersion) {}
 

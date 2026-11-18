@@ -120,7 +120,7 @@ class OpeningExcel {
                 }
                 Long product = byCode.containsKey(code) ? byCode.get(code) : byBarcode.get(code);
                 if (product == null) {
-                    throw new RowError("Mahsulot topilmadi: «" + code + "». 8 raqamli MEDIX kodi yoki shtrix-kodni yozing.");
+                    throw new RowError("Mahsulot topilmadi: «" + code + "». 8 raqamli 100+ kodi yoki shtrix-kodni yozing.");
                 }
                 String zoneName = text(r, "Zona");
                 Long zone = zoneName.isEmpty() ? mainZone : findZone(zones, zoneName);

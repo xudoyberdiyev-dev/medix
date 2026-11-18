@@ -35,7 +35,7 @@ class OpenApiSpecExportIT {
                 .getResponse()
                 .getContentAsString(StandardCharsets.UTF_8);
 
-        assertThat(json).contains("\"MEDIX API\"");
+        assertThat(json).contains("\"100+ API\"");
 
         Path out = Path.of("build", "openapi", "openapi.json");
         Files.createDirectories(out.getParent());
