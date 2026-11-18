@@ -3,6 +3,7 @@ package uz.yuzplus.identity.security;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import jakarta.servlet.http.Cookie;
@@ -119,5 +120,14 @@ class EndpointPermissionsIT {
         mvc.perform(get("/api/counterparties").param("role", "CUSTOMER").cookie(operator)).andExpect(status().isOk());
         mvc.perform(get("/api/products").cookie(operator)).andExpect(status().isOk());
         mvc.perform(get("/api/price-types").cookie(operator)).andExpect(status().isOk());
+    }
+
+    @Test
+    void securityHeaders() throws Exception {
+        mvc.perform(get("/api/auth/me").cookie(loginAs("PICKER", branch())))
+                .andExpect(status().isOk())
+                .andExpect(header().string("X-Content-Type-Options", "nosniff"))
+                .andExpect(header().string("X-Frame-Options", "DENY"))
+                .andExpect(header().string("Referrer-Policy", "strict-origin-when-cross-origin"));
     }
 }
