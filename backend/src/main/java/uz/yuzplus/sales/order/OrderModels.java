@@ -255,8 +255,10 @@ final class OrderModels {
     enum CatalogFlag { MARKED, CONTROLLED, PRESCRIPTION }
 
     /** Katalog filtrlari (bo'sh ro'yxat — filtr yo'q). */
-    record CatalogFilter(List<Long> manufacturerIds, List<Long> categoryIds, List<Long> countryIds, List<CatalogFlag> flags) {
-        static final CatalogFilter NONE = new CatalogFilter(List.of(), List.of(), List.of(), List.of());
+    /** productIds — faqat shu mahsulotlar (U11: tanlangan/qoʻshilgan qatorlarning qoldigʻi va muddati); boʻsh — hammasi. */
+    record CatalogFilter(List<Long> manufacturerIds, List<Long> categoryIds, List<Long> countryIds, List<CatalogFlag> flags,
+            List<Long> productIds) {
+        static final CatalogFilter NONE = new CatalogFilter(List.of(), List.of(), List.of(), List.of(), List.of());
     }
 
     record CatalogPage(List<CatalogRow> items, long total, int page, int size, CatalogFacets facets) {}

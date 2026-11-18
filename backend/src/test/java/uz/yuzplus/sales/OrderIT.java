@@ -284,6 +284,12 @@ class OrderIT {
         mvc.perform(get("/api/orders/catalog").param("warehouseId", String.valueOf(p.warehouseId())).param("q", "by aspirin")
                         .param("inStockOnly", "false").param("manufacturerIds", "-1").cookie(operator))
                 .andExpect(jsonPath("$.total").value(0));
+        // U11: tanlangan mahsulotlar boʻyicha (qidiruvsiz) — qoldiq va muddat qatorlar uchun
+        mvc.perform(get("/api/orders/catalog").param("warehouseId", String.valueOf(p.warehouseId())).param("inStockOnly", "false")
+                        .param("productIds", String.valueOf(a), String.valueOf(empty)).cookie(operator))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(2))
+                .andExpect(jsonPath("$.items[*].productId", hasItem((int) a)));
         // Qoralamada narx o'zgarsa — ogohlantirish
         setPrice(p, a, "2600");
         mvc.perform(get("/api/orders/" + doc).cookie(operator))

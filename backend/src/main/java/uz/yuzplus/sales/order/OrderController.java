@@ -227,9 +227,14 @@ class OrderController {
             @RequestParam(required = false) List<Long> categoryIds,
             @RequestParam(required = false) List<Long> countryIds,
             @RequestParam(required = false) List<OrderModels.CatalogFlag> flags,
+            @RequestParam(required = false) List<Long> productIds,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size) {
-        var filter = new OrderModels.CatalogFilter(nn(manufacturerIds), nn(categoryIds), nn(countryIds), nn(flags));
+        List<Long> ids = nn(productIds);
+        if (ids.size() > 200) {
+            ids = ids.subList(0, 200);
+        }
+        var filter = new OrderModels.CatalogFilter(nn(manufacturerIds), nn(categoryIds), nn(countryIds), nn(flags), ids);
         return orders.catalog(actor(), warehouseId, customerId, q, inStockOnly, filter, Math.max(page, 0), Math.clamp(size, 1, 200));
     }
 

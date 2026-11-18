@@ -788,6 +788,10 @@ class Orders {
         if (inStockOnly) {
             where.append(" AND coalesce(a.qty, 0) > 0");
         }
+        if (!filter.productIds().isEmpty()) {
+            where.append(" AND p.id IN (:pid)");
+            params.put("pid", filter.productIds());
+        }
         // Sotuvga mavjud qoldiq (StockAvailability bilan bir xil qoida) — o'qish modeli.
         String from = " " + """
                 FROM product p LEFT JOIN manufacturer mf ON mf.id = p.manufacturer_id
