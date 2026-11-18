@@ -589,7 +589,18 @@ export function OrdersPage() {
             filtered ? (
               <NoResultsState onClearFilters={clearAll} />
             ) : (
-              <EmptyState icon={ClipboardList} title={t("list.emptyTitle")} description={t("list.emptyHint")} />
+              <EmptyState
+                icon={ClipboardList}
+                title={t("list.emptyTitle")}
+                description={t("list.emptyHint")}
+                action={
+                  canCreate ? (
+                    <Button icon={Plus} onClick={() => openOrder(null)}>
+                      {t("list.create")}
+                    </Button>
+                  ) : undefined
+                }
+              />
             )
           }
           pagination={

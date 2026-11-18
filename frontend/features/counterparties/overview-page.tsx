@@ -726,9 +726,15 @@ export function OverviewPage({ role }: { role: CounterpartyRole }) {
                 description={t("emptyD")}
                 action={
                   canEdit ? (
-                    <Button icon={Plus} onClick={() => router.push(`${pathname}/new`)}>
-                      {customers ? t("addC") : t("addS")}
-                    </Button>
+                    // U15: birinchi yozuv — qoʻlda yoki Excelʼdan
+                    <div className="flex flex-wrap items-center justify-center gap-2">
+                      <Button variant="secondary" icon={Upload} onClick={() => router.push(`${pathname}/import`)}>
+                        {t("import")}
+                      </Button>
+                      <Button icon={Plus} onClick={() => router.push(`${pathname}/new`)}>
+                        {customers ? t("addC") : t("addS")}
+                      </Button>
+                    </div>
                   ) : undefined
                 }
               />

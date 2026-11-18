@@ -168,6 +168,7 @@ function PricesTab({
   onSetPrices: (lines: DraftLine[]) => void;
 }) {
   const t = useTranslations("prices.current");
+  const tp = useTranslations("prices.page");
   const types = usePriceTypes();
   const router = useRouter();
   const pathname = usePathname();
@@ -317,7 +318,18 @@ function PricesTab({
         f.q || f.manufacturerId || f.at ? (
           <NoResultsState onClearFilters={() => (setSearch(""), apply({ q: "", manufacturerId: null, at: null }))} />
         ) : (
-          <EmptyState icon={Tags} title={t("emptyTitle")} description={t("emptyDescription")} />
+          <EmptyState
+            icon={Tags}
+            title={t("emptyTitle")}
+            description={t("emptyDescription")}
+            action={
+              canSet ? (
+                <Button icon={Tag} onClick={() => router.push(`/prices/set${branchId ? `?branch=${branchId}` : ""}`)}>
+                  {tp("set")}
+                </Button>
+              ) : undefined
+            }
+          />
         )
       }
       pagination={
