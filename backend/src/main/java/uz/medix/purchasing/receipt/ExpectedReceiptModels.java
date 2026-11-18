@@ -34,39 +34,39 @@ final class ExpectedReceiptModels {
             @NotNull(message = "{validation.required}") @Min(1) @Max(MAX_QTY) Integer qty,
             @Schema(nullable = true, description = "Narx (satr, 2 xona) — narx ko'rish huquqisiz e'tiborsiz qoldiriladi") @Size(max = 24) String price,
             @Schema(nullable = true, description = "QQS stavkasi, %") @Min(0) @Max(100) Integer vatRate,
-            @Size(max = 64) String batchNumber,
-            LocalDate expiryDate) {}
+            @Schema(nullable = true) @Size(max = 64) String batchNumber,
+            @Schema(nullable = true) LocalDate expiryDate) {}
 
     record ExpectedReceiptRequest(
             @NotNull(message = "{validation.required}") Long warehouseId,
             @NotNull(message = "{validation.required}") Long supplierId,
             @NotBlank(message = "{validation.required}") @Size(max = 64) String waybillNumber,
             @NotNull(message = "{validation.required}") LocalDate waybillDate,
-            @Size(max = 64) String invoiceNumber,
-            LocalDate invoiceDate,
-            @Size(max = 100) String contract,
+            @Schema(nullable = true) @Size(max = 64) String invoiceNumber,
+            @Schema(nullable = true) LocalDate invoiceDate,
+            @Schema(nullable = true) @Size(max = 100) String contract,
             @NotNull(message = "{validation.required}") PaymentKind paymentKind,
-            LocalDate expectedDate,
+            @Schema(nullable = true) LocalDate expectedDate,
             @Schema(nullable = true, description = "To'lov kuni (qarzga); bo'sh — hisob-faktura (yo'q bo'lsa yuk xati) sanasi + YB sharti") LocalDate dueDate,
-            @Size(max = 500) String note,
+            @Schema(nullable = true) @Size(max = 500) String note,
             @NotEmpty(message = "{validation.required}") @Size(max = MAX_LINES) List<@Valid @NotNull ExpectedReceiptLineRequest> lines) {}
 
-    record ReceiveLineRequest(
+    record KkReceiveLineRequest(
             @NotNull(message = "{validation.required}") Long expectedLineId,
             @NotNull(message = "{validation.required}") @Min(1) @Max(MAX_QTY) Integer qty,
             @NotBlank(message = "{validation.required}") @Size(max = 60) String batchNumber,
-            LocalDate producedOn,
+            @Schema(nullable = true) LocalDate producedOn,
             @NotNull(message = "{validation.required}") LocalDate expiryDate,
             @NotNull(message = "{validation.required}") Long zoneId) {}
 
     /** «Qabul qilish»: KK dan kirim qoralamasi (narxlar KK dan; ombor sanaydi va kirim odatdagidek qabul qilinadi / o'tkaziladi). */
-    record ReceiveRequest(
-            @NotEmpty(message = "{validation.required}") @Size(max = MAX_LINES) List<@Valid @NotNull ReceiveLineRequest> lines) {}
+    record KkReceiveRequest(
+            @NotEmpty(message = "{validation.required}") @Size(max = MAX_LINES) List<@Valid @NotNull KkReceiveLineRequest> lines) {}
 
-    record ReceiveResult(long receiptId, String receiptNumber) {}
+    record KkReceiveResult(long receiptId, String receiptNumber) {}
 
     /** Yakuniy qabul: qolgan kelmagan soni hisobdan chiqariladi («qarzga» KK — qarz kamayadi), holat «Qabul qilindi». */
-    record CloseRequest(@NotBlank(message = "{validation.required}") @Size(max = 300) String reason) {}
+    record KkCloseRequest(@NotBlank(message = "{validation.required}") @Size(max = 300) String reason) {}
 
     record ExpectedReceiptCancelRequest(@NotBlank(message = "{validation.required}") @Size(max = 300) String reason) {}
 
@@ -87,7 +87,7 @@ final class ExpectedReceiptModels {
 
     record ExpectedReceiptFile(long id, String fileName, String contentType, int sizeBytes, String createdBy, Instant createdAt) {}
 
-    record LinkedReceipt(long id, String number, String status, LocalDate receiptDate) {}
+    record KkLinkedReceipt(long id, String number, String status, LocalDate receiptDate) {}
 
     record ExpectedReceiptDetail(long id, String number, long branchId, long warehouseId, String warehouse, long supplierId,
             String supplier, String waybillNumber, LocalDate waybillDate, @Schema(nullable = true) String invoiceNumber,
@@ -99,13 +99,13 @@ final class ExpectedReceiptModels {
             String createdBy, Instant createdAt, @Schema(nullable = true) String approvedBy, @Schema(nullable = true) Instant approvedAt,
             @Schema(nullable = true) String cancelledBy, @Schema(nullable = true) Instant cancelledAt,
             @Schema(nullable = true) String cancelReason, long qty, long receivedQty, List<ExpectedReceiptLine> lines,
-            List<ExpectedReceiptFile> files, List<LinkedReceipt> receipts) {}
+            List<ExpectedReceiptFile> files, List<KkLinkedReceipt> receipts) {}
 
     record InTransitDoc(long id, String number, String supplier, @Schema(nullable = true) LocalDate expectedDate, boolean late,
             int remainingQty) {}
 
     /** Mahsulotning yo'ldagi (KK Yo'lda / Qisman) qolgan soni — sotuvga olinmaydi, faqat ma'lumot. */
-    record InTransitRow(long productId, long qty, @Schema(nullable = true) LocalDate nearestDate, List<InTransitDoc> docs) {}
+    record InTransitRow(long productId, String productCode, String productName, long qty, @Schema(nullable = true) LocalDate nearestDate, List<InTransitDoc> docs) {}
 
     record FileData(String fileName, String contentType, byte[] data) {}
 }

@@ -30,11 +30,11 @@ import uz.medix.purchasing.receipt.ExpectedReceiptModels.FileData;
 import uz.medix.purchasing.receipt.ExpectedReceiptModels.InTransitDoc;
 import uz.medix.purchasing.receipt.ExpectedReceiptModels.InTransitRow;
 import uz.medix.purchasing.receipt.ExpectedReceiptModels.KkStatus;
-import uz.medix.purchasing.receipt.ExpectedReceiptModels.LinkedReceipt;
+import uz.medix.purchasing.receipt.ExpectedReceiptModels.KkLinkedReceipt;
 import uz.medix.purchasing.receipt.ExpectedReceiptModels.PaymentKind;
-import uz.medix.purchasing.receipt.ExpectedReceiptModels.ReceiveLineRequest;
-import uz.medix.purchasing.receipt.ExpectedReceiptModels.ReceiveRequest;
-import uz.medix.purchasing.receipt.ExpectedReceiptModels.ReceiveResult;
+import uz.medix.purchasing.receipt.ExpectedReceiptModels.KkReceiveLineRequest;
+import uz.medix.purchasing.receipt.ExpectedReceiptModels.KkReceiveRequest;
+import uz.medix.purchasing.receipt.ExpectedReceiptModels.KkReceiveResult;
 import uz.medix.shared.audit.AuditEntry;
 import uz.medix.shared.audit.AuditLog;
 import uz.medix.shared.error.MedixException;
@@ -202,10 +202,10 @@ class ExpectedReceipts {
                 .query((rs, n) -> new ExpectedReceiptFile(rs.getLong("id"), rs.getString("file_name"), rs.getString("content_type"),
                         rs.getInt("size_bytes"), rs.getString("created_by"), rs.getTimestamp("created_at").toInstant()))
                 .list();
-        List<LinkedReceipt> receipts = jdbc.sql("""
+        List<KkLinkedReceipt> receipts = jdbc.sql("""
                 SELECT id, number, status, receipt_date FROM receipt WHERE expected_receipt_id = :id ORDER BY id""")
                 .param("id", id)
-                .query((rs, n) -> new LinkedReceipt(rs.getLong("id"), rs.getString("number"), rs.getString("status"),
+                .query((rs, n) -> new KkLinkedReceipt(rs.getLong("id"), rs.getString("number"), rs.getString("status"),
                         rs.getDate("receipt_date").toLocalDate()))
                 .list();
         long qty = lines.stream().mapToLong(ExpectedReceiptLine::qty).sum();
@@ -245,26 +245,29 @@ class ExpectedReceipts {
             where.append(" AND l.product_id IN (:p)");
             params.put("p", productIds);
         }
-        record Row(long productId, long id, String number, String supplier, Date expectedDate, boolean late, int remaining) {}
+        record Row(long productId, String productCode, String productName, long id, String number, String supplier, Date expectedDate, boolean late, int remaining) {}
         List<Row> rows = jdbc.sql("""
-                SELECT l.product_id, h.id, h.number, c.name AS supplier, h.expected_date,""" + LATE_SQL + """
+                SELECT l.product_id, p.code AS product_code, p.name AS product_name, h.id, h.number, c.name AS supplier, h.expected_date,""" + LATE_SQL + """
                        AS late, sum(l.qty - l.received_qty - l.written_off_qty)::int AS remaining
                 FROM expected_receipt_line l
                 JOIN expected_receipt h ON h.id = l.expected_receipt_id
-                JOIN counterparty c ON c.id = h.supplier_id""" + where + """
+                JOIN counterparty c ON c.id = h.supplier_id
+                JOIN product p ON p.id = l.product_id""" + where + """
 
-                GROUP BY l.product_id, h.id, h.number, c.name, h.expected_date, h.status
-                ORDER BY l.product_id, h.expected_date NULLS LAST, h.id LIMIT 5000""")
+                GROUP BY l.product_id, p.code, p.name, h.id, h.number, c.name, h.expected_date, h.status
+                ORDER BY p.name, l.product_id, h.expected_date NULLS LAST, h.id LIMIT 5000""")
                 .params(params)
                 .query(Row.class)
                 .list();
         Map<Long, List<InTransitDoc>> byProduct = new java.util.LinkedHashMap<>();
+        Map<Long, String[]> names = new HashMap<>();
         for (Row r : rows) {
+            names.putIfAbsent(r.productId(), new String[] {r.productCode(), r.productName()});
             byProduct.computeIfAbsent(r.productId(), k -> new java.util.ArrayList<>())
                     .add(new InTransitDoc(r.id(), r.number(), r.supplier(), localDate(r.expectedDate()), r.late(), r.remaining()));
         }
         return byProduct.entrySet().stream()
-                .map(e -> new InTransitRow(e.getKey(), e.getValue().stream().mapToLong(InTransitDoc::remainingQty).sum(),
+                .map(e -> new InTransitRow(e.getKey(), names.get(e.getKey())[0], names.get(e.getKey())[1], e.getValue().stream().mapToLong(InTransitDoc::remainingQty).sum(),
                         e.getValue().stream().map(InTransitDoc::expectedDate).filter(java.util.Objects::nonNull).min(LocalDate::compareTo)
                                 .orElse(null), e.getValue()))
                 .toList();
@@ -517,7 +520,7 @@ class ExpectedReceipts {
      * yangilanadi (ExpectedReceiptLinks). Qisman kelish — bitta KK dan bir nechta kirim.
      */
     @Transactional
-    ReceiveResult receive(Actor actor, long id, ReceiveRequest req) {
+    KkReceiveResult receive(Actor actor, long id, KkReceiveRequest req) {
         Head h = lock(id, actor);
         if (h.status() != KkStatus.IN_TRANSIT && h.status() != KkStatus.PARTIAL) {
             throw MedixException.conflict("kk.badStatus", h.status().name());
@@ -534,7 +537,7 @@ class ExpectedReceipts {
                 .list()
                 .forEach(k -> klines.put(k.id(), k));
         Map<Long, Integer> asked = new HashMap<>();
-        for (ReceiveLineRequest l : req.lines()) {
+        for (KkReceiveLineRequest l : req.lines()) {
             KLine k = klines.get(l.expectedLineId());
             if (k == null) {
                 throw MedixException.badRequest("kk.lineUnknown");
@@ -566,7 +569,7 @@ class ExpectedReceipts {
         long receiptId = receipts.create(actor, rr, true);
         jdbc.sql("UPDATE receipt SET expected_receipt_id = :k WHERE id = :r").param("k", id).param("r", receiptId).update();
         int no = 0;
-        for (ReceiveLineRequest l : req.lines()) {
+        for (KkReceiveLineRequest l : req.lines()) {
             jdbc.sql("UPDATE receipt_line SET expected_line_id = :el WHERE receipt_id = :r AND line_no = :no")
                     .param("el", l.expectedLineId())
                     .param("r", receiptId)
@@ -576,7 +579,7 @@ class ExpectedReceipts {
         String number = jdbc.sql("SELECT number FROM receipt WHERE id = :r").param("r", receiptId).query(String.class).single();
         audit.record(AuditEntry.of("kk.receive", "expected_receipt", id).change(null, Map.of("receipt", number, "lines", req.lines().size())),
                 actor);
-        return new ReceiveResult(receiptId, number);
+        return new KkReceiveResult(receiptId, number);
     }
 
     /** Yakuniy qabul (Qisman holatida): qolgan kelmagan soni hisobdan chiqariladi, «qarzga» — qarz shu summaga kamayadi. */
