@@ -254,8 +254,10 @@ final class OrderModels {
     /** «Belgilar» filtri qiymatlari (bir nechtasi — «yoki»). */
     enum CatalogFlag { MARKED, CONTROLLED, PRESCRIPTION }
 
-    /** Katalog filtrlari (bo'sh ro'yxat — filtr yo'q). */
-    /** productIds — faqat shu mahsulotlar (U11: tanlangan/qoʻshilgan qatorlarning qoldigʻi va muddati); boʻsh — hammasi. */
+    /**
+     * Katalog filtrlari (bo'sh ro'yxat — filtr yo'q). productIds — faqat shu mahsulotlar (U11: tanlangan/qoʻshilgan
+     * qatorlarning qoldigʻi va muddati).
+     */
     record CatalogFilter(List<Long> manufacturerIds, List<Long> categoryIds, List<Long> countryIds, List<CatalogFlag> flags,
             List<Long> productIds) {
         static final CatalogFilter NONE = new CatalogFilter(List.of(), List.of(), List.of(), List.of(), List.of());
