@@ -1,5 +1,6 @@
 "use client";
 
+import { inTransitOf, useInTransit } from "@/features/expected-receipts/api";
 import {
   Archive,
   ArrowDown,
@@ -29,7 +30,7 @@ import { RowMenu } from "@/components/ui/row-menu";
 import { EmptyState, ErrorState, Skeleton } from "@/components/ui/system-states";
 import { Tabs } from "@/components/ui/tabs";
 import { toast } from "@/components/ui/toast";
-import { can } from "@/features/auth/can";
+import { can, canAny } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
 import { useDictionary, type Entry } from "@/features/dictionaries/api";
 import { DeactivateDialog } from "@/features/organization/deactivate-dialog";
@@ -123,6 +124,8 @@ function Card({
   const activate = useActivateProduct();
   const deactivate = useBulkDeactivate();
   const stock = useProductStockCard(p.id, branchId);
+  const transit = useInTransit([p.id], canAny(me.data, ["kk.view", "kk.create", "kk.approve", "stock.view", "products.view"]), branchId);
+  const transitRow = inTransitOf(transit.data, p.id);
   const s = stock.data;
   const unit = p.unit.name;
   const [now] = useState(() => Date.now());
@@ -162,6 +165,16 @@ function Card({
   const kpis: { label: string; value: string; note?: string; warn?: boolean }[] = [
     { label: t("sTotal"), value: s ? `${formatQuantity(s.total)} ${unit}` : "…" },
     { label: t("sBatches"), value: s ? formatQuantity(s.batches) : "…" },
+    // O15: yetkazib beruvchidan yoʻlda (KK) — sotuvga olinmaydi
+    ...(transitRow && transitRow.qty > 0
+      ? [
+          {
+            label: t("sTransit"),
+            value: `${formatQuantity(transitRow.qty)} ${unit}`,
+            note: transitRow.nearestDate ? t("sTransitNote", { date: day(transitRow.nearestDate) }) : undefined,
+          },
+        ]
+      : []),
     {
       label: t("sNearest"),
       value: s?.nearestExpiry ? day(s.nearestExpiry) : "—",

@@ -239,7 +239,9 @@
       "active": "Faol",
       "locations": "Hudud (ombordagi joyi)"
     },
-    "iLocation": "Ombordagi joyi (hudud)"
+    "iLocation": "Ombordagi joyi (hudud)",
+    "sTransit": "Yoʻlda (yetkazib beruvchidan)",
+    "sTransitNote": "Kutilmoqda {date}"
   },
   "pageForm": {
     "new": "Yangi mahsulot",

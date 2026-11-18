@@ -239,7 +239,9 @@
       "active": "Активен",
       "locations": "Место на складе"
     },
-    "iLocation": "Место на складе"
+    "iLocation": "Место на складе",
+    "sTransit": "В пути (от поставщика)",
+    "sTransitNote": "Ожидается {date}"
   },
   "pageForm": {
     "new": "Новый товар",
