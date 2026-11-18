@@ -43,6 +43,7 @@ import { SavedViews } from "@/components/ui/saved-views";
 import { ORDER_CREATE, useOrders, type OrderStatus, type OrderSummary } from "./api";
 import type { OrdersT } from "./i18n";
 import { readOpenDraft } from "./open-draft";
+import { OrderPreview } from "./order-preview";
 import { shortName, stageHint } from "./stage-hint";
 import { QUICK_VIEWS, quickOn, quickPatch, splitStatuses } from "./status-strip";
 import { todayTashkent } from "@/features/counterparties/api";
@@ -265,6 +266,8 @@ export function OrdersPage() {
   const [hidden, setHidden] = useHiddenColumns("yuzplus-orders-columns");
   const [columnsOpen, setColumnsOpen] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
+  // U5: qatorni bosganda — oʻngdan oldindan koʻrish paneli («Toʻliq ochish» — hujjat sahifasi)
+  const [preview, setPreview] = useState<number | null>(null);
   const [now, setNow] = useState(() => Date.now());
   const debounce = useRef<ReturnType<typeof setTimeout>>(undefined);
   // Buyurtma — alohida sahifa (prototip): `/orders/<id>`, `/orders/new`.
@@ -617,7 +620,7 @@ export function OrdersPage() {
           rows={rows}
           rowKey={(o) => String(o.id)}
           loading={orders.isPending}
-          onRowClick={(o) => openOrder(o.id)}
+          onRowClick={(o) => setPreview(o.id)}
           selectable
           selectedKeys={selected}
           onSelectionChange={setSelected}
@@ -684,6 +687,7 @@ export function OrdersPage() {
           }
         />
       )}
+      {preview !== null ? <OrderPreview id={preview} onClose={() => setPreview(null)} onOpen={openOrder} /> : null}
     </>
   );
 }

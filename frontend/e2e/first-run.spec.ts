@@ -538,6 +538,7 @@ test("CEO: buyurtma — mijoz, mahsulot, muammolar paneli, navbatga yuborish", a
 
   await page.goto("/orders");
   await page.getByRole("cell", { name: "Shifo Dorixona E2E" }).first().click();
+  await page.getByRole("button", { name: "Toʻliq ochish" }).click();
   await expect(page.getByRole("heading", { name: "Hisobdan oʻtkazish" })).toBeVisible();
   await page.getByText("Tekshirildi").first().click();
   await field(page, "Joylar soni").fill("1");

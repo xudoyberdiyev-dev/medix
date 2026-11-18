@@ -324,6 +324,7 @@ test("Ombor mudiri: kodlar egasini oʻzgartiradi va qaytaradi (O10b)", async ({ 
   const tabs = page.getByRole("tablist", { name: "Buyurtma holatlari" });
   await tabs.getByRole("tab", { name: /^Hammasi/ }).click();
   await page.getByRole("cell", { name: CUSTOMER }).first().click();
+  await page.getByRole("button", { name: "Toʻliq ochish" }).click();
   await expect(page).toHaveURL(/\/orders\/\d+/);
   // Naqd toʻlov → standart «Zaxira kodlarga» (toʻlov turi boʻyicha)
   await expect(page.getByText("toʻlov turi boʻyicha")).toBeVisible();
@@ -489,6 +490,7 @@ test("Filial rahbari: birinchi kirish, buyurtmani tasdiqlaydi", async ({ page })
   const tabs = page.getByRole("tablist", { name: "Buyurtma holatlari" });
   await tabs.getByRole("tab", { name: /^Tasdiqlashda/ }).click();
   await page.getByRole("cell", { name: CUSTOMER }).first().click();
+  await page.getByRole("button", { name: "Toʻliq ochish" }).click();
   await page.getByRole("button", { name: "Tasdiqlash", exact: true }).click();
   await expect(page.getByText("Tasdiqlandi — navbatga oʻtdi").first()).toBeVisible();
 });
@@ -768,6 +770,7 @@ test("Filial rahbari: Direktor darajasidagi buyurtmani tasdiqlay olmaydi", async
   const tabs = page.getByRole("tablist", { name: "Buyurtma holatlari" });
   await tabs.getByRole("tab", { name: /^Tasdiqlashda/ }).click();
   await page.getByRole("cell", { name: CUSTOMER }).first().click();
+  await page.getByRole("button", { name: "Toʻliq ochish" }).click();
   await expect(page.getByText("Direktor tasdigʻi kerak").first()).toBeVisible();
   await expect(page.getByRole("button", { name: "Tasdiqlash", exact: true })).toHaveCount(0);
 });
@@ -778,6 +781,7 @@ test("Direktor: birinchi kirish, buyurtmani tasdiqlaydi", async ({ page }) => {
   const tabs = page.getByRole("tablist", { name: "Buyurtma holatlari" });
   await tabs.getByRole("tab", { name: /^Tasdiqlashda/ }).click();
   await page.getByRole("cell", { name: CUSTOMER }).first().click();
+  await page.getByRole("button", { name: "Toʻliq ochish" }).click();
   await expect(page.getByText("Direktor tasdigʻi kerak").first()).toBeVisible();
   await page.getByRole("button", { name: "Tasdiqlash", exact: true }).click();
   await expect(page.getByText("Tasdiqlandi — navbatga oʻtdi").first()).toBeVisible();

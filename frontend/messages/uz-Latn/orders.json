@@ -1076,5 +1076,14 @@
     "menu": "Faktura: {title}",
     "drag": "Sudrab tartiblang",
     "pdf": "PDF yuklab olish"
+  },
+  "preview": {
+    "kind": "Buyurtma",
+    "loading": "Yuklanmoqda…",
+    "open": "Toʻliq ochish",
+    "printSheet": "Terish varagʻi",
+    "note": "Izoh",
+    "lines": "Qatorlar",
+    "moreLines": "Yana {n} ta qator — «Toʻliq ochish»da"
   }
 }
