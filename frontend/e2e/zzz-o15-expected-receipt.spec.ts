@@ -63,11 +63,16 @@ test("O15: KK → tasdiq (qarz darhol, Yoʻlda) → qabul qilish — kirim qoral
   await page.getByRole("button", { name: "Qoralamani saqlash" }).click();
   await expect(page).toHaveURL(/\/expected-receipts\/\d+$/);
   await expect(page.getByText(/Tasdiqlanganda yetkazib beruvchi qarzi darhol yoziladi/)).toBeVisible();
+  // Bildirishnomalar sarlavhadagi tugmalar ustida — yopilishini kutamiz
+  await page.mouse.move(0, 0);
+  await expect(page.getByText("Saqlandi", { exact: true })).toBeHidden({ timeout: 15_000 });
 
   await page.getByRole("button", { name: "Tasdiqlash", exact: true }).click();
   await page.getByRole("dialog").getByRole("button", { name: "Tasdiqlash", exact: true }).click();
   await expect(page.getByText(/Tovar yoʻlda — kutilgan sana/)).toBeVisible();
   await expect(page.getByText(/Qarz yozilgan: 10\.000,00/)).toBeVisible();
+  await page.mouse.move(0, 0);
+  await expect(page.getByText("Tasdiqlandi — tovar yoʻlda", { exact: true })).toBeHidden({ timeout: 15_000 });
 
   await page.getByRole("button", { name: "Qabul qilish", exact: true }).click();
   const dlg = page.getByRole("dialog");
@@ -92,6 +97,8 @@ test("O15: KK → tasdiq (qarz darhol, Yoʻlda) → qabul qilish — kirim qoral
   await accept.getByLabel(/^Yaroqli\s*\*?$/).fill("7");
   await accept.getByRole("button", { name: "Qabulni tasdiqlash" }).click();
   await expect(page.getByText("Tovar Qabul zonasida — sotuvga yopiq")).toBeVisible();
+  await page.mouse.move(0, 0);
+  await expect(page.getByText(/ · tovar Qabul zonasida$/)).toBeHidden({ timeout: 15_000 });
   await page.getByRole("button", { name: "Oʻtkazish" }).click();
   const postDialog = page.getByRole("dialog", { name: "Kirimni oʻtkazish" });
   await postDialog.getByText("Haqiqiy soni boʻyicha").click();
