@@ -183,3 +183,15 @@ export function describeDevice(ua: string | null | undefined): DeviceInfo {
               : null;
   return { browser, os, mobile: /Mobile|iPhone|Android/.test(ua) };
 }
+
+/** O24 — mavzu tanlovini profilga saqlash. */
+export function useSaveTheme() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (theme: "light" | "dark" | "system") => {
+      await ensureCsrf();
+      await unwrap(api.PUT("/api/profile/theme", { body: { theme } }));
+    },
+    onSuccess: (_d, theme) => qc.setQueryData<Profile>(KEY, (p) => (p ? { ...p, theme } : p)),
+  });
+}

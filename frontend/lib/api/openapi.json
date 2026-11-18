@@ -12974,6 +12974,29 @@
         "tags" : [ "profile" ]
       }
     },
+    "/api/profile/theme" : {
+      "put" : {
+        "description" : "Yorug'/qorong'i/tizim bo'yicha — har qurilmada bir xil bo'lishi uchun (O24).",
+        "operationId" : "setTheme",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ThemeRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          }
+        },
+        "summary" : "Interfeys mavzusini saqlash",
+        "tags" : [ "profile" ]
+      }
+    },
     "/api/receipts" : {
       "get" : {
         "description" : "Yorliqlar soni (holat filtrisiz), filtr variantlari va kartalar bilan.",
@@ -33500,9 +33523,14 @@
           },
           "roleName" : {
             "type" : "string"
+          },
+          "theme" : {
+            "type" : "string",
+            "description" : "Interfeys mavzusi: light, dark yoki system (O24)",
+            "enum" : [ "light", "dark", "system" ]
           }
         },
-        "required" : [ "fullName", "id", "login", "pinSet", "roleCode", "roleName" ]
+        "required" : [ "fullName", "id", "login", "pinSet", "roleCode", "roleName", "theme" ]
       },
       "PurchaserHomeView" : {
         "type" : "object",
@@ -37821,6 +37849,18 @@
             "format" : "int64"
           }
         }
+      },
+      "ThemeRequest" : {
+        "type" : "object",
+        "properties" : {
+          "theme" : {
+            "type" : "string",
+            "enum" : [ "light", "dark", "system" ],
+            "minLength" : 1,
+            "pattern" : "^(light|dark|system)$"
+          }
+        },
+        "required" : [ "theme" ]
       },
       "ThreadDetail" : {
         "type" : "object",

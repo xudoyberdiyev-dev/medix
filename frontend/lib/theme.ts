@@ -27,6 +27,15 @@ export function readThemePref(): ThemePref {
   return "system";
 }
 
+/** Shu brauzerda aniq tanlov bormi (yoʻq boʻlsa — profil (server) tanlovi qoʻllanadi, O24). */
+export function hasStoredThemePref(): boolean {
+  try {
+    return isThemePref(window.localStorage.getItem(THEME_KEY));
+  } catch {
+    return false;
+  }
+}
+
 export function resolveTheme(pref: ThemePref, systemDark: boolean): ResolvedTheme {
   if (pref === "system") return systemDark ? "dark" : "light";
   return pref;

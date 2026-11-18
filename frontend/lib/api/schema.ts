@@ -5751,6 +5751,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/profile/theme": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Interfeys mavzusini saqlash
+         * @description Yorug'/qorong'i/tizim bo'yicha — har qurilmada bir xil bo'lishi uchun (O24).
+         */
+        put: operations["setTheme"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/receipts": {
         parameters: {
             query?: never;
@@ -14134,6 +14154,11 @@ export interface components {
             position?: string;
             roleCode: string;
             roleName: string;
+            /**
+             * @description Interfeys mavzusi: light, dark yoki system (O24)
+             * @enum {string}
+             */
+            theme: "light" | "dark" | "system";
         };
         PurchaserHomeView: {
             bonus: components["schemas"]["BonusInfo"];
@@ -15916,6 +15941,10 @@ export interface components {
             supplierPaymentDays?: number;
             /** Format: int64 */
             supplyEmployeeId?: number;
+        };
+        ThemeRequest: {
+            /** @enum {string} */
+            theme: "light" | "dark" | "system";
         };
         ThreadDetail: {
             hasMore: boolean;
@@ -25173,6 +25202,28 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["EndSessionsResult"];
                 };
+            };
+        };
+    };
+    setTheme: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ThemeRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
