@@ -4,6 +4,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import jakarta.servlet.http.Cookie;
@@ -21,6 +22,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import uz.yuzplus.TestcontainersConfig;
+import uz.yuzplus.shared.error.SystemErrors;
 
 /** P1: panel rollari (Haydovchi, Yig'uvchi, Markirovkachi) katalog, narx, mijoz va eksport API'larini ololmaydi; qobiq API'lari ishlaydi. */
 @SpringBootTest
@@ -51,6 +53,9 @@ class EndpointPermissionsIT {
 
     @Autowired
     PasswordEncoder encoder;
+
+    @Autowired
+    SystemErrors systemErrors;
 
     private long branch() {
         jdbc.sql("INSERT INTO company (name) SELECT 'Shifo Dori' WHERE NOT EXISTS (SELECT 1 FROM company)").update();
@@ -129,5 +134,18 @@ class EndpointPermissionsIT {
                 .andExpect(header().string("X-Content-Type-Options", "nosniff"))
                 .andExpect(header().string("X-Frame-Options", "DENY"))
                 .andExpect(header().string("Referrer-Policy", "strict-origin-when-cross-origin"));
+    }
+
+    @Test
+    void systemStatusForSecuritySettingsOnly() throws Exception {
+        String path = "/api/p4-sinov/" + UUID.randomUUID();
+        systemErrors.record("GET", path, new IllegalStateException("sinov"));
+        long b = branch();
+        mvc.perform(get("/api/settings/system-status").cookie(loginAs("DIRECTOR", b)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.last24h").value(org.hamcrest.Matchers.greaterThanOrEqualTo(1)))
+                .andExpect(jsonPath("$.recent[0].path").value(path))
+                .andExpect(jsonPath("$.recent[0].exception").value("java.lang.IllegalStateException"));
+        mvc.perform(get("/api/settings/system-status").cookie(loginAs("OPERATOR", b))).andExpect(status().isForbidden());
     }
 }
