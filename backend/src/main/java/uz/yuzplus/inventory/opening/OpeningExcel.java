@@ -38,7 +38,7 @@ import uz.yuzplus.shared.error.YuzplusException;
 import uz.yuzplus.shared.security.Actor;
 
 /**
- * BQ qatorlari .xlsx dan (MEDIX shabloni; SmartUp ustunlari namunasi kelganda moslashtiriladi). Hammasi yoki hech narsa:
+ * BQ qatorlari .xlsx dan (100+ shabloni; SmartUp ustunlari namunasi kelganda moslashtiriladi). Hammasi yoki hech narsa:
  * bitta xato bo'lsa — qoralama o'zgarmaydi. Mahsulot 8 raqamli kod (yoki shtrix-kod) bo'yicha, zona nomi yoki turi bo'yicha
  * (bo'sh — Asosiy saqlash) topiladi.
  */

@@ -41,11 +41,11 @@ class IdentitySchemaIT {
     }
 
     private long warehouse() {
-        jdbc.sql("INSERT INTO company (name) VALUES ('Medix Group') ON CONFLICT DO NOTHING").update();
+        jdbc.sql("INSERT INTO company (name) VALUES ('Shifo Dori') ON CONFLICT DO NOTHING").update();
         long company = jdbc.sql("SELECT id FROM company").query(Long.class).single();
         long branch = jdbc.sql("""
                 INSERT INTO branch (company_id, code, name, legal_name, tin)
-                VALUES (:c, 'SMQ', 'Samarqand', 'Medix SMQ MChJ', '987654321') RETURNING id""")
+                VALUES (:c, 'SMQ', 'Samarqand', 'Shifo Dori SMQ MChJ', '987654321') RETURNING id""")
                 .param("c", company)
                 .query(Long.class)
                 .single();
@@ -87,8 +87,8 @@ class IdentitySchemaIT {
     @Test
     void branchCodeAndTinValidated() {
         warehouse();
-        assertRejected("INSERT INTO branch (company_id, code, name, legal_name, tin) SELECT id, 'bxr', 'Buxoro', 'Medix BXR', '111111111' FROM company");
-        assertRejected("INSERT INTO branch (company_id, code, name, legal_name, tin) SELECT id, 'BXR', 'Buxoro', 'Medix BXR', '12345' FROM company");
+        assertRejected("INSERT INTO branch (company_id, code, name, legal_name, tin) SELECT id, 'bxr', 'Buxoro', 'Shifo Dori BXR', '111111111' FROM company");
+        assertRejected("INSERT INTO branch (company_id, code, name, legal_name, tin) SELECT id, 'BXR', 'Buxoro', 'Shifo Dori BXR', '12345' FROM company");
     }
 
     @Test

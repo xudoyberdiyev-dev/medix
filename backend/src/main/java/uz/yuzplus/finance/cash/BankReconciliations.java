@@ -24,7 +24,7 @@ import uz.yuzplus.shared.money.Money;
 import uz.yuzplus.shared.security.Actor;
 
 /**
- * Bank ko'chirmasi bilan solishtirish (SPEC 5.5): bank hisobi uchun ko'chirma sanasidagi bank qoldig'i MEDIX jurnalidagi qoldiq bilan
+ * Bank ko'chirmasi bilan solishtirish (SPEC 5.5): bank hisobi uchun ko'chirma sanasidagi bank qoldig'i 100+ jurnalidagi qoldiq bilan
  * solishtiriladi, bank tasdiqlagan harakatlar belgilanadi. Farq bo'lsa — izoh majburiy. Solishtirishlar ketma-ket (har biri oldingisidan
  * keyingi sana), faqat qo'shiladi. V1 — qo'lda (bank fayli importi — namuna kelgach).
  */

@@ -92,18 +92,18 @@ class SetupIT {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("setup.incomplete"));
 
-        mvc.perform(json(put("/api/setup/company"), ceo, "{\"name\":\"Medix Group\"}"))
+        mvc.perform(json(put("/api/setup/company"), ceo, "{\"name\":\"Shifo Dori\"}"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("Medix Group"));
+                .andExpect(jsonPath("$.name").value("Shifo Dori"));
 
         mvc.perform(json(post("/api/setup/branches"), ceo,
-                        "{\"code\":\"T\",\"name\":\"Toshkent\",\"legalName\":\"Medix TSH MChJ\",\"tin\":\"12345\"}"))
+                        "{\"code\":\"T\",\"name\":\"Toshkent\",\"legalName\":\"Shifo Dori TSH MChJ\",\"tin\":\"12345\"}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errors.code").isNotEmpty())
                 .andExpect(jsonPath("$.errors.tin").isNotEmpty());
 
         MvcResult branch = mvc.perform(json(post("/api/setup/branches"), ceo,
-                        "{\"code\":\"tsh\",\"name\":\"Toshkent\",\"legalName\":\"Medix TSH MChJ\",\"tin\":\"301234567\"}"))
+                        "{\"code\":\"tsh\",\"name\":\"Toshkent\",\"legalName\":\"Shifo Dori TSH MChJ\",\"tin\":\"301234567\"}"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.code").value("TSH"))
                 .andReturn();
@@ -193,14 +193,14 @@ class SetupIT {
     @Test
     void companyLocaleAndLogo() throws Exception {
         Cookie ceo = loginAs("DIRECTOR");
-        mvc.perform(json(put("/api/setup/company"), ceo, "{\"name\":\"Medix Group\",\"defaultLocale\":\"ru\"}"))
+        mvc.perform(json(put("/api/setup/company"), ceo, "{\"name\":\"Shifo Dori\",\"defaultLocale\":\"ru\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.defaultLocale").value("ru"))
                 .andExpect(jsonPath("$.logoVersion").doesNotExist());
         // Til berilmasa — oʻzgarmaydi
-        mvc.perform(json(put("/api/setup/company"), ceo, "{\"name\":\"Medix Group\"}"))
+        mvc.perform(json(put("/api/setup/company"), ceo, "{\"name\":\"Shifo Dori\"}"))
                 .andExpect(jsonPath("$.defaultLocale").value("ru"));
-        mvc.perform(json(put("/api/setup/company"), ceo, "{\"name\":\"Medix Group\",\"defaultLocale\":\"de\"}"))
+        mvc.perform(json(put("/api/setup/company"), ceo, "{\"name\":\"Shifo Dori\",\"defaultLocale\":\"de\"}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errors.defaultLocale").value("Tilni roʻyxatdan tanlang."));
 

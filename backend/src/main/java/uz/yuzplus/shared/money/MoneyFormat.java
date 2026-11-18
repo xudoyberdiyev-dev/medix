@@ -2,7 +2,7 @@ package uz.yuzplus.shared.money;
 
 import java.math.BigDecimal;
 
-/** MEDIX pul ko'rinishi: {@code 1.250.000,00} (dizayn tizimi, «Raqamlar, pul, sana»). */
+/** 100+ pul ko'rinishi: {@code 1.250.000,00} (dizayn tizimi, «Raqamlar, pul, sana»). */
 public final class MoneyFormat {
 
     private MoneyFormat() {}

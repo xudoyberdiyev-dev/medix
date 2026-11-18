@@ -36,7 +36,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(YuzplusException.class)
-    ProblemDetail medix(YuzplusException e) {
+    ProblemDetail yuzplus(YuzplusException e) {
         return problem(e.status(), e.code(), e.args());
     }
 

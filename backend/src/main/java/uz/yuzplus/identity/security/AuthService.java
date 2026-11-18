@@ -40,7 +40,7 @@ public class AuthService {
         this.encoder = encoder;
         this.clock = clock;
         this.audit = audit;
-        this.dummyHash = encoder.encode("medix-dummy-password");
+        this.dummyHash = encoder.encode("yuzplus-dummy-password");
     }
 
     public static String normalizeLogin(String login) {

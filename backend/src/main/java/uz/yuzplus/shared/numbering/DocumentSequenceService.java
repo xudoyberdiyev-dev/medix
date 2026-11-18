@@ -79,7 +79,7 @@ public class DocumentSequenceService implements DisposableBean {
         }
         HikariDataSource m = main.unwrap(HikariDataSource.class);
         HikariConfig cfg = new HikariConfig();
-        cfg.setPoolName("medix-numbering");
+        cfg.setPoolName("yuzplus-numbering");
         cfg.setJdbcUrl(m.getJdbcUrl());
         cfg.setUsername(m.getUsername());
         cfg.setPassword(m.getPassword());

@@ -33,7 +33,7 @@ import uz.yuzplus.shared.audit.AuditLog;
 import uz.yuzplus.shared.error.YuzplusException;
 
 /**
- * Mahsulotlar .xlsx: eksport (jadval filtrlari bilan) va import (MEDIX shabloni bo'yicha; SmartUp ustunlari namunasi
+ * Mahsulotlar .xlsx: eksport (jadval filtrlari bilan) va import (100+ shabloni bo'yicha; SmartUp ustunlari namunasi
  * kelganda moslashtiriladi). Import — hammasi yoki hech narsa: bitta xato qator bo'lsa, hech narsa yozilmaydi.
  */
 @Service

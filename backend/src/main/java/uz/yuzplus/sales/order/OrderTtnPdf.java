@@ -17,7 +17,7 @@ import uz.yuzplus.shared.pdf.PdfRenderer;
 import uz.yuzplus.shared.security.Actor;
 
 /**
- * O10e TTN (tovar-transport yuk xati) — MEDIX o'zi chop etadi: buyurtma bo'yicha yoki reys bo'yicha (har buyurtma alohida varaqda).
+ * O10e TTN (tovar-transport yuk xati) — 100+ o'zi chop etadi: buyurtma bo'yicha yoki reys bo'yicha (har buyurtma alohida varaqda).
  * Jo'natuvchi, qabul qiluvchi, mashina, haydovchi, joylar, mahsulotlar (partiya), summa, imzolar. TTN raqami — nakladnoy raqami
  * (bitta yuk hujjati). Imzolangan nusxa buxgalter navbatida (O10d) yuklanadi.
  */

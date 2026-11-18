@@ -43,7 +43,7 @@ public class ProductImport {
     static final int MAX_SHEETS = 20;
     static final String TYPE = "products";
 
-    /** MEDIX maydonlari (prototip `BQ_FIELDS.products` + MEDIX shablonidagi qo'shimchalar). */
+    /** 100+ maydonlari (prototip `BQ_FIELDS.products` + 100+ shablonidagi qo'shimchalar). */
     static final List<String> FIELDS = List.of("code", "name", "contractName", "classifier", "maker", "country", "cat", "form", "dose",
             "pack", "unit", "barcode", "ikpu", "farmId", "note", "vat", "min", "max", "marked", "controlled", "prescription",
             "location");

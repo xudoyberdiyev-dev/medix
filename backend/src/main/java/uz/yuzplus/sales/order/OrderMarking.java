@@ -41,7 +41,7 @@ import uz.yuzplus.shared.security.Actor;
  * markirovkasiz qatorlarni «Tasdiqlash» bilan o'tkazadi, so'ng yakunlaydi → «Hisobdan o'tkazilmoqda». Har skanerlashda tekshiruv tartibi:
  * format → takror (global) → mahsulot (GTIN) → partiya (yig'ilgan) → tur (quti/dona) → qator to'lganmi.
  *
- * <p>V1: milliy markirovka reestri bilan integratsiya yo'q (V3) — «reestrda bor va sotilmagan» o'rniga MEDIX ichidagi
+ * <p>V1: milliy markirovka reestri bilan integratsiya yo'q (V3) — «reestrda bor va sotilmagan» o'rniga 100+ ichidagi
  * global takror tekshiruvi (faol yoki sotilgan kod qayta qabul qilinmaydi). Tur: mahsulot birligi «dona» — D, boshqasi — Q.
  */
 @Service

@@ -104,7 +104,7 @@ class ProductMovementLockIT {
                 .andExpect(jsonPath("$.code").value(newCode))
                 .andExpect(jsonPath("$.codeHistory", hasSize(1)));
         // Ombor harakati paydo bo'ladi
-        jdbc.sql("INSERT INTO company (name) SELECT 'Medix Group' WHERE NOT EXISTS (SELECT 1 FROM company)").update();
+        jdbc.sql("INSERT INTO company (name) SELECT 'Shifo Dori' WHERE NOT EXISTS (SELECT 1 FROM company)").update();
         var rnd = java.util.concurrent.ThreadLocalRandom.current();
         long br = jdbc.sql("""
                 INSERT INTO branch (company_id, code, name, legal_name, tin)

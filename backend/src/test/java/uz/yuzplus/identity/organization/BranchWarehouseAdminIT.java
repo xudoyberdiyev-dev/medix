@@ -47,7 +47,7 @@ class BranchWarehouseAdminIT {
 
     @BeforeEach
     void company() {
-        jdbc.sql("INSERT INTO company (name) SELECT 'Medix Group' WHERE NOT EXISTS (SELECT 1 FROM company)").update();
+        jdbc.sql("INSERT INTO company (name) SELECT 'Shifo Dori' WHERE NOT EXISTS (SELECT 1 FROM company)").update();
     }
 
     private Cookie loginAs(String role, Long branchId) throws Exception {
@@ -117,7 +117,7 @@ class BranchWarehouseAdminIT {
         branch(admin); // oxirgi faol filial nofaol qilinmaydi — yana bittasi bo'lsin
         String code = code();
         MvcResult created = mvc.perform(json(post("/api/branches"), admin,
-                        "{\"code\":\"" + code.toLowerCase() + "\",\"name\":\"Samarqand\",\"legalName\":\"Medix SMQ MChJ\",\"tin\":\"" + tin() + "\"}"))
+                        "{\"code\":\"" + code.toLowerCase() + "\",\"name\":\"Samarqand\",\"legalName\":\"Shifo Dori SMQ MChJ\",\"tin\":\"" + tin() + "\"}"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.code").value(code))
                 .andExpect(jsonPath("$.active").value(true))
@@ -125,7 +125,7 @@ class BranchWarehouseAdminIT {
         long id = id(created);
 
         mvc.perform(json(put("/api/branches/" + id), admin,
-                        "{\"name\":\"Samarqand filiali\",\"legalName\":\"Medix SMQ MChJ\",\"tin\":\"" + tin() + "\",\"phone\":\"+998 66 000 00 00\"}"))
+                        "{\"name\":\"Samarqand filiali\",\"legalName\":\"Shifo Dori SMQ MChJ\",\"tin\":\"" + tin() + "\",\"phone\":\"+998 66 000 00 00\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Samarqand filiali"))
                 .andExpect(jsonPath("$.code").value(code));
@@ -156,7 +156,7 @@ class BranchWarehouseAdminIT {
     void branchCardDetailsAndBankAccounts() throws Exception {
         Cookie admin = loginAs("ADMIN", null);
         String code = code();
-        String body = "{\"code\":\"" + code + "\",\"name\":\"Buxoro\",\"legalName\":\"Medix BXR MChJ\",\"tin\":\"" + tin()
+        String body = "{\"code\":\"" + code + "\",\"name\":\"Buxoro\",\"legalName\":\"Shifo Dori BXR MChJ\",\"tin\":\"" + tin()
                 + "\",\"address\":\"Buxoro sh., Navoiy koʻch., 1\",\"vatPayer\":true,\"vatCertNo\":\"326030012345\","
                 + "\"region\":\"Buxoro viloyati\",\"directorName\":\"Karimov Akmal\",\"accountantName\":\"Yusupova Malika\","
                 + "\"bankAccounts\":[{\"bankName\":\"Kapitalbank\",\"mfo\":\"01158\",\"account\":\"20208000900100001010\",\"main\":false},"
@@ -175,14 +175,14 @@ class BranchWarehouseAdminIT {
 
         // Eski mijoz (qoʻshimchasiz) tahrirlasa — qoʻshimchalar saqlanib qoladi
         mvc.perform(json(put("/api/branches/" + id), admin,
-                        "{\"name\":\"Buxoro filiali\",\"legalName\":\"Medix BXR MChJ\",\"tin\":\"" + tin() + "\"}"))
+                        "{\"name\":\"Buxoro filiali\",\"legalName\":\"Shifo Dori BXR MChJ\",\"tin\":\"" + tin() + "\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.region").value("Buxoro viloyati"))
                 .andExpect(jsonPath("$.bankAccounts.length()").value(2));
 
         // QQS toʻlovchi emas — guvohnoma tozalanadi; hisoblar almashtiriladi
         mvc.perform(json(put("/api/branches/" + id), admin,
-                        "{\"name\":\"Buxoro filiali\",\"legalName\":\"Medix BXR MChJ\",\"tin\":\"" + tin() + "\",\"vatPayer\":false,"
+                        "{\"name\":\"Buxoro filiali\",\"legalName\":\"Shifo Dori BXR MChJ\",\"tin\":\"" + tin() + "\",\"vatPayer\":false,"
                                 + "\"vatCertNo\":\"326030012345\",\"bankAccounts\":[{\"bankName\":\"Agrobank\",\"mfo\":\"00394\","
                                 + "\"account\":\"20208000900100001012\",\"main\":true}]}"))
                 .andExpect(status().isOk())

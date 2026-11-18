@@ -76,7 +76,7 @@ class OrderIT {
     private record Place(long branchId, long warehouseId, long main, long quarantine) {}
 
     private Place place() {
-        jdbc.sql("INSERT INTO company (name) SELECT 'Medix Group' WHERE NOT EXISTS (SELECT 1 FROM company)").update();
+        jdbc.sql("INSERT INTO company (name) SELECT 'Shifo Dori' WHERE NOT EXISTS (SELECT 1 FROM company)").update();
         var rnd = ThreadLocalRandom.current();
         String code = "" + (char) ('A' + rnd.nextInt(26)) + (char) ('A' + rnd.nextInt(26)) + (char) ('A' + rnd.nextInt(26));
         Long branch = jdbc.sql("""
@@ -881,8 +881,8 @@ class OrderIT {
                 .andReturn());
         mvc.perform(get("/api/orders/issues").cookie(keeper)).andExpect(jsonPath("$[*].id", hasItem((int) issue)));
         mvc.perform(get("/api/notifications").cookie(keeper)).andExpect(jsonPath("$.items[*].title", hasItem(containsString("Muammo bor"))));
-        // O'quvchi tilida (MEDIX_LOCALE): kalit va o'rinbosarlar saqlangan.
-        mvc.perform(get("/api/notifications").cookie(keeper).cookie(new Cookie("MEDIX_LOCALE", "ru")))
+        // O'quvchi tilida (YUZPLUS_LOCALE): kalit va o'rinbosarlar saqlangan.
+        mvc.perform(get("/api/notifications").cookie(keeper).cookie(new Cookie("YUZPLUS_LOCALE", "ru")))
                 .andExpect(jsonPath("$.items[*].title", hasItem(containsString("Есть проблема"))));
         send(post("/api/orders/issues/" + issue + "/resolve"), keeper, "{\"resolution\":\"Almashtirildi\"}")
                 .andExpect(jsonPath("$.resolvedBy").value("Sinov WAREHOUSE_MANAGER"));

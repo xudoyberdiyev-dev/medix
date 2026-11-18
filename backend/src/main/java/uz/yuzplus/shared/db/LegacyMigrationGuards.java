@@ -50,7 +50,7 @@ public class LegacyMigrationGuards implements Callback {
 
     @Override
     public String getCallbackName() {
-        return "medix-legacy-migration-guards";
+        return "yuzplus-legacy-migration-guards";
     }
 
     private static Optional<String[]> guard(Context context) {

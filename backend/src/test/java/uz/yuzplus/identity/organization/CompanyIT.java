@@ -62,7 +62,7 @@ class CompanyIT {
 
     @Test
     void overviewAndRenameWithAudit() throws Exception {
-        jdbc.sql("INSERT INTO company (name) SELECT 'Medix Group' WHERE NOT EXISTS (SELECT 1 FROM company)").update();
+        jdbc.sql("INSERT INTO company (name) SELECT 'Shifo Dori' WHERE NOT EXISTS (SELECT 1 FROM company)").update();
         String before = jdbc.sql("SELECT name FROM company").query(String.class).single();
         long branches = jdbc.sql("SELECT count(*) FROM branch WHERE active").query(Long.class).single();
         Cookie director = loginAs("DIRECTOR");
@@ -81,12 +81,12 @@ class CompanyIT {
 
         try {
             mvc.perform(put("/api/company").with(csrf()).cookie(director).contentType(MediaType.APPLICATION_JSON)
-                            .content("{\"name\":\"  Medix Group Yangi \"}"))
+                            .content("{\"name\":\"  Shifo Dori Yangi \"}"))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.name").value("Medix Group Yangi"));
+                    .andExpect(jsonPath("$.name").value("Shifo Dori Yangi"));
             assertThat(jdbc.sql("SELECT new_value->>'name' FROM audit_log WHERE action = 'company.update' ORDER BY id DESC LIMIT 1")
                             .query(String.class).single())
-                    .isEqualTo("Medix Group Yangi");
+                    .isEqualTo("Shifo Dori Yangi");
         } finally {
             jdbc.sql("UPDATE company SET name = :n").param("n", before).update();
         }

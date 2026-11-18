@@ -100,14 +100,14 @@ class ProfilePinIT {
         mvc.perform(put("/api/profile").with(csrf()).cookie(s.cookie())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"login\":\"" + newLogin.toUpperCase() + "\",\"lastName\":\"Karimov\",\"firstName\":\"Aziz\","
-                                + "\"middleName\":\"Akmalovich\",\"phone\":\"+998901112233\",\"email\":\"Ceo@Medix.uz\","
+                                + "\"middleName\":\"Akmalovich\",\"phone\":\"+998901112233\",\"email\":\"Ceo@ShifoDori.uz\","
                                 + "\"position\":\"Bosh direktor\",\"birthDate\":\"1985-03-21\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.login").value(newLogin))
                 .andExpect(jsonPath("$.fullName").value("Aziz Karimov"))
                 .andExpect(jsonPath("$.lastName").value("Karimov"))
                 .andExpect(jsonPath("$.middleName").value("Akmalovich"))
-                .andExpect(jsonPath("$.email").value("ceo@medix.uz"))
+                .andExpect(jsonPath("$.email").value("ceo@shifodori.uz"))
                 .andExpect(jsonPath("$.birthDate").value("1985-03-21"))
                 .andExpect(jsonPath("$.position").value("Bosh direktor"))
                 .andExpect(jsonPath("$.roleCode").value("DIRECTOR"));
