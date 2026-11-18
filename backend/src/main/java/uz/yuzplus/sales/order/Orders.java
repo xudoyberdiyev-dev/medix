@@ -332,7 +332,7 @@ class Orders {
     /** Ro'yxat filtrlari: mijoz, kiritgan xodim, sotuv/qaytarish davri (hisobotdan o'tish), buyurtma sanasi (SPEC 120). */
     record OrderFilter(List<Long> customerIds, List<Long> operatorIds, LocalDate soldFrom, LocalDate soldTo, LocalDate orderFrom,
             LocalDate orderTo, List<OrderStatus> statuses, List<DeliveryType> deliveryTypes, List<PaymentType> paymentTypes,
-            List<Long> regionIds, List<Long> salesZoneIds) {
+            List<Long> regionIds, List<Long> salesZoneIds, boolean overdue) {
         OrderFilter {
             salesZoneIds = salesZoneIds == null ? List.of() : List.copyOf(salesZoneIds);
             customerIds = customerIds == null ? List.of() : List.copyOf(customerIds);
@@ -423,6 +423,12 @@ class Orders {
         if (filter.orderTo() != null) {
             where.append(" AND o.order_date <= :ot");
             params.put("ot", java.sql.Date.valueOf(filter.orderTo()));
+        }
+        // U5 «Kechikkanlar»: yetkazish sanasi oʻtgan, lekin hali yetkazilmagan (jarayondagi) buyurtmalar
+        if (filter.overdue()) {
+            where.append(" AND o.delivery_date < :today AND o.status IN ('PENDING_APPROVAL', 'QUEUED', 'PICKING', 'MARKING', 'CHECKING',"
+                    + " 'DOCUMENTING', 'LOADING', 'IN_TRANSIT')");
+            params.put("today", java.sql.Date.valueOf(today()));
         }
         if (mine) {
             where.append(" AND o.created_by = :me");
