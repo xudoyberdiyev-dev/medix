@@ -44,7 +44,7 @@ import { api, unwrap } from "@/lib/api/client";
 import type { uzLatn } from "@/i18n/messages.generated";
 import type { components } from "@/lib/api/schema";
 import { cn } from "@/lib/cn";
-import { formatMoney } from "@/lib/format";
+import { formatMoney, formatMoneyOrDash } from "@/lib/format";
 import { useBranchStore } from "@/lib/stores/branch";
 import {
   axisLabel,
@@ -460,7 +460,7 @@ export function MiniTable<T>({
   );
 }
 
-const mny = (v: string) => <span className={nonZero(v) ? "" : "text-text-secondary"}>{formatMoney(v)}</span>;
+const mny = (v: string) => <span className={nonZero(v) ? "" : "text-text-secondary"}>{formatMoneyOrDash(v)}</span>;
 
 function PtCard({ label, value, note, href }: { label: string; value: ByPayment; note: string; href: string }) {
   const t = useTranslations("home");
@@ -472,14 +472,17 @@ function PtCard({ label, value, note, href }: { label: string; value: ByPayment;
         <span className="text-caption text-text-secondary">{t("dir.soum")}</span>
       </div>
       <div className="mt-1 text-caption text-text-secondary">{note}</div>
-      <dl className="mt-3 grid grid-cols-[1fr_auto] gap-x-3 gap-y-1.5 border-t border-border pt-3 text-body">
-        <dt className="text-text-secondary">{t("card.cash")}</dt>
-        <dd className="text-right tabular-nums">{mny(value.cash)}</dd>
-        <dt className="text-text-secondary">{t("card.transfer")}</dt>
-        <dd className="text-right tabular-nums">{mny(value.transfer)}</dd>
-        <dt className="text-text-secondary">{t("card.online")}</dt>
-        <dd className="text-right tabular-nums">{mny(value.online)}</dd>
-      </dl>
+      {/* U8: hammasi nol boʻlgan boʻlinma koʻrsatilmaydi */}
+      {nonZero(value.cash) || nonZero(value.transfer) || nonZero(value.online) ? (
+        <dl className="mt-3 grid grid-cols-[1fr_auto] gap-x-3 gap-y-1.5 border-t border-border pt-3 text-body">
+          <dt className="text-text-secondary">{t("card.cash")}</dt>
+          <dd className="text-right tabular-nums">{mny(value.cash)}</dd>
+          <dt className="text-text-secondary">{t("card.transfer")}</dt>
+          <dd className="text-right tabular-nums">{mny(value.transfer)}</dd>
+          <dt className="text-text-secondary">{t("card.online")}</dt>
+          <dd className="text-right tabular-nums">{mny(value.online)}</dd>
+        </dl>
+      ) : null}
     </Link>
   );
 }

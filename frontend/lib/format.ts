@@ -32,6 +32,12 @@ export function formatMoney(amount: string | bigint): string {
   return `${sign}${groupThousands(integer.toString())},${cents.toString().padStart(2, "0")}`;
 }
 
+/** U8: boʻlinma va jadval kataklarida nol summa — «—» (asosiy kartadagi summa uchun ishlatilmaydi). */
+export function formatMoneyOrDash(amount: string | bigint): string {
+  const v = formatMoney(amount);
+  return /[1-9]/.test(v) ? v : "—";
+}
+
 /** 1240 → "1.240" */
 export function formatQuantity(qty: number): string {
   if (!Number.isInteger(qty)) {
