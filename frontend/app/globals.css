@@ -224,7 +224,10 @@
 /* Asosiy kontent (har sahifaning <main>) — vertikal aylantirish chizigʻi koʻrinmaydi, aylantirish ishlaydi (egasi talabi 10.11 13:51).
    scrollbar-width meros boʻlmaydi: ichki jadvallarning gorizontal aylantirish chizigʻi oʻz holicha qoladi. */
 @layer base {
+  /* O23: faqat kontent maydoni aylanadi — flex bolasi kontent balandligigacha choʻzilmasin (aks holda sahifa oʻzi aylanadi,
+     sidebar qisqa qolib, pastda boʻsh joy chiqadi). */
   [data-app-content] main {
+    min-height: 0;
     scrollbar-width: none;
     -ms-overflow-style: none;
   }

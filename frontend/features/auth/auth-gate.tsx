@@ -25,7 +25,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
   if (me.data && !me.data.mustChangePassword) return <>{children}</>;
   if (me.error && !unauthorized) {
     return (
-      <div className="flex h-screen items-center justify-center p-6">
+      <div className="flex h-dvh items-center justify-center p-6">
         <div className="w-full max-w-md">
           <ErrorState onRetry={() => me.refetch()} />
         </div>
@@ -33,7 +33,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
     );
   }
   return (
-    <div className="flex h-screen" aria-busy="true">
+    <div className="flex h-dvh" aria-busy="true">
       <div className="w-sidebar shrink-0 bg-brand-900" />
       <div className="flex flex-1 flex-col gap-4 p-6">
         <Skeleton className="h-6 w-48" />

@@ -396,9 +396,9 @@ export function LoginShowcase({ roles }: { roles: number | null }) {
   ];
 
   return (
-    <aside className="hidden min-w-0 flex-[1_1_640px] flex-col gap-[20px] rounded-modal bg-primary-soft px-[32px] py-[28px] lg:flex">
+    <aside className="hidden min-h-0 min-w-0 flex-[1_1_640px] flex-col gap-[20px] rounded-modal bg-primary-soft px-[32px] py-[28px] lg:flex [@media(max-height:820px)]:gap-[12px] [@media(max-height:820px)]:py-[20px]">
       <BrandMark size="lg" />
-      <div className="flex min-h-[400px] flex-auto flex-col items-center justify-center gap-[10px]" aria-hidden>
+      <div className="flex min-h-0 flex-auto flex-col items-center justify-center gap-[10px] overflow-hidden" aria-hidden>
         <div key={active} className="flex w-full justify-center motion-safe:animate-login-fade">
           <SceneFor module={active} />
         </div>
@@ -450,7 +450,7 @@ export function LoginShowcase({ roles }: { roles: number | null }) {
             </button>
           )}
         </div>
-        <dl className="grid grid-cols-4 gap-[12px]">
+        <dl className="grid grid-cols-4 gap-[12px] [@media(max-height:820px)]:hidden">
           {stats.map((s) => (
             <div key={s.label} className="flex min-w-0 flex-col-reverse">
               <dt className="text-table text-text-secondary">{s.label}</dt>
