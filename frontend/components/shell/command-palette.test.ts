@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { groupHits, KIND_LABELS, localHits, type PaletteHit } from "./command-palette";
+import { actionHits, groupHits, KIND_LABELS, localHits, recentHits, type PaletteHit } from "./command-palette";
 
 describe("Ctrl+K: sahifalar va hisobotlar", () => {
   it("2 belgidan qisqa yoki ruxsatlar yoʻq — boʻsh", () => {
@@ -27,5 +27,19 @@ describe("Ctrl+K: sahifalar va hisobotlar", () => {
     const groups = groupHits(hits);
     expect(groups.map((g) => g.kind)).toEqual(["PAGE", "ORDER", "PRODUCT"]);
     expect(groups[1]?.label).toBe(KIND_LABELS.ORDER);
+  });
+});
+
+describe("Ctrl+K: tez amallar va oxirgilar (U6)", () => {
+  const label = (k: string) => ({ order: "Yangi buyurtma", payment: "Mijozdan toʻlov" })[k] ?? k;
+  it("amallar ruxsatga qarab; boʻsh soʻrovda hammasi, qidiruvda mosi", () => {
+    expect(actionHits("", ["orders.create"], label).map((h) => h.link)).toEqual(["/orders/new"]);
+    expect(actionHits("", ["picking.do"], label)).toEqual([]);
+    expect(actionHits("toʻlov", ["orders.create", "payments.create"], label).map((h) => h.link)).toEqual(["/payments/mt/new"]);
+  });
+  it("oxirgi yoʻl menyu boʻlimi nomi bilan; ruxsatsiz boʻlim tashlanadi", () => {
+    const hits = recentHits(["/orders/351", "/cash"], ["orders.create"], (i) => i.label);
+    expect(hits).toHaveLength(1);
+    expect(hits[0]).toMatchObject({ kind: "RECENT", title: "Buyurtmalar · 351", link: "/orders/351" });
   });
 });
