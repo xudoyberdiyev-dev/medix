@@ -271,7 +271,9 @@ class ExpectedReceiptIT {
         Cookie manager = loginAs("BRANCH_MANAGER", p.branchId());
         Cookie operator = loginAs("OPERATOR", p.branchId());
         Cookie stranger = loginAs("BRANCH_MANAGER", other.branchId());
-        long id = id(send(post("/api/expected-receipts"), manager, doc(p, sup, "PREPAID", null, ln(prod, 5, "100.00")))
+        // Kutilgan sana kiritilmagan (ixtiyoriy) — kartochka ochilishi kerak
+        long id = id(send(post("/api/expected-receipts"), manager,
+                doc(p, sup, "PREPAID", null, ln(prod, 5, "100.00")).replaceAll("\"expectedDate\":\"[^\"]+\"", "\"expectedDate\":null"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.dueDate").doesNotExist())
                 .andReturn());

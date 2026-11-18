@@ -79,7 +79,7 @@ class ExpectedReceipts {
 
     // ===== O'qish =====
 
-    private static final String LATE_SQL = " (h.status IN ('IN_TRANSIT', 'PARTIAL') AND h.expected_date < :today) ";
+    private static final String LATE_SQL = " coalesce(h.status IN ('IN_TRANSIT', 'PARTIAL') AND h.expected_date < :today, false) ";
 
     @Transactional(readOnly = true)
     ExpectedReceiptPage list(Actor actor, Long branchId, Long supplierId, Long warehouseId, KkStatus status, boolean open, boolean lateOnly,
