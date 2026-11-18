@@ -206,7 +206,7 @@ export function SalesReportPage() {
   const table = useClientTable(report.data?.rows ?? NO_ROWS);
   const display = flattenGroups(table.rows, expanded, groupBy2 != null);
   const gross = vatMode === "gross";
-  const { cols, update: setCols, reset: resetCols } = useColumnPrefs("medix-report-sales-cols", COLUMN_KEYS);
+  const { cols, update: setCols, reset: resetCols } = useColumnPrefs("yuzplus-report-sales-cols", COLUMN_KEYS);
 
   if (me.data && !allowed) return <ForbiddenState description={t("sales.forbidden")} />;
   const r = report.data;

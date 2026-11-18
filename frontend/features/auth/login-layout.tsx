@@ -37,7 +37,7 @@ export function helpLine(
   return null;
 }
 
-const THEME_KEY = "medix-login-theme";
+const THEME_KEY = "yuzplus-login-theme";
 type Theme = "light" | "dark";
 
 function readTheme(): Theme {

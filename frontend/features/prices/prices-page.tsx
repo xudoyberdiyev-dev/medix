@@ -292,7 +292,7 @@ function PricesTab({
           <DayField label={t("at")} value={f.at} invalid={t("dateInvalid")} onApply={(at) => apply({ at })} />
           <div className="ml-auto flex items-center gap-2">
             <SavedViews
-              storageKey="medix-prices-views"
+              storageKey="yuzplus-prices-views"
               query={params.toString()}
               hidden={[]}
               onApply={(v) => {

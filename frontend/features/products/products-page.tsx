@@ -173,7 +173,7 @@ export function ProductsPage() {
   const products = useProducts(filters, branchId);
   const activate = useActivateProduct();
   const bulkDeactivate = useBulkDeactivate();
-  const { cols, update: setCols, reset: resetCols } = useColumnPrefs("medix-products-cols", COLUMN_KEYS);
+  const { cols, update: setCols, reset: resetCols } = useColumnPrefs("yuzplus-products-cols", COLUMN_KEYS);
   const [selected, setSelected] = useState<string[]>([]);
   const [deact, setDeact] = useState<number[] | null>(null);
   const [search, setSearch] = useState(filters.q);

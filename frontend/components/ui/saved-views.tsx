@@ -33,7 +33,7 @@ export function SavedViews({
   hidden,
   onApply,
 }: {
-  /** Jadval kaliti, masalan «medix-products-views». */
+  /** Jadval kaliti, masalan «yuzplus-products-views». */
   storageKey: string;
   /** Joriy URL soʻrovi. */
   query: string;

@@ -356,7 +356,7 @@ function PlanLine({ line, t }: { line: PlanLineData; t: OrdersT }) {
   );
 }
 
-const BY_PLACE_KEY = "medix-pick-by-place";
+const BY_PLACE_KEY = "yuzplus-pick-by-place";
 
 /** «Joy boʻyicha saralash» — yigʻuvchining shaxsiy tanlovi (brauzerda). */
 function readByPlace(): boolean {

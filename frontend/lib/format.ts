@@ -1,5 +1,5 @@
 /**
- * MEDIX raqam, pul va sana koʻrinishi (design/system/README.md → «Raqamlar, pul, sana»).
+ * 100+ raqam, pul va sana koʻrinishi (design/system/README.md → «Raqamlar, pul, sana»).
  * Pul serverdan satr sifatida keladi ("1250000.50") — float ishlatilmaydi.
  */
 

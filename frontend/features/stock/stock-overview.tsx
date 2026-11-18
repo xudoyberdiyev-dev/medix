@@ -301,8 +301,8 @@ export function StockOverview() {
     enabled: allowed && f.view === "batch" && !f.transit,
     placeholderData: keepPreviousData,
   });
-  const pPrefs = useColumnPrefs("medix-stock-pcols-v1", PRODUCT_COLUMN_KEYS);
-  const bPrefs = useColumnPrefs("medix-stock-bcols-v1", BATCH_COLUMN_KEYS);
+  const pPrefs = useColumnPrefs("yuzplus-stock-pcols-v1", PRODUCT_COLUMN_KEYS);
+  const bPrefs = useColumnPrefs("yuzplus-stock-bcols-v1", BATCH_COLUMN_KEYS);
 
   if (me.data && !allowed) return <ForbiddenState description={t("forbidden")} />;
 

@@ -15,9 +15,9 @@ RUN pnpm build
 
 FROM node:24-alpine
 WORKDIR /app
-RUN corepack enable && addgroup -S medix && adduser -S medix -G medix
+RUN corepack enable && addgroup -S yuzplus && adduser -S yuzplus -G yuzplus
 ENV NODE_ENV=production TZ=Asia/Tashkent NEXT_TELEMETRY_DISABLED=1
-COPY --from=build --chown=medix:medix /app ./
-USER medix
+COPY --from=build --chown=yuzplus:yuzplus /app ./
+USER yuzplus
 EXPOSE 3000
 CMD ["pnpm", "start"]

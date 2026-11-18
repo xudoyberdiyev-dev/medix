@@ -216,7 +216,7 @@ export function OrdersPage() {
   const params = useSearchParams();
   const filters = parseOrderFilters(new URLSearchParams(params.toString()), { customer: t("list.customer"), operator: t("list.operator") });
   const [search, setSearch] = useState(filters.q);
-  const [hidden, setHidden] = useHiddenColumns("medix-orders-columns");
+  const [hidden, setHidden] = useHiddenColumns("yuzplus-orders-columns");
   const [columnsOpen, setColumnsOpen] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
   const [now, setNow] = useState(() => Date.now());
@@ -515,7 +515,7 @@ export function OrdersPage() {
         <div className="ml-auto flex items-center gap-2">
           {canCreate ? <Checkbox label={t("list.mine")} checked={filters.mine} onChange={(v) => apply({ mine: v })} /> : null}
           <SavedViews
-            storageKey="medix-orders-views"
+            storageKey="yuzplus-orders-views"
             query={serializeOrderFilters({ ...filters, page: 1 })}
             hidden={hidden}
             onApply={(v) => {

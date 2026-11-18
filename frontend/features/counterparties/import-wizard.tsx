@@ -570,7 +570,7 @@ export function CounterpartyImportWizard({ role }: { role: CpImportRole }) {
               <div className="overflow-x-auto rounded-control border border-border">
                 <div className="min-w-[720px]">
                   <div className="grid h-9 grid-cols-[minmax(180px,0.9fr)_28px_minmax(220px,1fr)_minmax(200px,1fr)] items-center border-b border-border bg-table-header text-caption font-medium text-text-secondary">
-                    <span className="px-3.5">{t("fMedix")}</span>
+                    <span className="px-3.5">{t("fSystem")}</span>
                     <span />
                     <span className="px-3">{t("fFile")}</span>
                     <span className="px-3">{t("fSample")}</span>

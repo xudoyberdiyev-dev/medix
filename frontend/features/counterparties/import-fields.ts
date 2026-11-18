@@ -45,7 +45,7 @@ export function messageField(key: string, params: Record<string, string>): CpFie
   return null;
 }
 
-/** Shablon — tanlangan til sarlavhalari bilan boʻsh CSV qatori (MEDIX nomlari avtomatik taniladi). */
+/** Shablon — tanlangan til sarlavhalari bilan boʻsh CSV qatori (100+ nomlari avtomatik taniladi). */
 export function templateRows(role: CpImportRole, label: (k: CpFieldKey) => string): string[][] {
   return [importFields(role).map((f) => label(f.key))];
 }

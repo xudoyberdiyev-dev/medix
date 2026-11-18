@@ -24,8 +24,8 @@ function DirectorSetupBanner() {
   const router = useRouter();
   const pending = status.data !== undefined && !status.data.completed;
   useEffect(() => {
-    if (pending && sessionStorageGet("medix.setup.redirected") !== "1") {
-      sessionStorageSet("medix.setup.redirected", "1");
+    if (pending && sessionStorageGet("yuzplus.setup.redirected") !== "1") {
+      sessionStorageSet("yuzplus.setup.redirected", "1");
       router.replace("/setup");
     }
   }, [pending, router]);

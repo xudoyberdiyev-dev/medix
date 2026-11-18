@@ -16,7 +16,7 @@ import { LANG_CODE } from "./language-chip";
 import { isNavActive, navigationFor } from "./nav";
 
 /**
- * Sidebar (prototip `Medix ERP`): fon brand-900; guruhlar yigʻiladi (chevron), faol band — sidebar-active rangli ikonka va chap chiziq.
+ * Sidebar (prototip `100plus ERP`): fon brand-900; guruhlar yigʻiladi (chevron), faol band — sidebar-active rangli ikonka va chap chiziq.
  * Kenglik: ≥1280 px — 240 px (yoki «Sidebarʼni yigʻish» bilan 64 px); 768–1279 px — 64 px (faqat ikonka, nom — `title`);
  * <768 px — yashirin, menyu yuqori paneldagi tugma orqali chapdan ochiladi (`MobileNav`). Pastda — foydalanuvchi menyusi.
  */

@@ -1,5 +1,6 @@
 "use client";
 
+import "@/lib/legacy-storage";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
@@ -14,7 +15,7 @@ interface BranchState {
 
 export const useBranchStore = create<BranchState>()(
   persist((set) => ({ branchId: null, setBranchId: (branchId) => set({ branchId }) }), {
-    name: "medix-branch",
+    name: "yuzplus-branch",
     storage: createJSONStorage(() => localStorage),
   }),
 );

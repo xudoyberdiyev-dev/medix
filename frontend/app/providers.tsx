@@ -3,6 +3,7 @@
 import { QueryClientProvider, type QueryClient } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { Toaster } from "@/components/ui/toast";
+import "@/lib/legacy-storage";
 import { makeQueryClient } from "@/lib/api/query-client";
 
 let browserQueryClient: QueryClient | undefined;

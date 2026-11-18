@@ -44,7 +44,7 @@ export function PasswordExit() {
   );
 }
 
-/** Vaqtinchalik parolni doimiysiga almashtirish (prototip `Medix ERP` → setpw): talablar, kuch, takror, «Parol saqlandi». */
+/** Vaqtinchalik parolni doimiysiga almashtirish (prototip `100plus ERP` → setpw): talablar, kuch, takror, «Parol saqlandi». */
 export function PasswordForm() {
   const t = useTranslations("password");
   const tc = useTranslations("common");

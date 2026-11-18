@@ -23,7 +23,7 @@ export interface OpenDraft {
   at: number;
 }
 
-const KEY = "medix-order-open";
+const KEY = "yuzplus-order-open";
 export const OPEN_DRAFT_TTL_MS = 12 * 60 * 60 * 1000;
 
 const str = (v: unknown): v is string => typeof v === "string";

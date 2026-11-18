@@ -174,7 +174,7 @@ export function OverviewPage({ role }: { role: CounterpartyRole }) {
   const block = useBlockCounterparty();
   const activate = useActivateCounterparty();
   const colKeys = (customers ? C_COLS : S_COLS) as readonly Col[];
-  const { cols, update: setCols, reset: resetCols } = useColumnPrefs(`medix-kt-${role}-cols`, [...colKeys]);
+  const { cols, update: setCols, reset: resetCols } = useColumnPrefs(`yuzplus-kt-${role}-cols`, [...colKeys]);
   const views = (customers ? VIEWS_C : VIEWS_S) as readonly View[];
   const initialView = (views as readonly string[]).includes(params.get("view") ?? "") ? (params.get("view") as View) : "all";
   const [f, setF] = useState<OverviewFilters>({

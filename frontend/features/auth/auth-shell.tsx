@@ -44,7 +44,7 @@ export function BrandMark({ inverted = false, size = "md" }: { inverted?: boolea
 }
 
 /**
- * Kirish, yangi parol va shu kabi sahifalar qobigʻi (prototip `Medix ERP` → LoginScreen): chapda brend paneli
+ * Kirish, yangi parol va shu kabi sahifalar qobigʻi (prototip `100plus ERP` → LoginScreen): chapda brend paneli
  * (≥1024 px), oʻngda 380 px forma; tor ekranda logotip forma ustida.
  */
 export function AuthShell({ topRight, children }: { topRight?: ReactNode; children: ReactNode }) {

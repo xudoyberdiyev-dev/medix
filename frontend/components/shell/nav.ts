@@ -135,7 +135,7 @@ export const TRANSFER_PAGES = ["/transfers", "/warehouse-transfers", "/zone-tran
 /** «Qaytarish va hisobdan chiqarish» yorliqlari. */
 export const RETURN_PAGES = ["/customer-returns", "/write-offs", "/supplier-returns"] as const;
 
-/** Menyu tuzilmasi — prototip `Medix ERP` (NAV) bilan aynan. */
+/** Menyu tuzilmasi — prototip `100plus ERP` (NAV) bilan aynan. */
 export const navigation: NavGroup[] = [
   {
     items: [
