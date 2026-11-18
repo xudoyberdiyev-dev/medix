@@ -84,6 +84,9 @@ test("O15: KK → tasdiq (qarz darhol, Yoʻlda) → qabul qilish — kirim qoral
   // Kirim: 8 dan 7 tasi keldi (kam) → oʻtkazish — qarz qayta yozilmaydi
   await page.getByRole("link", { name: /^KR-/ }).click();
   await expect(page).toHaveURL(/\/receipts\/\d+/);
+  // Bildirishnoma sarlavhadagi tugmalar ustida — yopilishini kutamiz
+  await page.mouse.move(0, 0);
+  await expect(page.getByText("Kirim qoralamasi yaratildi — sanab, qabul qiling")).toBeHidden({ timeout: 15_000 });
   await page.getByRole("button", { name: "Qabul qilish" }).click();
   const accept = page.getByRole("dialog", { name: "Tovarni qabul qilish" });
   await accept.getByLabel(/^Yaroqli\s*\*?$/).fill("7");
