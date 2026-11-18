@@ -9,7 +9,9 @@ export default defineConfig({
   fullyParallel: false,
   workers: 1,
   retries: 0,
-  timeout: 60_000,
+  // P2: koʻp rolli zanjir testlari (3–5 kirish + hujjatlar) CI runnerʼda 60 s ga yaqinlashadi — 18.11 dagi «beqaror» yiqilishlar
+  // (roles-chain «reysga chiqadi», o16 «3 dona → yigʻish») aynan test byudjeti tugashi edi (1.0m), mantiq xatosi emas.
+  timeout: 120_000,
   expect: { timeout: 10_000 },
   reporter: process.env.CI ? [["list"], ["html", { open: "never" }]] : "list",
   use: {

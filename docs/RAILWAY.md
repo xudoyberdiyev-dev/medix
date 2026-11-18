@@ -8,7 +8,7 @@ Foydalanuvchi faqat frontend domenini ochadi; `/api/*` so'rovlarini frontend bac
 
 ## 2. Backend xizmati
 1. Loyihada **+ Create → GitHub Repo → xudoyberdiyev-dev/medix**.
-2. Xizmat → **Settings**: nomi `backend`; **Source → Branch**: `develop`; **Root Directory**: `backend`.
+2. Xizmat → **Settings**: nomi `backend`; **Source → Branch**: `main`; **Root Directory**: `backend`.
 3. **Variables** (Raw Editor'ga nusxalang):
 ```
 YUZPLUS_DB_URL=jdbc:postgresql://${{Postgres.PGHOST}}:${{Postgres.PGPORT}}/${{Postgres.PGDATABASE}}
@@ -24,7 +24,7 @@ PORT=8080
 
 ## 3. Frontend xizmati
 1. **+ Create → GitHub Repo → xudoyberdiyev-dev/medix** (yana bir marta).
-2. **Settings**: nomi `frontend`; Branch `develop`; **Root Directory**: `frontend`.
+2. **Settings**: nomi `frontend`; Branch `main`; **Root Directory**: `frontend`.
 3. **Variables**:
 ```
 BACKEND_URL=http://${{backend.RAILWAY_PRIVATE_DOMAIN}}:8080
@@ -37,8 +37,18 @@ PORT=3000
 Ustani tugatgach, backend'dan `YUZPLUS_BOOTSTRAP_PASSWORD` ni o'chirib qo'yish mumkin.
 
 ## Yangilash
-`develop` ga har push'da Railway o'zgargan xizmatni avtomatik qayta yig'adi (watch paths: `/backend/**`, `/frontend/**`).
-Sinovdan keyin barqaror versiyada qolish uchun Branch'ni `main` ga o'zgartiring.
+`main` ga har merge'da (oyna oxirida, CI yashil bo'lsa) Railway o'zgargan xizmatni avtomatik qayta yig'adi (watch paths: `/backend/**`, `/frontend/**`).
+
+## Ishga tushirishdan oldin (P2, P5, P6 — egasi bir marta qiladi)
+1. **Bir versiya (P2).** Frontend (Vercel yoki Railway) va backend (Railway) **ikkalasi ham `main`** dan joylanishi shart —
+   aks holda yangi API'li backend eski frontend bilan (yoki aksincha) ishlab, sahifalar xato beradi.
+   Railway → backend xizmati → **Settings → Source → Branch** → `main` → **Save**. Frontend Railway'da bo'lsa — u ham `main`.
+2. **Vercel (P6).** `frontend/vercel.json` faqat `main` ni joylaydi (develop va boshqa branch preview'lari o'chiq — limit tejaladi).
+   Vercel → Project → **Settings → Git → Production Branch** = `main` ekanini tekshiring.
+3. **Zaxira nusxa (P5).** Railway → Postgres xizmati → **Backups** → kunlik avtomatik nusxani yoqing (Railway Pro'da bor).
+   Qo'shimcha shifrlangan kunlik nusxa (GitHub Actions, `.github/workflows/backup.yml`) **repo private bo'lgandan keyin** ishlaydi:
+   GitHub → Settings → Secrets → Actions → `PROD_DATABASE_URL` (Railway Postgres → Connect → *Public* URL) va
+   `BACKUP_PASSPHRASE` (uzun tasodifiy parol, xavfsiz joyda ham saqlang — usiz nusxani ochib bo'lmaydi).
 
 ## Muammolar
 - Backend «Healthcheck failed»: Deploy Logs'da `Started YuzplusApplication` bormi; baza o'zgaruvchilari to'g'rimi.
