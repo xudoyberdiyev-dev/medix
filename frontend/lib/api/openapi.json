@@ -93,6 +93,9 @@
     "description" : "Xodimlar",
     "name" : "employees"
   }, {
+    "description" : "Ishga tushirish: sozlash roʻyxati",
+    "name" : "setup-checklist"
+  }, {
     "description" : "Boshlang'ich qoldiq",
     "name" : "opening"
   }, {
@@ -12910,6 +12913,28 @@
         "tags" : [ "profile" ]
       }
     },
+    "/api/profile/favorites" : {
+      "put" : {
+        "operationId" : "setFavorites",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/FavoritesRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          }
+        },
+        "summary" : "Sidebar sevimlilarini saqlash",
+        "tags" : [ "profile" ]
+      }
+    },
     "/api/profile/pin" : {
       "put" : {
         "description" : "Joriy parol bilan tasdiqlanadi. PIN — 4–6 raqam.",
@@ -15963,6 +15988,25 @@
         },
         "summary" : "Usta holati",
         "tags" : [ "setup" ]
+      }
+    },
+    "/api/setup-checklist" : {
+      "get" : {
+        "operationId" : "checklist",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SetupChecklist"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Sozlash roʻyxati: kompaniya, filiallar, omborlar, xodimlar, narxlar, mijozlar, mahsulotlar, boshlangʻich qoldiq",
+        "tags" : [ "setup-checklist" ]
       }
     },
     "/api/setup/branches" : {
@@ -19920,47 +19964,6 @@
         "summary" : "Qoralamani o'tkazish",
         "tags" : [ "zone-transfer" ]
       }
-    },
-    "/api/setup-checklist" : {
-      "get" : {
-        "operationId" : "checklist",
-        "responses" : {
-          "200" : {
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/SetupChecklist"
-                }
-              }
-            },
-            "description" : "OK"
-          }
-        },
-        "summary" : "Sozlash roʻyxati",
-        "tags" : [ "setup-checklist" ]
-      }
-    },
-    "/api/profile/favorites" : {
-      "put" : {
-        "operationId" : "setFavorites",
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/FavoritesRequest"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "204" : {
-            "description" : "No Content"
-          }
-        },
-        "summary" : "Sidebar sevimlilarini saqlash",
-        "tags" : [ "profile" ]
-      }
     }
   },
   "components" : {
@@ -22806,7 +22809,8 @@
         "properties" : {
           "count" : {
             "type" : "integer",
-            "format" : "int64"
+            "format" : "int64",
+            "description" : "Hozirgi soni (kompaniya — 0/1)"
           },
           "done" : {
             "type" : "boolean"
