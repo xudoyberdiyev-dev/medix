@@ -170,7 +170,8 @@
     "OK": "Ombor koʻchirishi",
     "FS": "Filiallararo savdo",
     "IN": "Inventarizatsiya",
-    "BQ": "Boshlangʻich qoldiq"
+    "BQ": "Boshlangʻich qoldiq",
+    "KK": "Kutilayotgan kirim"
   },
   "bqLocked": "Tasdiqlangan boshlangʻich qoldiq hujjatlari bor. Kesish sanasini oʻzgartirish ular hisobini buzadi, shuning uchun maydon qulflangan.",
   "bqLockedShort": "Tasdiqlangan BQ hujjatlari bor — oʻzgartirib boʻlmaydi",

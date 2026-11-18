@@ -168,6 +168,9 @@
     "description" : "Zaxira markirovka kodlari",
     "name" : "reserve-codes"
   }, {
+    "description" : "Kutilayotgan kirim (KK, yuk xati)",
+    "name" : "expected-receipt"
+  }, {
     "description" : "Kassa, Terminal va bank hisoblari",
     "name" : "money-accounts"
   } ],
@@ -390,7 +393,7 @@
     },
     "/api/advance-offsets/{id}/cancel" : {
       "post" : {
-        "operationId" : "cancel_13",
+        "operationId" : "cancel_14",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -485,7 +488,7 @@
     },
     "/api/audit" : {
       "get" : {
-        "operationId" : "list_36",
+        "operationId" : "list_37",
         "parameters" : [ {
           "in" : "query",
           "name" : "view",
@@ -826,7 +829,7 @@
     },
     "/api/bank-reconciliations" : {
       "get" : {
-        "operationId" : "list_27",
+        "operationId" : "list_28",
         "parameters" : [ {
           "in" : "query",
           "name" : "accountId",
@@ -855,7 +858,7 @@
         "tags" : [ "bank-reconciliations" ]
       },
       "post" : {
-        "operationId" : "create_27",
+        "operationId" : "create_28",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -950,7 +953,7 @@
     "/api/branch-payments" : {
       "get" : {
         "description" : "Filial to'lovchi yoki oluvchi bo'lganlari.",
-        "operationId" : "list_26",
+        "operationId" : "list_27",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -980,7 +983,7 @@
       },
       "post" : {
         "description" : "Darhol o'tkaziladi: to'lovchi hisobidan chiqim, oluvchi hisobiga kirim, filiallararo qarz kamayadi. Qarzdan oshmaydi.",
-        "operationId" : "create_26",
+        "operationId" : "create_27",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -1050,7 +1053,7 @@
     "/api/branch-payments/{id}/cancel" : {
       "post" : {
         "description" : "Teskari: pul qaytadi, qarz tiklanadi.",
-        "operationId" : "cancel_12",
+        "operationId" : "cancel_13",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -1089,7 +1092,7 @@
     "/api/branch-sales" : {
       "get" : {
         "description" : "branchId — sotuvchi yoki xaridor filial.",
-        "operationId" : "list_25",
+        "operationId" : "list_26",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -1142,7 +1145,7 @@
       },
       "post" : {
         "description" : "Tovar joʻnatilguncha joyida qoladi.",
-        "operationId" : "create_25",
+        "operationId" : "create_26",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -1258,7 +1261,7 @@
     },
     "/api/branch-sales/{id}" : {
       "get" : {
-        "operationId" : "get_16",
+        "operationId" : "get_17",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -1285,7 +1288,7 @@
       },
       "put" : {
         "description" : "Sotuvchi zona, xaridor ombori, izoh va qatorlar almashtiriladi. Faqat qoralama.",
-        "operationId" : "update_21",
+        "operationId" : "update_22",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -1324,7 +1327,7 @@
     "/api/branch-sales/{id}/cancel" : {
       "post" : {
         "description" : "Faqat qoralama.",
-        "operationId" : "cancel_11",
+        "operationId" : "cancel_12",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -1383,7 +1386,7 @@
     "/api/branch-sales/{id}/receive" : {
       "post" : {
         "description" : "Xaridor filial. Kelgan miqdor qabul zonasiga kiradi; kamomad bo'lsa izoh majburiy.",
-        "operationId" : "receive_1",
+        "operationId" : "receive_2",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -1451,7 +1454,7 @@
     "/api/branch-sales/{id}/shortage" : {
       "get" : {
         "description" : "Ochiqmi, summa (special.cost) va hal qilish tarixi.",
-        "operationId" : "get_29",
+        "operationId" : "get_30",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -1518,7 +1521,7 @@
     },
     "/api/branches" : {
       "get" : {
-        "operationId" : "list_24",
+        "operationId" : "list_25",
         "responses" : {
           "200" : {
             "content" : {
@@ -1538,7 +1541,7 @@
         "tags" : [ "branches" ]
       },
       "post" : {
-        "operationId" : "create_24",
+        "operationId" : "create_25",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -1590,7 +1593,7 @@
     "/api/branches/{id}" : {
       "put" : {
         "description" : "Kod o'zgarmaydi.",
-        "operationId" : "update_20",
+        "operationId" : "update_21",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -1733,7 +1736,7 @@
       },
       "post" : {
         "description" : "Kupyuralar sanog'i. Farq bo'lsa — cash.closeDiff ruxsati, izoh va PIN; farq tuzatuvchi KO bilan yoziladi.",
-        "operationId" : "close",
+        "operationId" : "close_1",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -2122,7 +2125,7 @@
     },
     "/api/cash-panel" : {
       "get" : {
-        "operationId" : "get_28",
+        "operationId" : "get_29",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -2213,7 +2216,7 @@
     "/api/company" : {
       "get" : {
         "description" : "Faol filiallar, omborlar va xodimlar soni; ishga tushirilgan vaqt va kim.",
-        "operationId" : "get_15",
+        "operationId" : "get_16",
         "responses" : {
           "200" : {
             "content" : {
@@ -2281,7 +2284,7 @@
     "/api/counterparties" : {
       "get" : {
         "description" : "Qidiruv: nom, STIR, telefon, kontakt (lotin/kirill farqsiz).",
-        "operationId" : "list_23",
+        "operationId" : "list_24",
         "parameters" : [ {
           "in" : "query",
           "name" : "q",
@@ -2375,7 +2378,7 @@
         "tags" : [ "counterparties" ]
       },
       "post" : {
-        "operationId" : "create_23",
+        "operationId" : "create_24",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -2739,7 +2742,7 @@
     },
     "/api/counterparties/{id}" : {
       "get" : {
-        "operationId" : "get_14",
+        "operationId" : "get_15",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -2765,7 +2768,7 @@
         "tags" : [ "counterparties" ]
       },
       "put" : {
-        "operationId" : "update_19",
+        "operationId" : "update_20",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -3312,7 +3315,7 @@
     "/api/customer-returns" : {
       "get" : {
         "description" : "Qidiruv: raqam, mijoz, sotuv raqami.",
-        "operationId" : "list_22",
+        "operationId" : "list_23",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -3388,7 +3391,7 @@
       },
       "post" : {
         "description" : "«Qabul kutilmoqda» holatida yaratiladi; yaratuvchida qm.approve bo'lsa darhol qabul qilinadi.",
-        "operationId" : "create_22",
+        "operationId" : "create_23",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -3489,7 +3492,7 @@
     },
     "/api/customer-returns/{id}" : {
       "get" : {
-        "operationId" : "get_27",
+        "operationId" : "get_28",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -3518,7 +3521,7 @@
     "/api/customer-returns/{id}/approve" : {
       "post" : {
         "description" : "Tovar Karantin zonasiga kiradi, mijoz qarzi qaytarish summasiga kamayadi.",
-        "operationId" : "approve_6",
+        "operationId" : "approve_7",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -3547,7 +3550,7 @@
     "/api/customer-returns/{id}/cancel" : {
       "post" : {
         "description" : "Karantindan tovar chiqadi, mijoz qarzi qaytadi, hisobotlardan chiqadi. Partiya keyingi hujjat bilan chiqarilgan bo'lsa — 409 qm.cancelBlocked.",
-        "operationId" : "cancel_10",
+        "operationId" : "cancel_11",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -4217,7 +4220,7 @@
     },
     "/api/dictionaries/{kind}" : {
       "get" : {
-        "operationId" : "list_21",
+        "operationId" : "list_22",
         "parameters" : [ {
           "in" : "path",
           "name" : "kind",
@@ -4246,7 +4249,7 @@
         "tags" : [ "dictionaries" ]
       },
       "post" : {
-        "operationId" : "create_21",
+        "operationId" : "create_22",
         "parameters" : [ {
           "in" : "path",
           "name" : "kind",
@@ -4284,7 +4287,7 @@
     },
     "/api/dictionaries/{kind}/{id}" : {
       "put" : {
-        "operationId" : "update_18",
+        "operationId" : "update_19",
         "parameters" : [ {
           "in" : "path",
           "name" : "kind",
@@ -4403,7 +4406,7 @@
     },
     "/api/employee-lookup" : {
       "get" : {
-        "operationId" : "list_35",
+        "operationId" : "list_36",
         "responses" : {
           "200" : {
             "content" : {
@@ -4425,7 +4428,7 @@
     },
     "/api/employees" : {
       "get" : {
-        "operationId" : "list_20",
+        "operationId" : "list_21",
         "responses" : {
           "200" : {
             "content" : {
@@ -4445,7 +4448,7 @@
         "tags" : [ "employees" ]
       },
       "post" : {
-        "operationId" : "create_20",
+        "operationId" : "create_21",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -4543,7 +4546,7 @@
     "/api/employees/{id}" : {
       "put" : {
         "description" : "Login, rol yoki filial oʻzgarsa ochiq sessiyalari tugatiladi.",
-        "operationId" : "update_17",
+        "operationId" : "update_18",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -4807,6 +4810,464 @@
         "tags" : [ "employees" ]
       }
     },
+    "/api/expected-receipts" : {
+      "get" : {
+        "description" : "open — Yo'lda va Qisman; late — kutilgan sana o'tgan. Summa — narx ko'rish huquqi bilan.",
+        "operationId" : "list_20",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "supplierId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "warehouseId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "status",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "DRAFT", "IN_TRANSIT", "PARTIAL", "RECEIVED", "CANCELLED" ]
+          }
+        }, {
+          "in" : "query",
+          "name" : "open",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
+          }
+        }, {
+          "in" : "query",
+          "name" : "late",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
+          }
+        }, {
+          "in" : "query",
+          "name" : "q",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "page",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 0
+          }
+        }, {
+          "in" : "query",
+          "name" : "size",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 50
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ExpectedReceiptPage"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "KK hujjatlari",
+        "tags" : [ "expected-receipt" ]
+      },
+      "post" : {
+        "description" : "Qarz hali yozilmaydi — «Tasdiqlash» da.",
+        "operationId" : "create_20",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ExpectedReceiptRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ExpectedReceiptDetail"
+                }
+              }
+            },
+            "description" : "Created"
+          }
+        },
+        "summary" : "KK yaratish (qoralama)",
+        "tags" : [ "expected-receipt" ]
+      }
+    },
+    "/api/expected-receipts/files/{fileId}" : {
+      "get" : {
+        "operationId" : "file_2",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "fileId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "string",
+                  "format" : "byte"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Yuk xati faylini yuklab olish",
+        "tags" : [ "expected-receipt" ]
+      }
+    },
+    "/api/expected-receipts/in-transit" : {
+      "get" : {
+        "description" : "KK Yo'lda / Qisman qatorlarining qolgan soni mahsulot bo'yicha (sotuvga olinmaydi). productId — bir nechta.",
+        "operationId" : "inTransit",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "productId",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          }
+        }, {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "warehouseId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/InTransitRow"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Yo'ldagi tovar",
+        "tags" : [ "expected-receipt" ]
+      }
+    },
+    "/api/expected-receipts/{id}" : {
+      "get" : {
+        "description" : "Qatorlar (kutilgan / qabul qilingan / qolgan), fayllar, bog'langan kirimlar, qarz holati.",
+        "operationId" : "get_14",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ExpectedReceiptDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "KK kartochkasi",
+        "tags" : [ "expected-receipt" ]
+      },
+      "put" : {
+        "operationId" : "update_17",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ExpectedReceiptRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ExpectedReceiptDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "KK qoralamasini tahrirlash",
+        "tags" : [ "expected-receipt" ]
+      }
+    },
+    "/api/expected-receipts/{id}/approve" : {
+      "post" : {
+        "description" : "«Qarzga» — YB qarzi darhol yoziladi (hamma narx majburiy); holat «Yo'lda». Qoldiq o'zgarmaydi.",
+        "operationId" : "approve_6",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ExpectedReceiptDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "KK tasdiqlash",
+        "tags" : [ "expected-receipt" ]
+      }
+    },
+    "/api/expected-receipts/{id}/cancel" : {
+      "post" : {
+        "description" : "Qoralama — kk.create; «Yo'lda» — kk.approve, hech narsa qabul qilinmagan bo'lsa (qarz teskari yoziladi).",
+        "operationId" : "cancel_10",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ExpectedReceiptCancelRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ExpectedReceiptDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "KK bekor qilish",
+        "tags" : [ "expected-receipt" ]
+      }
+    },
+    "/api/expected-receipts/{id}/close" : {
+      "post" : {
+        "description" : "Qisman holatida: qolgan kelmagan soni hisobdan chiqariladi («qarzga» — qarz kamayadi).",
+        "operationId" : "close",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/KkCloseRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ExpectedReceiptDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Yakuniy qabul",
+        "tags" : [ "expected-receipt" ]
+      }
+    },
+    "/api/expected-receipts/{id}/files" : {
+      "post" : {
+        "description" : "PDF, JPG, PNG; ≤ 10 MB.",
+        "operationId" : "upload_2",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "multipart/form-data" : {
+              "schema" : {
+                "type" : "object",
+                "properties" : {
+                  "file" : {
+                    "type" : "string",
+                    "format" : "binary"
+                  }
+                },
+                "required" : [ "file" ]
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ExpectedReceiptDetail"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Yuk xati faylini yuklash",
+        "tags" : [ "expected-receipt" ]
+      }
+    },
+    "/api/expected-receipts/{id}/receive" : {
+      "post" : {
+        "description" : "Narxlar KK dan; partiya, yaroqlilik, zona — ombordan. Kirim keyin odatdagidek qabul qilinadi va o'tkaziladi; «qarzga» KK da qarz qayta yozilmaydi.",
+        "operationId" : "receive_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/KkReceiveRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/KkReceiveResult"
+                }
+              }
+            },
+            "description" : "Created"
+          }
+        },
+        "summary" : "Qabul qilish — KK dan kirim qoralamasi",
+        "tags" : [ "expected-receipt" ]
+      }
+    },
     "/api/expense-items" : {
       "get" : {
         "operationId" : "list_19",
@@ -4952,7 +5413,7 @@
     },
     "/api/home/accountant" : {
       "get" : {
-        "operationId" : "get_26",
+        "operationId" : "get_27",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -4980,7 +5441,7 @@
     },
     "/api/home/branch" : {
       "get" : {
-        "operationId" : "get_25",
+        "operationId" : "get_26",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -5024,7 +5485,7 @@
     },
     "/api/home/director" : {
       "get" : {
-        "operationId" : "get_24",
+        "operationId" : "get_25",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -5697,7 +6158,7 @@
     "/api/invoice-tasks" : {
       "get" : {
         "description" : "Filtrlar: filial (barcha filiallar doirasida), holat, davr (navbatga tushgan sana), qidiruv (buyurtma, mijoz, STIR, HF, e-faktura №). Kutilayotganlar — eng uzoq kutayotgani birinchi.",
-        "operationId" : "list_34",
+        "operationId" : "list_35",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -5832,7 +6293,7 @@
     },
     "/api/invoice-tasks/{id}" : {
       "get" : {
-        "operationId" : "get_23",
+        "operationId" : "get_24",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -6254,7 +6715,7 @@
     "/api/marking/orders/{id}" : {
       "get" : {
         "description" : "Qatorlar, partiyalar, hisoblagichlar va faol kodlar.",
-        "operationId" : "get_22",
+        "operationId" : "get_23",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -7303,7 +7764,7 @@
     "/api/nav/badges" : {
       "get" : {
         "description" : "Tasdiq kutayotgan buyurtmalar, jo'natishga tayyorlar, muddati 90 kun ichida tugaydigan partiyalar (o'tgan bo'lsa — danger). Ruxsat yo'q bo'lsa — null.",
-        "operationId" : "get_21",
+        "operationId" : "get_22",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -7331,7 +7792,7 @@
     },
     "/api/notifications" : {
       "get" : {
-        "operationId" : "list_33",
+        "operationId" : "list_34",
         "responses" : {
           "200" : {
             "content" : {
@@ -13020,7 +13481,7 @@
     },
     "/api/reconciliations/{id}" : {
       "get" : {
-        "operationId" : "get_20",
+        "operationId" : "get_21",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -13754,7 +14215,7 @@
     "/api/reports/marking-codes" : {
       "get" : {
         "description" : "Davr — skanerlangan sana (standart: oy boshidan bugungacha); mijoz, mahsulot, egasi (mijoz / zaxira), holat, qidiruv. Olib tashlangan kodlar — faqat status=REMOVED bilan.",
-        "operationId" : "list_32",
+        "operationId" : "list_33",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -14548,7 +15009,7 @@
     "/api/reserve-codes" : {
       "get" : {
         "description" : "Filtrlar: filial (barcha filiallar doirasida), mahsulot, holat, davr (zaxiraga tushgan sana), qidiruv.",
-        "operationId" : "list_31",
+        "operationId" : "list_32",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -14755,7 +15216,7 @@
     },
     "/api/roles" : {
       "get" : {
-        "operationId" : "list_30",
+        "operationId" : "list_31",
         "responses" : {
           "200" : {
             "content" : {
@@ -15598,7 +16059,7 @@
     "/api/stock" : {
       "get" : {
         "description" : "expiringWithinDays — muddat nazorati: shu kun ichida tugaydigan yoki o'tganlar.",
-        "operationId" : "list_29",
+        "operationId" : "list_30",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -16368,7 +16829,7 @@
     },
     "/api/supplier-bonuses" : {
       "get" : {
-        "operationId" : "list_28",
+        "operationId" : "list_29",
         "parameters" : [ {
           "in" : "query",
           "name" : "branchId",
@@ -16598,7 +17059,7 @@
     },
     "/api/supplier-returns/{id}" : {
       "get" : {
-        "operationId" : "get_19",
+        "operationId" : "get_20",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -18158,7 +18619,7 @@
     "/api/warehouse-transfers/{id}/shortage" : {
       "get" : {
         "description" : "Ochiqmi va hal qilish tarixi.",
-        "operationId" : "get_18",
+        "operationId" : "get_19",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -18803,7 +19264,7 @@
     },
     "/api/write-offs/{id}" : {
       "get" : {
-        "operationId" : "get_17",
+        "operationId" : "get_18",
         "parameters" : [ {
           "in" : "path",
           "name" : "id",
@@ -24109,7 +24570,7 @@
           },
           "prefix" : {
             "type" : "string",
-            "enum" : [ "BY", "SV", "HF", "NK", "RS", "KR", "BNS", "QM", "QY", "HC", "NO", "MT", "YT", "KO", "BO", "IO", "AH", "AS", "ZK", "OK", "FS", "IN", "BQ" ]
+            "enum" : [ "BY", "SV", "HF", "NK", "RS", "KR", "BNS", "QM", "QY", "HC", "NO", "MT", "YT", "KO", "BO", "IO", "AH", "AS", "ZK", "OK", "FS", "IN", "BQ", "KK" ]
           }
         },
         "required" : [ "count", "prefix" ]
@@ -24448,6 +24909,452 @@
           }
         },
         "required" : [ "name" ]
+      },
+      "ExpectedReceiptCancelRequest" : {
+        "type" : "object",
+        "properties" : {
+          "reason" : {
+            "type" : "string",
+            "maxLength" : 300,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "reason" ]
+      },
+      "ExpectedReceiptDetail" : {
+        "type" : "object",
+        "properties" : {
+          "approvedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "approvedBy" : {
+            "type" : "string"
+          },
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "cancelReason" : {
+            "type" : "string"
+          },
+          "cancelledAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "cancelledBy" : {
+            "type" : "string"
+          },
+          "contract" : {
+            "type" : "string"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "createdBy" : {
+            "type" : "string"
+          },
+          "debtAmount" : {
+            "type" : "string"
+          },
+          "debtOpen" : {
+            "type" : "string",
+            "description" : "Qarzning to'lanmagan qismi (KK hujjati bo'yicha)"
+          },
+          "dueDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "dueManual" : {
+            "type" : "boolean"
+          },
+          "expectedDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "files" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ExpectedReceiptFile"
+            }
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "invoiceDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "invoiceNumber" : {
+            "type" : "string"
+          },
+          "late" : {
+            "type" : "boolean"
+          },
+          "lines" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ExpectedReceiptLine"
+            }
+          },
+          "note" : {
+            "type" : "string"
+          },
+          "number" : {
+            "type" : "string"
+          },
+          "paymentKind" : {
+            "type" : "string",
+            "enum" : [ "CREDIT", "PREPAID", "CASH" ]
+          },
+          "qty" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "receipts" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/KkLinkedReceipt"
+            }
+          },
+          "receivedQty" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "DRAFT", "IN_TRANSIT", "PARTIAL", "RECEIVED", "CANCELLED" ]
+          },
+          "supplier" : {
+            "type" : "string"
+          },
+          "supplierId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "totalAmount" : {
+            "type" : "string"
+          },
+          "warehouse" : {
+            "type" : "string"
+          },
+          "warehouseId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "waybillDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "waybillNumber" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "branchId", "createdAt", "createdBy", "dueManual", "files", "id", "late", "lines", "number", "paymentKind", "qty", "receipts", "receivedQty", "status", "supplier", "supplierId", "warehouse", "warehouseId", "waybillDate", "waybillNumber" ]
+      },
+      "ExpectedReceiptFile" : {
+        "type" : "object",
+        "properties" : {
+          "contentType" : {
+            "type" : "string"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "createdBy" : {
+            "type" : "string"
+          },
+          "fileName" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "sizeBytes" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "contentType", "createdAt", "createdBy", "fileName", "id", "sizeBytes" ]
+      },
+      "ExpectedReceiptLine" : {
+        "type" : "object",
+        "properties" : {
+          "amount" : {
+            "type" : "string"
+          },
+          "batchNumber" : {
+            "type" : "string"
+          },
+          "expiryDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "lineNo" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "price" : {
+            "type" : "string"
+          },
+          "productCode" : {
+            "type" : "string"
+          },
+          "productId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "productName" : {
+            "type" : "string"
+          },
+          "qty" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "receivedQty" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "remainingQty" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Hali kutilmoqda: soni − qabul qilingan − hisobdan chiqarilgan"
+          },
+          "vatRate" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "writtenOffQty" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "id", "lineNo", "productCode", "productId", "productName", "qty", "receivedQty", "remainingQty", "writtenOffQty" ]
+      },
+      "ExpectedReceiptLineRequest" : {
+        "type" : "object",
+        "properties" : {
+          "batchNumber" : {
+            "type" : "string",
+            "maxLength" : 64,
+            "minLength" : 0
+          },
+          "expiryDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "price" : {
+            "type" : "string",
+            "description" : "Narx (satr, 2 xona) — narx ko'rish huquqisiz e'tiborsiz qoldiriladi",
+            "maxLength" : 24,
+            "minLength" : 0
+          },
+          "productId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "qty" : {
+            "type" : "integer",
+            "format" : "int32",
+            "maximum" : 10000000,
+            "minimum" : 1
+          },
+          "vatRate" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "QQS stavkasi, %",
+            "maximum" : 100,
+            "minimum" : 0
+          }
+        },
+        "required" : [ "productId", "qty" ]
+      },
+      "ExpectedReceiptPage" : {
+        "type" : "object",
+        "properties" : {
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ExpectedReceiptSummary"
+            }
+          },
+          "page" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "total" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "items", "page", "size", "total" ]
+      },
+      "ExpectedReceiptRequest" : {
+        "type" : "object",
+        "properties" : {
+          "contract" : {
+            "type" : "string",
+            "maxLength" : 100,
+            "minLength" : 0
+          },
+          "dueDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "To'lov kuni (qarzga); bo'sh — hisob-faktura (yo'q bo'lsa yuk xati) sanasi + YB sharti"
+          },
+          "expectedDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "invoiceDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "invoiceNumber" : {
+            "type" : "string",
+            "maxLength" : 64,
+            "minLength" : 0
+          },
+          "lines" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ExpectedReceiptLineRequest"
+            },
+            "maxItems" : 500,
+            "minItems" : 0
+          },
+          "note" : {
+            "type" : "string",
+            "maxLength" : 500,
+            "minLength" : 0
+          },
+          "paymentKind" : {
+            "type" : "string",
+            "enum" : [ "CREDIT", "PREPAID", "CASH" ]
+          },
+          "supplierId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "warehouseId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "waybillDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "waybillNumber" : {
+            "type" : "string",
+            "maxLength" : 64,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "lines", "paymentKind", "supplierId", "warehouseId", "waybillDate", "waybillNumber" ]
+      },
+      "ExpectedReceiptSummary" : {
+        "type" : "object",
+        "properties" : {
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "createdBy" : {
+            "type" : "string"
+          },
+          "debtAmount" : {
+            "type" : "string",
+            "description" : "Yozilgan qarz — faqat narx ko'rish huquqi bilan"
+          },
+          "dueDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "expectedDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "invoiceDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "invoiceNumber" : {
+            "type" : "string"
+          },
+          "late" : {
+            "type" : "boolean",
+            "description" : "Kutilgan sana o'tgan, tovar hali to'liq kelmagan"
+          },
+          "lines" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "number" : {
+            "type" : "string"
+          },
+          "paymentKind" : {
+            "type" : "string",
+            "enum" : [ "CREDIT", "PREPAID", "CASH" ]
+          },
+          "qty" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "receivedQty" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "DRAFT", "IN_TRANSIT", "PARTIAL", "RECEIVED", "CANCELLED" ]
+          },
+          "supplier" : {
+            "type" : "string"
+          },
+          "supplierId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "totalAmount" : {
+            "type" : "string",
+            "description" : "Summa — faqat narx ko'rish huquqi bilan"
+          },
+          "warehouse" : {
+            "type" : "string"
+          },
+          "warehouseId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "waybillDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "waybillNumber" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "branchId", "createdAt", "createdBy", "id", "late", "lines", "number", "paymentKind", "qty", "receivedQty", "status", "supplier", "supplierId", "warehouse", "warehouseId", "waybillDate", "waybillNumber" ]
       },
       "ExpenseItem" : {
         "type" : "object",
@@ -25398,6 +26305,63 @@
           }
         },
         "required" : [ "name", "rows" ]
+      },
+      "InTransitDoc" : {
+        "type" : "object",
+        "properties" : {
+          "expectedDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "late" : {
+            "type" : "boolean"
+          },
+          "number" : {
+            "type" : "string"
+          },
+          "remainingQty" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "supplier" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "id", "late", "number", "remainingQty", "supplier" ]
+      },
+      "InTransitRow" : {
+        "type" : "object",
+        "properties" : {
+          "docs" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/InTransitDoc"
+            }
+          },
+          "nearestDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "productCode" : {
+            "type" : "string"
+          },
+          "productId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "productName" : {
+            "type" : "string"
+          },
+          "qty" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "docs", "productCode", "productId", "productName", "qty" ]
       },
       "InventoryBatchHit" : {
         "type" : "object",
@@ -26538,6 +27502,97 @@
           }
         },
         "required" : [ "bank", "cash", "terminal", "total" ]
+      },
+      "KkCloseRequest" : {
+        "type" : "object",
+        "properties" : {
+          "reason" : {
+            "type" : "string",
+            "maxLength" : 300,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "reason" ]
+      },
+      "KkLinkedReceipt" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "number" : {
+            "type" : "string"
+          },
+          "receiptDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "status" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "id", "number", "receiptDate", "status" ]
+      },
+      "KkReceiveLineRequest" : {
+        "type" : "object",
+        "properties" : {
+          "batchNumber" : {
+            "type" : "string",
+            "maxLength" : 60,
+            "minLength" : 0
+          },
+          "expectedLineId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "expiryDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "producedOn" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "qty" : {
+            "type" : "integer",
+            "format" : "int32",
+            "maximum" : 10000000,
+            "minimum" : 1
+          },
+          "zoneId" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "batchNumber", "expectedLineId", "expiryDate", "qty", "zoneId" ]
+      },
+      "KkReceiveRequest" : {
+        "type" : "object",
+        "properties" : {
+          "lines" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/KkReceiveLineRequest"
+            },
+            "maxItems" : 500,
+            "minItems" : 0
+          }
+        },
+        "required" : [ "lines" ]
+      },
+      "KkReceiveResult" : {
+        "type" : "object",
+        "properties" : {
+          "receiptId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "receiptNumber" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "receiptId", "receiptNumber" ]
       },
       "LastChange" : {
         "type" : "object",

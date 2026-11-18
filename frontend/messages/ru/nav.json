@@ -8,6 +8,7 @@
   "approvals": "Согласование",
   "shipments": "Отгрузка",
   "receipts": "Приход",
+  "expectedReceipts": "Ожидаемый приход",
   "stock": "Остатки",
   "expiry": "Контроль сроков",
   "transfers": "Перемещение",

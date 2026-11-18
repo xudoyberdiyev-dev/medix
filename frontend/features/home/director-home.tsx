@@ -1,5 +1,6 @@
 "use client";
 
+import { KkHomeCard } from "@/features/expected-receipts/kk-home-card";
 import { useQuery } from "@tanstack/react-query";
 import {
   AlertTriangle,
@@ -304,6 +305,7 @@ function DirectorBody({ home: h }: { home: Home }) {
         </div>
       </div>
       <OrderStatuses cells={h.orderStatuses} staleDays={h.staleDays} />
+      <KkHomeCard branchId={null} />
       <Branches home={h} />
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         <TopDebtors rows={h.topDebtors} />
