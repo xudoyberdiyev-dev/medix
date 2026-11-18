@@ -39,7 +39,7 @@ class EndpointPermissionsIT {
             "/api/dictionaries/MANUFACTURER", "/api/vehicles", "/api/expense-items", "/api/employee-lookup", "/api/branches/stats",
             "/api/stock/product-card/1", "/api/warehouses/overview", "/api/price-types", "/api/prices/history?productId=1",
             "/api/prices?branchId=1", "/api/prices/export?branchId=1", "/api/price-changes", "/api/price-changes/1",
-            "/api/price-changes/1/pdf");
+            "/api/price-changes/1/pdf", "/api/setup-checklist", "/api/settings/system-status");
 
     /** Qobiq (har rol): filiallar, omborlar, profil, bildirishnomalar, qidiruv, o'zim. */
     private static final List<String> OPEN = List.of("/api/branches", "/api/warehouses", "/api/profile", "/api/notifications",
@@ -147,5 +147,16 @@ class EndpointPermissionsIT {
                 .andExpect(jsonPath("$.recent[0].path").value(path))
                 .andExpect(jsonPath("$.recent[0].exception").value("java.lang.IllegalStateException"));
         mvc.perform(get("/api/settings/system-status").cookie(loginAs("OPERATOR", b))).andExpect(status().isForbidden());
+    }
+
+    @Test
+    void setupChecklistForDirector() throws Exception {
+        long b = branch();
+        mvc.perform(get("/api/setup-checklist").cookie(loginAs("DIRECTOR", b)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items.length()").value(8))
+                .andExpect(jsonPath("$.items[1].step").value("BRANCHES"))
+                .andExpect(jsonPath("$.items[1].done").value(true));
+        mvc.perform(get("/api/setup-checklist").cookie(loginAs("OPERATOR", b))).andExpect(status().isForbidden());
     }
 }

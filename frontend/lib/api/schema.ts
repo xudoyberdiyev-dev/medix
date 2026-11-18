@@ -8725,6 +8725,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/setup-checklist": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Sozlash roʻyxati */
+        get: operations["checklist"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -9855,6 +9872,14 @@ export interface components {
             checkedLines: number[];
             /** Format: int32 */
             places: number;
+        };
+        ChecklistItem: {
+            /** Format: int64 */
+            count: number;
+            done: boolean;
+            link: string;
+            /** @enum {string} */
+            step: "COMPANY" | "BRANCHES" | "WAREHOUSES" | "EMPLOYEES" | "PRICES" | "CUSTOMERS" | "PRODUCTS" | "OPENING_STOCK";
         };
         CloseApprover: {
             /** Format: int64 */
@@ -15318,6 +15343,11 @@ export interface components {
             values: components["schemas"]["SettingValue"][];
             vatHistory: components["schemas"]["VatRow"][];
             vatRate: string;
+        };
+        SetupChecklist: {
+            /** Format: int32 */
+            donePercent: number;
+            items: components["schemas"]["ChecklistItem"][];
         };
         SetupStatus: {
             /** @description Yakunlashga to'sqinlik qilayotgan sabablar (i18n matni) */
@@ -29472,6 +29502,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ZoneTransferDetail"];
+                };
+            };
+        };
+    };
+    checklist: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SetupChecklist"];
                 };
             };
         };

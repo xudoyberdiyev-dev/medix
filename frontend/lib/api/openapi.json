@@ -19920,6 +19920,25 @@
         "summary" : "Qoralamani o'tkazish",
         "tags" : [ "zone-transfer" ]
       }
+    },
+    "/api/setup-checklist" : {
+      "get" : {
+        "operationId" : "checklist",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SetupChecklist"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Sozlash roʻyxati",
+        "tags" : [ "setup-checklist" ]
+      }
     }
   },
   "components" : {
@@ -22759,6 +22778,26 @@
           }
         },
         "required" : [ "checkedLines", "places" ]
+      },
+      "ChecklistItem" : {
+        "type" : "object",
+        "properties" : {
+          "count" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "done" : {
+            "type" : "boolean"
+          },
+          "link" : {
+            "type" : "string"
+          },
+          "step" : {
+            "type" : "string",
+            "enum" : [ "COMPANY", "BRANCHES", "WAREHOUSES", "EMPLOYEES", "PRICES", "CUSTOMERS", "PRODUCTS", "OPENING_STOCK" ]
+          }
+        },
+        "required" : [ "count", "done", "link", "step" ]
       },
       "CloseApprover" : {
         "type" : "object",
@@ -36337,6 +36376,22 @@
           }
         },
         "required" : [ "canEdit", "canSecurity", "docs", "opening", "pendingOrders", "print", "values", "vatHistory", "vatRate" ]
+      },
+      "SetupChecklist" : {
+        "type" : "object",
+        "properties" : {
+          "donePercent" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ChecklistItem"
+            }
+          }
+        },
+        "required" : [ "donePercent", "items" ]
       },
       "SetupStatus" : {
         "type" : "object",

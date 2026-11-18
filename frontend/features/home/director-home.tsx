@@ -58,6 +58,7 @@ import {
   tashkentHour,
   toCents,
 } from "./director-view";
+import { SetupChecklistCard } from "./setup-checklist";
 import { PeriodPicker, usePeriodState } from "./period-picker";
 
 type Home = components["schemas"]["Home"];
@@ -289,6 +290,7 @@ function DirectorBody({ home: h }: { home: Home }) {
   };
   return (
     <div className="flex flex-col gap-4">
+      <SetupChecklistCard />
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         <PtCard label={t("sales")} value={h.sales} note={per} href="/shipping" />
         <PtCard label={t("customerDebt")} value={h.customerDebtBy} note={t("today")} href="/debts/customers" />
