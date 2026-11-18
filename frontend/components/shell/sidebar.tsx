@@ -12,6 +12,7 @@ import { useBranchStore } from "@/lib/stores/branch";
 import { useNavBadges, type NavBadge } from "./nav-badges";
 import { LOCALE_NAMES, LOCALES, writeLocaleCookie, type Locale } from "@/i18n/config";
 import { useSidebarStore } from "@/lib/stores/sidebar";
+import { BrandSquare } from "./brand-logo";
 import { LANG_CODE } from "./language-chip";
 import { isNavActive, navigationFor } from "./nav";
 
@@ -77,9 +78,7 @@ export function SidebarContent({ variant, onNavigate }: { variant: "rail" | "she
           // eslint-disable-next-line @next/next/no-img-element -- kompaniya logotipi serverdan (PNG/SVG)
           <img src={logo} alt="" className="size-8 shrink-0 rounded-control bg-white object-contain" />
         ) : (
-          <span className="flex size-8 shrink-0 items-center justify-center rounded-control bg-primary-button font-semibold text-white">
-            M
-          </span>
+          <BrandSquare size={32} onDark />
         )}
         <span className={cn("flex min-w-0 flex-col", compact("hidden", "max-xl:hidden"))}>
           <span className="text-subtitle leading-5 text-white">100+</span>

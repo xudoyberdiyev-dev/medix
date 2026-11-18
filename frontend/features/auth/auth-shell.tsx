@@ -4,6 +4,7 @@ import { Building2, PackageCheck, Route } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useTransition, type ReactNode } from "react";
+import { BrandSquare } from "@/components/shell/brand-logo";
 import { Icon } from "@/components/ui/icon";
 import { LOCALE_NAMES, LOCALE_SHORT, LOCALES, writeLocaleCookie } from "@/i18n/config";
 import { cn } from "@/lib/cn";
@@ -17,24 +18,17 @@ const RINGS = [
   { size: 240, offset: -20, radius: 56 },
 ];
 
-/** «100+» logotipi: belgi (kvadrat ichida «100+») va nom. `inverted` — toʻq fon ustida. */
+/** «100+» logotipi (O22): belgi (`BrandSquare` — sidebar bilan bir xil) va nom. `inverted` — toʻq fon ustida. */
 export function BrandMark({ inverted = false, size = "md" }: { inverted?: boolean; size?: "md" | "lg" }) {
   const lg = size === "lg";
   return (
-    <div className={cn("flex items-center", lg ? "gap-[10px]" : "gap-[12px]")}>
+    <div className="flex items-center gap-[10px]">
+      <BrandSquare size={lg ? 40 : 32} onDark={inverted} />
       <span
         className={cn(
-          "flex items-center justify-center bg-primary-button font-bold tracking-[-0.03em] text-white",
-          lg ? "size-[40px] rounded-[12px] text-[14px]" : "size-[32px] rounded-card text-[11px]",
-        )}
-      >
-        100+
-      </span>
-      <span
-        className={cn(
-          "font-semibold tracking-[0.01em]",
-          lg ? "text-[26px] leading-8" : "text-[17px]",
-          inverted ? "text-white" : "text-text-primary",
+          "font-semibold tracking-[-0.5px]",
+          lg ? "text-[24px] leading-8" : "text-[18px] leading-6",
+          inverted ? "text-white" : "text-brand-900 [.theme-dark_&]:text-text-primary",
         )}
       >
         100+

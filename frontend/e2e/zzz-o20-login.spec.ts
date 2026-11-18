@@ -13,9 +13,15 @@ test("kirish sahifasi 100+ (O20)", async ({ page }) => {
   const roles = (await (await info).json()) as { roles: number };
   expect(roles.roles).toBeGreaterThan(0);
   await expect(page.getByText("rol uchun panel")).toBeVisible();
-  await expect(page.getByRole("tab", { name: "Buyurtmalar" })).toHaveAttribute("aria-selected", "true");
+  await expect(page.getByRole("tab", { name: "Savdo" })).toHaveAttribute("aria-selected", "true");
   await page.getByRole("tab", { name: "Markirovka" }).click();
-  await expect(page.getByText("Markirovka kodlari — skanerlab, xatosiz")).toBeVisible();
+  await expect(page.getByText("Quti va dona kodlari — bir zumda")).toBeVisible();
+  // O22: yorliq bosilganda almashish toʻxtaydi
+  await expect(page.getByRole("button", { name: "Davom ettirish" })).toBeVisible();
+  await expect(page.getByRole("checkbox", { name: "Loginni eslab qolish" })).toBeChecked();
+  await page.getByRole("button", { name: "Xavfsizlik" }).click();
+  await expect(page.getByRole("dialog", { name: "Xavfsizlik" }).getByText(/15 daqiqaga bloklanadi/)).toBeVisible();
+  await page.getByRole("dialog").getByRole("button", { name: "Yopish" }).last().click();
 
   await page.getByRole("button", { name: "Parolni unutdingizmi?" }).click();
   await expect(page.getByRole("dialog", { name: "Parolni tiklash" })).toBeVisible();
