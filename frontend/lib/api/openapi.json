@@ -8517,7 +8517,7 @@
     },
     "/api/orders" : {
       "get" : {
-        "description" : "operatorId — kiritgan xodim; soldFrom/soldTo — shu davrda sotilgan yoki qaytarilgan (Savdo hisoboti qatoridan hujjatlarga o'tish, SPEC 8); orderFrom/orderTo — buyurtma sanasi; customerId/operatorId/statuses/deliveryType/paymentType/regionId/salesZoneId — bir nechta qiymat (prototip filtr chiplari); q — raqam, STIR yoki mijoz nomi (lotin/kirill farqsiz); sort/desc — saralash (standart: kiritilgan vaqti, yangisi tepada).",
+        "description" : "operatorId — kiritgan xodim; soldFrom/soldTo — shu davrda sotilgan yoki qaytarilgan (Savdo hisoboti qatoridan hujjatlarga o'tish, SPEC 8); orderFrom/orderTo — buyurtma sanasi; customerId/operatorId/statuses/deliveryType/paymentType/regionId/salesZoneId — bir nechta qiymat (prototip filtr chiplari); q — raqam, STIR yoki mijoz nomi (lotin/kirill farqsiz); overdue — yetkazish sanasi oʻtgan jarayondagi buyurtmalar; sort/desc — saralash (standart: kiritilgan vaqti, yangisi tepada).",
         "operationId" : "list_14",
         "parameters" : [ {
           "in" : "query",
@@ -8654,6 +8654,14 @@
         }, {
           "in" : "query",
           "name" : "mine",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
+          }
+        }, {
+          "in" : "query",
+          "name" : "overdue",
           "required" : false,
           "schema" : {
             "type" : "boolean",
@@ -9070,6 +9078,14 @@
         }, {
           "in" : "query",
           "name" : "mine",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
+          }
+        }, {
+          "in" : "query",
+          "name" : "overdue",
           "required" : false,
           "schema" : {
             "type" : "boolean",
