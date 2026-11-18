@@ -1,4 +1,6 @@
-# MEDIX — Claude uchun ish qoidalari
+# 100+ — Claude uchun ish qoidalari
+
+> **NOM (egasi qarori 18.11.2026):** loyiha nomi **«100+»**, kod/identifikatorlardagi texnik nomi **`yuzplus`**. «MEDIX/Medix» — eski nom, **bizning nomimiz emas**: yangi kod, matn, hujjat, commit va hisobotda ISHLATMANG; mavjudlari PLAN.md → O21 bo'yicha olib tashlanadi. Hisobot sarlavhasi: «100+ · DD.MM.YYYY HH:MM sessiya».
 
 Farmatsevtika ulgurji distribyutsiyasi uchun ERP. Bitta egasi (loyiha egasi) + Claude. Kod avtonom **zanjir** sessiyalarida yoziladi (pastdagi «Zanjir rejimi»: har kuni 00:00–05:00, 06:00–11:00 va 14:00–18:00, ba'zan egasi so'rasa 20:00–22:30, Toshkent) va egasi ochgan sessiyalarda.
 
