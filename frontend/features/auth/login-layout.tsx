@@ -154,9 +154,9 @@ export function LoginLayout({ children }: { children: ReactNode }) {
   const help = helpLine(info.data);
   const footLink = "rounded-control text-table text-text-secondary transition-colors duration-150 ease-out hover:text-text-primary";
   return (
-    <main className="flex min-h-dvh gap-[16px] bg-surface p-0 text-text-primary lg:p-[16px]">
+    <main className="flex min-h-dvh gap-[16px] bg-surface p-0 text-text-primary lg:p-[16px] lg:[@media(min-height:640px)]:h-dvh lg:[@media(min-height:640px)]:overflow-hidden">
       <LoginShowcase roles={info.data?.roles ?? null} />
-      <div className="flex min-w-0 flex-[1_1_460px] flex-col px-[16px] pt-[16px] pb-[20px] sm:px-[40px]">
+      <div className="scrollbar-none flex min-h-0 min-w-0 flex-[1_1_460px] flex-col overflow-y-auto px-[16px] pt-[16px] pb-[20px] sm:px-[40px]">
         <div className="flex items-center justify-between gap-[8px] lg:justify-end">
           <div className="lg:hidden">
             <BrandMark />
