@@ -75,7 +75,7 @@ class Component extends DCLogic {
   componentDidMount() { this.onKey = e => { if (e.key === 'Escape') this.props.onClose && this.props.onClose(); }; window.addEventListener('keydown', this.onKey); }
   componentWillUnmount() { window.removeEventListener('keydown', this.onKey); }
   renderVals() {
-    const p = this.props, L = p.dict || {}, b = p.batch || {}, pr = b.p || {}, D = window.MedixData;
+    const p = this.props, L = p.dict || {}, b = p.batch || {}, pr = b.p || {}, D = window.YuzplusData;
     const st = ST[b.status] || ST.open, br = D ? (D.BRANCHES.find(x => x.code === b.branch) || {}).name : b.branch;
     const e = pD(b.exp), m = pD(b.mfg), days = b.days;
     const life = e && m ? Math.max(0, Math.min(100, Math.round((T0 - m) / (e - m) * 100))) : 0;
@@ -84,13 +84,13 @@ class Component extends DCLogic {
     const segs = [[L.q_avail, b.avail, '#0D9488'], [L.q_reserved, b.reservedQty, '#CBD5D3'], [L.q_closed, b.closed, '#FDE68A']].filter(x => x[1] > 0).map(([label, q, color]) => ({ label, legend: `${label}: ${fN(q)}`, qty: fN(q), pct: b.qty ? q / b.qty * 100 : 0, color }));
     const split = `${L.q_total} ${fN(b.qty || 0)} = ` + segs.map(s => `${s.label} ${s.qty}`).join(' + ');
     const docNo = b.doc || L.q_openingDoc;
-    const bqo = !b.doc && window.MedixData && window.MedixData.bqOfBatch ? window.MedixData.bqOfBatch(b) : null;
+    const bqo = !b.doc && window.YuzplusData && window.YuzplusData.bqOfBatch ? window.YuzplusData.bqOfBatch(b) : null;
     const moves = [{ date: bqo ? bqo.cutoff : b.docDate || '01.09.2026', type: b.doc ? L.q_mvReceipt : bqo ? (L.bq_title || L.q_mvOpening) : L.q_mvOpening, no: b.doc || (bqo ? bqo.no : 'SMARTUP-0001'), delta: '+' + fN(b.qty || 0), bal: fN(b.qty || 0), color: '#15803D' }];
     if (b.reservedQty) { let bal = b.qty; (b.resDocs && b.resDocs.length ? b.resDocs : [{ no: '—', qty: b.reservedQty, date: '03.10.2026' }]).forEach(r => { bal -= r.qty; moves.push({ date: r.date, type: L.q_mvReserve, no: r.no, delta: fN(r.qty), bal: fN(bal), color: '#5B6B6A' }); }); }
     (b.moves || []).forEach(m => moves.push({ date: m.date, type: m.label || L.tr_mvPick || "Terish → Jo'natish zonasi", no: m.no, delta: (m.delta > 0 ? '+' : '−') + fN(Math.abs(m.delta)), bal: fN(b.qty || 0), color: m.kind === 'sale' ? '#B91C1C' : m.delta > 0 ? '#15803D' : '#B45309' }));
     if (b.status === 'expired') moves.push({ date: b.exp, type: L.q_mvBlocked, no: '—', delta: '−' + fN(b.qty), bal: '0', color: '#B91C1C' });
     const gt = String((pr.barcodes || ['0000000'])[0]).slice(-7), code = i => `0104780${gt}21${((b.qty * 31 + i * 2654435761) >>> 0).toString(36).toUpperCase().padStart(6, '0').slice(-6)}`;
-    const MD = window.MedixData, mk = MD && MD.marks && pr.mark ? MD.marks().filter(m => m.bid === b.id && ['stock', 'picked', 'quar', 'returned'].includes(m.status)) : null;
+    const MD = window.YuzplusData, mk = MD && MD.marks && pr.mark ? MD.marks().filter(m => m.bid === b.id && ['stock', 'picked', 'quar', 'returned'].includes(m.status)) : null;
     const info = [[L.q_branch, br], [L.q_wh, b.wh], [L.q_zone, b.zoneLabel], [L.q_mfg, b.mfg], [L.q_exp, b.exp], ...(p.canCost ? [[L.q_cost, b.cost ? fM(b.cost) + ' ' + L.som : '']] : []), [L.q_doc, docNo, 1], [L.q_supplier, b.supplier], ...(pr.mark ? [[L.q_marking, L.q_scanned(fN(b.scanned || 0))]] : [])].map(([label, value, mono]) => ({ label, value, mono: !!mono }));
     return {
       L, name: pr.name, batchNo: b.batch, st: { icon: st[0], fg: st[1], bg: st[2], label: L['q_st_' + (b.status || 'open')] }, width: p.width || '480px', close: () => p.onClose && p.onClose(),

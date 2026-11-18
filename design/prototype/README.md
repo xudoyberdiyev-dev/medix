@@ -3,7 +3,7 @@
 **Talab: haqiqiy dastur UI'si shu prototip bilan AYNAN bir xil bo'lishi shart** (joylashuv, bloklar, kartalar, jadval ustunlari, yorliqlar, tugmalar, matnlar). Dizayn tizimi (`design/system/`) — faqat token manbai.
 
 ## Tarkib
-- `Medix ERP.dc.html` — kirish nuqtasi (login → rolga qarab ekranlar; demo ma'lumot `medix-data.js`).
+- `100plus ERP.dc.html` — kirish nuqtasi (login → rolga qarab ekranlar; demo ma'lumot `yuzplus-data.js`).
 - `<Ekran>.dc.html` — har bir ekran/komponent manbasi (React + JSX, Babel standalone): Home, Orders, OrderEntry, OrderCard, Receipts, Stock, Products, Prices, Customers, Suppliers, Counterparties, Payments, Cash, CashClose, Bank, Receivables, Payables, Reconciliation, Reports, Settings, Admin*, WarehousePanel, PickerPanel, MarkerPanel, DriverPanel, CashierPanel, SupervisorPanel, Shipping, TripPage, Transfers, Inventory*, OpeningBalances, SetupWizard … va umumiy komponentlar (DataTable, FilterBar, PageHeader, StatusStepper, DocumentHeader …).
 - `screenshots/` — egasi tasdiqlagan holatlar (t10b-*, y2-*): Direktor bosh sahifasi, hisobotlar, rollar va b.
 - `vendor/` — React 18.3.1, ReactDOM, Babel standalone, Lucide (CDN o'rniga, tarmoqsiz ochish uchun).
@@ -11,9 +11,9 @@
 
 ## Ekranni ko'rish (tarmoqsiz)
 ```bash
-NODE_PATH=$(npm root -g) node scripts/prototype-shot.cjs "Medix ERP" /tmp/p.png 1440x900 4000
+NODE_PATH=$(npm root -g) node scripts/prototype-shot.cjs "100plus ERP" /tmp/p.png 1440x900 4000
 ```
-Login va rol tanlash uchun skriptni nusxalab Playwright'da bosish qo'shing (prototipda demo foydalanuvchilar `medix-data.js` da).
+Login va rol tanlash uchun skriptni nusxalab Playwright'da bosish qo'shing (prototipda demo foydalanuvchilar `yuzplus-data.js` da).
 
 ## Ish tartibi (har ekran uchun)
 1. Prototip ekranining manbasini (`<Ekran>.dc.html`) va skrinshotini o'rganing.

@@ -7,7 +7,7 @@
 </head>
 <body>
 <x-dc>
-<helmet><script src="medix-data.js"></script></helmet>
+<helmet><script src="yuzplus-data.js"></script></helmet>
 <div style="display:flex;flex-direction:column;min-width:0;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
 <sc-if value="{{ isList }}" hint-placeholder-val="{{ true }}">
 <div data-screen-label="{{ title }}" style="display:flex;flex-direction:column;gap:16px;min-width:0">
@@ -51,10 +51,10 @@ const csv = rows => '\ufeff' + rows.map(r => r.map(v => { const s = String(v == 
 const pD = s => { const m = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(String(s || '')); return m ? Date.UTC(+m[3], +m[2] - 1, +m[1]) : null; };
 class Component extends DCLogic {
   state = { view: 'list', tab: 'all', q: '', fDebt: [], fBuyer: [], fPay: [], fAmt: [], fBonus: [], fDKind: [], amt: [null, null], dk: 'last', fOp: [], fPrice: [], fOver: [], fCtrl: [], date: { from: null, to: null }, sort: null, fType: [], fRegion: [], fBranch: [], fLic: [], fStatus: [], fGroup: [], sel: {}, page: 1, per: 25, cv: null, fv: null, imp: null, empty: false, dlg: null, reason: '', reasonErr: '' };
-  get D() { return window.MedixData; }
+  get D() { return window.YuzplusData; }
   get L() { return this.props.dict || {}; }
   get mt() { return this.props.kind !== 'yt'; }
-  applyUrl() { const D = window.MedixData, u = D && D.store.urlF; if (!u || u.page !== (this.mt ? 'clients' : 'suppliers') || u.n === this._un) return; this._un = u.n; const P = u.params || {}; if (P.new) return setTimeout(() => this.openForm('new'), 0); if (P.open) { D.store.navReq = { page: u.page, open: P.open }; return; } setTimeout(() => this.setState({ view: 'list', tab: 'all', fLic: P.lic ? [P.lic] : [], fDebt: P.due ? [P.due] : P.aging ? [P.aging] : [], page: 1 }), 0); }
+  applyUrl() { const D = window.YuzplusData, u = D && D.store.urlF; if (!u || u.page !== (this.mt ? 'clients' : 'suppliers') || u.n === this._un) return; this._un = u.n; const P = u.params || {}; if (P.new) return setTimeout(() => this.openForm('new'), 0); if (P.open) { D.store.navReq = { page: u.page, open: P.open }; return; } setTimeout(() => this.setState({ view: 'list', tab: 'all', fLic: P.lic ? [P.lic] : [], fDebt: P.due ? [P.due] : P.aging ? [P.aging] : [], page: 1 }), 0); }
   componentDidMount() {
     this._url = setInterval(() => this.applyUrl(), 250);
     if (!this.D || !this.D.ktCards) this._p = setInterval(() => { if (this.D && this.D.ktCards) { clearInterval(this._p); this.boot(); } }, 60); else this.boot();

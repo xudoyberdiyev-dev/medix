@@ -7,7 +7,7 @@
 </head>
 <body>
 <x-dc>
-<helmet><script src="medix-data.js"></script></helmet>
+<helmet><script src="yuzplus-data.js"></script></helmet>
 <div data-screen-label="Muddat nazorati" style="display:flex;flex-direction:column;gap:16px;min-width:0;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
   <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap">
     <h1 style="margin:0;font-size:22px;line-height:28px;font-weight:600;letter-spacing:-0.01em">{{ L.n_expiry }}</h1>
@@ -38,18 +38,18 @@
 const fN = n => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 const fM = n => { const [a, b] = (Math.round(n * 100) / 100).toFixed(2).split('.'); return fN(+a) + ',' + b; };
 const pD = s => { const a = String(s || '').split('.'); return a.length === 3 ? Date.UTC(+a[2], +a[1] - 1, +a[0]) : null; };
-const W = () => window.MedixData.CONFIG.expiryWarnDays; // F1: chegara CONFIG dan
+const W = () => window.YuzplusData.CONFIG.expiryWarnDays; // F1: chegara CONFIG dan
 const GRP = [['expired', b => b.days < 0], ['d30', b => b.days >= 0 && b.days <= 30], ['d90', b => b.days > 30 && b.days <= W()], ['d180', b => b.days > W() && b.days <= 180]];
 const ZT = { recv: ['package-open', '#5B6B6A', '#F5F7F8'], store: ['archive', '#5B6B6A', '#F5F7F8'], cold: ['snowflake', '#1D4ED8', '#EFF6FF'], quar: ['shield-alert', '#B45309', '#FFFBEB'], ctrl: ['lock', '#B91C1C', '#FEF2F2'], ship: ['truck', '#5B6B6A', '#F5F7F8'] };
 class Component extends DCLogic {
-  state = { ready: !!window.MedixData, grp: null, band: null, sort: { key: 'exp', dir: 'asc' }, panel: null, safe: false };
-  applyUrl() { const D = window.MedixData, u = D && D.store.urlF; if (!u || u.page !== 'expiry' || u.n === this._un) return; this._un = u.n; const P = u.params || {}, bd = (D.EXP_BANDS || []).find(x => x[0] === P.band); this.setState({ band: bd ? P.band : null, grp: null, panel: null }); } // T10a2: bosh sahifadan ?band=0-30|31-60|61-90
-  componentDidMount() { this._url = setInterval(() => this.applyUrl(), 250); if (!window.MedixData) this._poll = setInterval(() => { if (window.MedixData) { clearInterval(this._poll); this.setState({ ready: true }); } }, 60); if (this.props.demo) this.applyDemo(this.props.demo.k); }
+  state = { ready: !!window.YuzplusData, grp: null, band: null, sort: { key: 'exp', dir: 'asc' }, panel: null, safe: false };
+  applyUrl() { const D = window.YuzplusData, u = D && D.store.urlF; if (!u || u.page !== 'expiry' || u.n === this._un) return; this._un = u.n; const P = u.params || {}, bd = (D.EXP_BANDS || []).find(x => x[0] === P.band); this.setState({ band: bd ? P.band : null, grp: null, panel: null }); } // T10a2: bosh sahifadan ?band=0-30|31-60|61-90
+  componentDidMount() { this._url = setInterval(() => this.applyUrl(), 250); if (!window.YuzplusData) this._poll = setInterval(() => { if (window.YuzplusData) { clearInterval(this._poll); this.setState({ ready: true }); } }, 60); if (this.props.demo) this.applyDemo(this.props.demo.k); }
   componentWillUnmount() { clearInterval(this._poll); clearInterval(this._url); }
   componentDidUpdate(pp) { if (this.props.demo && (!pp.demo || pp.demo.n !== this.props.demo.n)) this.applyDemo(this.props.demo.k); }
   applyDemo(k) { this.setState({ safe: k === 'safe', grp: k === 'fexpired' ? 'expired' : null, panel: null }); }
   renderVals() {
-    const s = this.state, p = this.props, L = p.dict || {}, D = window.MedixData;
+    const s = this.state, p = this.props, L = p.dict || {}, D = window.YuzplusData;
     if (!D) return { L, segs: [], showTable: false };
     const br = p.branch && p.branch !== 'ALL' ? p.branch : null, canCost = D.can(p.role || 'director', 'special.cost');
     let scope = D.batches().filter(b => b.qty > 0 && (!br || b.branch === br) && b.days != null && b.days <= 180);
@@ -80,7 +80,7 @@ class Component extends DCLogic {
       L, narrow: !!p.narrow, canCost, segs, hasBand: !!bd, bandText: bd ? (L.m_band || 'Muddati {a}–{b} kun').replace('{a}', bd[1]).replace('{b}', bd[2]) + ' · ' + fN(list.length) + ' ' + (L.q_batchUnit || '') : '', clearBand: () => this.setState({ band: null }), segCols: p.narrow ? 2 : 4, hasBanner: expd > 0, canWo: D.can(p.role || 'director', 'hc.create'), woAll: () => { const e = scope.filter(b => b.days != null && b.days < 0 && b.qty > 0), w = (e.find(b => b.wh === 'Asosiy ombor') || e[0] || {}).wh; D.store.docReq = { kind: 'hc', wh: w || 'Asosiy ombor', expired: true }; p.onNavigate && p.onNavigate('writeoff'); }, bannerText: L.m_banner ? L.m_banner(expd) : '',
       settings: () => p.onToast && p.onToast(L.q_tNext), showTable: !safeShown && rows.length > 0, showSafe: safeShown || rows.length === 0, cols, rows, minW: p.narrow ? 1200 : 0, noop: () => {},
       onSort: k => this.setState(st => ({ sort: st.sort.key !== k ? { key: k, dir: 'asc' } : st.sort.dir === 'asc' ? { key: k, dir: 'desc' } : { key: 'exp', dir: 'asc' } })),
-      panelOpen: !!pb, panelBatch: pb, panelW: p.narrow ? '60%' : '480px', closePanel: () => this.setState({ panel: null }), openDoc: no => p.onNavigate && p.onNavigate('receipt', 'open:' + no), toWriteoff: b => { const D = window.MedixData; D.store.docReq = { kind: 'hc', bids: [b.id] }; p.onNavigate && p.onNavigate('writeoff'); }, toSupReturn: b => { const D = window.MedixData; D.store.docReq = { kind: 'qy', receiptNo: b.doc, bid: b.id }; p.onNavigate && p.onNavigate('sreturns'); }, toastFn: t => p.onToast && p.onToast(t)
+      panelOpen: !!pb, panelBatch: pb, panelW: p.narrow ? '60%' : '480px', closePanel: () => this.setState({ panel: null }), openDoc: no => p.onNavigate && p.onNavigate('receipt', 'open:' + no), toWriteoff: b => { const D = window.YuzplusData; D.store.docReq = { kind: 'hc', bids: [b.id] }; p.onNavigate && p.onNavigate('writeoff'); }, toSupReturn: b => { const D = window.YuzplusData; D.store.docReq = { kind: 'qy', receiptNo: b.doc, bid: b.id }; p.onNavigate && p.onNavigate('sreturns'); }, toastFn: t => p.onToast && p.onToast(t)
     };
   }
 }

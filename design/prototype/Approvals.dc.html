@@ -7,7 +7,7 @@
 </head>
 <body>
 <x-dc>
-<helmet><script src="medix-data.js"></script></helmet>
+<helmet><script src="yuzplus-data.js"></script></helmet>
 <div data-screen-label="Tasdiqlash" style="display:flex;flex-direction:column;gap:16px;min-width:0;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
   <div style="display:flex;flex-direction:column;gap:4px">
     <dc-import name="PageHeader" title="{{ L.bk_aTitle }}" count="{{ countLabel }}" hint-size="100%,34px"></dc-import>
@@ -143,18 +143,18 @@ const mln = n => (Math.round(n / 1e5) / 10).toFixed(1).replace('.', ',') + ' mln
 const waitText = (m, L) => { const d = Math.floor(m / 1440), h = Math.floor((m % 1440) / 60), mm = m % 60; return d ? fill(L.bk_wD, { d, h }) : h ? fill(L.bk_wH, { h, m: mm }) : fill(L.bk_wM, { m: mm }); };
 const DEC = ['approve', 'reject', 'return'];
 class Component extends DCLogic {
-  state = { view: 'mine', sel: null, leaving: null, detail: false, dlg: null, empty: false, ready: !!window.MedixData };
+  state = { view: 'mine', sel: null, leaving: null, detail: false, dlg: null, empty: false, ready: !!window.YuzplusData };
   get L() { return this.props.dict || {}; }
-  applyUrl() { const D = window.MedixData, u = D && D.store.urlF; if (!u || u.page !== 'approvals' || u.n === this._un) return; this._un = u.n; const P = u.params || {}; const o = P.open ? D.store.orders.find(x => x.no === P.open) : null; if (o) this.setState({ view: 'mine', sel: o.id, detail: true }); }
+  applyUrl() { const D = window.YuzplusData, u = D && D.store.urlF; if (!u || u.page !== 'approvals' || u.n === this._un) return; this._un = u.n; const P = u.params || {}; const o = P.open ? D.store.orders.find(x => x.no === P.open) : null; if (o) this.setState({ view: 'mine', sel: o.id, detail: true }); }
   componentDidMount() {
-    this._url = setInterval(() => this.applyUrl(), 250); if (!window.MedixData) this._p = setInterval(() => { if (window.MedixData) { clearInterval(this._p); this.setState({ ready: true }); } }, 60); this.applyDemo(); }
+    this._url = setInterval(() => this.applyUrl(), 250); if (!window.YuzplusData) this._p = setInterval(() => { if (window.YuzplusData) { clearInterval(this._p); this.setState({ ready: true }); } }, 60); this.applyDemo(); }
   componentWillUnmount() { clearInterval(this._url); clearInterval(this._p); clearTimeout(this._lv); }
   componentDidUpdate(pp) { const d = this.props.demo; if (d && (!pp.demo || pp.demo.n !== d.n)) this.applyDemo(); }
   applyDemo() { const d = this.props.demo; if (!d) return; this.setState({ empty: d.k === 'empty', view: d.k === 'branch' ? 'all' : 'mine', sel: null, detail: false, dlg: null }); }
   toast(t) { this.props.onToast && this.props.onToast(t); }
-  decision(o) { const L = this.L; return [...window.MedixData.orderLog(o)].reverse().find(e => DEC.includes(e.kind) && e.at.slice(0, 10) === window.MedixData.nowStr().slice(0, 10) && (o.viaAppr || o.rej || o.returned || e.kind !== 'approve' || true)); }
+  decision(o) { const L = this.L; return [...window.YuzplusData.orderLog(o)].reverse().find(e => DEC.includes(e.kind) && e.at.slice(0, 10) === window.YuzplusData.nowStr().slice(0, 10) && (o.viaAppr || o.rej || o.returned || e.kind !== 'approve' || true)); }
   lists() {
-    const D = window.MedixData, p = this.props, br = p.branch && p.branch !== 'ALL' ? p.branch : null, today = D.nowStr().slice(0, 10);
+    const D = window.YuzplusData, p = this.props, br = p.branch && p.branch !== 'ALL' ? p.branch : null, today = D.nowStr().slice(0, 10);
     const inBr = o => !br || o.branch === br;
     const pending = this.state.empty ? [] : D.store.orders.filter(o => o.status === 'pending' && inBr(o)).map(o => ({ o, cr: D.creditCheck(o), w: D.waitMin(o) })).sort((a, b) => b.w - a.w);
     const mineIds = D.apprPage(p.branch, p.role).orders.map(o => o.id), mine = pending.filter(x => mineIds.includes(x.o.id)); // T10a3: apprPage — yagona manba
@@ -162,13 +162,13 @@ class Component extends DCLogic {
     return { pending, mine, decided };
   }
   renderVals() { const v = this.rv0() || {}; return { ...v, ...this.priceAp(v.L || this.props.dict || {}) }; }
-  priceAp(L) { const D = window.MedixData, p = this.props; if (!D || !D.nrSum) return { paHas: false, paRows: [], paCount: '0' };
+  priceAp(L) { const D = window.YuzplusData, p = this.props; if (!D || !D.nrSum) return { paHas: false, paRows: [], paCount: '0' };
     const br = p.branch && p.branch !== 'ALL' ? p.branch : null, fM = n => { const [a, b] = (Math.round(Math.abs(n || 0) * 100) / 100).toFixed(2).split('.'); return String(+a).replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ',' + b; }, fl = (t, o) => String(t || '').replace(/\{(\w+)\}/g, (_, k) => o[k] != null ? o[k] : '');
     const list = this.state.empty ? [] : D.apprPage(p.branch, p.role).prices; // T10a3: bosh sahifa bilan bir manba
     const rows = list.map(x => ({ no: x.no, line: fl(L.nq_apRow, { t: D.ptName(x.type), b: (D.BRANCHES.find(b => b.code === x.branch) || {}).name || x.branch, n: (x.lines || []).length }), sent: fl(L.nq_apSent, { at: x.sentAt || x.createdAt, who: x.createdBy }), sum: fl(L.nq_apSum, { s: fM(D.nrSum(x)) }), open: () => { try { location.hash = '#prices?open=' + encodeURIComponent(x.no); } catch (e) {} } }));
     return { paHas: rows.length > 0, paRows: rows, paCount: String(rows.length) }; }
   rv0() {
-    const L = this.L, D = window.MedixData, p = this.props, s = this.state, narrow = !!p.narrow;
+    const L = this.L, D = window.YuzplusData, p = this.props, s = this.state, narrow = !!p.narrow;
     const base = { L, narrow, role: p.role, userName: p.userName, views: [], items: [], d: { why: [], lines: [] }, bar: {}, legend: [], aging: [], delays: [], pays: [] };
     if (!D) return base;
     const { pending, mine, decided } = this.lists();

@@ -87,7 +87,7 @@ const DOCT = ['kr', 'by', 'qm', 'hc', 'qy', 'mt', 'yt', 'tr', 'io', 'ko', 'bo', 
 const D0 = { from: '28.09.2026', to: '04.10.2026' };
 class Component extends DCLogic {
   state = { q: '', date: { ...D0 }, fWho: [], fBr: [], fAct: [], fObj: [], view: 'all', pg: 1, sel: null, dlg: null };
-  get D() { return window.MedixData; }
+  get D() { return window.YuzplusData; }
   get L() { return this.props.dict || {}; }
   componentDidMount() { const D = this.D; if (D && D.store.auditReq) { const r = D.store.auditReq; D.store.auditReq = null; this.setState({ fWho: r.who ? [r.who] : [], date: { from: null, to: null } }); } this.runDemo(); }
   componentDidUpdate(pp) { const d = this.props.demo; if (d && (!pp.demo || pp.demo.n !== d.n)) this.runDemo(); }

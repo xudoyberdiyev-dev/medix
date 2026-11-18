@@ -7,7 +7,7 @@
 </head>
 <body>
 <x-dc>
-<helmet><script src="medix-data.js"></script></helmet>
+<helmet><script src="yuzplus-data.js"></script></helmet>
 <div style="position:fixed;inset:0;z-index:120;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
   <div onClick="{{ close }}" style="position:absolute;inset:0;background:rgba(18,43,42,0.30)"></div>
   <aside role="dialog" aria-modal="true" data-screen-label="Mijozga topshirish" style="position:absolute;top:0;right:0;bottom:0;width:{{ width }};max-width:100%;background:#FFFFFF;border-left:1px solid #E2E8F0;box-shadow:0 8px 24px rgba(18,60,58,0.12);display:flex;flex-direction:column">
@@ -128,15 +128,15 @@ const fM = n => { const [a, b] = (Math.round(Math.abs(n) * 100) / 100).toFixed(2
 const fill = (t, o) => String(t || '').replace(/\{(\w+)\}/g, (_, k) => o[k] != null ? o[k] : '');
 const CB = on => ({ bg: on ? '#0F766E' : '#FFFFFF', border: on ? '#0F766E' : '#647574' });
 class Component extends DCLogic {
-  state = { name: '', poa: '', poaDate: '', phone: '', idOk: false, tried: false, confirm: false, ready: !!window.MedixData };
+  state = { name: '', poa: '', poaDate: '', phone: '', idOk: false, tried: false, confirm: false, ready: !!window.YuzplusData };
   get L() { return this.props.dict || {}; }
   componentDidMount() {
-    if (!window.MedixData) this._p = setInterval(() => { if (window.MedixData) { clearInterval(this._p); this.setState({ ready: true }); } }, 60);
+    if (!window.YuzplusData) this._p = setInterval(() => { if (window.YuzplusData) { clearInterval(this._p); this.setState({ ready: true }); } }, 60);
     this.onKey = e => { if (e.key === 'Escape' && !this.state.confirm) this.props.onClose && this.props.onClose(); }; window.addEventListener('keydown', this.onKey);
   }
   componentWillUnmount() { clearInterval(this._p); window.removeEventListener('keydown', this.onKey); }
   renderVals() {
-    const L = this.L, D = window.MedixData, p = this.props, s = this.state;
+    const L = this.L, D = window.YuzplusData, p = this.props, s = this.state;
     const close = () => p.onClose && p.onClose();
     const base = { L, close, width: p.narrow ? '70%' : '520px', lines: [], confirmItems: [], isForm: true, isDone: false };
     const o = D && D.store.orders.find(x => x.id === p.orderId); if (!o) return base;

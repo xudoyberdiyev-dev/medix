@@ -8,7 +8,7 @@ Sana: 31.10.2026. Hech qanday ilova fayli yoki ma'lumot o'zgartirilmadi. Faqat s
 - **Ishlab turgan ilovada (T11b dagi o'lchovlar).** 1280 / 1440 / 1024 / 924 / 375 px kengliklar haqiqiy oynada o'lchangan (chetdan chiqish, kesilish, gorizontal siljish, NaN).
 - **Bu bosqichda bajarilmadi:** jarayonlarni ekranda boshidan oxirigacha bosib o'tish. Sabab: sinov oynasi uzoq ketma-ketlikda qotib qoldi (T11b ga qarang), ichki oyna ekran rasmiga tushmaydi. 4-banddagi jarayon baholari kod va holatlar mashinasi bo'yicha berildi, bosishlar soni taxminiy («~»).
 - **Chuqur skan qilinmagan fayllar:** ro'yxat bo'yicha Payables dan keyingi 26 ta DC (Payables, PaymentDoc, Payments, PickConfirm, PickerPanel, PickerReport, PinSetup, PriceHistoryPanel, Prices, PrintPreview, ProductPicker, Products, Profile, Receipts, Receivables, Reconciliation, RecordHeader, Reports, SavedViews, ScanPanel, Select, Settings, SetupWizard, Shipping, SideSummary, StatusBanner va boshqalar). Ranglar soni shu sababli to'liq emas. Panel tugmalari alohida tekshirildi.
-- **Dizayn tizimi.** «Medix design system» loyihaga biriktirilmagan, token fayli ham yo'q. Moslik amaldagi palitra (prototipda eng ko'p ishlatilgan qiymatlar) bo'yicha baholandi.
+- **Dizayn tizimi.** «100+ design system» loyihaga biriktirilmagan, token fayli ham yo'q. Moslik amaldagi palitra (prototipda eng ko'p ishlatilgan qiymatlar) bo'yicha baholandi.
 
 ## 1. Umumiy topilmalar (statik)
 

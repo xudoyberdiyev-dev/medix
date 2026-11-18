@@ -7,7 +7,7 @@
 </head>
 <body>
 <x-dc>
-<helmet><script src="medix-data.js"></script></helmet>
+<helmet><script src="yuzplus-data.js"></script></helmet>
 <div style="display:flex;flex-direction:column;gap:16px;min-width:0;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
 <sc-if value="{{ isGrid }}" hint-placeholder-val="{{ true }}">
   <div data-screen-label="Boshqa ma'lumotnomalar" style="display:flex;flex-direction:column;gap:16px">
@@ -87,7 +87,7 @@ const fill = (t, o) => String(t || '').replace(/\{(\w+)\}/g, (_, k) => o[k] != n
 const ICON = { makers: 'factory', cats: 'folder-tree', countries: 'globe', units: 'ruler', ptypes: 'tag', regions: 'map-pin', fleet: 'truck', items: 'wallet' };
 class Component extends DCLogic {
   state = { view: 'grid', kind: null, fleet: 'drivers', q: '', inact: false, panel: null, dlg: null, mg: null, mgErr: '', drag: null };
-  get D() { return window.MedixData; }
+  get D() { return window.YuzplusData; }
   get L() { return this.props.dict || {}; }
   componentDidMount() { if (!this.D || !this.D.lkUse) this._p = setInterval(() => { if (this.D && this.D.lkUse) { clearInterval(this._p); this.boot(); } }, 60); else this.boot();
     this._poll = setInterval(() => { const D = this.D; if (D && D.store.v !== this._v) { this._v = D.store.v; this.forceUpdate(); } }, 400); }

@@ -7,7 +7,7 @@
 </head>
 <body>
 <x-dc>
-<helmet><script src="medix-data.js"></script></helmet>
+<helmet><script src="yuzplus-data.js"></script></helmet>
 <div data-screen-label="Reys" style="display:flex;flex-direction:column;gap:16px;min-width:0;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
   <dc-import name="DocumentHeader" print-items="{{ printItems }}" print-label="{{ L.ch_printMenu }}" parent-label="{{ L.j_title }}" on-parent="{{ back }}" title="{{ title }}" number="{{ number }}" badge="{{ badge }}" steps="{{ steps }}" autosave="{{ autosave }}" primary="{{ primary }}" secondary="{{ secondary }}" more="{{ more }}" more-label="{{ L.p_more }}" sub="{{ sub }}" hint-size="100%,96px"></dc-import>
 
@@ -207,8 +207,8 @@ const TRIP_ST = { draft: ['file-pen', '#5B6B6A', '#F8FAFA'], planned: ['calendar
 const CB = on => ({ bg: on ? '#0F766E' : '#FFFFFF', border: on ? '#0F766E' : '#647574' });
 const okDate = s => /^\d{2}\.\d{2}\.\d{4}$/.test(String(s || '').trim());
 class Component extends DCLogic {
-  state = { t: null, mode: 'edit', q: '', closed: {}, drag: null, over: null, tried: false, dlg: null, save: null, savedAt: null, loadTried: false, finTried: false, leftOpen: false, ready: !!window.MedixData };
-  get D() { return window.MedixData; }
+  state = { t: null, mode: 'edit', q: '', closed: {}, drag: null, over: null, tried: false, dlg: null, save: null, savedAt: null, loadTried: false, finTried: false, leftOpen: false, ready: !!window.YuzplusData };
+  get D() { return window.YuzplusData; }
   get L() { return this.props.dict || {}; }
   componentDidMount() {
     if (!this.D) this._p = setInterval(() => { if (this.D) { clearInterval(this._p); this.init(); } }, 60); else this.init();

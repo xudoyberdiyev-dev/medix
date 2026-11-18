@@ -1,4 +1,4 @@
-# MEDIX — Railway'ga joylashtirish (sinov muhiti)
+# 100+ — Railway'ga joylashtirish (sinov muhiti)
 
 Tarkib: 3 xizmat bitta Railway loyihasida — **Postgres** (Railway bazasi), **backend** (`backend/`), **frontend** (`frontend/`).
 Foydalanuvchi faqat frontend domenini ochadi; `/api/*` so'rovlarini frontend backendga Railway ichki tarmog'i orqali uzatadi (cookie bitta domenda).

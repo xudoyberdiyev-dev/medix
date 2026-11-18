@@ -7,7 +7,7 @@
 </head>
 <body>
 <x-dc>
-<helmet><script src="medix-data.js"></script></helmet>
+<helmet><script src="yuzplus-data.js"></script></helmet>
 <div style="display:flex;flex-direction:column;min-width:0;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
 <sc-if value="{{ isList }}" hint-placeholder-val="{{ true }}">
 <div data-screen-label="Akt sverka" style="display:flex;flex-direction:column;gap:16px;min-width:0">
@@ -145,7 +145,7 @@ const OUR_STIR = { TSH: '305 118 204', SMQ: '305 118 211', BXR: '305 118 229', F
 const QUICK = [['std', '01.07.2026', '04.10.2026'], ['lastMonth', '01.09.2026', '30.09.2026'], ['lastQ', '01.07.2026', '30.09.2026'], ['ytd', '01.01.2026', '04.10.2026']];
 class Component extends DCLogic {
   state = { view: 'list', tab: 'all', q: '', fKind: [], cur: null, form: null, partyErr: '', diffOpen: false, theirs: null, diffNote: '', theirsErr: '', noteErr: '' };
-  get D() { return window.MedixData; }
+  get D() { return window.YuzplusData; }
   get L() { return this.props.dict || {}; }
   componentDidMount() {
     if (!this.D) this._p = setInterval(() => { if (this.D) { clearInterval(this._p); this.boot(); } }, 60); else this.boot();
@@ -196,13 +196,13 @@ class Component extends DCLogic {
     }
     const a = s.view === 'view' && s.cur ? D.reconByNo(s.cur) : null;
     if (a) {
-      const K = a.kind, mt = K === 'mt', rc = D.reconCalc(K, a.party, a.branch, a.from, a.to), cp = D.partyName(K, a.party), me = `Medix Group · ${brName(a.branch)}`, R = RS[a.status] || RS.made;
+      const K = a.kind, mt = K === 'mt', rc = D.reconCalc(K, a.party, a.branch, a.from, a.to), cp = D.partyName(K, a.party), me = `Shifo Dori · ${brName(a.branch)}`, R = RS[a.status] || RS.made;
       const favor = (v, d) => { if (Math.abs(v) < 0.005) return fill(L.qz_rcZero, { d }); const ours = mt ? v > 0 : v < 0, adv = mt ? v < 0 : v < 0; return fill(L.qz_rcFavor, { d, who: ours ? cp : me, to: ours ? me : cp, s: fM(Math.abs(v)) }) + (mt && v < 0 ? L.qz_rcAdvSfx : !mt && v < 0 ? L.qz_rcAdvSfx : ''); };
       const pos = v => v ? fM(v) : '';
       const openAmt = Math.abs(rc.open), openOurs = mt ? rc.open > 0 : rc.open < 0;
       const mvText = m => { const T = { sale: L.qz_m_sale, arch: L.qz_m_arch, rc: L.qz_m_rc, mt: L.qz_m_mt, yt: L.qz_m_yt, qm: L.qz_m_qm, qy: L.qz_m_qy, tripret: L.qz_m_tripret, ah: m.auto ? L.qz_m_ahAuto : L.qz_m_ah }[m.t] || m.t;
         if (m.t === 'mt' || m.t === 'yt') return `${T} · ${L['tl_m_' + m.method] || m.method}`; if (m.base) return `${T} · ${m.base}`; if (m.t === 'ah') return fill(T, { s: fM(m.info) }); return T; };
-      // Medix nuqtai nazaridan: mijozga sotuv — debet; yetkazib beruvchiga to'lov — debet
+      // 100+ nuqtai nazaridan: mijozga sotuv — debet; yetkazib beruvchiga to'lov — debet
       const sheetRows = [{ date: a.from, no: '', link: false, plain: true, text: L.qz_openBal, dr: openOurs ? pos(openAmt) : '', cr: !openOurs ? pos(openAmt) : '', bg: '#FFFFFF', w: 500, txtColor: '#172B2A' },
         ...rc.rows.map(m => ({ date: m.date, no: m.no, link: !m.archive, plain: !!m.archive, open: () => docOpen({ ...m, kind: K, party: a.party, branch: a.branch }), text: mvText(m) + (m.archive ? ' · ' + L.qz_arch : ''), dr: pos(m.dr), cr: pos(m.cr), bg: '#FFFFFF', w: 400, txtColor: m.t === 'ah' ? '#1D4ED8' : '#172B2A' })),
         { date: '', no: '', link: false, plain: true, text: L.qz_turnover, dr: fM(rc.dr), cr: fM(rc.cr), bg: '#F8FAFA', w: 600, txtColor: '#172B2A' },
@@ -211,7 +211,7 @@ class Component extends DCLogic {
       const btn = (label, icon, pick, kind) => ({ label, icon, pick, bg: kind === 'pri' ? '#0F766E' : '#FFFFFF', fg: kind === 'pri' ? '#FFFFFF' : kind === 'dng' ? '#B91C1C' : '#172B2A', border: kind === 'pri' ? '#0F766E' : '#E2E8F0' });
       const actions = [btn(L.qz_rcSent, 'send', step('sent', ['made']), a.status === 'made' ? 'pri' : ''), btn(L.qz_rcSigned, 'circle-check', step('signed', ['sent', 'diff']), a.status === 'sent' ? 'pri' : ''),
         btn(L.qz_rcDiff, 'triangle-alert', () => { if (!this.can()) return this.toast(this.who(D.RECON_ROLES)); if (!['sent', 'diff'].includes(a.status)) return this.toast(L.qz_rcNeed_diff); this.setState({ diffOpen: true, theirs: a.theirs, diffNote: a.diffNote || '', theirsErr: '', noteErr: '' }); }, 'dng'),
-        btn(L.qz_rcPrint, 'printer', () => window.medixPrint && window.medixPrint('akt', a.no))];
+        btn(L.qz_rcPrint, 'printer', () => window.yuzplusPrint && window.yuzplusPrint('akt', a.no))];
       const theirs = s.theirs, diff = theirs != null ? r2(theirs - rc.close) : null;
       const saveDiff = () => { const e = { theirsErr: theirs == null ? L.qz_rcTheirsReq : '', noteErr: !s.diffNote.trim() ? L.qz_rcNoteReq : '' }; if (e.theirsErr || e.noteErr) return this.setState(e); D.reconStep(a.no, 'diff', p.userName, { theirs, diffNote: s.diffNote.trim() }); this.setState({ diffOpen: false }); this.toast(fill(L.qz_rcStepDone, { s: L.qz_rs_diff })); };
       const dSaved = a.status === 'diff' && a.theirs != null ? r2(a.theirs - rc.close) : 0;

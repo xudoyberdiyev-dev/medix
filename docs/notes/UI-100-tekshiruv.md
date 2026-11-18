@@ -1,6 +1,6 @@
 # UI 100% — prototip bilan ekranma-ekran tekshiruv (11.11.2026, 14:00 oynasi)
 
-Usul: prototip (`scripts/prototype-shot.cjs "Medix ERP"`, login → `hash:<sahifa>` qadami, rol — «Rol» menyusi) ↔ haqiqiy ilova
+Usul: prototip (`scripts/prototype-shot.cjs "100plus ERP"`, login → `hash:<sahifa>` qadami, rol — «Rol» menyusi) ↔ haqiqiy ilova
 («Demo skrinshotlar» workflow — toʻliq stek, e2e maʼlumotlari, 55 marshrut + rollar bosh sahifasi; log → base64 → jpg).
 Har juftlik yonma-yon solishtirildi (matn, ustun, tugma, yorliq, KPI, tartib).
 
@@ -61,7 +61,7 @@ Har juftlik yonma-yon solishtirildi (matn, ustun, tugma, yorliq, KPI, tartib).
 
 ## Kechki oyna 11.11 (20:00–22:30) — qoʻshimcha 31 ekran
 
-Demo workflow'ga 32 ta yangi marshrut qoʻshildi (yangi hujjat shakllari, hujjat va kartochka sahifalari, boʻsh holat); prototip — `Medix ERP` (login → hash → qatorni bosish).
+Demo workflow'ga 32 ta yangi marshrut qoʻshildi (yangi hujjat shakllari, hujjat va kartochka sahifalari, boʻsh holat); prototip — `100plus ERP` (login → hash → qatorni bosish).
 
 | # | Ekran | Holat | Izoh |
 |---|---|---|---|

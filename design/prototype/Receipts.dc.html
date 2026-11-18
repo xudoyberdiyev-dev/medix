@@ -7,7 +7,7 @@
 </head>
 <body>
 <x-dc>
-<helmet><script src="medix-data.js"></script></helmet>
+<helmet><script src="yuzplus-data.js"></script></helmet>
 <div style="display:flex;flex-direction:column;min-width:0;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
 <sc-if value="{{ loading }}"><div style="padding:48px 0;text-align:center;font-size:13px;color:#647574">{{ L.k_loading }}</div></sc-if>
 
@@ -228,11 +228,11 @@ const ageOf = d => { const t = pD(d.date); return t == null ? 0 : Math.max(0, Ma
 let LID = 90000;
 
 class Component extends DCLogic {
-  state = { ready: !!window.MedixData, docs: [], view: 'list', listState: 'normal', tab: 'all', q: '', fSup: [], fWh: [], date: { from: null, to: null }, sort: { key: 'date', dir: 'desc' }, page: 1, per: 25, sel: {},
+  state = { ready: !!window.YuzplusData, docs: [], view: 'list', listState: 'normal', tab: 'all', q: '', fSup: [], fWh: [], date: { from: null, to: null }, sort: { key: 'date', dir: 'desc' }, page: 1, per: 25, sel: {},
     doc: null, docTab: 'doc', save: { state: 'saved', time: '' }, failSave: false, vs: null, dlg: null, pendWh: null, reason: '', reasonErr: '', focusReq: null, tried: false, bonusTxt: null };
   componentDidMount() {
-    const od0 = window.MedixData && window.MedixData.openDocGet ? window.MedixData.openDocGet('receipt') : null;
-    this._flushFn = () => this.flush(); window.__medixFlush = this._flushFn;
+    const od0 = window.YuzplusData && window.YuzplusData.openDocGet ? window.YuzplusData.openDocGet('receipt') : null;
+    this._flushFn = () => this.flush(); window.__yuzplusFlush = this._flushFn;
     this.onPop = () => { if (this.state.view === 'pick' && !/[?&]pick/.test(location.hash)) this.closePick(); };
     window.addEventListener('popstate', this.onPop);
     this.onKeyK = e => { if (e.altKey && !e.ctrlKey && (e.code === 'KeyK' || e.key === 'k' || e.key === 'K') && this.state.view === 'doc' && this.state.doc && this.mode(this.state.doc) === 'edit' && !this.state.dlg) { e.preventDefault(); this.openPick(); } };
@@ -240,13 +240,13 @@ class Component extends DCLogic {
     const init = () => { this.reset(); if (this.props.demo) return this.applyDemo(this.props.demo.k); const D = this.D, q = D.store.navReq, u0 = D.store.urlF;
       // Y1: ochiq hujjat — boshqa sahifadan qaytganda hujjat ochiladi (yangi URL so'rovi bo'lsa — u ustun)
       if (od0 && od0.doc && !(q && q.page === 'receipt') && !(u0 && u0.page === 'receipt' && Date.now() - u0.n < 1500)) setTimeout(() => this.openDoc(od0.doc, { save: { state: 'saved', time: '' } }), 0); if (q && q.page === 'receipt' && q.open) { D.store.navReq = null; const d = D.store.receipts.find(x => x.no === q.open); if (d) this.openDoc(d); } if (q && q.page === 'receipt' && q.newBonus) { D.store.navReq = null; const nb = q.newBonus; this.newDoc(); setTimeout(() => this.upd(x => { x.supplier = nb.supplier; x.payType = this.supPay(nb.supplier); x.fromBonus = true; x.prepaid = false; x.bonus = null; }), 0); } const u = D.store.urlF; if (u && u.page === 'receipt' && u.params && ['draft', 'accepted', 'posted', 'cancelled'].includes(u.params.status)) this.setState({ tab: u.params.status }); if (u) this._un = u.n; this._url = setInterval(() => this.applyUrl(), 250); };
-    if (window.MedixData) init(); else this._poll = setInterval(() => { if (window.MedixData) { clearInterval(this._poll); this.setState({ ready: true }, init); } }, 60);
+    if (window.YuzplusData) init(); else this._poll = setInterval(() => { if (window.YuzplusData) { clearInterval(this._poll); this.setState({ ready: true }, init); } }, 60);
   }
   // T10a3 (1.7.4): sahifa ochiq turganda ham manzildagi filtr — ?status=draft|accepted|posted|cancelled, ?q=, ?open=
   applyUrl() { const D = this.D, u = D && D.store.urlF; if (!u || u.page !== 'receipt' || u.n === this._un || this.props.demo) return; this._un = u.n; const P = u.params || {};
     if (P.open) { const r = D.store.navReq; if (r && r.page === 'receipt' && r.open === P.open) D.store.navReq = null; const d = D.store.receipts.find(x => x.no === P.open); if (d) return this.openDoc(d); }
     this.setState({ view: 'list', doc: null, page: 1, tab: ['draft', 'accepted', 'posted', 'cancelled'].includes(P.status) ? P.status : 'all', q: P.q || '' }); }
-  componentWillUnmount() { this._unm = true; this.flush(); if (window.__medixFlush === this._flushFn) window.__medixFlush = null; window.removeEventListener('popstate', this.onPop); window.removeEventListener('keydown', this.onKeyK); clearTimeout(this._pt); clearInterval(this._url); clearInterval(this._poll); clearTimeout(this._sv); }
+  componentWillUnmount() { this._unm = true; this.flush(); if (window.__yuzplusFlush === this._flushFn) window.__yuzplusFlush = null; window.removeEventListener('popstate', this.onPop); window.removeEventListener('keydown', this.onKeyK); clearTimeout(this._pt); clearInterval(this._url); clearInterval(this._poll); clearTimeout(this._sv); }
   dirty(v) { this.props.onDirty && this.props.onDirty(!!v); }
   editable(d) { return !!d && ['draft', 'accepted'].includes(d.status) && this.mode(d) !== 'read'; }
   // Y1: chiqishdan oldin darhol saqlash (700 ms kutmasdan)
@@ -265,8 +265,8 @@ class Component extends DCLogic {
     this.toast([ids.length ? this.fill(L.pk_tAdded || "{n} ta mahsulot qo'shildi", { n: ids.length }) : '', inc ? this.fill(L.pk_tInc || '{n} tasida miqdor oshirildi', { n: inc }) : ''].filter(Boolean).join(' · '));
     if (ids.length) setTimeout(() => this.setState({ focusReq: { rowId: ids[0], key: 'batch', n: Date.now() } }), 80); }
   componentDidUpdate(pp) { const ps = this._ps || {}; this._ps = this.state; if (this.D && this.state.docs !== ps.docs && this.state.ready) this.D.setReceipts(this.state.docs);
-    const st = this.state; if (this.D && this.D.openDocSet && st.ready && (st.doc !== ps.doc || st.view !== ps.view) && st.view !== 'pick') { if (st.view === 'doc' && this.editable(st.doc)) this.D.openDocSet('receipt', st.doc); else { this.D.openDocSet('receipt', null); if (st.view === 'list') this.dirty(false); } } if (this.props.demo && (!pp.demo || pp.demo.n !== this.props.demo.n) && window.MedixData) this.applyDemo(this.props.demo.k); }
-  get D() { return window.MedixData; }
+    const st = this.state; if (this.D && this.D.openDocSet && st.ready && (st.doc !== ps.doc || st.view !== ps.view) && st.view !== 'pick') { if (st.view === 'doc' && this.editable(st.doc)) this.D.openDocSet('receipt', st.doc); else { this.D.openDocSet('receipt', null); if (st.view === 'list') this.dirty(false); } } if (this.props.demo && (!pp.demo || pp.demo.n !== this.props.demo.n) && window.YuzplusData) this.applyDemo(this.props.demo.k); }
+  get D() { return window.YuzplusData; }
   get L() { return this.props.dict || {}; }
   who() { return this.props.userName || 'Akmal Karimov'; }
   reset(extra) { const D = this.D, st = D.store; this.setState({ ready: true, docs: st.receipts, ...(extra || {}) }); }
@@ -626,7 +626,7 @@ class Component extends DCLogic {
   }
   renderVals() {
     const s = this.state, L = this.L;
-    if (!s.ready || !window.MedixData) return { L, loading: true, isList: false, isDoc: false };
+    if (!s.ready || !window.YuzplusData) return { L, loading: true, isList: false, isDoc: false };
     const lv = s.view === 'list' ? this.listVals(L) : {}, dv = s.view === 'doc' && s.doc ? this.docVals(L) : {};
     const canPick = s.view === 'doc' && !!s.doc && this.mode(s.doc) === 'edit';
     return { L, loading: false, narrow: !!this.props.narrow, isList: s.view === 'list', isDoc: s.view === 'doc' && !!s.doc, ...lv, ...dv,

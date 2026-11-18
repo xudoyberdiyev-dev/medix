@@ -44,7 +44,7 @@ const FIELDS = { makers: [['name', 't', 1], ['country', 't']], countries: [['nam
 const LB = { name: 'f_name', country: 'f_country', parent: 'f_parent', short: 'f_short', frac: 'f_frac', desc: 'f_desc', code: 'f_code', prov: 'f_prov', branch: 'f_branch', driver: 'f_driver', phone: 'f_phone', lic: 'f_lic', no: 'f_no', model: 'f_model', fridge: 'f_fridge', cap: 'f_cap', dir: 'f_dir' };
 class Component extends DCLogic {
   state = { f: null, tried: false };
-  get D() { return window.MedixData; }
+  get D() { return window.YuzplusData; }
   componentDidMount() { this.init(); this.onKey = e => { if (e.key === 'Escape') this.props.onClose && this.props.onClose(); }; window.addEventListener('keydown', this.onKey); }
   componentWillUnmount() { window.removeEventListener('keydown', this.onKey); }
   componentDidUpdate(pp) { if (pp.nonce !== this.props.nonce) this.init(); }

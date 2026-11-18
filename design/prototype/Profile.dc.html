@@ -118,7 +118,7 @@ const ini = n => String(n || '').split(' ').map(x => x[0] || '').join('').slice(
 const ACT = { create: ['file-plus', '#0F766E'], approve: ['circle-check', '#15803D'], cancel: ['circle-x', '#B91C1C'], change: ['pencil', '#5B6B6A'], login: ['log-in', '#0F766E'], loginFail: ['shield-x', '#B91C1C'], block: ['ban', '#B91C1C'], perm: ['shield-check', '#7C3AED'], setting: ['settings', '#B45309'] };
 class Component extends DCLogic {
   state = { panel: null, pw: { cur: '', a: '', b: '' }, pwTried: false, dlg: null, v: 0 };
-  get D() { return window.MedixData; }
+  get D() { return window.YuzplusData; }
   get L() { return this.props.dict || {}; }
   componentDidMount() { this.runDemo(); }
   componentDidUpdate(pp) { const d = this.props.demo; if (d && (!pp.demo || pp.demo.n !== d.n)) this.runDemo(); }

@@ -12,7 +12,7 @@ const vendor = {
   "lucide.min.js": "lucide.min.js",
 };
 (async () => {
-  const [screen = "Medix ERP", out = "/tmp/proto.png", size = "1440x900", wait = "4000"] = process.argv.slice(2);
+  const [screen = "100plus ERP", out = "/tmp/proto.png", size = "1440x900", wait = "4000"] = process.argv.slice(2);
   const [w, h] = size.split("x").map(Number);
   const server = http.createServer((req, res) => {
     const f = path.join(root, decodeURIComponent(req.url.split("?")[0]));
@@ -30,7 +30,7 @@ const vendor = {
     if (v) return route.fulfill({ path: path.join(root, "vendor", v), contentType: "text/javascript" });
     return route.fulfill({ status: 200, body: "", contentType: "text/css" });
   });
-  // INIT_LS='{"kalit":"qiymat"}' — sahifa yuklanishidan oldin localStorage (masalan, usta qadami: {"medix-wizard-v1":"{\"step\":4}"})
+  // INIT_LS='{"kalit":"qiymat"}' — sahifa yuklanishidan oldin localStorage (masalan, usta qadami: {"yuzplus-wizard-v1":"{\"step\":4}"})
   if (process.env.INIT_LS) await p.addInitScript((kv) => { for (const [k, v] of Object.entries(JSON.parse(kv))) localStorage.setItem(k, v); }, process.env.INIT_LS);
   const errs = [];
   p.on("pageerror", (e) => errs.push(e.message));

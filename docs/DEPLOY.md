@@ -1,13 +1,13 @@
-# MEDIX — joylashtirish va ekspluatatsiya (SPEC 14, 15)
+# 100+ — joylashtirish va ekspluatatsiya (SPEC 14, 15)
 
 Production: bitta server, Docker Compose — `deploy/` papkasi.
 
 | Xizmat | Image | Vazifa |
 |---|---|---|
 | caddy | `caddy:2` | HTTPS (Let's Encrypt yoki ichki CA), `/api/*` → backend, qolgani → frontend |
-| frontend | `ghcr.io/xudoyberdiyev-dev/medix-frontend` | Next.js |
-| backend | `ghcr.io/xudoyberdiyev-dev/medix-backend` | Spring Boot; Flyway migratsiyalari ishga tushganda o'zi bajariladi |
-| postgres | `ghcr.io/xudoyberdiyev-dev/medix-postgres` | PostgreSQL 18 + pgBackRest (WAL arxivi) |
+| frontend | `ghcr.io/xudoyberdiyev-dev/yuzplus-frontend` | Next.js |
+| backend | `ghcr.io/xudoyberdiyev-dev/yuzplus-backend` | Spring Boot; Flyway migratsiyalari ishga tushganda o'zi bajariladi |
+| postgres | `ghcr.io/xudoyberdiyev-dev/yuzplus-postgres` | PostgreSQL 18 + pgBackRest (WAL arxivi) |
 
 Fayllar (rasm, imzo, PDF) bazada saqlanadi — alohida fayl xotirasi (MinIO) hozircha shart emas.
 `/actuator` (health, prometheus) tashqariga ochilmaydi.
@@ -19,7 +19,7 @@ Fayllar (rasm, imzo, PDF) bazada saqlanadi — alohida fayl xotirasi (MinIO) hoz
 
 ## Birinchi o'rnatish
 ```bash
-sudo mkdir -p /opt/medix && cd /opt/medix
+sudo mkdir -p /opt/yuzplus && cd /opt/yuzplus
 git clone --depth 1 https://github.com/xudoyberdiyev-dev/medix.git src && cp -r src/deploy . && cd deploy
 cp .env.example .env && chmod 600 .env && nano .env      # domen, YUZPLUS_DB_PASSWORD, CEO login/parol, YUZPLUS_VERSION
 docker compose pull
@@ -30,13 +30,13 @@ docker compose logs -f backend                           # «Started YuzplusAppl
 Brauzerda `https://<YUZPLUS_DOMAIN>` → CEO login → parolni almashtirish → sozlash ustasi.
 Shundan keyin `.env` dagi `YUZPLUS_BOOTSTRAP_PASSWORD` ni o'chirib qo'yish mumkin.
 
-Domen yo'q (ofis ichki serveri): `YUZPLUS_DOMAIN=medix.local`, `YUZPLUS_TLS=internal` va xodimlar kompyuterida
-`medix.local` → server IP (DNS yoki hosts). Caddy'ning ichki CA sertifikatini (`docker compose exec caddy cat /data/caddy/pki/authorities/local/root.crt`) kompyuterlarga ishonchli deb o'rnating.
+Domen yo'q (ofis ichki serveri): `YUZPLUS_DOMAIN=yuzplus.local`, `YUZPLUS_TLS=internal` va xodimlar kompyuterida
+`yuzplus.local` → server IP (DNS yoki hosts). Caddy'ning ichki CA sertifikatini (`docker compose exec caddy cat /data/caddy/pki/authorities/local/root.crt`) kompyuterlarga ishonchli deb o'rnating.
 
 ## Yangilash
 Reliz: egasi `main` dan `vX.Y.Z` teg qo'yadi → GitHub Actions «Docker» image'larni GHCR'ga joylaydi.
 ```bash
-cd /opt/medix/deploy
+cd /opt/yuzplus/deploy
 ./backup/backup.sh                                       # yangilashdan oldin nusxa (YUZPLUS_BACKUP_TYPE=incr tezroq)
 sed -i 's/^YUZPLUS_VERSION=.*/YUZPLUS_VERSION=v1.0.1/' .env
 docker compose pull && docker compose up -d
@@ -51,19 +51,19 @@ Orqaga qaytish: oldingi versiyani yozib `up -d`. Migratsiya bajarilgan bo'lsa �
 
 Host cron (`sudo crontab -e`):
 ```cron
-15 2 * * *  /opt/medix/deploy/backup/backup.sh       >> /var/log/medix-backup.log 2>&1
-0  4 1 * *  /opt/medix/deploy/backup/restore-test.sh >> /var/log/medix-backup.log 2>&1
+15 2 * * *  /opt/yuzplus/deploy/backup/backup.sh       >> /var/log/yuzplus-backup.log 2>&1
+0  4 1 * *  /opt/yuzplus/deploy/backup/restore-test.sh >> /var/log/yuzplus-backup.log 2>&1
 ```
-Holat: `docker compose exec -u postgres postgres pgbackrest --stanza=medix info`.
+Holat: `docker compose exec -u postgres postgres pgbackrest --stanza=yuzplus info`.
 
 ## Tiklash (avariya)
 ```bash
-cd /opt/medix/deploy
+cd /opt/yuzplus/deploy
 docker compose stop backend frontend
 docker compose stop postgres
 # Oxirgi holatga: (yoki ma'lum vaqtga: --type=time "--target=2026-11-07 10:30:00+05")
 docker compose run --rm -u postgres --entrypoint bash postgres -c \
-  'pgbackrest --stanza=medix --delta restore'
+  'pgbackrest --stanza=yuzplus --delta restore'
 docker compose up -d
 ```
 `--delta` mavjud fayllarni tekshirib, faqat farqlarini tiklaydi. Server butunlay yo'qolsa: yangi serverda «Birinchi o'rnatish» (`backup.sh` siz), `repo2-s3.conf` ni qo'ying, `--repo=2` bilan restore qiling.

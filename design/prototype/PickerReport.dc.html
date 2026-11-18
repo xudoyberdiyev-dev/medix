@@ -64,15 +64,15 @@ const fill = (t, o) => String(t || '').replace(/\{(\w+)\}/g, (_, k) => o[k] != n
 class Component extends DCLogic {
   state = { from: '', to: '', open: {} };
   get L() { return this.props.dict || {}; }
-  componentDidMount() { this._p = setInterval(() => { if (window.MedixData && !this._rd) { this._rd = 1; this.forceUpdate(); } }, 100); }
+  componentDidMount() { this._p = setInterval(() => { if (window.YuzplusData && !this._rd) { this._rd = 1; this.forceUpdate(); } }, 100); }
   componentWillUnmount() { clearInterval(this._p); }
-  data() { const D = window.MedixData, s = this.state, f = s.from || D.TODAY, t = s.to || s.from || D.TODAY; return { f, t, G: D.pickStats(this.props.branch || 'ALL', f, t) }; }
-  exportX() { const D = window.MedixData, L = this.L, { f, t, G } = this.data(), rows = [[L.pr_cPicker, L.pr_cN, L.pr_cOn, L.pr_cLate, L.pr_cLateMin, L.pr_cAvg, L.pr_cIss]];
+  data() { const D = window.YuzplusData, s = this.state, f = s.from || D.TODAY, t = s.to || s.from || D.TODAY; return { f, t, G: D.pickStats(this.props.branch || 'ALL', f, t) }; }
+  exportX() { const D = window.YuzplusData, L = this.L, { f, t, G } = this.data(), rows = [[L.pr_cPicker, L.pr_cN, L.pr_cOn, L.pr_cLate, L.pr_cLateMin, L.pr_cAvg, L.pr_cIss]];
     G.forEach(g => rows.push([g.name, g.n, g.onTime, g.late, g.lateMin, g.avg == null ? '' : g.avg, g.issues])); rows.push([]); rows.push([L.b_cNo, L.pp_cCust, L.pr_cPicker, L.pp_cGiven, L.pp_cSpent, L.pr_cDiff, L.pp_cTime]);
     G.forEach(g => g.rows.forEach(r => rows.push([r.o.no, (D.custById(r.o.cust) || {}).name || '', g.name, r.o.tm.pickMin, r.spent, r.diff, r.start + ' – ' + r.end.slice(11)])));
     const ok = D.xlsxDownload('Yiguvchilar_natijasi_' + f + (t !== f ? '_' + t : ''), rows, L.pr_title); this.props.onToast && this.props.onToast(ok ? L.pr_exported : L.p_exportToast); }
   renderVals() {
-    const D = window.MedixData, L = this.L, s = this.state, p = this.props, grid = 'minmax(180px,1.4fr) repeat(6,minmax(96px,1fr))';
+    const D = window.YuzplusData, L = this.L, s = this.state, p = this.props, grid = 'minmax(180px,1.4fr) repeat(6,minmax(96px,1fr))';
     const cols = [[L.pr_cPicker, 'left'], [L.pr_cN, 'right'], [L.pr_cOn, 'right'], [L.pr_cLate, 'right'], [L.pr_cLateMin, 'right'], [L.pr_cAvg, 'right'], [L.pr_cIss, 'right']].map(([label, align]) => ({ label, align }));
     const base = { L, grid, cols, rows: [], empty: false, hasTotal: false, total: [], from: '', to: '', today: '', brOpts: [], brVal: 'ALL', brLocked: true, setDates: () => {}, setBr: () => {}, exportX: () => {}, toCatalog: () => p.onOpen && p.onOpen('#reports') };
     if (!D || !D.pickStats) return base;

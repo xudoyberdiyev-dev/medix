@@ -135,7 +135,7 @@ const ACT = { create: ['file-plus', '#0F766E'], approve: ['circle-check', '#1580
 class Component extends DCLogic {
   state = { emp: null, tab: 'info', pick: null, dlg: null, reason: '', rTried: false, creds: null, rule: null, rh: 640, v: 0 };
   rolesRef = React.createRef();
-  get D() { return window.MedixData; }
+  get D() { return window.YuzplusData; }
   get L() { return this.props.dict || {}; }
   componentDidMount() { const D = this.D; if (D && D.store.bsEmp) { this.setState({ emp: D.store.bsEmp, tab: 'info' }); D.store.bsEmp = null; } this.onResize = () => this.measure(); window.addEventListener('resize', this.onResize); setTimeout(() => this.measure(), 0); this.runDemo(); }
   componentWillUnmount() { window.removeEventListener('resize', this.onResize); }

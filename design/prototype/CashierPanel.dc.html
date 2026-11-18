@@ -186,7 +186,7 @@ const ICON = { cash: 'banknote', term: 'credit-card', bank: 'landmark' };
 class Component extends DCLogic {
   state = { per: 'day', cFrom: '01.10.2026', cTo: '04.10.2026', acct: 'ALL', pt: 'ALL', q: '', opKind: 'all', showAll: false };
   rootRef = el => { this._el = el; };
-  componentDidMount() { if (!window.MedixData) this._p = setInterval(() => { if (window.MedixData) { clearInterval(this._p); this.forceUpdate(); } }, 60); this._v = setInterval(() => { const D = window.MedixData; if (D && D.store.v !== this._sv) { this._sv = D.store.v; this.forceUpdate(); } }, 400); }
+  componentDidMount() { if (!window.YuzplusData) this._p = setInterval(() => { if (window.YuzplusData) { clearInterval(this._p); this.forceUpdate(); } }, 60); this._v = setInterval(() => { const D = window.YuzplusData; if (D && D.store.v !== this._sv) { this._sv = D.store.v; this.forceUpdate(); } }, 400); }
   componentWillUnmount() { clearInterval(this._p); clearInterval(this._v); }
   get L() { return this.props.dict || {}; }
   t(k) { return this.L['kd_' + k] || KD[k]; }
@@ -194,7 +194,7 @@ class Component extends DCLogic {
   href(B, page, params) { const o = Object.assign({}, params || {}, { branch: B }); return '#' + page + '?' + Object.keys(o).filter(k => o[k] != null && o[k] !== '').map(k => k + '=' + encodeURIComponent(o[k])).join('&'); }
   seg(list, cur, set) { return list.map(([k, label]) => { const on = cur === k; return { label, on, bg: on ? '#FFFFFF' : 'transparent', fg: on ? '#172B2A' : '#5B6B6A', sh: on ? '0 1px 2px rgba(18,60,58,0.08)' : 'none', pick: () => set(k) }; }); }
   renderVals() {
-    const D = window.MedixData, p = this.props, s = this.state, T = new Proxy({}, { get: (_, k) => this.t(k) });
+    const D = window.YuzplusData, p = this.props, s = this.state, T = new Proxy({}, { get: (_, k) => this.t(k) });
     const base = { rootRef: this.rootRef, T, greet: '', sub: '', actions2: [], primary: { label: KD.aMt, pick: () => {} }, periods: [], pts: [], acctOpts: [], cards: [], accHeads: [], accRows: [], accTot: {}, days: [], ops: [], opHeads: [], opKinds: [], isCustom: false };
     if (!D || !D.cashDash) return base;
     const role = p.role || 'cashier', user = p.userName || '', emp = (D.store.emps || []).find(e => D.empName(e) === user);

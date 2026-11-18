@@ -67,16 +67,16 @@ const kw = (L, box, unit) => { const a = []; if (box) a.push(fN(box) + ' ' + L.m
 class Component extends DCLogic {
   state = { from: '', to: '', open: {} };
   get L() { return this.props.dict || {}; }
-  componentDidMount() { this._p = setInterval(() => { if (window.MedixData && !this._rd) { this._rd = 1; this.forceUpdate(); } }, 100); }
+  componentDidMount() { this._p = setInterval(() => { if (window.YuzplusData && !this._rd) { this._rd = 1; this.forceUpdate(); } }, 100); }
   componentWillUnmount() { clearInterval(this._p); }
-  data() { const D = window.MedixData, s = this.state, f = s.from || D.TODAY, t = s.to || s.from || D.TODAY; return { f, t, G: D.markStats(this.props.branch || 'ALL', f, t) }; }
+  data() { const D = window.YuzplusData, s = this.state, f = s.from || D.TODAY, t = s.to || s.from || D.TODAY; return { f, t, G: D.markStats(this.props.branch || 'ALL', f, t) }; }
   res(L, r) { return r.none ? L.mp_resNone : r.late ? fill(L.q9_resLate, { d: -r.diff }) : r.diff > 0 ? fill(L.pp_resOk, { d: r.diff }) : L.pp_resOnTime; }
-  exportX() { const D = window.MedixData, L = this.L, { f, t, G } = this.data(), rows = [[L.mr_cMarker, L.pr_cN, L.mr_cBox, L.mr_cUnit, L.pr_cOn, L.pr_cLate, L.pr_cLateMin, L.pr_cAvg, L.mp_kErrs, L.pr_cIss]];
+  exportX() { const D = window.YuzplusData, L = this.L, { f, t, G } = this.data(), rows = [[L.mr_cMarker, L.pr_cN, L.mr_cBox, L.mr_cUnit, L.pr_cOn, L.pr_cLate, L.pr_cLateMin, L.pr_cAvg, L.mp_kErrs, L.pr_cIss]];
     G.forEach(g => rows.push([g.name, g.n, g.box, g.unit, g.onTime, g.late, g.lateMin, g.avg == null ? '' : g.avg, g.errs, g.issues])); rows.push([]); rows.push([L.b_cNo, L.pp_cCust, L.mr_cMarker, L.pp_cGiven, L.pp_cSpent, L.pr_cDiff, L.mr_cBox, L.mr_cUnit, L.mp_kErrs, L.pp_cTime]);
     G.forEach(g => g.rows.forEach(r => rows.push([r.o.no, (D.custById(r.o.cust) || {}).name || '', g.name, r.o.tm ? r.o.tm.markMin : '', r.none ? '' : r.spent, r.none ? '' : r.diff, r.codes.box, r.codes.unit, r.errs, r.start + ' – ' + r.end.slice(11)])));
     const ok = D.xlsxDownload('Markirovkachilar_natijasi_' + f + (t !== f ? '_' + t : ''), rows, L.mr_title); this.props.onToast && this.props.onToast(ok ? L.pr_exported : L.p_exportToast); }
   renderVals() {
-    const D = window.MedixData, L = this.L, s = this.state, p = this.props, grid = 'minmax(180px,1.4fr) 90px minmax(150px,1.3fr) repeat(6,minmax(90px,1fr))';
+    const D = window.YuzplusData, L = this.L, s = this.state, p = this.props, grid = 'minmax(180px,1.4fr) 90px minmax(150px,1.3fr) repeat(6,minmax(90px,1fr))';
     const cols = [[L.mr_cMarker, 'left'], [L.pr_cN, 'right'], [L.mr_cCodes, 'right'], [L.pr_cOn, 'right'], [L.pr_cLate, 'right'], [L.pr_cLateMin, 'right'], [L.pr_cAvg, 'right'], [L.mp_kErrs, 'right'], [L.pr_cIss, 'right']].map(([label, align]) => ({ label, align }));
     const base = { L, grid, cols, rows: [], empty: false, hasTotal: false, total: [], from: '', to: '', today: '', brOpts: [], brVal: 'ALL', brLocked: true, setDates: () => {}, setBr: () => {}, exportX: () => {}, toCatalog: () => p.onOpen && p.onOpen('#reports') };
     if (!D || !D.markStats) return base;

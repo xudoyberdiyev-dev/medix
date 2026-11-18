@@ -92,7 +92,7 @@ const FIXED = ['name', 'qty'];
 class Component extends DCLogic {
   state = { q: '', fMaker: [], fCat: [], fCountry: [], fFlags: [], onlyAv: true, sort: { key: 'name', dir: 'asc' }, sel: {}, hi: 0, cols: null };
   rootRef = React.createRef();
-  get D() { return window.MedixData; }
+  get D() { return window.YuzplusData; }
   get L() { return this.props.dict || {}; }
   mode() { return this.props.mode === 'receipt' ? 'receipt' : 'order'; }
   doc() { return this.props.doc || { lines: [] }; }

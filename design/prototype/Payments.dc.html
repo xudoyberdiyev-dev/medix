@@ -7,7 +7,7 @@
 </head>
 <body>
 <x-dc>
-<helmet><script src="medix-data.js"></script></helmet>
+<helmet><script src="yuzplus-data.js"></script></helmet>
 <div style="display:flex;flex-direction:column;min-width:0;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
 <sc-if value="{{ isList }}" hint-placeholder-val="{{ true }}">
 <div data-screen-label="To'lovlar" style="display:flex;flex-direction:column;gap:16px;min-width:0">
@@ -60,11 +60,11 @@ const pD = s => { const m = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(String(s || ''));
 const ST = { draft: ['file-pen', '#5B6B6A', '#F8FAFA'], pending: ['clock', '#B45309', '#FFFBEB'], posted: ['circle-check', '#15803D', '#F0FDF4'], cancelled: ['circle-x', '#5B6B6A', '#EEF2F4'] };
 const CLEAR = { fParty: [], fMethod: [], fAcct: [], fStatus: [], fBy: [], date: { from: null, to: null }, q: '', page: 1 };
 class Component extends DCLogic {
-  state = { view: 'list', tab: 'all', ...CLEAR, per: 25, doc: null, empty: false, ready: !!window.MedixData };
-  get D() { return window.MedixData; }
+  state = { view: 'list', tab: 'all', ...CLEAR, per: 25, doc: null, empty: false, ready: !!window.YuzplusData };
+  get D() { return window.YuzplusData; }
   get L() { return this.props.dict || {}; }
   // T10a3 (1.7.4): ?open= — hujjatning o'zi ochiladi («Ko'rib chiqish»); ?kind=mt|yt, ?status=, ?new=mt|yt&acct=
-  applyUrl() { const D = window.MedixData, u = D && D.store.urlF; if (!u || u.page !== 'payments' || u.n === this._un || this.props.demo) return; this._un = u.n; const P = u.params || {};
+  applyUrl() { const D = window.YuzplusData, u = D && D.store.urlF; if (!u || u.page !== 'payments' || u.n === this._un || this.props.demo) return; this._un = u.n; const P = u.params || {};
     if (P.open) { D.store.payReq = null; const x = D.payByNo(P.open); if (x) return this.open(x); }
     if (P.new === 'mt' || P.new === 'yt') { if (!this.canCreate()) return this.toast(this.L.tl_whoCreate); return this.openNew(Object.assign({ kind: P.new }, P.acct ? { acct: P.acct } : {})); }
     const tab = P.status === 'pending' ? 'pending' : P.status === 'cancelled' ? 'cancelled' : P.kind === 'mt' ? 'in' : P.kind === 'yt' ? 'out' : 'all';

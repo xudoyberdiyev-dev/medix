@@ -7,7 +7,7 @@
 </head>
 <body>
 <x-dc>
-<helmet><script src="medix-data.js"></script></helmet>
+<helmet><script src="yuzplus-data.js"></script></helmet>
 <div data-screen-label="Ombor mudiri paneli" style="display:flex;flex-direction:column;gap:16px;min-width:0;color:#172B2A;font-family:Inter,system-ui,sans-serif;font-variant-numeric:tabular-nums">
   <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap">
     <div style="display:flex;flex-direction:column;gap:4px;min-width:0">
@@ -402,7 +402,7 @@ const fromIso = d => { const a = String(d || '').split('-'); return a.length ===
 const short = n => { const a = String(n || '').split(' '); return a.length > 1 ? a[1] + ' ' + a[0][0] + '.' : n; };
 class Component extends DCLogic {
   state = { tab: 'mon', onlyLate: false, chkId: null, places: {}, plTried: false, ret: null, tv: {}, sel: {}, tf: null, iss: null };
-  get D() { return window.MedixData; }
+  get D() { return window.YuzplusData; }
   get L() { return this.props.dict || {}; }
   me() { return this.props.userName || 'Farrux Ismoilov'; }
   br() { const b = this.props.branch; return b && b !== 'ALL' ? b : 'TSH'; }
@@ -444,8 +444,8 @@ class Component extends DCLogic {
   xlsx(o) { const D = this.D, L = this.L, rows = D.dcCodes(o); if (!rows.length) return this.toast(L.w4_noCodes);
     const out = [[L.w4_cCode, L.w4_cProd, L.w4_cBatch, L.mp_cKind || 'Tur', L.w4_cAt, L.w4_cWho]].concat(rows.map(r => [r.code, r.name, r.batch, r.kind === 'box' ? L.mk_box : L.mk_unit, r.at, r.by]));
     D.xlsxDownload('Kodlar_' + o.no, out, o.no); this.toast(fill(L.w4_tXlsx, { n: rows.length })); }
-  print(form, no) { window.medixPrint && window.medixPrint(form, no); }
-  renderVals() { return Object.assign({ showDemo: !window.MedixData || !window.MedixData.demoUi || window.MedixData.demoUi() }, this._rv()); } // T11a: demo tugmalari faqat demo rejimida
+  print(form, no) { window.yuzplusPrint && window.yuzplusPrint(form, no); }
+  renderVals() { return Object.assign({ showDemo: !window.YuzplusData || !window.YuzplusData.demoUi || window.YuzplusData.demoUi() }, this._rv()); } // T11a: demo tugmalari faqat demo rejimida
   _rv() {
     const D = this.D, L = this.L, s = this.state, p = this.props, me = this.me(), br = this.br(), narrow = !!p.narrow;
     const base = { L, narrow, wide: !narrow, sub: '', clock: '', tabs: [], kpis: [], cols: [], colsN: [], times: [], chks: [], c: { res: [], rows: [] }, deliv: [], trips: [], pickups: [], issues: [], resolved: [], cars: [], drivers: [], tf: {}, ret: { lines: [], reasons: [] }, lateBtn: {}, stop: e => e.stopPropagation() };

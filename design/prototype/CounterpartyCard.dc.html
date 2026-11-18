@@ -7,7 +7,7 @@
 </head>
 <body>
 <x-dc>
-<helmet><script src="medix-data.js"></script></helmet>
+<helmet><script src="yuzplus-data.js"></script></helmet>
 <div ref="{{ rootRef }}" data-screen-label="{{ screenLabel }}" style="display:flex;flex-direction:column;gap:16px;min-width:0;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
   <dc-import name="RecordHeader" parent-label="{{ parentLabel }}" on-parent="{{ back }}" title="{{ c.name }}" badges="{{ badges }}" meta="{{ meta }}" mono="{{ stirText }}" more="{{ more }}" primary="{{ primary }}" more-label="{{ L.p_more }}" read-only="{{ readOnly }}" read-only-label="{{ L.kt_ro }}" hint-size="100%,80px"></dc-import>
   <sc-for list="{{ banners }}" as="b"><dc-import name="StatusBanner" tone="{{ b.tone }}" icon="{{ b.icon }}" title="{{ b.title }}" text="{{ b.text }}" hint-size="100%,44px"></dc-import></sc-for>
@@ -166,7 +166,7 @@ const reD = /^\d{2}\.\d{2}\.\d{4}$/;
 class Component extends DCLogic {
   state = { tab: 'gen', panel: null, dlg: null, reason: '', reasonErr: '', lf: null, lfTried: false, period: 'all', sumBr: null, wide: true };
   rootRef = React.createRef();
-  get D() { return window.MedixData; }
+  get D() { return window.YuzplusData; }
   get L() { return this.props.dict || {}; }
   mt() { return this.props.kind !== 'yt'; }
   componentDidMount() {

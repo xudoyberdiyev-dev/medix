@@ -7,7 +7,7 @@
 </head>
 <body>
 <x-dc>
-<helmet><script src="medix-data.js"></script></helmet>
+<helmet><script src="yuzplus-data.js"></script></helmet>
 <div style="display:flex;flex-direction:column;min-width:0;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
 <sc-if value="{{ isList }}" hint-placeholder-val="{{ true }}">
 <div data-screen-label="{{ listTitle }}" style="display:flex;flex-direction:column;gap:16px;min-width:0">
@@ -121,8 +121,8 @@ const ICON = { qm: 'undo-2', hc: 'package-minus', qy: 'rotate-ccw' };
 const ZICON = { store: 'boxes', ctrl: 'lock-keyhole', cold: 'snowflake', quar: 'shield-alert', recv: 'package-open' };
 const ini = n => String(n || '').split(' ').map(w => w[0]).join('').slice(0, 2);
 class Component extends DCLogic {
-  state = { view: 'list', tab: 'all', q: '', d: null, docTab: 'doc', save: null, savedAt: null, tried: false, vs: null, dlg: null, reason: '', reasonErr: '', ready: !!window.MedixData };
-  get D() { return window.MedixData; }
+  state = { view: 'list', tab: 'all', q: '', d: null, docTab: 'doc', save: null, savedAt: null, tried: false, vs: null, dlg: null, reason: '', reasonErr: '', ready: !!window.YuzplusData };
+  get D() { return window.YuzplusData; }
   get L() { return this.props.dict || {}; }
   get K() { return this.props.kind || 'qm'; }
   componentDidMount() {

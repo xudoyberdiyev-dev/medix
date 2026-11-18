@@ -7,7 +7,7 @@
 </head>
 <body>
 <x-dc>
-<helmet><script src="medix-data.js"></script></helmet>
+<helmet><script src="yuzplus-data.js"></script></helmet>
 <div data-screen-label="{{ screenLabel }}" style="display:flex;flex-direction:column;gap:16px;min-width:0;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
   <dc-import name="DocumentHeader" parent-label="{{ L.kc_title }}" on-parent="{{ back }}" title="{{ L.kc_rTitle }}" number="{{ dNumber }}" badge="{{ dBadge }}" status="draft" steps="{{ dSteps }}" sub="{{ dSub }}" primary="{{ dPrimary }}" more="{{ dMore }}" more-label="{{ L.p_more }}" hint-size="100%,88px"></dc-import>
   <sc-for list="{{ banners }}" as="b"><dc-import name="StatusBanner" tone="{{ b.tone }}" icon="{{ b.icon }}" title="{{ b.title }}" text="{{ b.text }}" hint-size="100%,48px"></dc-import></sc-for>
@@ -76,7 +76,7 @@ const ZICON = { store: 'boxes', ctrl: 'lock-keyhole', cold: 'snowflake', quar: '
 const num = v => { const t = String(v == null ? '' : v).replace(/\s/g, '').replace(/\./g, ''); return t === '' || !/^\d+$/.test(t) ? NaN : +t; };
 class Component extends DCLogic {
   state = { x: null, rows: [], tried: false, vs: null, dlg: null };
-  get D() { return window.MedixData; }
+  get D() { return window.YuzplusData; }
   get L() { return this.props.dict || {}; }
   componentDidMount() { if (!this.D) this._p = setInterval(() => { if (this.D) { clearInterval(this._p); this.load(); } }, 60); else this.load(); }
   componentWillUnmount() { clearInterval(this._p); }

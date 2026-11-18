@@ -93,7 +93,7 @@ const fill = (s, o) => String(s || '').replace(/\{(\w+)\}/g, (m, k) => o[k] != n
 const stirF = s => String(s || '').replace(/\D/g, '').replace(/(\d{3})(\d{3})(\d{3})/, '$1 $2 $3');
 class Component extends DCLogic {
   state = { done: false, vs: false, dlg: false, target: 'home' };
-  get D() { return window.MedixData; }
+  get D() { return window.YuzplusData; }
   get L() { return this.props.dict || {}; }
   componentDidMount() { this.boot(); }
   componentDidUpdate(pp) { const d = this.props.demo; if (d && (!pp.demo || pp.demo.n !== d.n)) this.boot(); }
@@ -120,7 +120,7 @@ class Component extends DCLogic {
     if (!D || !D.store.emps) return base;
     const c = this.calc(), go = n => () => p.onGo && p.onGo(n), ok = ['#F0FDF4', '#15803D'];
     const items = [
-      { icon: 'building', label: L.rl_kCo, value: c.stir ? fill(L.rl_vCo, { n: p.companyName || 'Medix Group', s: stirF(c.stir) }) : fill(L.rl_vCoNoStir, { n: p.companyName || 'Medix Group' }), go: go(1), bad: !c.stir },
+      { icon: 'building', label: L.rl_kCo, value: c.stir ? fill(L.rl_vCo, { n: p.companyName || 'Shifo Dori', s: stirF(c.stir) }) : fill(L.rl_vCoNoStir, { n: p.companyName || 'Shifo Dori' }), go: go(1), bad: !c.stir },
       { icon: 'building-2', label: L.rl_kBr, value: String(c.brs.length), go: go(2), bad: !c.brs.length },
       { icon: 'warehouse', label: L.rl_kWh, value: fill(L.rl_vWh, { w: c.whs.length, z: c.zones.length, c: c.zc('cold'), q: c.zc('quar'), s: c.zc('ctrl') }), go: go(3), bad: c.blk.some(b => b.go && false) },
       { icon: 'shield-check', label: L.rl_kRl, value: fill(L.rl_vRl, { n: c.std }) + (c.nw ? fill(L.rl_vRlNew, { n: c.nw }) : ''), go: go(4) },

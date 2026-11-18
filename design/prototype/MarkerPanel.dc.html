@@ -294,7 +294,7 @@ const DEMO = [['ok', 'circle-check', '#15803D', '#BBF7D0'], ['prod', 'pill', '#B
 class Component extends DCLogic {
   state = { tab: 'queue', open: {}, scan: '', manual: false, err: null, flash: 0, left: null, issueOpen: false, issueR: '', issueNote: '', issueTried: false, rm: null, rmReason: '', rmTried: false, result: null, showAll: false, lq: '', lFrom: '', lTo: '', lProd: 'ALL', lView: 'scan', lN: 50 };
   get L() { return this.props.dict || {}; }
-  get D() { return window.MedixData; }
+  get D() { return window.YuzplusData; }
   componentDidMount() { this._t = setInterval(() => { const D = this.D; if (!D) return; if (this.state.tab === 'mine' && this.active()) { this.forceUpdate(); this.focusScan(); } else if (!this._rd || D.store.v !== this._v) { this._rd = 1; this._v = D.store.v; this.forceUpdate(); } }, 1000); }
   componentWillUnmount() { clearInterval(this._t); clearTimeout(this._ft); clearTimeout(this._bt); }
   componentDidUpdate() { const ps = this._ps || {}, s = this.state; this._ps = s; if (s.err && !ps.err && this._errBtn) this._errBtn.focus(); if (ps.tab !== 'mine' && s.tab === 'mine') setTimeout(() => this.focusScan(), 60); }
@@ -331,7 +331,7 @@ class Component extends DCLogic {
   stTxt(r) { const L = this.L; return r.rm ? fill(L.mp_lRm, { r: r.rm.reason, who: short(r.rm.by), at: r.rm.at.slice(11) }) : L.mp_lOk; }
   exportLog() { const D = this.D, L = this.L, { f, t, rows } = this.logData(), out = [[L.mp_cCode, L.mp_cKind, L.qt_gProduct || L.mp_lProd, L.qt_gBatch || L.mp_cBatch, L.b_cNo, L.mp_cWho, L.mp_cAt, L.mp_cSt]];
     rows.forEach(r => out.push([D.mkPretty(r.c), this.kindW(r.kind), r.name, r.batch, r.no, r.by, r.at, this.stTxt(r)])); const ok = D.xlsxDownload('Kodlar_jurnali_' + f + (t !== f ? '_' + t : ''), out, L.mp_tLog); this.toast(ok ? L.pr_exported : L.p_exportToast); }
-  renderVals() { return Object.assign({ showDemo: !window.MedixData || !window.MedixData.demoUi || window.MedixData.demoUi() }, this._rv()); } // T11a: demo tugmalari faqat demo rejimida
+  renderVals() { return Object.assign({ showDemo: !window.YuzplusData || !window.YuzplusData.demoUi || window.YuzplusData.demoUi() }, this._rv()); } // T11a: demo tugmalari faqat demo rejimida
   _rv() {
     const D = this.D, L = this.L, s = this.state, p = this.props, me = this.me(), br = this.br(), narrow = !!p.narrow;
     const base = { L, me, narrow, role: p.role, branch: br, sub: '', stats: [], tabs: [], isQueue: true, isMine: false, isDone: false, isLog: false, queue: [], queueEmpty: false, noActive: false, hasActive: false, a: { lines: [], plain: [], codes: [], issues: [] }, done: [], doneEmpty: false, hasResult: false, result: {}, issueOpen: false, rmOpen: false, errOpen: false, err: {}, reasons: [], demoBtns: [], logViews: [], logRows: [], lCols: [], prodOpts: [], stop: e => e.stopPropagation(), scanRef: el => { this._in = el; }, errRef: el => { this._errBtn = el; } };

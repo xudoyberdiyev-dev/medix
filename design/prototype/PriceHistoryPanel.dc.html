@@ -109,7 +109,7 @@ const pD = s => { const m = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(String(s || ''));
 const MON = ['yan', 'fev', 'mar', 'apr', 'may', 'iyn', 'iyl', 'avg', 'sen', 'okt', 'noy', 'dek'];
 class Component extends DCLogic {
   state = { type: null };
-  get D() { return window.MedixData; }
+  get D() { return window.YuzplusData; }
   componentDidMount() { this.onKey = e => { if (e.key === 'Escape' && !this.props.inline) this.props.onClose && this.props.onClose(); }; window.addEventListener('keydown', this.onKey); }
   componentWillUnmount() { window.removeEventListener('keydown', this.onKey); }
   componentDidUpdate(pp) { if (pp.pid !== this.props.pid || pp.type !== this.props.type) this.setState({ type: null }); }

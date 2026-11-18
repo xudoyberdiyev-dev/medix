@@ -7,7 +7,7 @@
 </head>
 <body>
 <x-dc>
-<helmet><script src="medix-data.js"></script></helmet>
+<helmet><script src="yuzplus-data.js"></script></helmet>
 <div data-screen-label="Buyurtma kartochkasi" style="display:flex;flex-direction:column;gap:16px;min-width:0;font-family:Inter,system-ui,sans-serif;color:#172B2A;font-size:14px;line-height:20px;font-variant-numeric:tabular-nums">
   <dc-import name="DocumentHeader" print-items="{{ printItems }}" print-label="{{ L.ch_printMenu }}" parent-label="{{ L.b_title }}" on-parent="{{ back }}" title="{{ L.bk_title }}" number="{{ o.no }}" badge="{{ badge }}" sub="{{ sub }}" hide-stepper="{{ true }}" secondary="{{ secondary }}" more="{{ more }}" primary="{{ primary }}" more-label="{{ L.p_more }}" hint-size="100%,96px"></dc-import>
   <sc-if value="{{ noCancelNote }}"><div style="margin-top:-8px;display:flex;align-items:center;gap:6px;font-size:12px;line-height:16px;color:#5B6B6A"><lucide-i name="info" size="14" style="color:#647574"></lucide-i>{{ L.bk_noCancel }}</div></sc-if>
@@ -219,19 +219,19 @@ const PRESETS = [15, 30, 60, 120];
 const fAt = a => a ? a.slice(0, 5) + ' ' + a.slice(11) : '';
 const waitText = (m, L) => { const d = Math.floor(m / 1440), h = Math.floor((m % 1440) / 60), mm = m % 60; return d ? fill(L.bk_wD, { d, h }) : h ? fill(L.bk_wH, { h, m: mm }) : fill(L.bk_wM, { m: mm }); };
 class Component extends DCLogic {
-  state = { tab: 'order', dlg: null, panelOpen: false, ready: !!window.MedixData, tmEdit: false, tmP: null, tmM: null, tmTried: false, finOpen: false, fin: {}, finTried: false };
+  state = { tab: 'order', dlg: null, panelOpen: false, ready: !!window.YuzplusData, tmEdit: false, tmP: null, tmM: null, tmTried: false, finOpen: false, fin: {}, finTried: false };
   get L() { return this.props.dict || {}; }
-  componentDidMount() { if (!window.MedixData) this._p = setInterval(() => { if (window.MedixData) { clearInterval(this._p); this.setState({ ready: true }); } }, 60); }
+  componentDidMount() { if (!window.YuzplusData) this._p = setInterval(() => { if (window.YuzplusData) { clearInterval(this._p); this.setState({ ready: true }); } }, 60); }
   componentWillUnmount() { clearInterval(this._p); }
   componentDidUpdate(pp) { if (pp.orderId !== this.props.orderId) this.setState({ tab: 'order', dlg: null, tmEdit: false, tmP: null, tmM: null, tmTried: false, finOpen: false, fin: {}, finTried: false }); }
   who() { return this.props.userName || ''; }
-  saveTime(o) { const D = window.MedixData, L = this.L, s = this.state, pv = o.tm, pm = parseInt(s.tmP != null ? s.tmP : pv ? pv.pickMin : '', 10), mm = parseInt(s.tmM != null ? s.tmM : pv ? pv.markMin : '', 10);
+  saveTime(o) { const D = window.YuzplusData, L = this.L, s = this.state, pv = o.tm, pm = parseInt(s.tmP != null ? s.tmP : pv ? pv.pickMin : '', 10), mm = parseInt(s.tmM != null ? s.tmM : pv ? pv.markMin : '', 10);
     if (!(pm > 0) || !(mm > 0)) return this.setState({ tmTried: true });
     const n = D.setQueueTime(o.id, pm, mm, this.who()); if (!n) return; this.setState({ tmEdit: false, tmP: null, tmM: null, tmTried: false }); this.toast(fill(pv ? L.q9_tEdited : L.q9_tSaved, { no: o.no })); }
-  startPick(o) { const D = window.MedixData, L = this.L, lk = D.pickLock ? D.pickLock(o) : null; if (lk) return this.toast(fill(L.iv_tPickLock, { z: lk.zone, n: lk.no }));
+  startPick(o) { const D = window.YuzplusData, L = this.L, lk = D.pickLock ? D.pickLock(o) : null; if (lk) return this.toast(fill(L.iv_tPickLock, { z: lk.zone, n: lk.no }));
     const n = D.startPick(o.id, this.who()); if (!n && D.activePickOf(this.who(), o.branch)) return this.toast(L.pp_oneActive); if (n) { this.toast(fill(L.q9_tStarted, { no: o.no })); this.setState({ tab: 'order' }); } }
   resText(tmr) { const L = this.L; if (!tmr || tmr.run) return ''; return tmr.diff > 0 ? fill(L.q9_resOk, { s: tmr.spent, d: tmr.diff }) : tmr.diff === 0 ? fill(L.q9_resOnTime, { s: tmr.spent }) : fill(L.q9_resLate, { d: -tmr.diff }); }
-  pkVals(o, st) { const D = window.MedixData, L = this.L, p = this.props, s = this.state, tm = o.tm, tmr = D.pickTimer(o), canQ = st === 'queued' && D.can(p.role, 'orders.queue'), mkI = (icon, text, color) => ({ icon, text, color: color || '#5B6B6A' });
+  pkVals(o, st) { const D = window.YuzplusData, L = this.L, p = this.props, s = this.state, tm = o.tm, tmr = D.pickTimer(o), canQ = st === 'queued' && D.can(p.role, 'orders.queue'), mkI = (icon, text, color) => ({ icon, text, color: color || '#5B6B6A' });
     const tmInfo = tm ? [mkI('timer', fill(L.q9_tmVal, { p: tm.pickMin, m: tm.markMin })), mkI('user-round', fill(L.q9_tmBy, { who: tm.by, at: fAt(tm.at) }))].concat(tm.hist && tm.hist.length ? [mkI('history', fill(L.q9_tmHist, { n: tm.hist.length }))] : []) : [];
     const clock = { hasClock: false, clock: '', clk5: () => {}, clk15: () => {} }, iss = (o.issues || []).map(x => mkI('triangle-alert', fill(L.pp_issueLine, { r: L['pp_r_' + x.reason] || x.reason, n: x.note ? ' — ' + x.note : '', who: x.by, at: x.at.slice(11) }), '#B91C1C'));
     if (st === 'queued') { const editing = canQ && (!tm || s.tmEdit), vP = s.tmP != null ? s.tmP : tm ? String(tm.pickMin) : '', vM = s.tmM != null ? s.tmM : tm ? String(tm.markMin) : '';
@@ -259,7 +259,7 @@ class Component extends DCLogic {
   finVals(o, st) { const L = this.L, open = this.state.finOpen && st === 'picking';
     return { finOpen: open, orderId: o.id, userName: this.who(), narrow: !!this.props.narrow, finClose: () => this.setState({ finOpen: false }), finDone: n => { this.setState({ finOpen: false }); if (n) this.toast(fill(L.q9_tFinished, { no: o.no })); } }; }
   renderVals() {
-    const L = this.L, D = window.MedixData, p = this.props, s = this.state, narrow = !!p.narrow;
+    const L = this.L, D = window.YuzplusData, p = this.props, s = this.state, narrow = !!p.narrow;
     const o = D && D.store.orders.find(x => x.id === p.orderId);
     const base = { L, o: o || {}, role: p.role, userName: p.userName, narrow, wide: !narrow, back: () => p.onBack && p.onBack(), steps: [], tabs: [], lRows: [], lHead: [], pRows: [], pHead: [], hist: [], info1: [], info2: [], info3: [], chips: [], payKpis: [], payRows: [], totItems: [], sub: [], secondary: [], more: [], printItems: [] };
     if (!D || !o) return base;
@@ -287,7 +287,7 @@ class Component extends DCLogic {
     const mgr = D.can(p.role, 'orders.manage'), own = D.can(p.role, 'orders.cancel') && o.op === p.userName, canCanc = D.canCancelOrder(p.role, p.userName, o), canCopy = D.can(p.role, 'orders.create');
     const canRet = mgr || (own && st === 'pending'), canApp = st === 'pending' && D.canApprove(cr.level || 'branch', p.role), canDo = D.can(p.role, 'picking.do');
     const dlg = k => () => this.setState({ dlg: k });
-    const print = { label: L.bk_print, icon: 'printer', pick: () => window.medixPrint && window.medixPrint('pick', o.no) }, copy = { label: L.bk_copy, icon: 'copy', pick: () => p.onCopy && p.onCopy(o) };
+    const print = { label: L.bk_print, icon: 'printer', pick: () => window.yuzplusPrint && window.yuzplusPrint('pick', o.no) }, copy = { label: L.bk_copy, icon: 'copy', pick: () => p.onCopy && p.onCopy(o) };
     const cancel = { sep: true, label: L.bk_cancel, icon: 'circle-x', danger: true, pick: dlg('cancel') };
     let primary = null, secondary = [], more = [];
     if (st === 'pending') { if (canApp) { primary = { label: L.bk_approve, icon: 'check', pick: dlg('approve') }; secondary = [{ label: L.bk_return, icon: 'undo-2', pick: dlg('return') }, { label: L.bk_reject, icon: 'octagon-x', danger: true, pick: dlg('reject') }]; }

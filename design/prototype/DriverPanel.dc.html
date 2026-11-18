@@ -7,7 +7,7 @@
 </head>
 <body>
 <x-dc>
-<helmet><script src="medix-data.js"></script></helmet>
+<helmet><script src="yuzplus-data.js"></script></helmet>
 <div data-screen-label="Haydovchi paneli" style="display:flex;flex-direction:column;gap:14px;width:100%;max-width:680px;margin:0 auto;min-width:0;color:#172B2A;font-family:Inter,system-ui,sans-serif;font-variant-numeric:tabular-nums">
   <div style="display:flex;flex-direction:column;gap:2px">
     <h1 style="margin:0;font-size:22px;line-height:28px;font-weight:600;letter-spacing:-0.01em">{{ L.dv_title }}</h1>
@@ -174,7 +174,7 @@ const RICON = { refused: 'user-x', closed: 'store', noMoney: 'wallet', damaged: 
 class Component extends DCLogic {
   state = { tab: 'mine', tripNo: null, lf: null, form: null, n: 0 };
   sigRef = React.createRef();
-  get D() { return window.MedixData; }
+  get D() { return window.YuzplusData; }
   get L() { return this.props.dict || {}; }
   me() { return this.props.userName || ''; }
   toast(t) { this.props.onToast && this.props.onToast(t); }
@@ -192,7 +192,7 @@ class Component extends DCLogic {
     this._dirty = false;
     this.setState({ form: { trip: t.no, oid: o.id, res, photos: prev ? (prev.photos || []).slice() : [], sign: prev ? prev.sign : null, reason: prev ? prev.reason || '' : '', note: prev ? prev.note || '' : '', ret, lr, cash: prev && prev.cash ? String(Math.round(prev.cash.sum)) : '', cashNote: prev && prev.cash ? prev.cash.note || '' : '', tried: false } }); }
   onFile(e) { const fl = e.target.files && e.target.files[0]; if (!fl) return; const rd = new FileReader(); rd.onload = () => this.setState(st => st.form ? { form: { ...st.form, photos: st.form.photos.concat([{ name: fl.name, url: rd.result }]).slice(0, 4) } } : null); rd.readAsDataURL(fl); e.target.value = ''; }
-  renderVals() { return Object.assign({ showDemo: !window.MedixData || !window.MedixData.demoUi || window.MedixData.demoUi() }, this._rv()); } // T11a: demo tugmalari faqat demo rejimida
+  renderVals() { return Object.assign({ showDemo: !window.YuzplusData || !window.YuzplusData.demoUi || window.YuzplusData.demoUi() }, this._rv()); } // T11a: demo tugmalari faqat demo rejimida
   _rv() {
     const D = this.D, L = this.L, s = this.state, me = this.me();
     const base = { L, sub: me, tabs: [], stops: [], tripChips: [], done: [], trip: {}, bar: {}, f: { reasons: [], lines: [], photos: [] }, sigRef: this.sigRef };

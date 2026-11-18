@@ -246,7 +246,7 @@ const cp = x => JSON.parse(JSON.stringify(x));
 const ini = n => String(n || '').split(' ').map(x => x[0] || '').join('').slice(0, 2).toUpperCase();
 class Component extends DCLogic {
   state = { card: null, tab: 'info', bp: null, wp: null, co: null, chk: null, reason: '', rTried: false, sel: null, listOpen: false, menu: null, zd: null, rule: null, dlg: null, v: 0 };
-  get D() { return window.MedixData; }
+  get D() { return window.YuzplusData; }
   get L() { return this.props.dict || {}; }
   componentDidMount() { const D = this.D; if (D && D.store.bsSel) { this.setState({ sel: D.store.bsSel }); D.store.bsSel = null; } this.runDemo(); }
   componentDidUpdate(pp) { const d = this.props.demo; if (d && (!pp.demo || pp.demo.n !== d.n)) this.runDemo(); if (pp.page !== this.props.page) this.setState({ card: null, chk: null, menu: null }); }

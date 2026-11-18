@@ -1,4 +1,4 @@
-// MEDIX — komponentlar API shartnomasi (Claude Design'dagi «Medix» dizayn tizimidan nusxa).
+// 100+ — komponentlar API shartnomasi (Claude Design'dagi «100+» dizayn tizimidan nusxa).
 // Uslublar asl manbada: components/bundle.css (mx-*). Frontend komponentlari shu shartnomaga mos quriladi.
 import type { ReactNode } from "react";
 
