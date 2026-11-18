@@ -2127,6 +2127,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/expected-receipts/{id}/act/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Farq dalolatnomasi — PDF
+         * @description Yetkazib beruvchiga: kam / ortiqcha / shikastlangan / kutilmoqda; summa — narx ko'rish huquqi bilan.
+         */
+        get: operations["act"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/expected-receipts/{id}/approve": {
         parameters: {
             query?: never;
@@ -19903,6 +19923,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ExpectedReceiptDetail"];
+                };
+            };
+        };
+    };
+    act: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
                 };
             };
         };

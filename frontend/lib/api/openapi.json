@@ -5077,6 +5077,36 @@
         "tags" : [ "expected-receipt" ]
       }
     },
+    "/api/expected-receipts/{id}/act/pdf" : {
+      "get" : {
+        "description" : "Yetkazib beruvchiga: kam / ortiqcha / shikastlangan / kutilmoqda; summa — narx ko'rish huquqi bilan.",
+        "operationId" : "act",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/pdf" : {
+                "schema" : {
+                  "type" : "string",
+                  "format" : "byte"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Farq dalolatnomasi — PDF",
+        "tags" : [ "expected-receipt" ]
+      }
+    },
     "/api/expected-receipts/{id}/approve" : {
       "post" : {
         "description" : "«Qarzga» — YB qarzi darhol yoziladi (hamma narx majburiy); holat «Yo'lda». Qoldiq o'zgarmaydi.",
