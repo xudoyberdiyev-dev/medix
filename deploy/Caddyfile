@@ -1,8 +1,8 @@
 # MEDIX — HTTPS va teskari proksi (SPEC 15).
 # /api/* — to'g'ridan-to'g'ri backendga (SSE, fayl yuklash); qolgani — Next.js.
 # /actuator tashqariga ochilmaydi (faqat ichki tarmoq).
-{$MEDIX_DOMAIN} {
-	tls {$MEDIX_TLS}
+{$YUZPLUS_DOMAIN} {
+	tls {$YUZPLUS_TLS}
 	encode zstd gzip
 
 	header {

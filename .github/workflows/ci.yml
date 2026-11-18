@@ -93,9 +93,9 @@ jobs:
         options: >-
           --health-cmd "pg_isready -U medix" --health-interval 5s --health-timeout 5s --health-retries 10
     env:
-      MEDIX_BOOTSTRAP_LOGIN: ceo
-      MEDIX_BOOTSTRAP_PASSWORD: Boshlangich-parol-2026
-      MEDIX_COOKIE_SECURE: "false"
+      YUZPLUS_BOOTSTRAP_LOGIN: ceo
+      YUZPLUS_BOOTSTRAP_PASSWORD: Boshlangich-parol-2026
+      YUZPLUS_COOKIE_SECURE: "false"
       BACKEND_URL: http://localhost:8080
       E2E_CEO_LOGIN: ceo
       E2E_CEO_PASSWORD: Boshlangich-parol-2026

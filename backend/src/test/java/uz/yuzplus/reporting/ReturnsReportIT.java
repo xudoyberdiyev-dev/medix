@@ -24,7 +24,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import uz.yuzplus.TestcontainersConfig;
 
 /** Qaytarishlar hisoboti (QM): sabab / mijoz / mahsulot / kun, hujjatlar soni, qaytarish ulushi, filtrlar, reports.own, filial doirasi. */
-@SpringBootTest(properties = "medix.test.isolation=branch-admin")
+@SpringBootTest(properties = "yuzplus.test.isolation=branch-admin")
 @AutoConfigureMockMvc
 @Import(TestcontainersConfig.class)
 class ReturnsReportIT {

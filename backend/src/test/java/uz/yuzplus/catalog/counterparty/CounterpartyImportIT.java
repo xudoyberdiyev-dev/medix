@@ -28,7 +28,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import uz.yuzplus.TestcontainersConfig;
 
 /** Kontragentlar import ustasi (prototip ImportWizard «cust» / «sup»): tekshirish, takror STIR, yaratish, shartlar, ruxsatlar. */
-@SpringBootTest(properties = "medix.test.isolation=branch-admin")
+@SpringBootTest(properties = "yuzplus.test.isolation=branch-admin")
 @AutoConfigureMockMvc
 @Import(TestcontainersConfig.class)
 class CounterpartyImportIT {

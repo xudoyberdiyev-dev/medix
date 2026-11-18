@@ -25,7 +25,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import uz.yuzplus.TestcontainersConfig;
 
 /** Mijozlar / YB qarzi: muddat guruhlari, avans FIFO, filial doirasi va ruxsatlar. */
-@SpringBootTest(properties = "medix.test.isolation=branch-admin")
+@SpringBootTest(properties = "yuzplus.test.isolation=branch-admin")
 @AutoConfigureMockMvc
 @Import(TestcontainersConfig.class)
 class DebtIT {

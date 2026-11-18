@@ -3,7 +3,7 @@
 #   15 2 * * *  /opt/medix/deploy/backup/backup.sh >> /var/log/medix-backup.log 2>&1
 # Yakshanba — to'liq (full), boshqa kunlar — farq (diff). WAL arxivi doimiy (archive_command), shuning uchun
 # istalgan daqiqaga tiklash mumkin. Birinchi ishga tushirishda stanza o'zi yaratiladi.
-# Ixtiyoriy: MEDIX_BACKUP_TYPE=full|diff|incr — turini majburlash.
+# Ixtiyoriy: YUZPLUS_BACKUP_TYPE=full|diff|incr — turini majburlash.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -16,7 +16,7 @@ if ! pgbr info --output=json | grep -q '"status":{"code":0'; then
 fi
 pgbr check
 
-type="${MEDIX_BACKUP_TYPE:-}"
+type="${YUZPLUS_BACKUP_TYPE:-}"
 if [[ -z "$type" ]]; then
   if [[ "$(date +%u)" == "7" ]]; then type=full; else type=diff; fi
 fi

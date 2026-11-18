@@ -47,7 +47,7 @@ import uz.yuzplus.shared.money.Money;
  * FS: qoralama → jo'natish (qoldiq −, tannarx narxi, QQS, HF, filiallararo qarz) → qabul (xaridor qoldig'i +, partiya o'sha),
  * kamomad, filial doirasi, tannarx yashirinligi, bazadagi himoya, parallel jo'natish.
  */
-@SpringBootTest(properties = "medix.test.isolation=branch-admin")
+@SpringBootTest(properties = "yuzplus.test.isolation=branch-admin")
 @AutoConfigureMockMvc
 @Import(TestcontainersConfig.class)
 class BranchSaleIT {

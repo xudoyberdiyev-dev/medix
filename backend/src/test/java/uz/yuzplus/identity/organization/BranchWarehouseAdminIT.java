@@ -29,7 +29,7 @@ import uz.yuzplus.TestcontainersConfig;
  * Boshqaruv → Filiallar, Omborlar va zonalar: qo'shish, tahrirlash, nofaol qilish, filial doirasi, audit.
  * Alohida kontekst (alohida baza): sozlash ustasi testi «filiallar yo'q» holatidan boshlanadi.
  */
-@SpringBootTest(properties = "medix.test.isolation=branch-admin")
+@SpringBootTest(properties = "yuzplus.test.isolation=branch-admin")
 @AutoConfigureMockMvc
 @Import(TestcontainersConfig.class)
 class BranchWarehouseAdminIT {

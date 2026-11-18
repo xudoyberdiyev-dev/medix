@@ -26,7 +26,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import uz.yuzplus.TestcontainersConfig;
 
 /** «Mijozlar» / «Yetkazib beruvchilar» ro'yxati (prototip Counterparties): tur, filiallar, litsenziya, qarz va muddati o'tgani, limit. */
-@SpringBootTest(properties = "medix.test.isolation=branch-admin")
+@SpringBootTest(properties = "yuzplus.test.isolation=branch-admin")
 @AutoConfigureMockMvc
 @Import(TestcontainersConfig.class)
 class CounterpartyOverviewIT {

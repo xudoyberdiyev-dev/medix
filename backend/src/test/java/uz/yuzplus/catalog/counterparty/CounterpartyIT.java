@@ -33,7 +33,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import uz.yuzplus.TestcontainersConfig;
 
 /** Kontragentlar: bitta STIR — bitta karta, qidiruv (kirill, telefon), bloklash, litsenziya, shartnoma, filial shartlari. */
-@SpringBootTest(properties = "medix.test.isolation=branch-admin")
+@SpringBootTest(properties = "yuzplus.test.isolation=branch-admin")
 @AutoConfigureMockMvc
 @Import(TestcontainersConfig.class)
 class CounterpartyIT {

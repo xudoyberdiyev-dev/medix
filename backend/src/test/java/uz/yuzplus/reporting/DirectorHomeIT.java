@@ -27,7 +27,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import uz.yuzplus.TestcontainersConfig;
 
 /** Direktor bosh sahifasi (SPEC 8): ruxsat, filial doirasi, xarajatlar kartasi, qarzlar (qarz sahifasi bilan bir manba), «Diqqat talab qiladi». */
-@SpringBootTest(properties = "medix.test.isolation=branch-admin")
+@SpringBootTest(properties = "yuzplus.test.isolation=branch-admin")
 @AutoConfigureMockMvc
 @Import(TestcontainersConfig.class)
 class DirectorHomeIT {

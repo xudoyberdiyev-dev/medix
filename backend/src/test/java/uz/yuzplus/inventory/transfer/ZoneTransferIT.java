@@ -43,7 +43,7 @@ import uz.yuzplus.inventory.ZoneType;
 import uz.yuzplus.shared.money.Money;
 
 /** ZK: darhol o'tkazish, karantin → tasdiq, zahira ko'chirilmaydi, filial doirasi, bazadagi himoya, qarama-qarshi parallel ko'chirishlar. */
-@SpringBootTest(properties = "medix.test.isolation=branch-admin")
+@SpringBootTest(properties = "yuzplus.test.isolation=branch-admin")
 @AutoConfigureMockMvc
 @Import(TestcontainersConfig.class)
 class ZoneTransferIT {

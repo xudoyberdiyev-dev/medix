@@ -27,7 +27,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import uz.yuzplus.TestcontainersConfig;
 
 /** Buxgalter bosh sahifasi (prototip): kassa/bank, qarzlar, to'lov taqvimi, ish ro'yxati, filial doirasi. */
-@SpringBootTest(properties = "medix.test.isolation=branch-admin")
+@SpringBootTest(properties = "yuzplus.test.isolation=branch-admin")
 @AutoConfigureMockMvc
 @Import(TestcontainersConfig.class)
 class AccountantHomeIT {

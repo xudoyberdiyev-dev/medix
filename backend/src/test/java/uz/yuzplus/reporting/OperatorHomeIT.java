@@ -24,7 +24,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import uz.yuzplus.TestcontainersConfig;
 
 /** Operator bosh sahifasi (SPEC 8): faqat o'zi kiritgan buyurtmalar — sof savdo, holatlar, «Diqqat talab qiladi», ruxsat. */
-@SpringBootTest(properties = "medix.test.isolation=branch-admin")
+@SpringBootTest(properties = "yuzplus.test.isolation=branch-admin")
 @AutoConfigureMockMvc
 @Import(TestcontainersConfig.class)
 class OperatorHomeIT {

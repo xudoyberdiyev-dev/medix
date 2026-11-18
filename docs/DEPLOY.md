@@ -21,24 +21,24 @@ Fayllar (rasm, imzo, PDF) bazada saqlanadi — alohida fayl xotirasi (MinIO) hoz
 ```bash
 sudo mkdir -p /opt/medix && cd /opt/medix
 git clone --depth 1 https://github.com/xudoyberdiyev-dev/medix.git src && cp -r src/deploy . && cd deploy
-cp .env.example .env && chmod 600 .env && nano .env      # domen, MEDIX_DB_PASSWORD, CEO login/parol, MEDIX_VERSION
+cp .env.example .env && chmod 600 .env && nano .env      # domen, YUZPLUS_DB_PASSWORD, CEO login/parol, YUZPLUS_VERSION
 docker compose pull
 docker compose up -d
 docker compose logs -f backend                           # «Started YuzplusApplication» kutiladi
 ./backup/backup.sh                                       # stanza yaratiladi va birinchi to'liq nusxa olinadi
 ```
-Brauzerda `https://<MEDIX_DOMAIN>` → CEO login → parolni almashtirish → sozlash ustasi.
-Shundan keyin `.env` dagi `MEDIX_BOOTSTRAP_PASSWORD` ni o'chirib qo'yish mumkin.
+Brauzerda `https://<YUZPLUS_DOMAIN>` → CEO login → parolni almashtirish → sozlash ustasi.
+Shundan keyin `.env` dagi `YUZPLUS_BOOTSTRAP_PASSWORD` ni o'chirib qo'yish mumkin.
 
-Domen yo'q (ofis ichki serveri): `MEDIX_DOMAIN=medix.local`, `MEDIX_TLS=internal` va xodimlar kompyuterida
+Domen yo'q (ofis ichki serveri): `YUZPLUS_DOMAIN=medix.local`, `YUZPLUS_TLS=internal` va xodimlar kompyuterida
 `medix.local` → server IP (DNS yoki hosts). Caddy'ning ichki CA sertifikatini (`docker compose exec caddy cat /data/caddy/pki/authorities/local/root.crt`) kompyuterlarga ishonchli deb o'rnating.
 
 ## Yangilash
 Reliz: egasi `main` dan `vX.Y.Z` teg qo'yadi → GitHub Actions «Docker» image'larni GHCR'ga joylaydi.
 ```bash
 cd /opt/medix/deploy
-./backup/backup.sh                                       # yangilashdan oldin nusxa (MEDIX_BACKUP_TYPE=incr tezroq)
-sed -i 's/^MEDIX_VERSION=.*/MEDIX_VERSION=v1.0.1/' .env
+./backup/backup.sh                                       # yangilashdan oldin nusxa (YUZPLUS_BACKUP_TYPE=incr tezroq)
+sed -i 's/^YUZPLUS_VERSION=.*/YUZPLUS_VERSION=v1.0.1/' .env
 docker compose pull && docker compose up -d
 ```
 Orqaga qaytish: oldingi versiyani yozib `up -d`. Migratsiya bajarilgan bo'lsa — eski versiya yangi sxema bilan ishlamasligi mumkin; unda nusxadan tiklang (pastda).

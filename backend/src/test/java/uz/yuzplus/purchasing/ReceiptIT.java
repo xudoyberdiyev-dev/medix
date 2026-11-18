@@ -42,7 +42,7 @@ import uz.yuzplus.inventory.Warehouses;
 import uz.yuzplus.inventory.ZoneType;
 
 /** KR: qoralama → qabul (farq sababi, Qabul zonasi) → o'tkazish (zonalar, Karantin, qarz, to'lov kuni) → bekor qilish qoidalari. */
-@SpringBootTest(properties = "medix.test.isolation=branch-admin")
+@SpringBootTest(properties = "yuzplus.test.isolation=branch-admin")
 @AutoConfigureMockMvc
 @Import(TestcontainersConfig.class)
 class ReceiptIT {

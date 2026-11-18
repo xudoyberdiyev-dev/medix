@@ -87,9 +87,9 @@ class SecurityConfig {
         };
     }
 
-    /** Sessiya cookie'si: httpOnly, Secure (lokal http'da {@code MEDIX_COOKIE_SECURE=false}), SameSite=Lax. */
+    /** Sessiya cookie'si: httpOnly, Secure (lokal http'da {@code YUZPLUS_COOKIE_SECURE=false}), SameSite=Lax. */
     @Bean
-    CookieSerializer cookieSerializer(@Value("${medix.session.cookie-secure:true}") boolean secure) {
+    CookieSerializer cookieSerializer(@Value("${yuzplus.session.cookie-secure:true}") boolean secure) {
         var serializer = new DefaultCookieSerializer();
         serializer.setCookieName(SESSION_COOKIE);
         serializer.setCookiePath("/");

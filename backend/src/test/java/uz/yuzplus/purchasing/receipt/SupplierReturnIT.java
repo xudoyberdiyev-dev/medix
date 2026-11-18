@@ -41,7 +41,7 @@ import uz.yuzplus.inventory.ZoneType;
 import uz.yuzplus.shared.security.Actor;
 
 /** QY: tasdiq oqimi, YB qarzi (KR ga qo'llanadi), bonus partiya, summa ruxsati, tekshiruvlar, kirimni bekor qilish, himoya, parallel. */
-@SpringBootTest(properties = "medix.test.isolation=branch-admin")
+@SpringBootTest(properties = "yuzplus.test.isolation=branch-admin")
 @AutoConfigureMockMvc
 @Import(TestcontainersConfig.class)
 class SupplierReturnIT {

@@ -46,7 +46,7 @@ import uz.yuzplus.inventory.ZoneType;
 import uz.yuzplus.shared.error.YuzplusException;
 
 /** BQ: qoralama qoldiqqa ta'sir qilmaydi → o'tkazish (partiya + jurnal + qoldiq) → o'zgarmaydi → bekor qilish qoidalari; import. */
-@SpringBootTest(properties = "medix.test.isolation=branch-admin")
+@SpringBootTest(properties = "yuzplus.test.isolation=branch-admin")
 @AutoConfigureMockMvc
 @Import(TestcontainersConfig.class)
 class OpeningBalanceIT {

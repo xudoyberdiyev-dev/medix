@@ -24,7 +24,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import uz.yuzplus.TestcontainersConfig;
 
 /** O6 (egasi 13.11.2026): savdo zonalari — filial filtri, unikal nom, faolsizlantirish, mijozga biriktirish (majburiy). */
-@SpringBootTest(properties = "medix.test.isolation=branch-admin")
+@SpringBootTest(properties = "yuzplus.test.isolation=branch-admin")
 @AutoConfigureMockMvc
 @Import(TestcontainersConfig.class)
 class SalesZoneIT {

@@ -2,14 +2,14 @@
 # MEDIX — tiklashni sinash (SPEC 14: «tiklash har oy sinab ko'riladi»). Ishchi bazaga TEGMAYDI:
 # oxirgi nusxa vaqtinchalik konteynerga tiklanadi, ishga tushiriladi va tekshiriladi, so'ng o'chiriladi.
 #   0 4 1 * *  /opt/medix/deploy/backup/restore-test.sh >> /var/log/medix-backup.log 2>&1
-# Ixtiyoriy: MEDIX_RESTORE_REPO=2 — boshqa joydagi nusxadan sinash.
+# Ixtiyoriy: YUZPLUS_RESTORE_REPO=2 — boshqa joydagi nusxadan sinash.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
 project="$(docker compose config --format json | python3 -c 'import json,sys; print(json.load(sys.stdin)["name"])')"
 image="$(docker compose config --images | grep medix-postgres | head -1)"
 name="medix-restore-test-$$"
-repo="${MEDIX_RESTORE_REPO:-1}"
+repo="${YUZPLUS_RESTORE_REPO:-1}"
 cleanup() { docker rm -f "$name" >/dev/null 2>&1 || true; }
 trap cleanup EXIT
 

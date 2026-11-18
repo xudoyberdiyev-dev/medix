@@ -28,7 +28,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import uz.yuzplus.TestcontainersConfig;
 
 /** BQ — mijozlar qarzi, YB qarzi, kassa va bank: qoralama, tekshiruv, o'tkazish (jurnallar), bitta o'tkazilgan, parallel, ruxsatlar. */
-@SpringBootTest(properties = "medix.test.isolation=branch-admin")
+@SpringBootTest(properties = "yuzplus.test.isolation=branch-admin")
 @AutoConfigureMockMvc
 @Import(TestcontainersConfig.class)
 class OpeningFinanceIT {

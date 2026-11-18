@@ -24,7 +24,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import uz.yuzplus.TestcontainersConfig;
 
 /** Xarid bosh sahifasi (SPEC 8): kutayotgan kirimlar, YB qarzi va to'lov kunlari, bonus, ruxsat va filial doirasi. */
-@SpringBootTest(properties = "medix.test.isolation=branch-admin")
+@SpringBootTest(properties = "yuzplus.test.isolation=branch-admin")
 @AutoConfigureMockMvc
 @Import(TestcontainersConfig.class)
 class PurchaserHomeIT {

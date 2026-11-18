@@ -47,7 +47,7 @@ import uz.yuzplus.shared.money.Money;
  * IN: to'liq oqim (qoralama → sanoq → tekshirish → tasdiq), qulf (ivLock), topilgan partiya, Direktor chegarasi va nazoratdagi tovar,
  * ko'r sanoq va tannarx ruxsati, bitta faol hujjat, bazadagi himoya, sanoqni ochish va parallel ombor harakatlari.
  */
-@SpringBootTest(properties = "medix.test.isolation=branch-admin")
+@SpringBootTest(properties = "yuzplus.test.isolation=branch-admin")
 @AutoConfigureMockMvc
 @Import(TestcontainersConfig.class)
 class InventoryCountIT {

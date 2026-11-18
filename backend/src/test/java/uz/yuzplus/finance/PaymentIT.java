@@ -38,7 +38,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import uz.yuzplus.TestcontainersConfig;
 
 /** MT: qoralama → o'tkazish (eng eski qarzdan / qo'lda, ortig'i avans, kassa qoldig'i) → bekor qilish; parallel o'tkazish. */
-@SpringBootTest(properties = "medix.test.isolation=branch-admin")
+@SpringBootTest(properties = "yuzplus.test.isolation=branch-admin")
 @AutoConfigureMockMvc
 @Import(TestcontainersConfig.class)
 class PaymentIT {

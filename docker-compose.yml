@@ -6,7 +6,7 @@ services:
     environment:
       POSTGRES_DB: medix
       POSTGRES_USER: medix
-      POSTGRES_PASSWORD: ${MEDIX_DB_PASSWORD:-medix}
+      POSTGRES_PASSWORD: ${YUZPLUS_DB_PASSWORD:-medix}
       TZ: Asia/Tashkent
     ports: ["5432:5432"]
     volumes: [pgdata:/var/lib/postgresql]
@@ -27,14 +27,14 @@ services:
   backend:
     build: ./backend
     environment:
-      MEDIX_DB_URL: jdbc:postgresql://postgres:5432/medix
-      MEDIX_DB_USER: medix
-      MEDIX_DB_PASSWORD: ${MEDIX_DB_PASSWORD:-medix}
+      YUZPLUS_DB_URL: jdbc:postgresql://postgres:5432/medix
+      YUZPLUS_DB_USER: medix
+      YUZPLUS_DB_PASSWORD: ${YUZPLUS_DB_PASSWORD:-medix}
       # Lokal ishlab chiqish: http orqali (productionda Secure cookie yoqilgan).
-      MEDIX_COOKIE_SECURE: "false"
+      YUZPLUS_COOKIE_SECURE: "false"
       # Birinchi ishga tushirishdagi CEO hisobi (.env faylida beriladi, repoga yozilmaydi).
-      MEDIX_BOOTSTRAP_LOGIN: ${MEDIX_BOOTSTRAP_LOGIN:-}
-      MEDIX_BOOTSTRAP_PASSWORD: ${MEDIX_BOOTSTRAP_PASSWORD:-}
+      YUZPLUS_BOOTSTRAP_LOGIN: ${YUZPLUS_BOOTSTRAP_LOGIN:-}
+      YUZPLUS_BOOTSTRAP_PASSWORD: ${YUZPLUS_BOOTSTRAP_PASSWORD:-}
     depends_on:
       postgres: { condition: service_healthy }
     ports: ["8080:8080"]

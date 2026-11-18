@@ -43,7 +43,7 @@ import uz.yuzplus.inventory.ZoneType;
 import uz.yuzplus.shared.money.Money;
 
 /** HC: darhol o'tkazish, tasdiq, Direktor chegarasi (5 000 000), tannarx ruxsati, zahira, filial doirasi, bazadagi himoya, parallel. */
-@SpringBootTest(properties = "medix.test.isolation=branch-admin")
+@SpringBootTest(properties = "yuzplus.test.isolation=branch-admin")
 @AutoConfigureMockMvc
 @Import(TestcontainersConfig.class)
 class WriteOffIT {

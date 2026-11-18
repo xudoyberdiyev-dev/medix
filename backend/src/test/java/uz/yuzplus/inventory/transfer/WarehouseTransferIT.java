@@ -42,7 +42,7 @@ import uz.yuzplus.inventory.ZoneType;
 import uz.yuzplus.shared.money.Money;
 
 /** OK: qoralama → jo'natish → qabul (kamomad bilan), zahira, filial doirasi va ruxsatlar, bazadagi himoya, parallel jo'natish. */
-@SpringBootTest(properties = "medix.test.isolation=branch-admin")
+@SpringBootTest(properties = "yuzplus.test.isolation=branch-admin")
 @AutoConfigureMockMvc
 @Import(TestcontainersConfig.class)
 class WarehouseTransferIT {

@@ -16,7 +16,7 @@ import uz.yuzplus.notification.Notifications;
 import uz.yuzplus.shared.money.Money;
 
 /**
- * «Qaytish kutilmoqda»da qotib qolgan reyslar (T12-audit №23): reys yakunlanganidan {@code medix.trips.return-wait-hours}
+ * «Qaytish kutilmoqda»da qotib qolgan reyslar (T12-audit №23): reys yakunlanganidan {@code yuzplus.trips.return-wait-hours}
  * soat o'tib ham qaytgan tovar qabul qilinmagan bo'lsa — Ombor mudiriga (orders.check), naqd pul topshirilmagan bo'lsa —
  * kassirga (payments.mt); ikkalasida ham haydovchiga. Har soatda tekshiriladi, bir reys bo'yicha kuniga bir marta.
  */
@@ -31,7 +31,7 @@ public class TripReminders {
     private final Duration threshold;
 
     TripReminders(JdbcClient jdbc, Notifications notifications, Clock clock,
-            @Value("${medix.trips.return-wait-hours:4}") int returnWaitHours) {
+            @Value("${yuzplus.trips.return-wait-hours:4}") int returnWaitHours) {
         this.jdbc = jdbc;
         this.notifications = notifications;
         this.clock = clock;

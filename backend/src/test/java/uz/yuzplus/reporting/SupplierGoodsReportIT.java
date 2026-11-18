@@ -24,7 +24,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import uz.yuzplus.TestcontainersConfig;
 
 /** Ta'minotchi xodim / korxona tovari: tannarxda olib keldi / sotildi / boshqa / qoldi, Aktiv / Passiv, ruxsat va filial doirasi. */
-@SpringBootTest(properties = "medix.test.isolation=branch-admin")
+@SpringBootTest(properties = "yuzplus.test.isolation=branch-admin")
 @AutoConfigureMockMvc
 @Import(TestcontainersConfig.class)
 class SupplierGoodsReportIT {

@@ -36,7 +36,7 @@ import uz.yuzplus.TestcontainersConfig;
 import uz.yuzplus.finance.account.Accounts;
 
 /** Filiallar o'rtasida hisob-kitob: to'lov (pul + qarz bitta tranzaksiyada), qarzdan oshmaydi (parallel), bekor qilish, doira. */
-@SpringBootTest(properties = "medix.test.isolation=branch-admin")
+@SpringBootTest(properties = "yuzplus.test.isolation=branch-admin")
 @AutoConfigureMockMvc
 @Import(TestcontainersConfig.class)
 class BranchPaymentIT {

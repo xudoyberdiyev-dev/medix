@@ -25,7 +25,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import uz.yuzplus.TestcontainersConfig;
 
 /** «Tasdiqlash» sahifasi: buyurtmalar navbati (daraja, limitdan oshish, muddati o'tgan), bugun hal qilinganlar, kredit tafsiloti, filial doirasi. */
-@SpringBootTest(properties = "medix.test.isolation=approvals")
+@SpringBootTest(properties = "yuzplus.test.isolation=approvals")
 @AutoConfigureMockMvc
 @Import(TestcontainersConfig.class)
 class ApprovalsIT {

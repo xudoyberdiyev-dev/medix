@@ -11,7 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Birinchi ishga tushirish (SPEC 2): xodimlar yo'q bo'lsa, CEO hisobi env'dan yaratiladi
- * ({@code MEDIX_BOOTSTRAP_LOGIN}, {@code MEDIX_BOOTSTRAP_PASSWORD}). Birinchi kirishda parol almashtiriladi.
+ * ({@code YUZPLUS_BOOTSTRAP_LOGIN}, {@code YUZPLUS_BOOTSTRAP_PASSWORD}). Birinchi kirishda parol almashtiriladi.
  * Parol kodda yoki repoda saqlanmaydi.
  */
 @Component
@@ -27,8 +27,8 @@ class BootstrapAccount implements ApplicationRunner {
     BootstrapAccount(
             EmployeeAccounts accounts,
             PasswordEncoder encoder,
-            @Value("${medix.bootstrap.login:}") String login,
-            @Value("${medix.bootstrap.password:}") String password) {
+            @Value("${yuzplus.bootstrap.login:}") String login,
+            @Value("${yuzplus.bootstrap.password:}") String password) {
         this.accounts = accounts;
         this.encoder = encoder;
         this.login = login;
@@ -42,7 +42,7 @@ class BootstrapAccount implements ApplicationRunner {
             return;
         }
         if (login.isBlank() || password.isBlank()) {
-            log.warn("Xodimlar yo'q va MEDIX_BOOTSTRAP_LOGIN/MEDIX_BOOTSTRAP_PASSWORD berilmagan — tizimga kirib bo'lmaydi.");
+            log.warn("Xodimlar yo'q va YUZPLUS_BOOTSTRAP_LOGIN/YUZPLUS_BOOTSTRAP_PASSWORD berilmagan — tizimga kirib bo'lmaydi.");
             return;
         }
         long id = accounts.create(AuthService.normalizeLogin(login), "CEO", accounts.roleId("DIRECTOR"), encoder.encode(password));

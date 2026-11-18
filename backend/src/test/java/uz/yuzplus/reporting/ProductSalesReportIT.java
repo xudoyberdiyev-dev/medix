@@ -24,7 +24,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import uz.yuzplus.TestcontainersConfig;
 
 /** Mahsulotlar savdosi va yalpi foyda (SPEC 8): sotuv − qaytarish qatorlari, guruhlar, mijoz filtri, tannarx/rentabellik faqat prices.cost bilan, reports.own. */
-@SpringBootTest(properties = "medix.test.isolation=branch-admin")
+@SpringBootTest(properties = "yuzplus.test.isolation=branch-admin")
 @AutoConfigureMockMvc
 @Import(TestcontainersConfig.class)
 class ProductSalesReportIT {

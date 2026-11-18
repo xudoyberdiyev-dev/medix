@@ -42,7 +42,7 @@ import uz.yuzplus.inventory.ZoneType;
 import uz.yuzplus.shared.security.Actor;
 
 /** KK (O15): qarz tasdiqda darhol va bir marta, bekor qilishda teskari, narx ruxsati, oldindan to'langan, filial, tekshiruvlar, parallel. */
-@SpringBootTest(properties = "medix.test.isolation=branch-admin")
+@SpringBootTest(properties = "yuzplus.test.isolation=branch-admin")
 @AutoConfigureMockMvc
 @Import(TestcontainersConfig.class)
 class ExpectedReceiptIT {

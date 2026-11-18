@@ -38,7 +38,7 @@ import uz.yuzplus.shared.error.YuzplusException;
 import uz.yuzplus.shared.money.Money;
 
 /** Ombor jurnali: qoldiq = jurnal yig'indisi, manfiy bo'lmaydi, hujjat — hammasi yoki hech narsa, parallel chiqimlar. */
-@SpringBootTest(properties = "medix.test.isolation=branch-admin")
+@SpringBootTest(properties = "yuzplus.test.isolation=branch-admin")
 @AutoConfigureMockMvc
 @Import(TestcontainersConfig.class)
 class StockLedgerIT {

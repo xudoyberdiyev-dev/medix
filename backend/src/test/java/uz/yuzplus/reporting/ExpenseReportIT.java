@@ -24,7 +24,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import uz.yuzplus.TestcontainersConfig;
 
 /** Xarajatlar hisoboti (SPEC 8): o'tkazilgan KO/BO modda / oy bo'yicha, hisob turi ustunlari, filial doirasi, ruxsat. */
-@SpringBootTest(properties = "medix.test.isolation=branch-admin")
+@SpringBootTest(properties = "yuzplus.test.isolation=branch-admin")
 @AutoConfigureMockMvc
 @Import(TestcontainersConfig.class)
 class ExpenseReportIT {

@@ -40,7 +40,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import uz.yuzplus.TestcontainersConfig;
 
 /** KO/BO (tasdiq chegarasi, rad etish, bekor qilish), IO (parallel o'tkazmalar), ko'chirma, kunni yopish (farq, PIN, yopilgan kun). */
-@SpringBootTest(properties = "medix.test.isolation=branch-admin")
+@SpringBootTest(properties = "yuzplus.test.isolation=branch-admin")
 @AutoConfigureMockMvc
 @Import(TestcontainersConfig.class)
 class CashIT {

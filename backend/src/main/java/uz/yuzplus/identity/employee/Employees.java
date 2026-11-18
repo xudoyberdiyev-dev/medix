@@ -97,7 +97,7 @@ public class Employees {
     private final PasswordPolicy passwords;
 
     Employees(JdbcClient jdbc, PasswordEncoder encoder, AuditLog audit, Warehouses warehouses, CashierAssignments cashiers,
-            @Value("${medix.employees.limit:40}") int limit, PasswordPolicy passwords) {
+            @Value("${yuzplus.employees.limit:40}") int limit, PasswordPolicy passwords) {
         this.passwords = passwords;
         this.jdbc = jdbc;
         this.encoder = encoder;
