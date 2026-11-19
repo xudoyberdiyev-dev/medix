@@ -43,6 +43,8 @@ function field(page: Page | Locator, label: string) {
 }
 
 async function login(page: Page, login: string, password: string) {
+  // Oldingi foydalanuvchi sessiyasi qolsa /login «/» ga oʻtib ketadi va kirish yoʻqoladi (beqaror test sababi).
+  await page.context().clearCookies();
   await page.goto("/login");
   await field(page, "Login").fill(login);
   await field(page, "Parol").fill(password);
