@@ -1,1 +1,1 @@
-▶️ 100+: 06:06 sessiya boshlandi — reja: U8 qoldigʻi (boshqa rollar bosh sahifalarida 0,00 → «—»), U1 qoldigʻi (Table siz jadvallar), regressiya
+▶️ 100+: 14:10 sessiya boshlandi — reja: Inventarizatsiya «Tizimda yoʻq partiya» qatori (prototip InventoryDoc qoldigʻi), regressiya
