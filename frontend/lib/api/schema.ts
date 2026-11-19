@@ -4393,7 +4393,7 @@ export interface paths {
         };
         /**
          * Faktura qatorlari (joriy va asl)
-         * @description Narx ko'rish ruxsatisiz (prices.view) — narx va summa null.
+         * @description Narx ko'rish ruxsatisiz (prices.view) — narx va summa null. fefo=true — O25: yig'ilmagan buyurtmada seriya/muddat zahira yoki FEFO taklifidan.
          */
         get: operations["get_10"];
         /**
@@ -11090,6 +11090,8 @@ export interface components {
         FormRow: {
             /** @description Худуд — buyurtma omboridagi joy (O13) */
             area?: string;
+            /** @description O25: seriya manbai — RESERVED (zahira) yoki PROPOSED (FEFO taklifi); yig'ilgan/oddiy — null */
+            batchHint?: string;
             /** @description Яроклик муддати — DD.MM.YYYY yoki erkin matn */
             expiry?: string;
             farmId?: string;
@@ -11101,6 +11103,11 @@ export interface components {
             qty: number;
             /** @description Серия (partiya) */
             series?: string;
+            /**
+             * Format: int32
+             * @description O25: qoldiq yetmagan miqdor (shu qator — partiyasiz qolgan qism)
+             */
+            shortage?: number;
             /** @description ККС билан Жами — qty × price */
             total?: string;
             unit?: string;
@@ -11674,11 +11681,15 @@ export interface components {
             /** Format: date-time */
             editedAt?: string;
             editedBy?: string;
+            /** @description O25: seriya/muddat FEFO bo'yicha to'ldirildimi */
+            fefo: boolean;
             /** Format: int64 */
             orderId: number;
             orderNumber: string;
             /** @description Asl qatorlar (buyurtmadan) */
             original: components["schemas"]["FormRow"][];
+            /** @description O25: buyurtmadan tovar yig'ilganmi (yig'ilmagan bo'lsa — FEFO so'rovi ko'rsatiladi) */
+            picked: boolean;
             /** @description Joriy qatorlar (tuzatilgan bo'lsa — tuzatilgani) */
             rows: components["schemas"]["FormRow"][];
             tin?: string;
@@ -22805,6 +22816,7 @@ export interface operations {
         parameters: {
             query: {
                 ids: number[];
+                fefo?: boolean;
             };
             header?: never;
             path: {
@@ -22829,6 +22841,7 @@ export interface operations {
         parameters: {
             query: {
                 ids: number[];
+                fefo?: boolean;
             };
             header?: never;
             path: {
@@ -23286,7 +23299,9 @@ export interface operations {
     };
     get_10: {
         parameters: {
-            query?: never;
+            query?: {
+                fefo?: boolean;
+            };
             header?: never;
             path: {
                 id: number;
@@ -23356,7 +23371,9 @@ export interface operations {
     };
     pdf_4: {
         parameters: {
-            query?: never;
+            query?: {
+                fefo?: boolean;
+            };
             header?: never;
             path: {
                 id: number;
@@ -23379,7 +23396,9 @@ export interface operations {
     };
     xlsx_1: {
         parameters: {
-            query?: never;
+            query?: {
+                fefo?: boolean;
+            };
             header?: never;
             path: {
                 id: number;

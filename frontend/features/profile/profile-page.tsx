@@ -21,6 +21,7 @@ import { describeError } from "@/features/setup/form-error";
 import { cn } from "@/lib/cn";
 import { formatDateTime } from "@/lib/format";
 import { setScanFeedback, useScanFeedbackPref } from "@/lib/scan-feedback";
+import { setFefoPref, useFefoPref } from "@/features/orders/fefo-invoice-pref";
 import { useTheme, type ThemePref } from "@/lib/theme";
 import { formatIsoDate, todayTashkent } from "@/features/counterparties/api";
 import { cleanLogin, formatPhone } from "@/features/employees/staff";
@@ -67,6 +68,7 @@ export function ProfilePage() {
           <LanguageCard />
           <ThemeCard />
           <ScanCard />
+          <FefoInvoiceCard />
           <PasswordCard profile={p} />
           <PinCard profile={p} />
         </div>
@@ -248,6 +250,27 @@ function ScanCard() {
   return (
     <Card title={t("title")}>
       <Switch label={t("label")} description={t("note")} checked={on} onChange={setScanFeedback} />
+    </Card>
+  );
+}
+
+/** O25: «Seriya va muddat FEFO boʻyicha koʻrsatilsinmi?» soʻrovini qayta yoqish (ombor fakturasini koʻra oladiganlar uchun). */
+function FefoInvoiceCard() {
+  const t = useTranslations("profile.fefoInvoice");
+  const me = useMe();
+  const pref = useFefoPref(me.data?.id);
+  if (!can(me.data, "orders.view")) return null;
+  return (
+    <Card title={t("title")}>
+      <Switch
+        label={t("label")}
+        description={t("note")}
+        checked={pref === "ask"}
+        onChange={(on) => setFefoPref(me.data?.id, on ? "ask" : "yes")}
+      />
+      {pref !== "ask" ? (
+        <p className="mt-2 text-caption text-text-secondary">{t("saved", { choice: pref === "yes" ? t("yes") : t("no") })}</p>
+      ) : null}
     </Card>
   );
 }

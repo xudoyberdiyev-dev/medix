@@ -1075,7 +1075,20 @@
     "saveError": "Tuzatishlar saqlanmadi. Internetni tekshiring va qayta urinib koʻring.",
     "menu": "Faktura: {title}",
     "drag": "Sudrab tartiblang",
-    "pdf": "PDF yuklab olish"
+    "pdf": "PDF yuklab olish",
+    "fefoTitle": "Seriya va muddat FEFO boʻyicha koʻrsatilsinmi?",
+    "fefoText": "Buyurtma hali yigʻilmagan. «Ha» — har qatorga muddati eng yaqin partiya (zahira yoki tizim taklifi) yoziladi; «Yoʻq» — seriya va muddat boʻsh qoladi.",
+    "fefoYes": "Ha, FEFO bilan",
+    "fefoNo": "Yoʻq, oddiy",
+    "fefoRemember": "Har safar soʻralmasin",
+    "fefoRememberNote": "Profil → «Fakturada partiya» da qayta yoqiladi.",
+    "fefoNote": "Seriya va muddat — tizim taklifi (FEFO). Yigʻuvchi boshqa partiyadan olsa, panelda «Boshqa partiyadan oldim» ni tanlaydi.",
+    "fefoOn": "FEFO bilan",
+    "fefoOff": "Oddiy",
+    "fefoSwitch": "Seriya va muddat",
+    "hintReserved": "zahira",
+    "hintProposed": "taklif",
+    "shortage": "Yetishmaydi: {n}"
   },
   "preview": {
     "kind": "Buyurtma",

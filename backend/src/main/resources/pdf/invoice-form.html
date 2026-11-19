@@ -16,6 +16,10 @@
         th { text-align: center; }
         .r { text-align: right; }
         .tot td { font-weight: 700; }
+        /* O25: FEFO zahira/taklif — och sariq; yetishmaydi — qizil */
+        td.hint { background: #fff4cc; }
+        td.miss { color: #c62828; font-weight: 700; }
+        .note { margin-top: 2px; font-style: italic; }
     </style>
 </head>
 <body>
@@ -24,13 +28,14 @@
     <div th:text="${d.number}">Буюртма №</div>
     <div th:text="${d.customer}">Мижоз</div>
     <div th:text="${d.warehouse}">Омбор</div>
+    <div class="note" th:if="${!#strings.isEmpty(d.note)}" th:text="${d.note}">Серия ва муддат — тизим таклифи</div>
     <table>
         <thead>
         <tr><th th:each="c : ${columns}" th:text="${c.name}">№</th></tr>
         </thead>
         <tbody>
         <tr th:each="r : ${d.rows}">
-            <td th:each="c : ${r}" th:classappend="${c.right} ? 'r'" th:text="${c.v}">1</td>
+            <td th:each="c : ${r}" th:classappend="${(c.right ? 'r ' : '') + c.cls}" th:text="${c.v}">1</td>
         </tr>
         <tr class="tot">
             <td th:each="c, s : ${columns}" th:classappend="${c.right} ? 'r'"

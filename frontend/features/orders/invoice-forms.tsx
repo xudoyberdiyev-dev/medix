@@ -14,6 +14,8 @@ import { ensureCsrf, useMe } from "@/features/auth/session";
 import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
 import { formatDateTime, formatMoney } from "@/lib/format";
+import { useFefoPref, withFefo } from "./fefo-invoice-pref";
+import { FefoQuestionBody, FefoQuestionModal, useFefoChoice } from "./fefo-question";
 
 type FormRow = components["schemas"]["FormRow"];
 export type FormType = "WAREHOUSE" | "WAREHOUSE2" | "CLIENT_SEND" | "CLIENT1" | "CLIENT2";
@@ -109,19 +111,49 @@ function withTotal(r: FormRow): FormRow {
   return { ...r, total: r.price == null ? undefined : rowTotal(r.qty, r.price) };
 }
 
+/** O25: ombor fakturalari (yigʻilmagan buyurtmada FEFO soʻrovi faqat shularda). */
+export function isWarehouseForm(type: FormType): boolean {
+  return type === "WAREHOUSE" || type === "WAREHOUSE2";
+}
+
+/** O25: «Серия» katagidagi koʻrinish — zahira/taklif belgisi yoki «Yetishmaydi: N». */
+export function seriesLabel(r: FormRow, labels: { reserved: string; proposed: string; shortage: (n: number) => string }): string {
+  if (r.shortage != null) return labels.shortage(r.shortage);
+  if (!r.series || !r.batchHint) return r.series ?? "";
+  return `${r.series} (${r.batchHint === "RESERVED" ? labels.reserved : labels.proposed})`;
+}
+
 export function InvoiceFormsModal(props: { orderId: number; initial: FormType; onClose: () => void }) {
   const t = useTranslations("orders.invoiceForms");
   const qc = useQueryClient();
+  const me = useMe();
+  const pref = useFefoPref(me.data?.id);
   const [type, setType] = useState<FormType>(props.initial);
+  const [fefoChoice, setFefoChoice] = useState<boolean | null>(null);
+  const choice = fefoChoice ?? (pref === "yes" ? true : pref === "no" ? false : null);
+  const fefoOn = isWarehouseForm(type) && choice === true;
+  const base = ["orders", props.orderId, "invoice-forms"] as const;
+  const key = [...base, { fefo: fefoOn }];
   const data = useQuery({
-    queryKey: ["orders", props.orderId, "invoice-forms"],
-    queryFn: () => unwrap(api.GET("/api/orders/{id}/invoice-forms", { params: { path: { id: props.orderId } } })),
+    queryKey: key,
+    queryFn: () => unwrap(api.GET("/api/orders/{id}/invoice-forms", { params: { path: { id: props.orderId }, query: { fefo: fefoOn } } })),
+    placeholderData: (prev) => prev,
   });
   const [rows, setRows] = useState<FormRow[] | null>(null);
   const history = useRef<FormRow[][]>([]);
   const dirty = useRef(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [undoCount, setUndoCount] = useState(0);
+
+  function setFefo(v: boolean) {
+    if (!dirty.current) {
+      setRows(null);
+      history.current = [];
+      setUndoCount(0);
+    }
+    setFefoChoice(v);
+  }
+  const ask = useFefoChoice(setFefo);
 
   const save = useMutation({
     mutationFn: async (next: FormRow[]) => {
@@ -135,7 +167,8 @@ export function InvoiceFormsModal(props: { orderId: number; initial: FormType; o
     },
     onSuccess: (r) => {
       dirty.current = false;
-      qc.setQueryData(["orders", props.orderId, "invoice-forms"], r);
+      void qc.invalidateQueries({ queryKey: base, refetchType: "none" });
+      qc.setQueryData(key, r);
     },
   });
   const revert = useMutation({
@@ -147,13 +180,22 @@ export function InvoiceFormsModal(props: { orderId: number; initial: FormType; o
       history.current = [];
       setUndoCount(0);
       dirty.current = false;
-      setRows(r.rows);
-      qc.setQueryData(["orders", props.orderId, "invoice-forms"], r);
+      setRows(null);
+      void qc.invalidateQueries({ queryKey: base, refetchType: "none" });
+      qc.setQueryData(key, r);
     },
   });
 
   const f = data.data;
   const canEdit = !!f?.canEdit && !!f?.canSeePrices;
+  /** Yigʻilmagan, tuzatilmagan buyurtmaning ombor fakturasi — FEFO soʻraladi. */
+  const fefoApplies = !!f && !f.picked && !f.edited && isWarehouseForm(type);
+  const asking = fefoApplies && choice === null;
+  const labels = {
+    reserved: t("hintReserved"),
+    proposed: t("hintProposed"),
+    shortage: (n: number) => t("shortage", { n }),
+  };
   const types = FORM_TYPES.filter((x) => !x.priced || f?.canSeePrices);
   const form = FORM_TYPES.find((x) => x.type === type) ?? FORM_TYPES[1];
   const current = useMemo(() => rows ?? data.data?.rows ?? [], [rows, data.data]);
@@ -208,7 +250,7 @@ export function InvoiceFormsModal(props: { orderId: number; initial: FormType; o
   async function download(format: "xlsx" | "pdf" = "xlsx") {
     if (timer.current) clearTimeout(timer.current);
     if (dirty.current && canEdit) await save.mutateAsync(current);
-    window.open(`/api/orders/${props.orderId}/invoice-forms/${type}/${format}`, "_blank", "noopener");
+    window.open(withFefo(`/api/orders/${props.orderId}/invoice-forms/${type}/${format}`, fefoOn), "_blank", "noopener");
   }
 
   /** Excel kabi: Enter — pastdagi katak, ↑/↓ — qatorlar boʻylab; Ctrl+Z — bekor qilish. */
@@ -232,8 +274,12 @@ export function InvoiceFormsModal(props: { orderId: number; initial: FormType; o
       onClose={props.onClose}
       size="lg"
       title={t("title")}
-      primaryAction={{ label: t("download"), onClick: () => void download(), loading: save.isPending, disabled: !f }}
-      secondaryAction={{ label: t("close"), onClick: props.onClose }}
+      primaryAction={
+        asking
+          ? { label: t("fefoYes"), onClick: () => ask.choose(true) }
+          : { label: t("download"), onClick: () => void download(), loading: save.isPending, disabled: !f || data.isPlaceholderData }
+      }
+      secondaryAction={asking ? { label: t("fefoNo"), onClick: () => ask.choose(false) } : { label: t("close"), onClick: props.onClose }}
     >
       <div className="flex flex-col gap-3">
         <div role="tablist" aria-label={t("types")} className="flex flex-wrap gap-2">
@@ -250,13 +296,33 @@ export function InvoiceFormsModal(props: { orderId: number; initial: FormType; o
             </button>
           ))}
         </div>
-        <Alert tone="info" title={t("note")} />
+        {asking ? null : <Alert tone="info" title={t("note")} />}
         {data.error ? (
           <ErrorState onRetry={() => data.refetch()} />
         ) : !f ? (
           <Skeleton className="h-40" />
+        ) : asking ? (
+          <FefoQuestionBody remember={ask.remember} setRemember={ask.setRemember} />
         ) : (
           <>
+            {fefoApplies ? (
+              <div className="flex flex-wrap items-center gap-2 text-caption" role="radiogroup" aria-label={t("fefoSwitch")}>
+                <span className="text-text-secondary">{t("fefoSwitch")}:</span>
+                {([true, false] as const).map((v) => (
+                  <button
+                    key={String(v)}
+                    type="button"
+                    role="radio"
+                    aria-checked={choice === v}
+                    onClick={() => setFefo(v)}
+                    className={`rounded-full border px-3 py-1 ${choice === v ? "border-primary bg-primary-soft text-primary" : "border-border"}`}
+                  >
+                    {v ? t("fefoOn") : t("fefoOff")}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+            {f.fefo ? <Alert tone="warning" title={t("fefoNote")} /> : null}
             <div className="flex flex-wrap items-center justify-between gap-2 text-caption text-text-secondary">
               <span aria-live="polite">
                 {t("changed", { n: changed })}
@@ -353,11 +419,21 @@ export function InvoiceFormsModal(props: { orderId: number; initial: FormType; o
                         const value = cellValue(r, c);
                         const was = o ? cellValue(o, c) : "";
                         const edited = value !== was;
+                        const hinted = !!r.batchHint && (c === "series" || c === "expiry");
+                        const short = c === "series" && r.shortage != null;
                         return (
                           <td
                             key={c}
-                            className={`px-1 py-0.5 ${edited ? "bg-warning-bg" : ""}`}
-                            title={edited ? t("original", { v: was || "—" }) : undefined}
+                            className={`px-1 py-0.5 ${c === "series" ? "min-w-32" : ""} ${edited || hinted ? "bg-warning-bg" : ""}`}
+                            title={
+                              edited
+                                ? t("original", { v: was || "—" })
+                                : hinted
+                                  ? r.batchHint === "RESERVED"
+                                    ? labels.reserved
+                                    : labels.proposed
+                                  : undefined
+                            }
                           >
                             {canEdit ? (
                               <input
@@ -367,13 +443,30 @@ export function InvoiceFormsModal(props: { orderId: number; initial: FormType; o
                                 onChange={(e) => setCell(i, c, e.target.value)}
                                 onKeyDown={(e) => onKey(e, i, c)}
                                 inputMode={c === "qty" || c === "price" ? "decimal" : undefined}
+                                placeholder={short ? seriesLabel(r, labels) : undefined}
                                 className={`w-full rounded-control border border-transparent bg-transparent px-1 py-0.5 focus:border-primary focus:outline-none ${
                                   c === "qty" || c === "price" ? "text-right tabular-nums" : ""
-                                }`}
+                                } ${short ? "placeholder:font-semibold placeholder:text-danger" : ""}`}
                               />
-                            ) : (
-                              <span className={c === "qty" || c === "price" ? "block text-right tabular-nums" : ""}>
-                                {c === "price" ? (r.price == null ? "" : formatMoney(r.price)) : value}
+                            ) : null}
+                            {canEdit && hinted && c === "series" ? (
+                              <span className="block px-1 text-caption text-text-secondary">
+                                {r.batchHint === "RESERVED" ? labels.reserved : labels.proposed}
+                              </span>
+                            ) : null}
+                            {canEdit ? null : (
+                              <span
+                                className={
+                                  c === "qty" || c === "price" ? "block text-right tabular-nums" : short ? "font-semibold text-danger" : ""
+                                }
+                              >
+                                {c === "price"
+                                  ? r.price == null
+                                    ? ""
+                                    : formatMoney(r.price)
+                                  : c === "series"
+                                    ? seriesLabel(r, labels)
+                                    : value}
                               </span>
                             )}
                           </td>
@@ -434,24 +527,44 @@ export function InvoiceFormsModal(props: { orderId: number; initial: FormType; o
 export function InvoiceFormsMenu({ orderIds }: { orderIds: number[] }) {
   const t = useTranslations("orders.tripPage");
   const me = useMe();
+  const pref = useFefoPref(me.data?.id);
+  const [pending, setPending] = useState<string | null>(null);
   if (orderIds.length === 0) return null;
+  const open = (url: string, fefo: boolean) => window.open(withFefo(url, fefo), "_blank", "noopener");
   return (
-    <RowMenu
-      label={t("invoiceFormsXlsx")}
-      trigger={{ icon: FileSpreadsheet, text: t("invoiceFormsXlsx") }}
-      items={FORM_TYPES.filter((f) => !f.priced || can(me.data, "prices.view")).flatMap((f) =>
-        (["xlsx", "pdf"] as const).map((fmt) => ({
-          key: `${f.type}-${fmt}`,
-          label: `${f.title} · ${fmt === "xlsx" ? "Excel" : "PDF"}`,
-          icon:
-            fmt === "xlsx" ? (
-              <FileSpreadsheet size={16} strokeWidth={1.5} aria-hidden />
-            ) : (
-              <FileText size={16} strokeWidth={1.5} aria-hidden />
-            ),
-          onSelect: () => window.open(`/api/orders/invoice-forms/${f.type}/${fmt}?ids=${orderIds.join(",")}`, "_blank", "noopener"),
-        })),
-      )}
-    />
+    <>
+      {pending ? (
+        <FefoQuestionModal
+          onClose={() => setPending(null)}
+          onChoose={(fefo) => {
+            open(pending, fefo);
+            setPending(null);
+          }}
+        />
+      ) : null}
+      <RowMenu
+        label={t("invoiceFormsXlsx")}
+        trigger={{ icon: FileSpreadsheet, text: t("invoiceFormsXlsx") }}
+        items={FORM_TYPES.filter((f) => !f.priced || can(me.data, "prices.view")).flatMap((f) =>
+          (["xlsx", "pdf"] as const).map((fmt) => ({
+            key: `${f.type}-${fmt}`,
+            label: `${f.title} · ${fmt === "xlsx" ? "Excel" : "PDF"}`,
+            icon:
+              fmt === "xlsx" ? (
+                <FileSpreadsheet size={16} strokeWidth={1.5} aria-hidden />
+              ) : (
+                <FileText size={16} strokeWidth={1.5} aria-hidden />
+              ),
+            onSelect: () => {
+              const url = `/api/orders/invoice-forms/${f.type}/${fmt}?ids=${orderIds.join(",")}`;
+              // O25: ombor fakturasida soʻrov bir marta (yigʻilgan buyurtmalarda server FEFO ni eʼtiborsiz qoldiradi)
+              if (!isWarehouseForm(f.type)) open(url, false);
+              else if (pref === "ask") setPending(url);
+              else open(url, pref === "yes");
+            },
+          })),
+        )}
+      />
+    </>
   );
 }

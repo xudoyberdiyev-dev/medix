@@ -9141,6 +9141,14 @@
               "format" : "int64"
             }
           }
+        }, {
+          "in" : "query",
+          "name" : "fefo",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
+          }
         } ],
         "responses" : {
           "200" : {
@@ -9181,6 +9189,14 @@
               "type" : "integer",
               "format" : "int64"
             }
+          }
+        }, {
+          "in" : "query",
+          "name" : "fefo",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
           }
         } ],
         "responses" : {
@@ -9834,7 +9850,7 @@
         "tags" : [ "invoice-forms" ]
       },
       "get" : {
-        "description" : "Narx ko'rish ruxsatisiz (prices.view) — narx va summa null.",
+        "description" : "Narx ko'rish ruxsatisiz (prices.view) — narx va summa null. fefo=true — O25: yig'ilmagan buyurtmada seriya/muddat zahira yoki FEFO taklifidan.",
         "operationId" : "get_10",
         "parameters" : [ {
           "in" : "path",
@@ -9843,6 +9859,14 @@
           "schema" : {
             "type" : "integer",
             "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "fefo",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
           }
         } ],
         "responses" : {
@@ -9918,6 +9942,14 @@
             "type" : "string",
             "enum" : [ "WAREHOUSE", "WAREHOUSE2", "CLIENT_SEND", "CLIENT1", "CLIENT2" ]
           }
+        }, {
+          "in" : "query",
+          "name" : "fefo",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
+          }
         } ],
         "responses" : {
           "200" : {
@@ -9955,6 +9987,14 @@
           "schema" : {
             "type" : "string",
             "enum" : [ "WAREHOUSE", "WAREHOUSE2", "CLIENT_SEND", "CLIENT1", "CLIENT2" ]
+          }
+        }, {
+          "in" : "query",
+          "name" : "fefo",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
           }
         } ],
         "responses" : {
@@ -25984,6 +26024,11 @@
             "maxLength" : 60,
             "minLength" : 0
           },
+          "batchHint" : {
+            "type" : "string",
+            "description" : "O25: seriya manbai — RESERVED (zahira) yoki PROPOSED (FEFO taklifi); yig'ilgan/oddiy — null",
+            "pattern" : "RESERVED|PROPOSED"
+          },
           "expiry" : {
             "type" : "string",
             "description" : "Яроклик муддати — DD.MM.YYYY yoki erkin matn",
@@ -26020,6 +26065,12 @@
             "description" : "Серия (partiya)",
             "maxLength" : 60,
             "minLength" : 0
+          },
+          "shortage" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "O25: qoldiq yetmagan miqdor (shu qator — partiyasiz qolgan qism)",
+            "minimum" : 1
           },
           "total" : {
             "type" : "string",
@@ -27501,6 +27552,10 @@
           "editedBy" : {
             "type" : "string"
           },
+          "fefo" : {
+            "type" : "boolean",
+            "description" : "O25: seriya/muddat FEFO bo'yicha to'ldirildimi"
+          },
           "orderId" : {
             "type" : "integer",
             "format" : "int64"
@@ -27514,6 +27569,10 @@
             "items" : {
               "$ref" : "#/components/schemas/FormRow"
             }
+          },
+          "picked" : {
+            "type" : "boolean",
+            "description" : "O25: buyurtmadan tovar yig'ilganmi (yig'ilmagan bo'lsa — FEFO so'rovi ko'rsatiladi)"
           },
           "rows" : {
             "type" : "array",
@@ -27529,7 +27588,7 @@
             "type" : "string"
           }
         },
-        "required" : [ "canEdit", "canSeePrices", "customer", "date", "edited", "orderId", "orderNumber", "original", "rows", "warehouse" ]
+        "required" : [ "canEdit", "canSeePrices", "customer", "date", "edited", "fefo", "orderId", "orderNumber", "original", "picked", "rows", "warehouse" ]
       },
       "InvoiceLine" : {
         "type" : "object",
