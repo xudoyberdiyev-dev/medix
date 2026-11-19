@@ -1,1 +1,1 @@
-▶️ 100+: 00:10 sessiya boshlandi — reja: P1 ruxsat teshiklari (@PreAuthorize ~30 API + ArchUnit test), keyin P2–P7
+▶️ 100+: 06:06 sessiya boshlandi — reja: U8 qoldigʻi (boshqa rollar bosh sahifalarida 0,00 → «—»), U1 qoldigʻi (Table siz jadvallar), regressiya

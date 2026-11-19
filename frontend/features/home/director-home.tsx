@@ -342,11 +342,11 @@ export function PaymentCard({ icon, title, note, value }: { icon: typeof Banknot
       <div className="mt-1 font-mono text-subtitle tabular-nums">{formatMoney(value.total)}</div>
       <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 text-caption text-text-secondary">
         <dt>{t("cash")}</dt>
-        <dd className="text-right font-mono tabular-nums">{formatMoney(value.cash)}</dd>
+        <dd className="text-right font-mono tabular-nums">{formatMoneyOrDash(value.cash)}</dd>
         <dt>{t("transfer")}</dt>
-        <dd className="text-right font-mono tabular-nums">{formatMoney(value.transfer)}</dd>
+        <dd className="text-right font-mono tabular-nums">{formatMoneyOrDash(value.transfer)}</dd>
         <dt>{t("online")}</dt>
-        <dd className="text-right font-mono tabular-nums">{formatMoney(value.online)}</dd>
+        <dd className="text-right font-mono tabular-nums">{formatMoneyOrDash(value.online)}</dd>
       </dl>
       <div className="mt-2 text-caption text-text-secondary">{note}</div>
     </Card>
@@ -830,16 +830,18 @@ function Branches({ home: h }: { home: Home }) {
   const sum = (pick: (b: BranchRow) => string) => formatMoney(sumMoney(h.branches.map(pick)));
   const cols: MiniCol<BranchRow>[] = [
     { key: "name", title: t("director.branch"), render: (b) => b.name },
-    { key: "sales", title: t("dir.sales"), right: true, render: (b) => formatMoney(b.sales) },
-    { key: "debt", title: t("dir.customerDebt"), right: true, render: (b) => formatMoney(b.customerDebt) },
+    { key: "sales", title: t("dir.sales"), right: true, render: (b) => formatMoneyOrDash(b.sales) },
+    { key: "debt", title: t("dir.customerDebt"), right: true, render: (b) => formatMoneyOrDash(b.customerDebt) },
     {
       key: "over",
       title: t("dir.overdue"),
       right: true,
-      render: (b) => <span className={nonZero(b.overdue) ? "text-danger" : ""}>{formatMoney(b.overdue)}</span>,
+      render: (b) => <span className={nonZero(b.overdue) ? "text-danger" : ""}>{formatMoneyOrDash(b.overdue)}</span>,
     },
-    ...(cost ? [{ key: "stock", title: t("dir.stock"), right: true, render: (b: BranchRow) => formatMoney(b.stockValue ?? "0") }] : []),
-    { key: "money", title: t("dir.money"), right: true, render: (b) => formatMoney(b.money) },
+    ...(cost
+      ? [{ key: "stock", title: t("dir.stock"), right: true, render: (b: BranchRow) => formatMoneyOrDash(b.stockValue ?? "0") }]
+      : []),
+    { key: "money", title: t("dir.money"), right: true, render: (b) => formatMoneyOrDash(b.money) },
   ];
   const foot: ReactNode[] = [
     t("dir.total"),
@@ -899,7 +901,7 @@ function Operators({ rows, per }: { rows: OperatorRow[]; per: string }) {
   const cols: MiniCol<OperatorRow>[] = [
     { key: "name", title: t("dir.employee"), render: (o) => o.name },
     { key: "docs", title: t("dir.orders"), right: true, render: (o) => o.docs },
-    { key: "sales", title: t("dir.sales"), right: true, render: (o) => formatMoney(o.sales) },
+    { key: "sales", title: t("dir.sales"), right: true, render: (o) => formatMoneyOrDash(o.sales) },
     { key: "st", title: t("dir.status"), render: (o) => <StatusWord active={o.active} /> },
   ];
   return (
@@ -921,9 +923,9 @@ function Suppliers({ title, party, block, href }: { title: string; party: string
   const rows = mergeSuppliers<SupplierStat>(block.active, block.passive);
   const cols: MiniCol<SupplierStat & { active: boolean }>[] = [
     { key: "name", title: party, render: (r) => r.name },
-    { key: "brought", title: t("brought"), right: true, render: (r) => formatMoney(r.brought) },
-    { key: "sold", title: t("sold"), right: true, render: (r) => formatMoney(r.sold) },
-    { key: "left", title: t("left"), right: true, render: (r) => <span className="font-semibold">{formatMoney(r.left)}</span> },
+    { key: "brought", title: t("brought"), right: true, render: (r) => formatMoneyOrDash(r.brought) },
+    { key: "sold", title: t("sold"), right: true, render: (r) => formatMoneyOrDash(r.sold) },
+    { key: "left", title: t("left"), right: true, render: (r) => <span className="font-semibold">{formatMoneyOrDash(r.left)}</span> },
     { key: "st", title: t("status"), render: (r) => <StatusWord active={r.active} /> },
   ];
   return (
@@ -966,7 +968,7 @@ function Aging({ card, attention: a }: { card: Home["customerDebt"]; attention: 
                 <span className={cn("size-2 rounded-xs", s.color)} aria-hidden />
                 {t(s.key)}
               </div>
-              <div className="mt-1 font-semibold tabular-nums">{formatMoney(s.value)}</div>
+              <div className="mt-1 font-semibold tabular-nums">{formatMoneyOrDash(s.value)}</div>
             </Link>
           ))}
         </div>

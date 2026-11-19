@@ -204,7 +204,7 @@ function MoneyByBranch({ rows }: { rows: BranchMoney[] }) {
     { key: "name", title: t("director.branch"), render: (r) => r.name },
     { key: "cash", title: t("acc.cCash"), right: true, render: (r) => formatMoneyOrDash(r.cash) },
     { key: "bank", title: t("acc.cBank"), right: true, render: (r) => formatMoneyOrDash(r.bank) },
-    { key: "total", title: t("dir.total"), right: true, render: (r) => formatMoney(r.total) },
+    { key: "total", title: t("dir.total"), right: true, render: (r) => formatMoneyOrDash(r.total) },
   ];
   return (
     <Panel title={t("acc.moneyBrT")}>
