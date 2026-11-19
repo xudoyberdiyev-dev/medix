@@ -98,5 +98,13 @@
     "title": "Skanerlash",
     "label": "Ovoz va tebranish",
     "note": "Toʻgʻri kodda — qisqa signal, xato kodda — past uzun signal va ikki marta tebranish. Shu qurilma uchun."
+  },
+  "fefoInvoice": {
+    "title": "Fakturada partiya",
+    "label": "Har safar soʻralsin",
+    "note": "Yigʻilmagan buyurtmaning ombor fakturasida «Seriya va muddat FEFO boʻyicha koʻrsatilsinmi?» soʻrovi.",
+    "saved": "Eslab qolingan tanlov: {choice}",
+    "yes": "Ha, FEFO bilan",
+    "no": "Yoʻq, oddiy"
   }
 }

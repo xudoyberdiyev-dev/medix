@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { COL_TITLES, FORM_TYPES, changedCells, moveRow, rowTotal } from "./invoice-forms";
+import { fefoPrefKey, parseFefoPref, withFefo } from "./fefo-invoice-pref";
+import { COL_TITLES, FORM_TYPES, changedCells, isWarehouseForm, moveRow, rowTotal, seriesLabel } from "./invoice-forms";
 
 const row = (over: Partial<Parameters<typeof changedCells>[0][number]> = {}) => ({
   area: "B-2",
@@ -60,5 +61,31 @@ describe("moveRow (sudrab tartiblash)", () => {
     const rows = ["a", "b"];
     expect(moveRow(rows, 1, 1)).toBe(rows);
     expect(moveRow(rows, 0, 5)).toBe(rows);
+  });
+});
+
+describe("O25 FEFO faktura", () => {
+  const labels = { reserved: "zahira", proposed: "taklif", shortage: (n: number) => `Yetishmaydi: ${n}` };
+  it("seriya belgisi: zahira, taklif, yetishmaydi, oddiy", () => {
+    expect(seriesLabel(row({ batchHint: "RESERVED" }), labels)).toBe("LOT (zahira)");
+    expect(seriesLabel(row({ batchHint: "PROPOSED" }), labels)).toBe("LOT (taklif)");
+    expect(seriesLabel(row({ series: undefined, shortage: 5 }), labels)).toBe("Yetishmaydi: 5");
+    expect(seriesLabel(row(), labels)).toBe("LOT");
+    expect(seriesLabel(row({ series: undefined }), labels)).toBe("");
+  });
+  it("soʻrov faqat ombor fakturalarida", () => {
+    expect(FORM_TYPES.filter((f) => isWarehouseForm(f.type)).map((f) => f.type)).toEqual(["WAREHOUSE", "WAREHOUSE2"]);
+  });
+  it("yuklab olish manzili va eslab qolingan tanlov", () => {
+    expect(withFefo("/api/orders/1/invoice-forms/WAREHOUSE/pdf", true)).toBe("/api/orders/1/invoice-forms/WAREHOUSE/pdf?fefo=true");
+    expect(withFefo("/api/orders/invoice-forms/WAREHOUSE/xlsx?ids=1,2", true)).toBe(
+      "/api/orders/invoice-forms/WAREHOUSE/xlsx?ids=1,2&fefo=true",
+    );
+    expect(withFefo("/x", false)).toBe("/x");
+    expect(parseFefoPref("yes")).toBe("yes");
+    expect(parseFefoPref("no")).toBe("no");
+    expect(parseFefoPref(null)).toBe("ask");
+    expect(parseFefoPref("boshqa")).toBe("ask");
+    expect(fefoPrefKey(7)).toBe("yuzplus.fefoInvoice.7");
   });
 });
