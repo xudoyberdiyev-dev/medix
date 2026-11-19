@@ -29,7 +29,7 @@ class OrderInvoiceFormPdf {
     }
 
     @Transactional(readOnly = true)
-    PdfDocument render(Actor actor, List<Long> ids, OrderInvoiceForms.FormType type, boolean prices) {
+    PdfDocument render(Actor actor, List<Long> ids, OrderInvoiceForms.FormType type, boolean prices, boolean fefo) {
         if (type.priced && !prices) {
             throw YuzplusException.forbidden("invoiceForms.noPrices");
         }
@@ -40,7 +40,7 @@ class OrderInvoiceFormPdf {
         List<Map<String, Object>> docs = new ArrayList<>();
         String first = null;
         for (Long id : unique) {
-            OrderInvoiceForms.InvoiceForms f = forms.get(actor, id, prices, false);
+            OrderInvoiceForms.InvoiceForms f = forms.get(actor, id, prices, false, fefo && type.warehouse());
             if (first == null) {
                 first = f.orderNumber();
             }
@@ -74,14 +74,16 @@ class OrderInvoiceFormPdf {
                     case "Фарм ИД" -> x.farmId();
                     case "Махсулот номи" -> x.name();
                     case "Ишлаб чикарувчиси" -> x.manufacturer();
-                    case "Серия" -> x.series();
+                    case "Серия" -> OrderInvoiceForms.printSeries(x);
                     case "Сони" -> PdfFormat.qty(x.qty());
                     case "Яроклик муддати" -> x.expiry();
                     case "Ул/Бирлиги" -> x.unit();
                     case "ККС билан Нархи" -> x.price() == null ? "" : PdfFormat.money(x.price());
                     default -> x.total() == null ? "" : PdfFormat.money(x.total());
                 };
-                cells.add(Map.of("v", v == null ? "" : v, "right", right(col)));
+                String cls = (col.equals("Серия") || col.equals("Яроклик муддати")) && x.batchHint() != null ? "hint"
+                        : col.equals("Серия") && x.shortage() != null ? "miss" : "";
+                cells.add(Map.of("v", v == null ? "" : v, "right", right(col), "cls", cls));
             }
             rows.add(cells);
             qty += x.qty();
@@ -91,6 +93,7 @@ class OrderInvoiceFormPdf {
         m.put("number", "Буюртма № " + f.orderNumber() + " · " + DMY.format(f.date()));
         m.put("customer", "Мижоз: " + f.customer() + (f.tin() == null ? "" : " · СТИР " + f.tin()));
         m.put("warehouse", "Омбор: " + f.warehouse());
+        m.put("note", f.fefo() && f.rows().stream().anyMatch(x -> x.batchHint() != null || x.shortage() != null) ? OrderInvoiceForms.FEFO_NOTE : "");
         m.put("rows", rows);
         m.put("qtyCol", type.columns.indexOf("Сони"));
         m.put("cols", type.columns.size());

@@ -1213,6 +1213,77 @@ class OrderIT {
                 .andExpect(jsonPath("$.rows[0].name").value("BY Faktura dori"));
         assertThat(jdbc.sql("SELECT count(*) FROM audit_log WHERE entity_id = :o AND action IN ('order.invoiceEdit', 'order.invoiceRevert')")
                 .param("o", String.valueOf(o)).query(Long.class).single()).isEqualTo(2L);
+        // O25: yig'ilgan buyurtmada fefo=true e'tiborsiz — haqiqiy partiyalar
+        mvc.perform(get("/api/orders/" + o + "/invoice-forms").param("fefo", "true").cookie(operator))
+                .andExpect(jsonPath("$.picked").value(true))
+                .andExpect(jsonPath("$.fefo").value(false))
+                .andExpect(jsonPath("$.rows[0].series").value("LOT-INV"))
+                .andExpect(jsonPath("$.rows[0].batchHint").doesNotExist());
+    }
+
+    /** O25: yig'ishdan oldingi faktura — FEFO taklifi (qoralama), zahira (navbatda), bo'linish va yetishmaslik. */
+    @Test
+    void invoiceFormsFefoBeforePicking() throws Exception {
+        Place p = place();
+        long c = customer(p.branchId(), null);
+        Cookie operator = loginAs("OPERATOR", p.branchId());
+        long prod = product(p, "BY FEFO dori", "1000", 0, null, null);
+        tx.executeWithoutResult(s -> {
+            long late = ledger.createBatch(prod, "LOT-LATE", null, LocalDate.of(2029, 10, 31), Money.of("100"), false, "BQ", null);
+            long early = ledger.createBatch(prod, "LOT-EARLY", null, LocalDate.of(2028, 4, 30), Money.of("100"), false, "BQ", null);
+            ledger.post(new DocRef("BQ", prod, "BQ-FEFO"), List.of(Move.in(p.main(), late, 30), Move.in(p.main(), early, 45)));
+        });
+        // Qoralama, qoldiqdan ko'p (80 > 75): taklif 45 + 30, yetishmaydi 5; hech narsa zahiralanmaydi
+        long d = draft(operator, order(p, c, new long[][] {{prod, 80}}));
+        mvc.perform(get("/api/orders/" + d + "/invoice-forms").cookie(operator))
+                .andExpect(jsonPath("$.picked").value(false))
+                .andExpect(jsonPath("$.fefo").value(false))
+                .andExpect(jsonPath("$.rows.length()").value(1))
+                .andExpect(jsonPath("$.rows[0].series").doesNotExist());
+        mvc.perform(get("/api/orders/" + d + "/invoice-forms").param("fefo", "true").cookie(operator))
+                .andExpect(jsonPath("$.fefo").value(true))
+                .andExpect(jsonPath("$.rows.length()").value(3))
+                .andExpect(jsonPath("$.rows[0].series").value("LOT-EARLY"))
+                .andExpect(jsonPath("$.rows[0].expiry").value("30.04.2028"))
+                .andExpect(jsonPath("$.rows[0].qty").value(45))
+                .andExpect(jsonPath("$.rows[0].batchHint").value("PROPOSED"))
+                .andExpect(jsonPath("$.rows[1].series").value("LOT-LATE"))
+                .andExpect(jsonPath("$.rows[1].qty").value(30))
+                .andExpect(jsonPath("$.rows[2].series").doesNotExist())
+                .andExpect(jsonPath("$.rows[2].qty").value(5))
+                .andExpect(jsonPath("$.rows[2].shortage").value(5));
+        assertThat(jdbc.sql("SELECT count(*) FROM stock_reservation WHERE doc_id = :o").param("o", d).query(Long.class).single()).isZero();
+        // Navbatda: faol zahiradan — 45 + 15, belgi RESERVED
+        long q = draft(operator, order(p, c, new long[][] {{prod, 60}}));
+        send(post("/api/orders/" + q + "/submit"), operator, "").andExpect(jsonPath("$.status").value("QUEUED"));
+        mvc.perform(get("/api/orders/" + q + "/invoice-forms").param("fefo", "true").cookie(operator))
+                .andExpect(jsonPath("$.rows.length()").value(2))
+                .andExpect(jsonPath("$.rows[0].series").value("LOT-EARLY"))
+                .andExpect(jsonPath("$.rows[0].qty").value(45))
+                .andExpect(jsonPath("$.rows[0].batchHint").value("RESERVED"))
+                .andExpect(jsonPath("$.rows[1].series").value("LOT-LATE"))
+                .andExpect(jsonPath("$.rows[1].qty").value(15));
+        // Endi qoralama taklifi zahiradan qolgan bo'sh qoldiqdan: 15 (LOT-LATE), yetishmaydi 65
+        mvc.perform(get("/api/orders/" + d + "/invoice-forms").param("fefo", "true").cookie(operator))
+                .andExpect(jsonPath("$.rows.length()").value(2))
+                .andExpect(jsonPath("$.rows[0].series").value("LOT-LATE"))
+                .andExpect(jsonPath("$.rows[0].qty").value(15))
+                .andExpect(jsonPath("$.rows[1].shortage").value(65));
+        // Excel: «(захира)» belgisi, izoh, sariq katak; mijoz fakturasi — o'zgarmaydi
+        MvcResult x = mvc.perform(get("/api/orders/" + q + "/invoice-forms/WAREHOUSE/xlsx").param("fefo", "true").cookie(operator))
+                .andExpect(status().isOk()).andReturn();
+        try (var wb = new org.apache.poi.xssf.usermodel.XSSFWorkbook(new java.io.ByteArrayInputStream(x.getResponse().getContentAsByteArray()))) {
+            var sh = wb.getSheetAt(0);
+            assertThat(sh.getRow(4).getCell(0).getStringCellValue()).startsWith("Серия ва муддат — тизим таклифи (FEFO)");
+            assertThat(sh.getRow(7).getCell(4).getStringCellValue()).isEqualTo("LOT-EARLY (захира)");
+            assertThat(sh.getRow(7).getCell(4).getCellStyle().getFillPattern()).isEqualTo(org.apache.poi.ss.usermodel.FillPatternType.SOLID_FOREGROUND);
+            assertThat(sh.getRow(8).getCell(5).getNumericCellValue()).isEqualTo(15.0);
+        }
+        assertThat(pdfText("/api/orders/" + q + "/invoice-forms/WAREHOUSE2/pdf?fefo=true", operator)).contains("LOT-EARLY (захира)",
+                "тизим таклифи");
+        assertThat(pdfText("/api/orders/" + d + "/invoice-forms/WAREHOUSE2/pdf?fefo=true", operator)).contains("LOT-LATE (таклиф)",
+                "Етишмайди: 65");
+        assertThat(pdfText("/api/orders/" + q + "/invoice-forms/CLIENT1/pdf?fefo=true", operator)).doesNotContain("захира");
     }
 
     /** O5: markirovka tayyor fayldan — oldindan ko'rish hech narsa saqlamaydi, qabul qilishda mos kelganlari yoziladi. */

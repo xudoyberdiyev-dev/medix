@@ -34,6 +34,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import uz.yuzplus.inventory.StockReservations;
 import uz.yuzplus.shared.audit.AuditEntry;
 import uz.yuzplus.shared.audit.AuditLog;
 import uz.yuzplus.shared.error.YuzplusException;
@@ -86,7 +87,10 @@ class OrderInvoiceForms {
             @Schema(nullable = true) @Size(max = 20) String unit,
             @Schema(nullable = true, description = "ККС билан Нархи (narx ko'rish ruxsatisiz — null)") @Pattern(regexp = "\\d{1,16}(\\.\\d{1,2})?")
             String price,
-            @Schema(nullable = true, description = "ККС билан Жами — qty × price") String total) {}
+            @Schema(nullable = true, description = "ККС билан Жами — qty × price") String total,
+            @Schema(nullable = true, description = "O25: seriya manbai — RESERVED (zahira) yoki PROPOSED (FEFO taklifi); yig'ilgan/oddiy — null")
+            @Pattern(regexp = "RESERVED|PROPOSED") String batchHint,
+            @Schema(nullable = true, description = "O25: qoldiq yetmagan miqdor (shu qator — partiyasiz qolgan qism)") @Min(1) Integer shortage) {}
 
     record InvoiceForms(
             long orderId,
@@ -101,32 +105,45 @@ class OrderInvoiceForms {
             @Schema(nullable = true) String editedBy,
             @Schema(nullable = true) Instant editedAt,
             boolean canEdit,
-            boolean canSeePrices) {}
+            boolean canSeePrices,
+            @Schema(description = "O25: buyurtmadan tovar yig'ilganmi (yig'ilmagan bo'lsa — FEFO so'rovi ko'rsatiladi)") boolean picked,
+            @Schema(description = "O25: seriya/muddat FEFO bo'yicha to'ldirildimi") boolean fefo) {}
 
     record InvoiceFormSave(@NotNull @Size(max = 1000) List<@Valid FormRow> rows) {}
 
-    private record Head(long id, String number, LocalDate date, String customer, String tin, String warehouse, long warehouseId, long branchId) {}
+    private record Head(long id, String number, LocalDate date, String customer, String tin, String warehouse, long warehouseId, long branchId,
+            long customerId, String status) {}
+
+    /** O25: zahira olinmagan holatlar — FEFO faqat taklif (hech narsa yozilmaydi). */
+    private static final java.util.Set<String> PROPOSAL_STATUSES = java.util.Set.of("DRAFT", "PENDING_APPROVAL");
+    /** O25: bekor qilingan buyurtmada zahira yo'q — oddiy faktura. */
+    private static final java.util.Set<String> NO_FEFO_STATUSES = java.util.Set.of("CANCELLED", "REJECTED");
 
     private static final DateTimeFormatter DMY = DateTimeFormatter.ofPattern("dd.MM.yyyy");
     private static final ZoneId TASHKENT = ZoneId.of("Asia/Tashkent");
 
     private final JdbcClient jdbc;
     private final AuditLog audit;
+    private final StockReservations reservations;
+    private final java.time.Clock clock;
 
-    OrderInvoiceForms(JdbcClient jdbc, AuditLog audit) {
+    OrderInvoiceForms(JdbcClient jdbc, AuditLog audit, StockReservations reservations, java.time.Clock clock) {
         this.jdbc = jdbc;
         this.audit = audit;
+        this.reservations = reservations;
+        this.clock = clock;
     }
 
     private Head head(Actor actor, long id) {
         return jdbc.sql("""
                 SELECT o.id, o.number, o.created_at, coalesce(nullif(btrim(c.legal_name), ''), c.name) AS customer, c.tin, w.name AS warehouse,
-                       o.warehouse_id, o.branch_id
+                       o.warehouse_id, o.branch_id, o.customer_id, o.status
                 FROM sales_order o JOIN counterparty c ON c.id = o.customer_id JOIN warehouse w ON w.id = o.warehouse_id WHERE o.id = :id""")
                 .param("id", id)
                 .query((rs, n) -> new Head(rs.getLong("id"), rs.getString("number"),
                         rs.getTimestamp("created_at").toInstant().atZone(TASHKENT).toLocalDate(), rs.getString("customer"), rs.getString("tin"),
-                        rs.getString("warehouse"), rs.getLong("warehouse_id"), rs.getLong("branch_id")))
+                        rs.getString("warehouse"), rs.getLong("warehouse_id"), rs.getLong("branch_id"), rs.getLong("customer_id"),
+                        rs.getString("status")))
                 .optional()
                 .filter(h -> actor.canAccessBranch(h.branchId()))
                 .orElseThrow(() -> YuzplusException.notFound("error.notFound"));
@@ -170,15 +187,127 @@ class OrderInvoiceForms {
         return out;
     }
 
+    /**
+     * O25: yig'ilmagan buyurtma — har qator partiyalarga bo'linadi. «Navbatda» va undan keyin — faol zahira (RESERVED); undan oldin — FEFO
+     * taklifi (PROPOSED, {@link StockReservations#plan} — sotuvga ochiq zona, mijozning minimal muddat talabi; hech narsa yozilmaydi).
+     * Yetmagan qism — partiyasiz qator {@code shortage} bilan.
+     */
+    private List<FormRow> fefoRows(Head h) {
+        record Line(long id, long productId, String area, String farmId, String name, String manufacturer, String unit, int qty, BigDecimal price) {}
+        List<Line> lines = jdbc.sql("""
+                SELECT l.id, l.product_id, pl.location AS area, p.farm_id, p.name, m.name AS manufacturer, coalesce(u.short_name, u.name) AS unit,
+                       l.qty, l.price
+                FROM sales_order_line l
+                JOIN product p ON p.id = l.product_id
+                LEFT JOIN manufacturer m ON m.id = p.manufacturer_id
+                LEFT JOIN unit u ON u.id = p.unit_id
+                LEFT JOIN product_location pl ON pl.product_id = p.id AND pl.warehouse_id = :w
+                WHERE l.order_id = :o
+                ORDER BY l.line_no""")
+                .param("o", h.id())
+                .param("w", h.warehouseId())
+                .query((rs, n) -> new Line(rs.getLong("id"), rs.getLong("product_id"), rs.getString("area"), rs.getString("farm_id"),
+                        rs.getString("name"), rs.getString("manufacturer"), rs.getString("unit"), rs.getInt("qty"), rs.getBigDecimal("price")))
+                .list();
+        record Part(long batchId, int qty) {}
+        Map<Long, List<Part>> byLine = new java.util.HashMap<>();
+        boolean proposal = PROPOSAL_STATUSES.contains(h.status());
+        if (proposal) {
+            Integer days = jdbc.sql("SELECT min_shelf_life_days FROM counterparty_branch_terms WHERE counterparty_id = :c AND branch_id = :b")
+                    .param("c", h.customerId())
+                    .param("b", h.branchId())
+                    .query(Integer.class)
+                    .optional()
+                    .orElse(null);
+            LocalDate minExpiry = LocalDate.now(clock.withZone(TASHKENT)).plusDays(days == null ? 0 : days);
+            Map<Long, Integer> need = new java.util.LinkedHashMap<>();
+            lines.forEach(l -> need.merge(l.productId(), l.qty(), Integer::sum));
+            Map<Long, java.util.ArrayDeque<long[]>> pool = new java.util.HashMap<>();
+            reservations.plan(h.warehouseId(), minExpiry, need).forEach((product, planned) -> pool.put(product,
+                    planned.stream().map(x -> new long[] {x.batchId(), x.qty()}).collect(java.util.stream.Collectors.toCollection(java.util.ArrayDeque::new))));
+            for (Line l : lines) {
+                java.util.ArrayDeque<long[]> q = pool.getOrDefault(l.productId(), new java.util.ArrayDeque<>());
+                int left = l.qty();
+                while (left > 0 && !q.isEmpty()) {
+                    long[] head = q.peekFirst();
+                    int take = (int) Math.min(left, head[1]);
+                    byLine.computeIfAbsent(l.id(), k -> new ArrayList<>()).add(new Part(head[0], take));
+                    head[1] -= take;
+                    left -= take;
+                    if (head[1] == 0) {
+                        q.pollFirst();
+                    }
+                }
+            }
+        } else {
+            for (StockReservations.Allocation a : reservations.active(Orders.DOC_TYPE, h.id())) {
+                List<Part> parts = byLine.computeIfAbsent(a.lineId(), k -> new ArrayList<>());
+                // bir partiya bir necha zonada zahiralangan bo'lsa — bitta qator
+                if (!parts.isEmpty() && parts.getLast().batchId() == a.batchId()) {
+                    parts.set(parts.size() - 1, new Part(a.batchId(), parts.getLast().qty() + a.qty()));
+                } else {
+                    parts.add(new Part(a.batchId(), a.qty()));
+                }
+            }
+        }
+        record Batch(String number, LocalDate expiry) {}
+        java.util.Set<Long> batchIds = new java.util.HashSet<>();
+        byLine.values().forEach(ps -> ps.forEach(x -> batchIds.add(x.batchId())));
+        Map<Long, Batch> batches = new java.util.HashMap<>();
+        if (!batchIds.isEmpty()) {
+            jdbc.sql("SELECT id, number, expiry_date FROM batch WHERE id IN (:ids)")
+                    .param("ids", batchIds)
+                    .query((rs, n) -> Map.entry(rs.getLong("id"), new Batch(rs.getString("number"), rs.getObject("expiry_date", LocalDate.class))))
+                    .list()
+                    .forEach(e -> batches.put(e.getKey(), e.getValue()));
+        }
+        String hint = proposal ? "PROPOSED" : "RESERVED";
+        List<FormRow> out = new ArrayList<>();
+        for (Line l : lines) {
+            BigDecimal price = l.price() == null ? BigDecimal.ZERO : l.price();
+            int covered = 0;
+            for (Part x : byLine.getOrDefault(l.id(), List.of())) {
+                Batch b = batches.get(x.batchId());
+                FormRow r = row(l.area(), l.farmId(), l.name(), l.manufacturer(), b.number(), x.qty(), b.expiry() == null ? null : DMY.format(b.expiry()),
+                        l.unit(), price);
+                out.add(withHint(r, hint, null));
+                covered += x.qty();
+            }
+            if (covered < l.qty()) {
+                int missing = l.qty() - covered;
+                out.add(withHint(row(l.area(), l.farmId(), l.name(), l.manufacturer(), null, missing, null, l.unit(), price), null, missing));
+            }
+        }
+        return out;
+    }
+
+    private static FormRow withHint(FormRow r, String hint, Integer shortage) {
+        return new FormRow(r.area(), r.farmId(), r.name(), r.manufacturer(), r.series(), r.qty(), r.expiry(), r.unit(), r.price(), r.total(), hint, shortage);
+    }
+
+    /** O25: chop etishdagi «Серия» katagi — zahira/taklif belgisi yoki «Етишмайди: N». */
+    static String printSeries(FormRow r) {
+        if (r.shortage() != null) {
+            return "Етишмайди: " + r.shortage();
+        }
+        if (r.series() == null || r.batchHint() == null) {
+            return r.series();
+        }
+        return r.series() + ("RESERVED".equals(r.batchHint()) ? " (захира)" : " (таклиф)");
+    }
+
+    static final String FEFO_NOTE = "Серия ва муддат — тизим таклифи (FEFO). Йиғувчи бошқа партиядан олса, панелда «Бошқа партиядан олдим» ни танлайди.";
+
     private static FormRow row(String area, String farmId, String name, String manufacturer, String series, int qty, String expiry, String unit,
             BigDecimal price) {
         BigDecimal p = price.setScale(2, RoundingMode.HALF_UP);
         return new FormRow(area, farmId, name, manufacturer, series, qty, expiry, unit, p.toPlainString(),
-                p.multiply(BigDecimal.valueOf(qty)).setScale(2, RoundingMode.HALF_UP).toPlainString());
+                p.multiply(BigDecimal.valueOf(qty)).setScale(2, RoundingMode.HALF_UP).toPlainString(), null, null);
     }
 
     private static FormRow hidePrice(FormRow r) {
-        return new FormRow(r.area(), r.farmId(), r.name(), r.manufacturer(), r.series(), r.qty(), r.expiry(), r.unit(), null, null);
+        return new FormRow(r.area(), r.farmId(), r.name(), r.manufacturer(), r.series(), r.qty(), r.expiry(), r.unit(), null, null, r.batchHint(),
+                r.shortage());
     }
 
     private List<FormRow> saved(long orderId) {
@@ -192,8 +321,16 @@ class OrderInvoiceForms {
 
     @Transactional(readOnly = true)
     InvoiceForms get(Actor actor, long id, boolean prices, boolean canEdit) {
+        return get(actor, id, prices, canEdit, false);
+    }
+
+    /** {@code fefo} — O25: yig'ilmagan buyurtmada seriya/muddat zahira yoki FEFO taklifidan. */
+    @Transactional(readOnly = true)
+    InvoiceForms get(Actor actor, long id, boolean prices, boolean canEdit, boolean fefo) {
         Head h = head(actor, id);
-        List<FormRow> original = original(id, h.warehouseId());
+        boolean picked = jdbc.sql("SELECT EXISTS (SELECT 1 FROM sales_order_pick WHERE order_id = :o)").param("o", id).query(Boolean.class).single();
+        boolean useFefo = fefo && !picked && !NO_FEFO_STATUSES.contains(h.status());
+        List<FormRow> original = useFefo ? fefoRows(h) : original(id, h.warehouseId());
         record Meta(String by, Instant at) {}
         Meta meta = jdbc.sql("""
                 SELECT e.full_name, x.updated_at FROM order_invoice_edit x JOIN employee e ON e.id = x.updated_by WHERE x.order_id = :o""")
@@ -207,7 +344,7 @@ class OrderInvoiceForms {
             original = original.stream().map(OrderInvoiceForms::hidePrice).toList();
         }
         return new InvoiceForms(h.id(), h.number(), h.date(), h.customer(), h.tin(), h.warehouse(), rows, original, meta != null,
-                meta == null ? null : meta.by(), meta == null ? null : meta.at(), canEdit, prices);
+                meta == null ? null : meta.by(), meta == null ? null : meta.at(), canEdit, prices, picked, useFefo && meta == null);
     }
 
     /** Tuzatilgan holatni saqlaydi (avtosaqlash): faqat fayl uchun — buyurtma, qoldiq, qarz o'zgarmaydi. Audit — nechta qator o'zgardi. */
@@ -278,15 +415,15 @@ class OrderInvoiceForms {
 
     /** Excel: sarlavha bloki, ustunlar shablondagidek, «Жами» (soni va summa); albom, sahifaga sig'adi, sarlavha har sahifada. */
     @Transactional(readOnly = true)
-    byte[] xlsx(Actor actor, long id, FormType type, boolean prices) {
-        return xlsxMany(actor, List.of(id), type, prices);
+    byte[] xlsx(Actor actor, long id, FormType type, boolean prices, boolean fefo) {
+        return xlsxMany(actor, List.of(id), type, prices, fefo);
     }
 
     static final int MAX_BULK = 50;
 
     /** Ommaviy (reys / ro'yxat): bitta fayl, har buyurtma — alohida varaq (varaq nomi = buyurtma raqami). */
     @Transactional(readOnly = true)
-    byte[] xlsxMany(Actor actor, List<Long> ids, FormType type, boolean prices) {
+    byte[] xlsxMany(Actor actor, List<Long> ids, FormType type, boolean prices, boolean fefo) {
         if (type.priced && !prices) {
             throw YuzplusException.forbidden("invoiceForms.noPrices");
         }
@@ -297,7 +434,7 @@ class OrderInvoiceForms {
         try (XSSFWorkbook wb = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             java.util.Set<String> names = new java.util.HashSet<>();
             for (Long id : unique) {
-                InvoiceForms f = get(actor, id, prices, false);
+                InvoiceForms f = get(actor, id, prices, false, fefo && type.warehouse());
                 String name = unique.size() == 1 ? type.title.replace("№", "N") : f.orderNumber().replaceAll("[\\\\/?*\\[\\]:]", "-");
                 if (name.length() > 31) {
                     name = name.substring(name.length() - 31);
@@ -339,6 +476,13 @@ class OrderInvoiceForms {
             CellStyle money = box(wb, false);
             money.setDataFormat(wb.createDataFormat().getFormat("#,##0.00"));
             CellStyle totText = box(wb, true);
+            CellStyle hinted = box(wb, false);
+            ((org.apache.poi.xssf.usermodel.XSSFCellStyle) hinted).setFillForegroundColor(new org.apache.poi.xssf.usermodel.XSSFColor(new byte[] {(byte) 0xFF, (byte) 0xF4, (byte) 0xCC}, null));
+            hinted.setFillPattern(org.apache.poi.ss.usermodel.FillPatternType.SOLID_FOREGROUND);
+            CellStyle missing = box(wb, false);
+            Font rf = wb.createFont();
+            rf.setColor(org.apache.poi.ss.usermodel.IndexedColors.RED.getIndex());
+            missing.setFont(rf);
             CellStyle totMoney = box(wb, true);
             totMoney.setDataFormat(wb.createDataFormat().getFormat("#,##0.00"));
             int cols = type.columns.size();
@@ -347,6 +491,9 @@ class OrderInvoiceForms {
             r = line(s, r, "Буюртма № " + f.orderNumber() + " · " + DMY.format(f.date()), null, cols);
             r = line(s, r, "Мижоз: " + f.customer() + (f.tin() == null ? "" : " · СТИР " + f.tin()), null, cols);
             r = line(s, r, "Омбор: " + f.warehouse(), null, cols);
+            if (f.fefo() && rows.stream().anyMatch(x -> x.batchHint() != null || x.shortage() != null)) {
+                r = line(s, r, FEFO_NOTE, null, cols);
+            }
             r++;
             int headerRow = r;
             Row hr = s.createRow(r++);
@@ -371,12 +518,12 @@ class OrderInvoiceForms {
                         case "Фарм ИД" -> text(cell, x.farmId(), text);
                         case "Махсулот номи" -> text(cell, x.name(), text);
                         case "Ишлаб чикарувчиси" -> text(cell, x.manufacturer(), text);
-                        case "Серия" -> text(cell, x.series(), text);
+                        case "Серия" -> text(cell, printSeries(x), x.shortage() != null ? missing : x.batchHint() != null ? hinted : text);
                         case "Сони" -> {
                             cell.setCellValue(x.qty());
                             cell.setCellStyle(qty);
                         }
-                        case "Яроклик муддати" -> text(cell, x.expiry(), text);
+                        case "Яроклик муддати" -> text(cell, x.expiry(), x.batchHint() != null ? hinted : text);
                         case "Ул/Бирлиги" -> text(cell, x.unit(), text);
                         case "ККС билан Нархи" -> {
                             cell.setCellValue(new BigDecimal(x.price() == null ? "0" : x.price()).doubleValue());

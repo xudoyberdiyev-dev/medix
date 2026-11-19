@@ -45,9 +45,9 @@ class OrderInvoiceFormController {
 
     @GetMapping("/api/orders/{id}/invoice-forms")
     @PreAuthorize("hasAuthority('orders.view')")
-    @Operation(summary = "Faktura qatorlari (joriy va asl)", description = "Narx ko'rish ruxsatisiz (prices.view) — narx va summa null.")
-    OrderInvoiceForms.InvoiceForms get(@PathVariable long id, Authentication auth) {
-        return forms.get(actor(), id, has(auth, "prices.view"), has(auth, "invoices.edit"));
+    @Operation(summary = "Faktura qatorlari (joriy va asl)", description = "Narx ko'rish ruxsatisiz (prices.view) — narx va summa null. fefo=true — O25: yig'ilmagan buyurtmada seriya/muddat zahira yoki FEFO taklifidan.")
+    OrderInvoiceForms.InvoiceForms get(@PathVariable long id, @RequestParam(defaultValue = "false") boolean fefo, Authentication auth) {
+        return forms.get(actor(), id, has(auth, "prices.view"), has(auth, "invoices.edit"), fefo);
     }
 
     @PutMapping("/api/orders/{id}/invoice-forms")
@@ -68,8 +68,9 @@ class OrderInvoiceFormController {
     @PreAuthorize("hasAuthority('orders.view')")
     @Operation(summary = "Faktura .xlsx (5 tur)", description = "WAREHOUSE — «Фактура для склада», WAREHOUSE2 — narxsiz, CLIENT_SEND, CLIENT1, CLIENT2. "
             + "Narxli turlar — prices.view.")
-    ResponseEntity<byte[]> xlsx(@PathVariable long id, @PathVariable OrderInvoiceForms.FormType type, Authentication auth) {
-        byte[] body = forms.xlsx(actor(), id, type, has(auth, "prices.view"));
+    ResponseEntity<byte[]> xlsx(@PathVariable long id, @PathVariable OrderInvoiceForms.FormType type,
+            @RequestParam(defaultValue = "false") boolean fefo, Authentication auth) {
+        byte[] body = forms.xlsx(actor(), id, type, has(auth, "prices.view"), fefo);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_TYPE, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + forms.fileName(id, type) + "\"")
@@ -80,8 +81,9 @@ class OrderInvoiceFormController {
     @PreAuthorize("hasAuthority('orders.view')")
     @Operation(summary = "Faktura .xlsx — ommaviy (reys / ro'yxat)", description = "50 tagacha buyurtma; har buyurtma alohida varaqda. "
             + "Narxli turlar — prices.view.")
-    ResponseEntity<byte[]> xlsxMany(@PathVariable OrderInvoiceForms.FormType type, @RequestParam List<Long> ids, Authentication auth) {
-        byte[] body = forms.xlsxMany(actor(), ids, type, has(auth, "prices.view"));
+    ResponseEntity<byte[]> xlsxMany(@PathVariable OrderInvoiceForms.FormType type, @RequestParam List<Long> ids,
+            @RequestParam(defaultValue = "false") boolean fefo, Authentication auth) {
+        byte[] body = forms.xlsxMany(actor(), ids, type, has(auth, "prices.view"), fefo);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_TYPE, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + forms.bulkFileName(ids, type) + "\"")
@@ -91,14 +93,16 @@ class OrderInvoiceFormController {
     @GetMapping(value = "/api/orders/{id}/invoice-forms/{type}/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
     @PreAuthorize("hasAuthority('orders.view')")
     @Operation(summary = "Faktura PDF (5 tur)", description = "Excel bilan bir xil ustunlar va tuzatishlar; narxli turlar — prices.view.")
-    ResponseEntity<byte[]> pdf(@PathVariable long id, @PathVariable OrderInvoiceForms.FormType type, Authentication auth) {
-        return pdf.render(actor(), List.of(id), type, has(auth, "prices.view")).response();
+    ResponseEntity<byte[]> pdf(@PathVariable long id, @PathVariable OrderInvoiceForms.FormType type,
+            @RequestParam(defaultValue = "false") boolean fefo, Authentication auth) {
+        return pdf.render(actor(), List.of(id), type, has(auth, "prices.view"), fefo).response();
     }
 
     @GetMapping(value = "/api/orders/invoice-forms/{type}/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
     @PreAuthorize("hasAuthority('orders.view')")
     @Operation(summary = "Faktura PDF — ommaviy (reys / ro'yxat)", description = "50 tagacha buyurtma; har buyurtma yangi sahifadan.")
-    ResponseEntity<byte[]> pdfMany(@PathVariable OrderInvoiceForms.FormType type, @RequestParam List<Long> ids, Authentication auth) {
-        return pdf.render(actor(), ids, type, has(auth, "prices.view")).response();
+    ResponseEntity<byte[]> pdfMany(@PathVariable OrderInvoiceForms.FormType type, @RequestParam List<Long> ids,
+            @RequestParam(defaultValue = "false") boolean fefo, Authentication auth) {
+        return pdf.render(actor(), ids, type, has(auth, "prices.view"), fefo).response();
     }
 }
