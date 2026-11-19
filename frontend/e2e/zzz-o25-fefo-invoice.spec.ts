@@ -2,11 +2,13 @@ import { expect, test, type Page } from "@playwright/test";
 
 /**
  * O25 (egasi 19.11.2026): yigʻilmagan buyurtmaning ombor fakturasi — «Seriya va muddat FEFO boʻyicha koʻrsatilsinmi?»
- * «Ha, FEFO bilan» — zahiradagi partiyalar, izoh; «Yoʻq, oddiy» — seriya boʻsh. Maʼlumot oldingi spec'lardan (navbatdagi buyurtma).
+ * «Ha, FEFO bilan» — zahiradagi partiyalar, izoh; «Yoʻq, oddiy» — seriya boʻsh. Buyurtma shu yerda yaratiladi (navbatga, yigʻilmaydi);
+ * mijoz va mahsulot — first-run / roles-chain / O16 dan.
  */
 test.describe.configure({ mode: "serial" });
 
 const OPERATOR_PASSWORD = "Operator-parol-2026";
+const CUSTOMER = "Shifo Dorixona E2E";
 
 function field(page: Page, label: string) {
   const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -22,20 +24,30 @@ async function login(page: Page, login: string, password: string) {
   await expect(page).toHaveURL(/\/$/);
 }
 
+async function choose(page: Page, label: string, option: RegExp, search?: string) {
+  await page.getByRole("combobox", { name: label, exact: true }).click();
+  if (search) await page.getByPlaceholder("Qidirish").fill(search);
+  await page.getByRole("option", { name: option }).first().click();
+}
+
 test("Operator: yigʻilmagan buyurtma fakturasi — FEFO soʻrovi Ha/Yoʻq", async ({ page }) => {
   await login(page, "operator.1", OPERATOR_PASSWORD);
-  const res = await page.request.get("/api/orders?statuses=QUEUED&size=50");
-  expect(res.ok()).toBeTruthy();
-  const items = ((await res.json()) as { items: { id: number }[] }).items;
-  let id: number | null = null;
-  for (const it of items) {
-    const f = (await (await page.request.get(`/api/orders/${it.id}/invoice-forms`)).json()) as { picked: boolean; edited: boolean };
-    if (!f.picked && !f.edited) {
-      id = it.id;
-      break;
-    }
-  }
-  test.skip(id == null, "yigʻilmagan navbatdagi buyurtma yoʻq");
+  await page.goto("/orders");
+  await page.getByRole("button", { name: "Yangi buyurtma" }).click();
+  await choose(page, "Mijoz", new RegExp(CUSTOMER), "Shifo");
+  await choose(page, "Joʻnatiladigan ombor", /Markaziy ombor/);
+  await choose(page, "Mahsulot", /Amoksitsillin E2E/, "Amoksitsillin");
+  await field(page, "Miqdor").first().fill("1");
+  await page.getByRole("button", { name: "Qator qoʻshish" }).click();
+  await page.getByRole("button", { name: "Qoralamani saqlash" }).click();
+  await expect(page.getByText("Qoralama saqlandi").first()).toBeVisible();
+  await page.getByRole("button", { name: "Yuborish" }).click();
+  await expect(page.getByText("Buyurtma navbatga yuborildi")).toBeVisible();
+  const id = Number(/\/orders\/(\d+)/.exec(page.url())?.[1]);
+  expect(id).toBeGreaterThan(0);
+  const plain = (await (await page.request.get(`/api/orders/${id}/invoice-forms`)).json()) as { picked: boolean; fefo: boolean };
+  expect(plain.picked).toBe(false);
+  expect(plain.fefo).toBe(false);
   const api = (await (await page.request.get(`/api/orders/${id}/invoice-forms?fefo=true`)).json()) as {
     fefo: boolean;
     rows: { batchHint?: string; shortage?: number }[];
