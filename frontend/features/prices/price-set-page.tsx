@@ -441,14 +441,14 @@ export function PriceSetPage() {
         />
       </div>
       <div className="min-w-0 overflow-x-auto rounded-card border border-border bg-surface">
-        <table className="w-full min-w-[1180px] border-collapse text-[13px]">
+        <table className="w-full min-w-[1040px] border-collapse text-[13px] 2xl:min-w-[1180px]">
           <caption className="sr-only">{t("caption")}</caption>
           <thead>
             <tr className="border-b border-border bg-table-header text-left text-caption font-medium text-text-secondary">
               <th className="w-11 px-3 py-2">№</th>
               <th className="w-[92px] px-3 py-2">{t("k.code")}</th>
-              <th className="px-3 py-2">{t("k.prod")}</th>
-              <th className="w-[130px] px-3 py-2">{t("k.cat")}</th>
+              <th className="bg-table-header px-3 py-2 sm:sticky sm:left-0 sm:z-[1]">{t("k.prod")}</th>
+              <th className="hidden w-[130px] px-3 py-2 2xl:table-cell">{t("k.cat")}</th>
               {showCost ? (
                 <>
                   <th className="w-32 px-3 py-2 text-right">{t("k.avg")}</th>
@@ -486,11 +486,11 @@ export function PriceSetPage() {
                   <tr key={r.productId} className={cn("border-b border-border last:border-b-0", s.below && "bg-danger-bg/40")}>
                     <td className="px-3 py-2 text-text-secondary">{i + 1}</td>
                     <td className="px-3 py-2 font-mono text-mono">{r.code}</td>
-                    <td className="px-3 py-2">
+                    <td className={cn("px-3 py-2 sm:sticky sm:left-0 sm:z-[1]", s.below ? "bg-danger-bg" : "bg-surface")}>
                       <div className="font-medium">{r.name}</div>
                       <div className="text-caption text-text-secondary">{[r.manufacturer, r.country].filter(Boolean).join(" · ")}</div>
                     </td>
-                    <td className="px-3 py-2 text-text-secondary">{r.category ?? "—"}</td>
+                    <td className="hidden px-3 py-2 text-text-secondary 2xl:table-cell">{r.category ?? "—"}</td>
                     {showCost ? (
                       <>
                         <td className="px-3 py-2 text-right tabular-nums text-text-secondary">
