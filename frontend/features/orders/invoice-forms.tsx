@@ -424,7 +424,7 @@ export function InvoiceFormsModal(props: { orderId: number; initial: FormType; o
                         return (
                           <td
                             key={c}
-                            className={`px-1 py-0.5 ${edited || hinted ? "bg-warning-bg" : ""}`}
+                            className={`px-1 py-0.5 ${c === "series" ? "min-w-32" : ""} ${edited || hinted ? "bg-warning-bg" : ""}`}
                             title={
                               edited
                                 ? t("original", { v: was || "—" })
@@ -448,7 +448,13 @@ export function InvoiceFormsModal(props: { orderId: number; initial: FormType; o
                                   c === "qty" || c === "price" ? "text-right tabular-nums" : ""
                                 } ${short ? "placeholder:font-semibold placeholder:text-danger" : ""}`}
                               />
-                            ) : (
+                            ) : null}
+                            {canEdit && hinted && c === "series" ? (
+                              <span className="block px-1 text-caption text-text-secondary">
+                                {r.batchHint === "RESERVED" ? labels.reserved : labels.proposed}
+                              </span>
+                            ) : null}
+                            {canEdit ? null : (
                               <span
                                 className={
                                   c === "qty" || c === "price" ? "block text-right tabular-nums" : short ? "font-semibold text-danger" : ""
