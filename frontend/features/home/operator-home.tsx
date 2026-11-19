@@ -287,7 +287,7 @@ function CustomerCard({ c }: { c: CustomerStatus }) {
         <div>
           <div className="text-text-secondary">{t("custLimit")}</div>
           <div className="tabular-nums">
-            {formatMoney(c.debt)} / {c.limit ? formatMoney(c.limit) : "—"}
+            {formatMoneyOrDash(c.debt)} / {c.limit ? formatMoney(c.limit) : "—"}
             {limit > 0n ? ` · ${pct}%` : ""}
           </div>
           {limit > 0n ? (
