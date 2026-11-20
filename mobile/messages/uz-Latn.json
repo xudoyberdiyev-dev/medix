@@ -149,7 +149,13 @@
     "delivered": "Yetkazildi",
     "partial": "Qisman",
     "undelivered": "Yetkazilmadi",
-    "notFound": "Bu manzil reysda topilmadi. Reys sahifasiga qayting."
+    "notFound": "Bu manzil reysda topilmadi. Reys sahifasiga qayting.",
+    "signature": "Mijoz imzosi",
+    "signNone": "Ixtiyoriy — mijoz telefon ekraniga imzo qoʻyadi",
+    "signDone": "Imzo olindi",
+    "signClear": "Tozalash",
+    "signHint": "Mijoz barmogʻi bilan imzo qoʻysin.",
+    "signSave": "Imzoni saqlash"
   },
   "sheet": {
     "partialTab": "Qisman",

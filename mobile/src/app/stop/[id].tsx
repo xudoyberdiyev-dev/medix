@@ -3,7 +3,7 @@ import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text
 import { router, useLocalSearchParams } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Banknote, Camera, Check, CheckCircle2, ChevronLeft } from "lucide-react-native";
+import { Banknote, Camera, Check, CheckCircle2, ChevronLeft, Signature } from "lucide-react-native";
 import { useT, type MessageKey } from "../../i18n";
 import { ApiError } from "../../lib/api";
 import { formatTiyin } from "../../lib/format";
@@ -14,6 +14,7 @@ import { useAsync } from "../../lib/use-async";
 import { Card, Chip, ErrorState, Loading, Notice, StatusIcons, mono } from "../../ui/blocks";
 import { Button } from "../../ui/parts";
 import { OutcomeSheet } from "../../ui/outcome-sheet";
+import { SignatureSheet } from "../../ui/signature-sheet";
 import { color, font, radius, space, text } from "../../ui/theme";
 
 /** Bekatda (dizayn «Bekatda — yetkazish»): rasm (majburiy), naqd summa (kam — mijoz qarzi), Yetkazildi / Qisman / Yetkazilmadi. */
@@ -26,6 +27,7 @@ export default function Stop() {
   const [busy, setBusy] = useState<"photo" | "deliver" | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [sheet, setSheet] = useState<"partial" | "undelivered" | null>(null);
+  const [signing, setSigning] = useState(false);
 
   if (trip.loading && trip.data === undefined) return <Loading />;
   if (trip.error && trip.data === undefined)
@@ -116,6 +118,19 @@ export default function Stop() {
           </Card>
         </Pressable>
 
+        <Pressable accessibilityRole="button" accessibilityLabel={t("stop.signature")} onPress={() => setSigning(true)} disabled={busy !== null || stop.signed}>
+          <Card style={[styles.task, stop.signed && { borderColor: color.successBorder }]}>
+            <View style={[styles.taskIcon, { backgroundColor: stop.signed ? color.success : color.divider }]}>
+              {stop.signed ? <Check size={18} strokeWidth={2} color={color.textOnDark} /> : <Signature size={18} strokeWidth={1.5} color={color.textSecondary} />}
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={text.bodyStrong}>{t("stop.signature")}</Text>
+              <Text style={[text.caption, { fontSize: 13 }]}>{stop.signed ? t("stop.signDone") : t("stop.signNone")}</Text>
+            </View>
+            <Signature size={20} strokeWidth={1.5} color={color.textSecondary} />
+          </Card>
+        </Pressable>
+
         {isCash ? (
           <Card accent="active">
             <View style={styles.spread}>
@@ -171,6 +186,22 @@ export default function Stop() {
           </Pressable>
         </View>
       </View>
+      {signing ? (
+        <SignatureSheet
+          onClose={() => setSigning(false)}
+          onSave={async (uri) => {
+            setError(null);
+            try {
+              await uploadPhoto(tripId, stop.id, uri, true);
+              setSigning(false);
+              await trip.reload();
+            } catch (e) {
+              setSigning(false);
+              failure(e);
+            }
+          }}
+        />
+      ) : null}
       {sheet ? (
         <OutcomeSheet
           tripId={tripId}
