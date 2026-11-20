@@ -33,7 +33,7 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
-      - uses: android-actions/setup-android@v3
+      # Android SDK runner'da oldindan bor (ANDROID_HOME); yetishmagan platformani AGP oʻzi yuklaydi
       - uses: gradle/actions/setup-gradle@v4
       - run: npm ci
       - name: Versiya kodi = ishga tushirish raqami
