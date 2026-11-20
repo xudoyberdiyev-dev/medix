@@ -43,9 +43,11 @@ export function SignatureSheet({ onClose, onSave }: { onClose: () => void; onSav
     if (!svg.current) return;
     setBusy(true);
     svg.current.toDataURL((base64) => {
-      const file = new File(Paths.cache, `imzo-${Date.now()}.png`);
-      file.write(base64, { encoding: "base64" });
-      void onSave(file.uri).finally(() => setBusy(false));
+      const file = new File(Paths.document, `imzo-${Date.now()}.png`);
+      void file
+        .write(base64, { encoding: "base64" })
+        .then(() => onSave(file.uri))
+        .finally(() => setBusy(false));
     });
   }
 

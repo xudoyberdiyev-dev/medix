@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { AppState } from "react-native";
 import { router, Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
@@ -7,6 +8,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { I18nProvider } from "../i18n";
 import { setOnSessionExpired } from "../lib/api";
 import { clearPin } from "../lib/pin-store";
+import { flush } from "../lib/queue";
 import { color } from "../ui/theme";
 
 void SplashScreen.preventAutoHideAsync();
@@ -21,6 +23,17 @@ export default function RootLayout() {
   useEffect(() => {
     if (loaded || error) void SplashScreen.hideAsync();
   }, [loaded, error]);
+  // Oflayn navbat: har 30 soniyada va ilova ochilganda yuboriladi
+  useEffect(() => {
+    const timer = setInterval(() => void flush(), 30_000);
+    const sub = AppState.addEventListener("change", (s) => {
+      if (s === "active") void flush();
+    });
+    return () => {
+      clearInterval(timer);
+      sub.remove();
+    };
+  }, []);
   if (!loaded && !error) return null;
   return (
     <SafeAreaProvider>

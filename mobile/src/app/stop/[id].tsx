@@ -8,7 +8,9 @@ import { useT, type MessageKey } from "../../i18n";
 import { ApiError } from "../../lib/api";
 import { formatTiyin } from "../../lib/format";
 import { cashDigits, checkCash, digitsToTiyin, groupDigits, tiyinToApi, tiyinToDigits } from "../../lib/stop-view";
-import { deliver, myTrip, uploadPhoto } from "../../lib/trips";
+import { enqueue, isNetworkError } from "../../lib/queue";
+import { loadTrip } from "../../lib/trip-source";
+import { deliver, uploadPhoto } from "../../lib/trips";
 import { stops, stopToCollect, type TripStop } from "../../lib/trip-view";
 import { useAsync } from "../../lib/use-async";
 import { Card, Chip, ErrorState, Loading, Notice, StatusIcons, mono } from "../../ui/blocks";
@@ -22,7 +24,7 @@ export default function Stop() {
   const { t } = useT();
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const trip = useAsync(myTrip);
+  const trip = useAsync(loadTrip);
   const [digits, setDigits] = useState<string | null>(null);
   const [busy, setBusy] = useState<"photo" | "deliver" | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -69,7 +71,11 @@ export default function Stop() {
       await uploadPhoto(tripId, stop!.id, asset.uri);
       await trip.reload();
     } catch (e) {
-      failure(e);
+      if (isNetworkError(e)) {
+        // Internet yoʻq — rasm navbatga, keyin oʻzi yuboriladi
+        await enqueue({ kind: "photo", tripId, stopId: stop!.id, uri: asset.uri, signature: false });
+        await trip.reload();
+      } else failure(e);
     } finally {
       setBusy(null);
     }
@@ -82,6 +88,10 @@ export default function Stop() {
       await deliver(tripId, stop!.id, isCash ? tiyinToApi(collected) : null);
       router.replace("/home");
     } catch (e) {
+      if (isNetworkError(e)) {
+        await enqueue({ kind: "deliver", tripId, stopId: stop!.id, cash: isCash ? tiyinToApi(collected) : null });
+        return router.replace("/home");
+      }
       failure(e);
       setBusy(null);
     }
@@ -197,7 +207,10 @@ export default function Stop() {
               await trip.reload();
             } catch (e) {
               setSigning(false);
-              failure(e);
+              if (isNetworkError(e)) {
+                await enqueue({ kind: "photo", tripId, stopId: stop.id, uri, signature: true });
+                await trip.reload();
+              } else failure(e);
             }
           }}
         />

@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useState } from "react";
-import { Linking, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Linking, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Redirect, router, useFocusEffect } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { MapPin, Navigation, Phone, Truck } from "lucide-react-native";
+import { MapPin, Navigation, Phone, Truck, WifiOff, X } from "lucide-react-native";
 import { useT, type MessageKey } from "../../i18n";
 import { formatDate, formatTiyin, weekday } from "../../lib/format";
 import { getMe, type Me } from "../../lib/session";
-import { myHistory, myTrip } from "../../lib/trips";
+import { myHistory } from "../../lib/trips";
+import { isOffline, loadTrip } from "../../lib/trip-source";
+import { useQueueInfo } from "../../lib/use-queue";
 import { cashInHand, cashToCollect, mapUri, markedCount, nextStop, stopToCollect, stops, telUri, type TripDetail, type TripStop } from "../../lib/trip-view";
 import { useAsync } from "../../lib/use-async";
 import { Card, Chip, ErrorState, Loading, SectionLabel, StatusIcons, mono } from "../../ui/blocks";
@@ -17,7 +19,7 @@ import { color, font, radius, space, text } from "../../ui/theme";
 /** «Reys» bo'limi: faol reys yo'q → bosh sahifa; yuklash → /load; yo'lda → keyingi manzil. */
 export default function TripTab() {
   const { t } = useT();
-  const trip = useAsync(myTrip);
+  const trip = useAsync(loadTrip);
   const [me, setMe] = useState<Me | null>(null);
   useEffect(() => {
     void getMe().then(setMe);
@@ -83,11 +85,20 @@ function RouteView({ trip, refreshing, onRefresh }: { trip: TripDetail; refreshi
   const done = markedCount(trip);
   const next = nextStop(trip);
   const rest = all.filter((s) => s.id !== next?.id);
+  const queueInfo = useQueueInfo();
   return (
     <View style={{ flex: 1 }}>
       <View style={[styles.dark, { paddingTop: insets.top + 16 }]}>
         <View style={styles.spread}>
           <Text style={[mono, { color: color.textOnDarkMuted }]}>{trip.number}</Text>
+          {queueInfo.count > 0 || isOffline() ? (
+            <View style={styles.offline}>
+              <WifiOff size={14} strokeWidth={1.5} color={color.warningBorder} />
+              <Text style={styles.offlineText}>
+                {queueInfo.count > 0 ? t("route.offlineQueue", { count: queueInfo.count }) : t("route.offline")}
+              </Text>
+            </View>
+          ) : null}
         </View>
         <Text style={[text.title, { color: color.textOnDark }]}>{t("route.title", { done, total: all.length })}</Text>
         <Progress value={done} total={all.length} dark />
@@ -101,6 +112,16 @@ function RouteView({ trip, refreshing, onRefresh }: { trip: TripDetail; refreshi
         </View>
       </View>
       <ScrollView contentContainerStyle={styles.body} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
+        {queueInfo.failed.length > 0 ? (
+          <Pressable accessibilityRole="button" accessibilityLabel={t("sheet.close")} onPress={() => void queueInfo.dismiss()}>
+            <View style={styles.failed}>
+              <Text style={[text.caption, { color: color.danger, fontSize: 13, flex: 1 }]}>
+                {t("route.queueFailed", { count: queueInfo.failed.length, detail: queueInfo.failed[queueInfo.failed.length - 1]?.detail ?? "" })}
+              </Text>
+              <X size={16} strokeWidth={1.5} color={color.danger} />
+            </View>
+          </Pressable>
+        ) : null}
         {next && trip.status === "IN_TRANSIT" ? (
           <>
             <SectionLabel>{t("route.next")}</SectionLabel>
@@ -200,5 +221,8 @@ const styles = StyleSheet.create({
   iconCircle: { width: 56, height: 56, borderRadius: 28, backgroundColor: color.divider, alignItems: "center", justifyContent: "center" },
   row: { flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 12 },
   rowDivider: { borderTopWidth: 1, borderTopColor: color.divider },
+  offline: { flexDirection: "row", alignItems: "center", gap: 5, backgroundColor: color.brand800, borderRadius: radius.pill, paddingHorizontal: 10, paddingVertical: 4 },
+  offlineText: { fontFamily: font.semibold, fontSize: 12, color: color.warningBorder },
+  failed: { flexDirection: "row", gap: 8, alignItems: "center", backgroundColor: color.dangerBg, borderRadius: radius.card, padding: 12 },
   seq: { width: 22, height: 22, borderRadius: radius.pill, alignItems: "center", justifyContent: "center" },
 });

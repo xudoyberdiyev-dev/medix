@@ -5,6 +5,7 @@ import { useT, type MessageKey } from "../i18n";
 import { ApiError } from "../lib/api";
 import { formatMoney, formatTiyin, toTiyin } from "../lib/format";
 import { returnedAmount, tiyinToApi } from "../lib/stop-view";
+import { enqueue, isNetworkError } from "../lib/queue";
 import { partial, stopLines, undeliver } from "../lib/trips";
 import type { TripStop } from "../lib/trip-view";
 import { useAsync } from "../lib/use-async";
@@ -48,12 +49,17 @@ export function OutcomeSheet({
     setBusy(true);
     setError(null);
     try {
-      if (tab === "partial") {
-        const body = (lines.data ?? []).map((l) => ({ saleLineId: l.id, qty: Math.min(returned[l.id] ?? 0, l.qty) })).filter((l) => l.qty > 0);
-        // Naqd toʻlovda mijoz qolgan summani toʻlaydi (taxminiy; server oshib ketsa rad etadi)
-        await partial(tripId, stop.id, t("sheet.partialReason"), body, stop.paymentType === "CASH" ? tiyinToApi(pays) : null);
-      } else {
-        await undeliver(tripId, stop.id, reasonText);
+      const body = (lines.data ?? []).map((l) => ({ saleLineId: l.id, qty: Math.min(returned[l.id] ?? 0, l.qty) })).filter((l) => l.qty > 0);
+      // Naqd toʻlovda mijoz qolgan summani toʻlaydi (taxminiy; server oshib ketsa rad etadi)
+      const cash = stop.paymentType === "CASH" ? tiyinToApi(pays) : null;
+      try {
+        if (tab === "partial") await partial(tripId, stop.id, t("sheet.partialReason"), body, cash);
+        else await undeliver(tripId, stop.id, reasonText);
+      } catch (e) {
+        if (!isNetworkError(e)) throw e;
+        // Internet yoʻq — amal navbatga (qisman uchun qatorlar oldindan yuklangan boʻlishi kerak)
+        if (tab === "partial") await enqueue({ kind: "partial", tripId, stopId: stop.id, reason: t("sheet.partialReason"), lines: body, cash });
+        else await enqueue({ kind: "undeliver", tripId, stopId: stop.id, reason: reasonText });
       }
       onDone();
     } catch (e) {
