@@ -97,7 +97,7 @@ Tizimda **11 ta rol**. Ruxsatlar rollar matritsasidan olinadi: prototipda 131 ta
 
 Eslatma: oldingi «Omborchi» va «Ombor nazoratchisi» («Ombor menejeri») rollari bitta **Ombor mudiri** roliga birlashtirilgan. Barcha funksiyalar saqlangan.
 
-**Qurilmalar:** asosiy rollar kompyuterda ishlaydi (1280–1920 px). Ombor mudiri planshetda ham (1024 px) ishlaydi. Yig'uvchi, Markirovkachi va Haydovchi panellari telefon (360–390 px), planshet va kompyuterda ishlaydi. Alohida mobil ilova yo'q — moslashuvchan veb-ilova.
+**Qurilmalar:** asosiy rollar kompyuterda ishlaydi (1280–1920 px). Ombor mudiri planshetda ham (1024 px) ishlaydi. Yig'uvchi, Markirovkachi va Haydovchi panellari telefon (360–390 px), planshet va kompyuterda ishlaydi. Moslashuvchan veb-ilova; Haydovchi uchun qo'shimcha **Android ilova «100+ Haydovchi»** (egasi qarori 20.11.2026; React Native + Expo, APK — `docs/mobil-apk.md`), brauzerdagi Haydovchi paneli ham qoladi.
 
 ---
 
@@ -232,6 +232,7 @@ Eslatma: oldingi «Omborchi» va «Ombor nazoratchisi» («Ombor menejeri») rol
 - **Haydovchi paneli.** Yorliqlar: Reysim, Yakunlangan reyslar.
   - Har buyurtmada manzil, telefon, joylar soni, summa va naqd bo'lsa olinadigan summa.
   - Yuklash → reysni boshlash → har manzilda: Yetkazildi (rasm) / Qisman / Yetkazilmadi → naqd pul → «Reysni yakunlash».
+- **Haydovchi mobil ilovasi (20.11.2026).** Login + parol bir marta → qurilma tokeni, keyin 4 xonali PIN (telefonda; 5 xato → login qayta). Ekranlar: Bosh (faol reys yo'q / oxirgi reyslar), Yuklash (qutilarni sanab «Qabul qildim» → «Reysni boshlash»), Keyingi manzil (yo'l, qo'ng'iroq, «Yetib keldim»), Bekatda (rasm majburiy, mijoz imzosi ixtiyoriy, naqd summa), Qisman / Yetkazilmadi (sabab), Reys yakuni (Kassirga topshiriladigan naqd, omborga qaytadigan tovar), Tarix, Profil. **Naqd kam olinsa** — farq mijoz qarzida qoladi (sotuv qarzi faqat olingan naqd bilan kamayadi); ko'p olish mumkin emas. Internet yo'q bo'lsa amallar telefonda navbatga yoziladi va tartib bilan yuboriladi.
 - **Qaytgan tovar** ikki bosqichda o'tadi: «Qaytmoqda» → Ombor mudiri sanab qabul qiladi → Karantin. Farq bo'lsa muammo sifatida yoziladi. Qisman qaytgan tovar asl sotuv narxida qaytarish (QM) sifatida yoziladi.
 - **Haydovchidagi pul:** naqd pul → «Haydovchidagi pul» → Kassir qabul qiladi → MT yoziladi, mijoz qarzi kamayadi.
 
@@ -531,6 +532,7 @@ To'liq maydonlar va bog'lanishlar dasturlashdan oldin alohida «Ma'lumotlar mode
 - **Ma'lumot doirasi:** xodim faqat o'z filialini ko'radi. Barcha filiallar — faqat ruxsati borlarga (Direktor, Admin; Buxgalter — faqat Direktor xodim kartasida bergan belgi bilan, audit — egasi qarori 07.11.2026). Kassir amallarni faqat o'z kassasida bajaradi.
 - **Tannarx:** faqat tannarx ruxsati borlarga ko'rinadi (Direktor, Admin, Filial rahbari, Buxgalter; Xarid — faqat Narxlarda). API ham tannarx maydonini yubormaydi.
 - **PIN:** rahbar tasdiqlari va kassa farqi uchun ikkinchi tasdiq.
+- **Mobil qurilma tokeni (Haydovchi ilovasi):** faqat DRIVER roli; `Authorization: Bearer` (cookie va CSRF ishlatilmaydi); bazada faqat SHA-256 xesh; 30 kun ishlatilmasa eskiradi; xodim bloklansa, roli o'zgarsa yoki «Sessiyalarni tugatish» bosilsa — bekor; berish/chiqish auditda. Vaqtinchalik parolli hisob token olmaydi (avval brauzerda parolni almashtiradi).
 - **Audit:** kim, qachon, nima, eski → yangi qiymat. Jadval faqat qo'shiladigan.
 - **Zaxira:** kunlik to'liq nusxa va WAL arxivi (pgBackRest), boshqa joyda nusxa; tiklash har oy sinab ko'riladi.
 - **Shaxsiy ma'lumotlar:** O'zbekiston qonunchiligi bo'yicha fuqarolarning shaxsiy ma'lumotlarini O'zbekiston hududidagi serverda saqlash talabi bor — yurist bilan tasdiqlash kerak (18-bo'lim).
