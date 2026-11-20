@@ -139,6 +139,7 @@ public class Employees {
                 .update();
         // Bloklangan xodimning ochiq sessiyalari darhol tugatiladi.
         jdbc.sql("DELETE FROM spring_session WHERE principal_name = :login").param("login", e.login()).update();
+        revokeMobileTokens(e.id());
         audit.record(AuditEntry.of("employee.block", "employee", id)
                 .change(Map.of("status", e.status()), Map.of("status", "BLOCKED"))
                 .withReason(reason.strip()));
@@ -172,6 +173,7 @@ public class Employees {
                 .param("id", id)
                 .update();
         jdbc.sql("DELETE FROM spring_session WHERE principal_name = :login").param("login", e.login()).update();
+        revokeMobileTokens(e.id());
         audit.record(AuditEntry.of("employee.resetPassword", "employee", id));
         return get(id);
     }
@@ -194,6 +196,7 @@ public class Employees {
                 .param("id", id)
                 .update();
         jdbc.sql("DELETE FROM spring_session WHERE principal_name = :login").param("login", e.login()).update();
+        revokeMobileTokens(e.id());
         audit.record(AuditEntry.of("employee.allBranches", "employee", id)
                 .change(Map.of("allBranches", e.allBranches()), Map.of("allBranches", enabled)));
         return get(id);
@@ -273,6 +276,7 @@ public class Employees {
     public int endSessions(Actor actor, long id) {
         Employee e = accessible(actor, id);
         int n = jdbc.sql("DELETE FROM spring_session WHERE principal_name = :login").param("login", e.login()).update();
+        n += revokeMobileTokens(id);
         audit.record(AuditEntry.of("employee.endSessions", "employee", id).change(null, Map.of("sessions", n)));
         return n;
     }
@@ -288,6 +292,15 @@ public class Employees {
                 .update();
         audit.record(AuditEntry.of("employee.resetPin", "employee", id));
         return get(id);
+    }
+
+    /** Haydovchi ilovasi qurilma tokenlari ham sessiya bilan birga bekor qilinadi (M2). */
+    private int revokeMobileTokens(long employeeId) {
+        return jdbc.sql("""
+                UPDATE mobile_device_token SET revoked_at = now(), revoke_reason = 'ADMIN'
+                WHERE employee_id = :id AND revoked_at IS NULL""")
+                .param("id", employeeId)
+                .update();
     }
 
     private Employee get(long id) {
@@ -403,6 +416,7 @@ public class Employees {
         if (access) {
             // Yangi login / rol / filial keyingi kirishda kuchga kiradi
             jdbc.sql("DELETE FROM spring_session WHERE principal_name = :login").param("login", before.login()).update();
+            revokeMobileTokens(before.id());
         }
         Employee after = get(id);
         audit.record(AuditEntry.of("employee.update", "employee", id).change(snapshot(before), snapshot(after)));
