@@ -243,7 +243,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Tizimga kirish */
-        post: operations["login"];
+        post: operations["login_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3449,6 +3449,40 @@ export interface paths {
          * @description Ijrochi: IN_PROGRESS, DONE (o'z holati). Yuboruvchi: NEW — «Qayta ochish», CANCELLED — «Bekor qilish».
          */
         post: operations["status_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/mobile/auth/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mobil ilovaga kirish (faqat haydovchi) */
+        post: operations["login"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/mobile/auth/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mobil ilovadan chiqish — shu qurilma tokeni bekor qilinadi */
+        post: operations["logout"];
         delete?: never;
         options?: never;
         head?: never;
@@ -12331,6 +12365,17 @@ export interface components {
             /** Format: int64 */
             threadId: number;
         };
+        MobileLoginRequest: {
+            /** @description Qurilma nomi (masalan, «Samsung A54 · Android 15») */
+            device?: string;
+            login: string;
+            password: string;
+        };
+        MobileLoginResponse: {
+            me: components["schemas"]["MeResponse"];
+            /** @description Qurilma tokeni — faqat bir marta qaytariladi */
+            token: string;
+        };
         MonitorBoard: {
             cards: components["schemas"]["MonitorCard"][];
             /** Format: date-time */
@@ -17416,7 +17461,7 @@ export interface operations {
             };
         };
     };
-    login: {
+    login_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -21957,6 +22002,48 @@ export interface operations {
         responses: {
             /** @description OK */
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    login: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MobileLoginRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MobileLoginResponse"];
+                };
+            };
+        };
+    };
+    logout: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
                 headers: {
                     [name: string]: unknown;
                 };

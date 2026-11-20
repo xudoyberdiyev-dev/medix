@@ -3,7 +3,8 @@ import { Platform } from "react-native";
 import { api, ApiError } from "./api";
 import { loginErrorKind, type LoginErrorKind } from "./api-errors";
 import { clearPin } from "./pin-store";
-import { clearSession, getToken, saveSession, type Me } from "./session";
+import type { components } from "./api-schema";
+import { clearSession, getToken, saveSession } from "./session";
 
 // Mobil kirish (M2): POST /api/mobile/auth/login → qurilma tokeni (faqat haydovchi). Keyin ilovada PIN.
 export type { LoginErrorKind };
@@ -25,7 +26,7 @@ function deviceName(): string {
 
 export async function login(user: string, password: string): Promise<void> {
   try {
-    const r = await api<{ token: string; me: Me }>("/api/mobile/auth/login", {
+    const r = await api<components["schemas"]["MobileLoginResponse"]>("/api/mobile/auth/login", {
       method: "POST",
       auth: false,
       body: { login: user, password, device: deviceName() },
