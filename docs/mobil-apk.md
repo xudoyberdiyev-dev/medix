@@ -8,6 +8,16 @@ APK GitHub Actions'da avtomatik yigʻiladi (`.github/workflows/mobile-apk.yml`):
 
 APK'ni telefonga: Releases sahifasidan `.apk` faylni yuklab oling → oching → «Nomaʼlum manbalardan oʻrnatish»ga ruxsat bering.
 
+## Server manzili (egasi bir marta qiladi)
+
+Ilova qaysi serverga ulanishini yigʻish paytida oladi. Repo → **Settings → Secrets and variables → Actions → Variables → New repository variable**:
+
+| Variable | Qiymat |
+|---|---|
+| `MOBILE_API_URL` | 100+ veb-sayt manzili, masalan `https://100plus.example.uz` (oxirida `/` siz) |
+
+Veb-sayt `/api/*` soʻrovlarini backendga uzatadi — alohida backend manzili kerak emas. Oʻzgaruvchi qoʻyilmasa ilova «Serverga ulanib boʻlmadi» deydi; qoʻyilgach Actions → `mobile-apk` → **Run workflow**.
+
 ## Imzolash kaliti (egasi bir marta qiladi)
 
 Hozir Secrets'da kalit yoʻq — APK **vaqtinchalik debug kalit** bilan imzolanadi (fayl nomida `-debugkey`). U ishlaydi, lekin:

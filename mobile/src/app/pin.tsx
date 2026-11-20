@@ -4,7 +4,8 @@ import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useT } from "../i18n";
 import { isComplete, popDigit, pushDigit } from "../lib/pin";
-import { checkPin, clearPin } from "../lib/pin-store";
+import { logout } from "../lib/auth";
+import { checkPin } from "../lib/pin-store";
 import { Keypad, PinDots } from "../ui/parts";
 import { color, font, space, text } from "../ui/theme";
 
@@ -23,7 +24,7 @@ export default function PinEnter() {
       if (r.ok) return router.replace("/home");
       if (r.locked) {
         setError(t("pin.locked"));
-        router.replace("/login");
+        void logout().then(() => router.replace("/login"));
         return;
       }
       setError(t("pin.wrong", { left: r.left }));
@@ -45,7 +46,7 @@ export default function PinEnter() {
       <Keypad onDigit={digit} onDelete={() => setPin(popDigit(pin))} deleteLabel={t("pin.delete")} />
       <Pressable
         accessibilityRole="button"
-        onPress={() => void clearPin().then(() => router.replace("/login"))}
+        onPress={() => void logout().then(() => router.replace("/login"))}
         style={{ alignSelf: "center", minHeight: 44, justifyContent: "center", marginTop: space.md }}
       >
         <Text style={{ fontFamily: font.semibold, fontSize: 15, color: color.primaryButton }}>{t("pin.forgot")}</Text>

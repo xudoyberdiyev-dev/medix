@@ -4,10 +4,19 @@ import { router } from "expo-router";
 import Constants from "expo-constants";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Eye, EyeOff, Info, Languages, Lock, UserRound } from "lucide-react-native";
-import { LOCALES, useT } from "../i18n";
-import { login, LoginError } from "../lib/auth";
+import { LOCALES, useT, type MessageKey } from "../i18n";
+import { login, LoginError, type LoginErrorKind } from "../lib/auth";
 import { Button, Logo } from "../ui/parts";
 import { color, font, radius, space, text, touch } from "../ui/theme";
+
+const LOGIN_ERROR = {
+  credentials: "login.failed",
+  locked: "login.locked",
+  role: "login.notDriver",
+  passwordChange: "login.passwordChange",
+  blocked: "login.blocked",
+  network: "login.network",
+} as const satisfies Record<LoginErrorKind, MessageKey>;
 
 export default function Login() {
   const { t, locale, setLocale } = useT();
@@ -26,8 +35,8 @@ export default function Login() {
       await login(user.trim(), pass);
       router.replace("/pin-set");
     } catch (e) {
-      const kind = e instanceof LoginError ? e.kind : "network";
-      setError(t(kind === "credentials" ? "login.failed" : kind === "role" ? "login.notDriver" : "login.network"));
+      const err = e instanceof LoginError ? e : new LoginError("network");
+      setError(err.detail ?? t(LOGIN_ERROR[err.kind]));
     } finally {
       setBusy(false);
     }

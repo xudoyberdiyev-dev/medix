@@ -17,7 +17,10 @@
     "failed": "Login yoki parol notoʻgʻri. Qayta kiriting yoki Ombor mudiriga murojaat qiling.",
     "network": "Serverga ulanib boʻlmadi. Internetni tekshirib, qayta urinib koʻring.",
     "notDriver": "Bu ilova faqat haydovchilar uchun. Boshqa rollar 100+ ning brauzer versiyasidan foydalanadi.",
-    "language": "Til"
+    "language": "Til",
+    "locked": "Juda koʻp notoʻgʻri urinish. Birozdan keyin qayta urining yoki Ombor mudiriga murojaat qiling.",
+    "passwordChange": "Vaqtinchalik parol bilan kirdingiz. Avval brauzerda 100+ ga kirib parolni almashtiring, keyin shu yerda yangi parol bilan kiring.",
+    "blocked": "Hisobingiz bloklangan. Ombor mudiri yoki Filial rahbariga murojaat qiling."
   },
   "pin": {
     "setStep": "1 / 2 · Yangi PIN",

@@ -1,4 +1,5 @@
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useMemo, useState, type ReactNode, useEffect } from "react";
+import { setApiLocale } from "../lib/api";
 import { getLocales } from "expo-localization";
 import uzLatn from "../../messages/uz-Latn.json";
 import uzCyrl from "../../messages/uz-Cyrl.json";
@@ -44,6 +45,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     (k: MessageKey, v?: Record<string, string | number>) => format(lookup(DICT[locale], k) ?? lookup(DICT["uz-Latn"], k) ?? k, v),
     [locale],
   );
+  useEffect(() => setApiLocale(locale), [locale]);
   const value = useMemo(() => ({ locale, setLocale, t }), [locale, t]);
   return <I18n.Provider value={value}>{children}</I18n.Provider>;
 }
