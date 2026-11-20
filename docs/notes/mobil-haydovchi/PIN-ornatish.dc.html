@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<title>PIN kod oʻrnatish</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>
+body{margin:0}
+.scr{width:390px;height:844px;box-sizing:border-box;background:#F5F7F8;color:#172B2A;font-family:Inter,sans-serif;font-size:15px;display:flex;flex-direction:column;overflow:hidden;position:relative}
+.hd{background:#FFFFFF;border-bottom:1px solid #E2E8F0;padding:20px 20px 14px;display:flex;flex-direction:column;gap:2px}
+.h1{margin:0;font-size:20px;font-weight:600;line-height:1.25}
+.sub{margin:0;font-size:13px;color:#5B6B6A}
+.body{flex:1;padding:16px;display:flex;flex-direction:column;gap:12px;overflow:hidden}
+.card{background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.lbl{margin:0;font-size:12px;color:#5B6B6A}
+.val{margin:0;font-size:15px;font-weight:600}
+.btn{height:52px;border-radius:10px;border:1px solid #E2E8F0;background:#FFFFFF;color:#172B2A;font:600 16px Inter,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;padding:0 16px;box-sizing:border-box;width:100%}
+.btn.p{background:#0F766E;border-color:#0F766E;color:#FFFFFF}
+.btn.sm{height:44px;font-size:15px}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px}
+.ok{background:#F0FDF4;color:#15803D}.warn{background:#FFFBEB;color:#B45309}.dang{background:#FEF2F2;color:#B91C1C}.prim{background:#DDF5EE;color:#0F766E}.info{background:#EFF6FF;color:#1D4ED8}
+.foot{background:#FFFFFF;border-top:1px solid #E2E8F0;padding:12px 16px 24px;display:flex;flex-direction:column;gap:8px}
+.tabs{background:#FFFFFF;border-top:1px solid #E2E8F0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));padding:8px 0 22px}
+.tab{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:12px;color:#5B6B6A;background:none;border:0;font-family:Inter,sans-serif}
+.tab.a{color:#0F766E;font-weight:600}
+.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
+.inp{height:52px;border:1px solid #E2E8F0;border-radius:10px;background:#FFFFFF;display:flex;align-items:center;gap:10px;padding:0 14px;box-sizing:border-box;font-size:16px}
+.key{height:64px;border:0;border-radius:14px;background:#FFFFFF;font:500 26px Inter,sans-serif;color:#172B2A;display:flex;align-items:center;justify-content:center}
+.dot{width:16px;height:16px;border-radius:8px;border:2px solid #94A3A1;box-sizing:border-box}
+.dot.f{background:#0F766E;border-color:#0F766E}
+.row{display:flex;align-items:center;gap:10px}
+.sec{margin:4px 2px 0;font-size:12px;font-weight:600;letter-spacing:.05em;color:#5B6B6A}
+</style>
+</helmet>
+<div class="scr">
+
+<div class="hd" style="border:0;background:#F5F7F8;padding-top:28px"><p class="lbl" style="font-weight:600;color:#0F766E">1 / 2 · Yangi PIN</p></div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:20px 32px 0;text-align:center">
+<div style="width:64px;height:64px;border-radius:32px;background:#DDF5EE;display:flex;align-items:center;justify-content:center"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#0F766E" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"></path><circle cx="16.5" cy="7.5" r=".5" fill="currentColor"></circle></svg></div>
+<p class="h1" style="font-size:24px">PIN kod oʻrnating</p>
+<p class="sub" style="font-size:15px;line-height:1.45">Keyingi safar ilovaga shu 4 raqam bilan kirasiz. PIN faqat shu telefonda saqlanadi.</p>
+</div>
+<div style="padding:36px 0 0"><div class="row" style="justify-content:center;gap:18px" aria-label="PIN: 2 ta raqam kiritildi"><div class="dot f"></div><div class="dot f"></div><div class="dot"></div><div class="dot"></div></div></div>
+<div style="flex:1"></div>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding:0 24px 28px"><button type="button" class="key">1</button><button type="button" class="key">2</button><button type="button" class="key">3</button><button type="button" class="key">4</button><button type="button" class="key">5</button><button type="button" class="key">6</button><button type="button" class="key">7</button><button type="button" class="key">8</button><button type="button" class="key">9</button><div></div><button type="button" class="key">0</button><button type="button" class="key" aria-label="Oʻchirish" style="background:transparent"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#5B6B6A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 5a2 2 0 0 0-1.344.519l-6.328 5.74a1 1 0 0 0 0 1.481l6.328 5.741A2 2 0 0 0 10 19h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2z"></path><path d="m12 9 6 6"></path><path d="m18 9-6 6"></path></svg></button></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>
