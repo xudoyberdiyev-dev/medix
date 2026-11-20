@@ -23,6 +23,7 @@
   },
   "devDependencies": {
     "@types/react": "~19.3.0",
+    "openapi-typescript": "^7.13.0",
     "typescript": "~6.0.3"
   },
   "scripts": {
@@ -32,7 +33,8 @@
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
     "test": "node --experimental-strip-types --no-warnings --test src/**/*.test.ts",
-    "i18n:cyrl": "node --experimental-strip-types --no-warnings scripts/i18n-cyrl.ts"
+    "i18n:cyrl": "node --experimental-strip-types --no-warnings scripts/i18n-cyrl.ts",
+    "api:gen": "openapi-typescript ../frontend/lib/api/openapi.json -o src/lib/api-schema.ts"
   },
   "private": true
 }

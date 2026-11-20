@@ -1,15 +1,10 @@
 import * as SecureStore from "expo-secure-store";
+import type { components } from "./api-schema";
 
 // Qurilma tokeni va haydovchi maʼlumoti — faqat SecureStore'da (Android Keystore bilan shifrlangan).
 const K = { token: "yuzplus.token", me: "yuzplus.me" } as const;
 
-export type Me = {
-  id: number;
-  login: string;
-  fullName: string;
-  branchId?: number | null;
-  role: { code: string; name: string };
-};
+export type Me = components["schemas"]["MeResponse"];
 
 export async function saveSession(token: string, me: Me): Promise<void> {
   await SecureStore.setItemAsync(K.token, token);
