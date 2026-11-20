@@ -182,7 +182,7 @@
   },
   "finish": {
     "cta": "Reysni yakunlash",
-    "ctaHint": "Barcha manzillar belgilandi. Yakunlang va omborga qayting.",
+    "ctaHint": "Reysni yakunlang va omborga qayting: qaytgan tovar va naqd pulni topshirasiz.",
     "waitQueue": "Avval oflayn navbatdagi amallar yuborilsin — internetga ulaning.",
     "title": "Reys yakunlandi",
     "delivered": "{count} yetkazildi",

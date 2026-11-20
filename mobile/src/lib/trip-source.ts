@@ -18,7 +18,7 @@ export async function loadTrip(): Promise<TripDetail | null> {
   try {
     trip = await myTrip();
     offline = false;
-    await writeJson(CACHE, trip);
+    await writeJson(CACHE, trip).catch(() => undefined); // kesh yozilmasa ham ish davom etadi
   } catch (e) {
     if (!isNetworkError(e)) throw e;
     offline = true;
