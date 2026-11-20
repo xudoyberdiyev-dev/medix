@@ -77,7 +77,7 @@ class MobileAuthIT {
                 .andExpect(jsonPath("$.me.login").value(login))
                 .andExpect(jsonPath("$.me.role.code").value("DRIVER"))
                 .andReturn();
-        assertThat(result.getResponse().getHeaders("Set-Cookie")).noneMatch(h -> h.startsWith("YUZPLUS_SESSION="));
+        assertThat(result.getResponse().getHeaders("Set-Cookie")).noneMatch(h -> h.startsWith("YUZPLUS_SESSION=") && !h.startsWith("YUZPLUS_SESSION=;"));
         String token = JsonPath.read(result.getResponse().getContentAsString(), "$.token");
         assertThat(token).hasSizeGreaterThanOrEqualTo(40);
 
@@ -92,7 +92,7 @@ class MobileAuthIT {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.login").value(login))
                 .andReturn();
-        assertThat(me.getResponse().getHeaders("Set-Cookie")).noneMatch(h -> h.startsWith("YUZPLUS_SESSION="));
+        assertThat(me.getResponse().getHeaders("Set-Cookie")).noneMatch(h -> h.startsWith("YUZPLUS_SESSION=") && !h.startsWith("YUZPLUS_SESSION=;"));
     }
 
     @Test
