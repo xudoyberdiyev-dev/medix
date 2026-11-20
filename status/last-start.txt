@@ -1,1 +1,1 @@
-▶️ 100+: 23:00 sessiya boshlandi (egasi so'rovi bilan, bir martalik) — reja: M — haydovchi mobil ilovasi
+▶️ 100+: 00:12 sessiya boshlandi — reja: regressiya tekshiruvi, PR #35 (develop → main) CI kuzatish va merge; ochiq V1 vazifasi yoʻq (M qoldigʻi, U2x/K/B/H/O26 — egasini kutadi)
