@@ -41,6 +41,11 @@ test("Operator: yigʻilmagan buyurtma fakturasi — FEFO soʻrovi Ha/Yoʻq", asy
   await page.getByRole("button", { name: "Qator qoʻshish" }).click();
   await page.getByRole("button", { name: "Qoralamani saqlash" }).click();
   await expect(page.getByText("Qoralama saqlandi").first()).toBeVisible();
+  // Saqlangach sahifa /orders/{id} ga oʻtadi — raqam chiqquncha kutamiz (zzz-o13/o16 dagidek), keyin yuboramiz.
+  await expect(page).toHaveURL(/\/orders\/\d+/);
+  const docNumber = page.getByRole("main").getByRole("heading", { level: 1 }).locator("xpath=following-sibling::span[1]");
+  await expect(docNumber).toHaveText(/^BY-[A-Z]{3}-\d{6}$/);
+  await expect(page.getByText("Qoralama saqlandi")).toHaveCount(0, { timeout: 15_000 });
   await page.getByRole("button", { name: "Yuborish" }).click();
   await expect(page.getByText("Buyurtma navbatga yuborildi")).toBeVisible();
   const id = Number(/\/orders\/(\d+)/.exec(page.url())?.[1]);
