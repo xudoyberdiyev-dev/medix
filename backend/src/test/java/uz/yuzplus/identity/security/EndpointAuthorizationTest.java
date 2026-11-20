@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 class EndpointAuthorizationTest {
 
     /** Tizimga kirmasdan ochiq: CSRF token, kirish, kirish sahifasi ma'lumoti. */
-    private static final Set<String> PUBLIC = Set.of("AuthController#csrf", "AuthController#login", "LoginInfoController#get");
+    private static final Set<String> PUBLIC = Set.of("AuthController#csrf", "AuthController#login", "LoginInfoController#get", "MobileAuthController#login");
 
     @Test
     void everyEndpointDeclaresPreAuthorize() throws Exception {

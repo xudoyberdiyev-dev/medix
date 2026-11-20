@@ -36,6 +36,9 @@
     "description" : "YB ga qaytarish (QY)",
     "name" : "supplier-return"
   }, {
+    "description" : "Haydovchi mobil ilovasi kirishi",
+    "name" : "mobile-auth"
+  }, {
     "description" : "Avansni hisobga olish (AH)",
     "name" : "advance-offsets"
   }, {
@@ -761,7 +764,7 @@
     },
     "/api/auth/login" : {
       "post" : {
-        "operationId" : "login",
+        "operationId" : "login_1",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -7619,6 +7622,47 @@
         },
         "summary" : "Topshiriq holati",
         "tags" : [ "messages" ]
+      }
+    },
+    "/api/mobile/auth/login" : {
+      "post" : {
+        "operationId" : "login",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/MobileLoginRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/MobileLoginResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Mobil ilovaga kirish (faqat haydovchi)",
+        "tags" : [ "mobile-auth" ]
+      }
+    },
+    "/api/mobile/auth/logout" : {
+      "post" : {
+        "operationId" : "logout",
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          }
+        },
+        "summary" : "Mobil ilovadan chiqish — shu qurilma tokeni bekor qilinadi",
+        "tags" : [ "mobile-auth" ]
       }
     },
     "/api/money-accounts" : {
@@ -29087,6 +29131,41 @@
           }
         },
         "required" : [ "assignees", "createdAt", "editable", "files", "id", "kind", "readCount", "recipientCount", "senderId", "senderName", "threadId" ]
+      },
+      "MobileLoginRequest" : {
+        "type" : "object",
+        "properties" : {
+          "device" : {
+            "type" : "string",
+            "description" : "Qurilma nomi (masalan, «Samsung A54 · Android 15»)",
+            "maxLength" : 160,
+            "minLength" : 0
+          },
+          "login" : {
+            "type" : "string",
+            "maxLength" : 64,
+            "minLength" : 0
+          },
+          "password" : {
+            "type" : "string",
+            "maxLength" : 128,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "login", "password" ]
+      },
+      "MobileLoginResponse" : {
+        "type" : "object",
+        "properties" : {
+          "me" : {
+            "$ref" : "#/components/schemas/MeResponse"
+          },
+          "token" : {
+            "type" : "string",
+            "description" : "Qurilma tokeni — faqat bir marta qaytariladi"
+          }
+        },
+        "required" : [ "me", "token" ]
       },
       "MonitorBoard" : {
         "type" : "object",

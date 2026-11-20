@@ -36,16 +36,22 @@ import uz.yuzplus.shared.error.YuzplusException;
 class SecurityConfig {
 
     static final String SESSION_COOKIE = "YUZPLUS_SESSION";
+    static final String MOBILE_LOGIN = "/api/mobile/auth/login";
 
     @Bean
     SecurityFilterChain api(
             HttpSecurity http,
             SecurityContextRepository contextRepository,
+            MobileTokens mobileTokens,
             @Qualifier("handlerExceptionResolver") HandlerExceptionResolver resolver)
             throws Exception {
         http.securityContext(c -> c.securityContextRepository(contextRepository))
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
-                .csrf(csrf -> csrf.spa().csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
+                .csrf(csrf -> csrf.spa()
+                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                        // Mobil ilova: cookie yoʻq, token sarlavhada — CSRF xavfi yoʻq (brauzer bu sarlavhani oʻzi qoʻshmaydi)
+                        .ignoringRequestMatchers(req -> MobileTokens.bearer(req.getHeader("Authorization")) != null)
+                        .ignoringRequestMatchers(MOBILE_LOGIN))
                 // P3: standart sarlavhalar (nosniff, X-Frame-Options DENY, HSTS, Cache-Control) + Referrer-Policy
                 .headers(h -> h.referrerPolicy(r -> r.policy(ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN)))
                 .httpBasic(b -> b.disable())
@@ -53,7 +59,7 @@ class SecurityConfig {
                 .logout(l -> l.logoutUrl("/api/auth/logout")
                         .logoutSuccessHandler((req, res, auth) -> res.setStatus(204))
                         .deleteCookies(SESSION_COOKIE))
-                .authorizeHttpRequests(a -> a.requestMatchers("/api/auth/login", "/api/auth/csrf", "/api/auth/login-info")
+                .authorizeHttpRequests(a -> a.requestMatchers("/api/auth/login", "/api/auth/csrf", "/api/auth/login-info", MOBILE_LOGIN)
                         .permitAll()
                         .requestMatchers("/actuator/health/**", "/actuator/info")
                         .permitAll()
@@ -69,6 +75,7 @@ class SecurityConfig {
                                 ex instanceof CsrfException
                                         ? YuzplusException.forbidden("auth.csrf")
                                         : YuzplusException.forbidden("auth.forbidden"))))
+                .addFilterBefore(new MobileTokenFilter(mobileTokens, resolver), BasicAuthenticationFilter.class)
                 .addFilterAfter(new PasswordChangeRequiredFilter(resolver), BasicAuthenticationFilter.class);
         return http.build();
     }

@@ -1,0 +1,213 @@
+{
+  "app": {
+    "name": "100+",
+    "role": "Haydovchi",
+    "version": "Faqat haydovchilar uchun · v{version}"
+  },
+  "login": {
+    "title": "Xush kelibsiz",
+    "intro": "Login va parolni bir marta kiritasiz — keyin PIN kod bilan kirasiz.",
+    "login": "Login",
+    "password": "Parol",
+    "showPassword": "Parolni koʻrsatish",
+    "hidePassword": "Parolni yashirish",
+    "submit": "Kirish",
+    "forgot": "Parolni unutdingizmi? Ombor mudiri yoki Filial rahbariga murojaat qiling — ular yangi parol beradi.",
+    "required": "Login va parolni kiriting.",
+    "failed": "Login yoki parol notoʻgʻri. Qayta kiriting yoki Ombor mudiriga murojaat qiling.",
+    "network": "Serverga ulanib boʻlmadi. Internetni tekshirib, qayta urinib koʻring.",
+    "notDriver": "Bu ilova faqat haydovchilar uchun. Boshqa rollar 100+ ning brauzer versiyasidan foydalanadi.",
+    "language": "Til",
+    "locked": "Juda koʻp notoʻgʻri urinish. Birozdan keyin qayta urining yoki Ombor mudiriga murojaat qiling.",
+    "passwordChange": "Vaqtinchalik parol bilan kirdingiz. Avval brauzerda 100+ ga kirib parolni almashtiring, keyin shu yerda yangi parol bilan kiring.",
+    "blocked": "Hisobingiz bloklangan. Ombor mudiri yoki Filial rahbariga murojaat qiling."
+  },
+  "pin": {
+    "setStep": "1 / 2 · Yangi PIN",
+    "confirmStep": "2 / 2 · Tasdiqlash",
+    "setTitle": "PIN kod oʻrnating",
+    "setIntro": "Keyingi safar ilovaga shu 4 raqam bilan kirasiz. PIN faqat shu telefonda saqlanadi.",
+    "confirmTitle": "PIN kodni qayta kiriting",
+    "confirmIntro": "Adashmaslik uchun yana bir marta kiriting.",
+    "mismatch": "PIN kodlar mos kelmadi. Boshidan kiriting.",
+    "enter": "PIN kodni kiriting",
+    "wrong": "PIN notoʻgʻri. Yana {left} ta urinish qoldi.",
+    "limit": "5 marta xato kiritilsa — login va parol soʻraladi",
+    "locked": "PIN 5 marta xato kiritildi. Login va parol bilan qayta kiring.",
+    "forgot": "PIN kodni unutdim",
+    "delete": "Oʻchirish",
+    "progress": "PIN: {count} ta raqam kiritildi"
+  },
+  "lang": {
+    "uz-Latn": "Oʻzbekcha",
+    "uz-Cyrl": "Ўзбекча",
+    "ru": "Русский"
+  },
+  "tabs": {
+    "trip": "Reys",
+    "history": "Tarix",
+    "profile": "Profil"
+  },
+  "common": {
+    "retry": "Qayta urinish",
+    "loadError": "Maʼlumotni yuklab boʻlmadi. Internetni tekshirib, qayta urinib koʻring.",
+    "saveError": "Saqlab boʻlmadi. Internetni tekshirib, qayta urinib koʻring."
+  },
+  "weekday": {
+    "0": "Yakshanba",
+    "1": "Dushanba",
+    "2": "Seshanba",
+    "3": "Chorshanba",
+    "4": "Payshanba",
+    "5": "Juma",
+    "6": "Shanba"
+  },
+  "status": {
+    "PLANNED": "Rejalashtirilgan",
+    "IN_TRANSIT": "Yoʻlda",
+    "RETURN_WAIT": "Topshirish kutilmoqda",
+    "DONE": "Topshirildi",
+    "CANCELLED": "Bekor qilindi"
+  },
+  "pay": {
+    "CASH": "Naqd",
+    "TRANSFER": "Perechisleniye",
+    "ONLINE": "Onlayn"
+  },
+  "home": {
+    "hello": "Salom, {name}",
+    "helloNoName": "Salom",
+    "noTrip": "Hozir faol reys yoʻq",
+    "noTripHint": "Ombor mudiri reys tuzganda telefoningizga bildirishnoma keladi.",
+    "recent": "Oxirgi reyslar",
+    "tripRow": "{date} · {stops} manzil · {total}",
+    "noHistory": "Hali yakunlangan reys yoʻq."
+  },
+  "load": {
+    "title": "Yuklash · {count} manzil",
+    "accepted": "Qabul qilindi",
+    "waiting": "Kutilmoqda",
+    "boxes": "{count} quti",
+    "docBoxes": "hujjatda {count} quti",
+    "counted": "Sanagan qutilar soni",
+    "match": "Mos",
+    "diff": "Farq {diff}",
+    "accept": "Qabul qildim",
+    "hint": "Son hujjatdagidan farq qilsa — qayta sanang yoki Ombor mudiriga ayting.",
+    "startHint": "Hammasi qabul qilingach reys boshlanadi",
+    "start": "Reysni boshlash",
+    "progress": "{done} / {total} qabul qilindi"
+  },
+  "route": {
+    "title": "Bugungi reys · {done} / {total}",
+    "cash": "Qoʻldagi naqd",
+    "toCollect": "Olinadigan",
+    "next": "Keyingi manzil",
+    "boxes": "Qutilar",
+    "payment": "Toʻlov",
+    "collect": "Olinadigan",
+    "road": "Yoʻl",
+    "call": "Qoʻngʻiroq",
+    "arrived": "Yetib keldim",
+    "rest": "Qolgan",
+    "delivered": "Yetkazildi",
+    "partial": "Qisman yetkazildi",
+    "undelivered": "Yetkazilmadi",
+    "restRow": "{boxes} quti · {payment}",
+    "allMarked": "Barcha manzillar belgilandi",
+    "noAddress": "Manzil koʻrsatilmagan",
+    "offline": "Oflayn",
+    "offlineQueue": "Oflayn · {count} navbatda",
+    "queueFailed": "{count} ta amal server tomonidan qabul qilinmadi: {detail} Ombor mudiriga ayting. (Yopish uchun bosing)"
+  },
+  "history": {
+    "title": "Reyslar tarixi",
+    "empty": "Hali yakunlangan reys yoʻq."
+  },
+  "profile": {
+    "logout": "Chiqish",
+    "logoutHint": "Chiqqandan keyin login, parol va yangi PIN soʻraladi",
+    "version": "Ilova versiyasi"
+  },
+  "stop": {
+    "head": "{seq} / {total} · {order}",
+    "back": "Orqaga",
+    "photo": "Tovar rasmi",
+    "photoNone": "Kamida 1 ta rasm majburiy — bosib suratga oling",
+    "photoCount": "{count} ta rasm",
+    "photoAdd": "Rasm qoʻshish",
+    "cameraDenied": "Kameraga ruxsat berilmagan. Telefon sozlamalarida 100+ Haydovchi uchun kamerani yoqing.",
+    "uploading": "Rasm yuborilmoqda…",
+    "cash": "Naqd olish",
+    "cashDue": "kerak {amount}",
+    "cashTaken": "Olingan summa",
+    "cashFull": "Toʻliq summa",
+    "cashShort": "Kam: {amount}",
+    "cashDebt": "{amount} mijoz qarziga yoziladi",
+    "cashOver": "Olingan summa kerakli summadan koʻp boʻlishi mumkin emas. Summani tekshiring.",
+    "noCash": "Naqd olinmaydi — toʻlov: {payment}",
+    "delivered": "Yetkazildi",
+    "partial": "Qisman",
+    "undelivered": "Yetkazilmadi",
+    "notFound": "Bu manzil reysda topilmadi. Reys sahifasiga qayting.",
+    "signature": "Mijoz imzosi",
+    "signNone": "Ixtiyoriy — mijoz telefon ekraniga imzo qoʻyadi",
+    "signDone": "Imzo olindi",
+    "signClear": "Tozalash",
+    "signHint": "Mijoz barmogʻi bilan imzo qoʻysin.",
+    "signSave": "Imzoni saqlash"
+  },
+  "sheet": {
+    "partialTab": "Qisman",
+    "undeliveredTab": "Yetkazilmadi",
+    "partialIntro": "Mijoz olmagan miqdorni kiriting. Qaytgan qism omborga (karantin) qaytadi, mijoz qarzi kamayadi.",
+    "returned": "Qaytdi",
+    "line": "{qty} dona × {price}",
+    "customerPays": "Mijoz toʻlaydi",
+    "estimate": "Taxminiy — aniq summani server hisoblaydi",
+    "markPartial": "Qisman yetkazildi deb belgilash",
+    "partialReason": "Mijoz qisman qabul qildi",
+    "nothingReturned": "Qaytgan miqdorni kiriting.",
+    "reasonTitle": "Sabab",
+    "reasons": {
+      "closed": "Mijoz yopiq",
+      "noMoney": "Pul yoʻq",
+      "notOrdered": "Buyurtma bermagan",
+      "noAddress": "Manzil topilmadi",
+      "other": "Boshqa"
+    },
+    "otherPlaceholder": "Sababni yozing",
+    "markUndelivered": "Yetkazilmadi deb belgilash",
+    "close": "Yopish"
+  },
+  "finish": {
+    "cta": "Reysni yakunlash",
+    "ctaHint": "Reysni yakunlang va omborga qayting: qaytgan tovar va naqd pulni topshirasiz.",
+    "waitQueue": "Avval oflayn navbatdagi amallar yuborilsin — internetga ulaning.",
+    "title": "Reys yakunlandi",
+    "delivered": "{count} yetkazildi",
+    "partial": "{count} qisman",
+    "undelivered": "{count} yetkazilmadi",
+    "cashTitle": "Kassirga topshiring",
+    "due": "Olinishi kerak",
+    "taken": "Olindi",
+    "debt": "Mijozlar qarziga",
+    "handover": "Topshiriladi",
+    "returnTitle": "Omborga qaytadi",
+    "returnPartial": "{customer} · qisman · {number}",
+    "returnWhole": "{customer} · butun buyurtma · {places} quti",
+    "noReturn": "Qaytadigan tovar yoʻq",
+    "waiting": "Kutilmoqda",
+    "waitingText": "Ombor mudiri tovarni, Kassir naqdni qabul qilishi",
+    "accepted": "Qabul qilindi",
+    "acceptedText": "Reys topshirildi",
+    "home": "Bosh sahifaga"
+  },
+  "profile2": {
+    "pin": "PIN kodni oʻzgartirish",
+    "lang": "Til",
+    "vehicle": "Mashina",
+    "queue": "Oflayn navbat",
+    "queueCount": "{count} ta kutmoqda"
+  }
+}

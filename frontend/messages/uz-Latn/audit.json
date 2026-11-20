@@ -24,6 +24,11 @@
       "loginBlocked": "Bloklangan hisob bilan kirish urinishi",
       "passwordChanged": "Parolni almashtirdi"
     },
+    "mobile": {
+      "loginDenied": "Mobil ilovaga kirish rad etildi (haydovchi emas)",
+      "tokenIssued": "Mobil ilovaga kirdi",
+      "logout": "Mobil ilovadan chiqdi"
+    },
     "employee": {
       "create": "Xodim qoʻshildi",
       "block": "Xodim bloklandi",

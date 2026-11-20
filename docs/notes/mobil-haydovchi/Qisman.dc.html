@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<title>Qisman yetkazish yoki yetkazilmadi</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap">
+<style>
+body{margin:0}
+.scr{width:390px;height:844px;box-sizing:border-box;background:#F5F7F8;color:#172B2A;font-family:Inter,sans-serif;font-size:15px;display:flex;flex-direction:column;overflow:hidden;position:relative}
+.hd{background:#FFFFFF;border-bottom:1px solid #E2E8F0;padding:20px 20px 14px;display:flex;flex-direction:column;gap:2px}
+.h1{margin:0;font-size:20px;font-weight:600;line-height:1.25}
+.sub{margin:0;font-size:13px;color:#5B6B6A}
+.body{flex:1;padding:16px;display:flex;flex-direction:column;gap:12px;overflow:hidden}
+.card{background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.lbl{margin:0;font-size:12px;color:#5B6B6A}
+.val{margin:0;font-size:15px;font-weight:600}
+.btn{height:52px;border-radius:10px;border:1px solid #E2E8F0;background:#FFFFFF;color:#172B2A;font:600 16px Inter,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;padding:0 16px;box-sizing:border-box;width:100%}
+.btn.p{background:#0F766E;border-color:#0F766E;color:#FFFFFF}
+.btn.sm{height:44px;font-size:15px}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px}
+.ok{background:#F0FDF4;color:#15803D}.warn{background:#FFFBEB;color:#B45309}.dang{background:#FEF2F2;color:#B91C1C}.prim{background:#DDF5EE;color:#0F766E}.info{background:#EFF6FF;color:#1D4ED8}
+.foot{background:#FFFFFF;border-top:1px solid #E2E8F0;padding:12px 16px 24px;display:flex;flex-direction:column;gap:8px}
+.tabs{background:#FFFFFF;border-top:1px solid #E2E8F0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));padding:8px 0 22px}
+.tab{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:12px;color:#5B6B6A;background:none;border:0;font-family:Inter,sans-serif}
+.tab.a{color:#0F766E;font-weight:600}
+.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
+.inp{height:52px;border:1px solid #E2E8F0;border-radius:10px;background:#FFFFFF;display:flex;align-items:center;gap:10px;padding:0 14px;box-sizing:border-box;font-size:16px}
+.key{height:64px;border:0;border-radius:14px;background:#FFFFFF;font:500 26px Inter,sans-serif;color:#172B2A;display:flex;align-items:center;justify-content:center}
+.dot{width:16px;height:16px;border-radius:8px;border:2px solid #94A3A1;box-sizing:border-box}
+.dot.f{background:#0F766E;border-color:#0F766E}
+.row{display:flex;align-items:center;gap:10px}
+.sec{margin:4px 2px 0;font-size:12px;font-weight:600;letter-spacing:.05em;color:#5B6B6A}
+</style>
+</helmet>
+<div class="scr">
+
+<div style="position:absolute;left:0;top:0;width:390px;height:844px;background:rgba(18,43,42,0.45)"></div>
+<div style="position:absolute;left:0;bottom:0;width:390px;box-sizing:border-box;background:#F5F7F8;border-radius:22px 22px 0 0;padding:10px 16px 24px;display:flex;flex-direction:column;gap:12px">
+<div style="width:40px;height:4px;border-radius:2px;background:#CBD5D4;align-self:center"></div>
+<p class="h1">Shifo Dorixona</p>
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));background:#EEF2F4;border-radius:10px;padding:4px">
+<button type="button" style="height:40px;border:0;border-radius:8px;background:#FFFFFF;font:600 15px Inter,sans-serif;color:#B45309;box-shadow:0 1px 3px rgba(0,0,0,0.08)">Qisman</button>
+<button type="button" style="height:40px;border:0;border-radius:8px;background:transparent;font:500 15px Inter,sans-serif;color:#5B6B6A">Yetkazilmadi</button></div>
+<p class="sub" style="line-height:1.45">Mijoz olmagan miqdorni kiriting. Qaytgan qism omborga (karantin) qaytadi, mijoz qarzi kamayadi.</p>
+<div class="card" style="gap:0;padding:2px 14px"><div class="row" style="padding:10px 0;border-top:1px solid #EEF2F4"><div style="flex:1"><p class="val" style="font-size:14px">Amoksitsillin 250 mg</p><p class="lbl">20 dona × 18.900,00</p></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px"><p class="lbl">Qaytdi</p><div class="inp" style="height:40px;width:76px;justify-content:flex-end;font-weight:600">10</div></div></div><div class="row" style="padding:10px 0;border-top:1px solid #EEF2F4"><div style="flex:1"><p class="val" style="font-size:14px">Paratsetamol 500 mg</p><p class="lbl">50 dona × 2.150,00</p></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px"><p class="lbl">Qaytdi</p><div class="inp" style="height:40px;width:76px;justify-content:flex-end;font-weight:600">0</div></div></div><div class="row" style="padding:10px 0;border-top:1px solid #EEF2F4"><div style="flex:1"><p class="val" style="font-size:14px">Sefazolin 1 g</p><p class="lbl">30 dona × 9.800,00</p></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px"><p class="lbl">Qaytdi</p><div class="inp" style="height:40px;width:76px;justify-content:flex-end;font-weight:600">0</div></div></div></div>
+<div class="card" style="gap:6px"><div class="row" style="justify-content:space-between"><p class="lbl">Qaytdi</p><p class="val" style="color:#B45309">189.000,00</p></div><div class="row" style="justify-content:space-between"><p class="lbl">Mijoz toʻlaydi</p><p class="val" style="font-size:18px">631.000,00</p></div></div>
+<p class="lbl">Yetkazilmadi tabida — sabab tanlanadi: Mijoz yopiq · Pul yoʻq · Buyurtma bermagan · Manzil topilmadi · Boshqa</p>
+<button type="button" class="btn p">Qisman yetkazildi deb belgilash</button>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

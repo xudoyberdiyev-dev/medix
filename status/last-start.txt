@@ -1,1 +1,1 @@
-▶️ 100+: 00:08 sessiya boshlandi — reja: O25 (yigʻishdan oldingi fakturada FEFO partiya, Ha/Yoʻq dialogi)
+▶️ 100+: 00:12 sessiya boshlandi — reja: regressiya tekshiruvi, PR #35 (develop → main) CI kuzatish va merge; ochiq V1 vazifasi yoʻq (M qoldigʻi, U2x/K/B/H/O26 — egasini kutadi)
