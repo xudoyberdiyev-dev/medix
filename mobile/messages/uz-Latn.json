@@ -42,5 +42,91 @@
     "uz-Latn": "Oʻzbekcha",
     "uz-Cyrl": "Ўзбекча",
     "ru": "Русский"
+  },
+  "tabs": {
+    "trip": "Reys",
+    "history": "Tarix",
+    "profile": "Profil"
+  },
+  "common": {
+    "retry": "Qayta urinish",
+    "loadError": "Maʼlumotni yuklab boʻlmadi. Internetni tekshirib, qayta urinib koʻring.",
+    "saveError": "Saqlab boʻlmadi. Internetni tekshirib, qayta urinib koʻring."
+  },
+  "weekday": {
+    "0": "Yakshanba",
+    "1": "Dushanba",
+    "2": "Seshanba",
+    "3": "Chorshanba",
+    "4": "Payshanba",
+    "5": "Juma",
+    "6": "Shanba"
+  },
+  "status": {
+    "PLANNED": "Rejalashtirilgan",
+    "IN_TRANSIT": "Yoʻlda",
+    "RETURN_WAIT": "Topshirish kutilmoqda",
+    "DONE": "Topshirildi",
+    "CANCELLED": "Bekor qilindi"
+  },
+  "pay": {
+    "CASH": "Naqd",
+    "TRANSFER": "Perechisleniye",
+    "ONLINE": "Onlayn"
+  },
+  "home": {
+    "hello": "Salom, {name}",
+    "helloNoName": "Salom",
+    "noTrip": "Hozir faol reys yoʻq",
+    "noTripHint": "Ombor mudiri reys tuzganda telefoningizga bildirishnoma keladi.",
+    "recent": "Oxirgi reyslar",
+    "tripRow": "{date} · {stops} manzil · {total}",
+    "noHistory": "Hali yakunlangan reys yoʻq."
+  },
+  "load": {
+    "title": "Yuklash · {count} manzil",
+    "accepted": "Qabul qilindi",
+    "waiting": "Kutilmoqda",
+    "boxes": "{count} quti",
+    "docBoxes": "hujjatda {count} quti",
+    "counted": "Sanagan qutilar soni",
+    "match": "Mos",
+    "diff": "Farq {diff}",
+    "accept": "Qabul qildim",
+    "hint": "Son hujjatdagidan farq qilsa — qayta sanang yoki Ombor mudiriga ayting.",
+    "startHint": "Hammasi qabul qilingach reys boshlanadi",
+    "start": "Reysni boshlash",
+    "progress": "{done} / {total} qabul qilindi"
+  },
+  "route": {
+    "title": "Bugungi reys · {done} / {total}",
+    "cash": "Qoʻldagi naqd",
+    "toCollect": "Olinadigan",
+    "next": "Keyingi manzil",
+    "boxes": "Qutilar",
+    "payment": "Toʻlov",
+    "collect": "Olinadigan",
+    "road": "Yoʻl",
+    "call": "Qoʻngʻiroq",
+    "arrived": "Yetib keldim",
+    "rest": "Qolgan",
+    "delivered": "Yetkazildi",
+    "partial": "Qisman yetkazildi",
+    "undelivered": "Yetkazilmadi",
+    "restRow": "{boxes} quti · {payment}",
+    "allMarked": "Barcha manzillar belgilandi",
+    "allMarkedHint": "Omborga qayting: qaytgan tovar va naqd pulni topshirasiz.",
+    "noAddress": "Manzil koʻrsatilmagan",
+    "returnWait": "Reys topshirilishi kutilmoqda",
+    "returnWaitHint": "Qaytgan tovar va naqd pulni Ombor mudiri va Kassirga topshiring."
+  },
+  "history": {
+    "title": "Reyslar tarixi",
+    "empty": "Hali yakunlangan reys yoʻq."
+  },
+  "profile": {
+    "logout": "Chiqish",
+    "logoutHint": "Chiqqandan keyin login, parol va yangi PIN soʻraladi",
+    "version": "Ilova versiyasi"
   }
 }
