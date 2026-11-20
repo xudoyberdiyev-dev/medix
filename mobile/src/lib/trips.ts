@@ -44,3 +44,8 @@ export function stopLines(tripId: number, stopId: number): Promise<SaleLine[]> {
 export function partial(tripId: number, stopId: number, reason: string, lines: { saleLineId: number; qty: number }[], cash: string | null): Promise<TripDetail> {
   return api<TripDetail>(`/api/trips/${tripId}/stops/${stopId}/partial`, { method: "POST", body: { reason, lines, cash } });
 }
+
+/** «Reysni yakunlash»: qaytgan tovar yoki naqd boʻlsa — RETURN_WAIT, aks holda DONE. */
+export function finishTrip(tripId: number): Promise<{ status: TripDetail["status"] }> {
+  return api<{ status: TripDetail["status"] }>(`/api/trips/${tripId}/finish`, { method: "POST" });
+}

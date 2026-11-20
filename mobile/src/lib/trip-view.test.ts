@@ -53,3 +53,15 @@ test("telefon va xarita havolalari", () => {
   assert.equal(mapUri(" Yunusobod 4-kv "), "geo:0,0?q=Yunusobod%204-kv");
   assert.equal(mapUri(null), null);
 });
+
+test("reys yakuni: olinishi kerak, natijalar soni", async () => {
+  const { cashDue, outcomeCounts } = await import("./trip-view.ts");
+  const t = trip([
+    stop({ id: 1, seq: 1, outcome: "DELIVERED", total: "1000.00" }),
+    stop({ id: 2, seq: 2, outcome: "PARTIAL", total: "820000.00", returnTotal: "189000.00" }),
+    stop({ id: 3, seq: 3, outcome: "UNDELIVERED" }),
+    stop({ id: 4, seq: 4, outcome: "DELIVERED", paymentType: "TRANSFER" }),
+  ]);
+  assert.equal(cashDue(t), 63200000n);
+  assert.deepEqual(outcomeCounts(t), { delivered: 2, partial: 1, undelivered: 1 });
+});

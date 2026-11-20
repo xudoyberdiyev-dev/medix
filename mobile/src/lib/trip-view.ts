@@ -71,3 +71,20 @@ export function mapUri(address: string | null | undefined): string | null {
   if (!address?.trim()) return null;
   return `geo:0,0?q=${encodeURIComponent(address.trim())}`;
 }
+
+/** Reys yakuni: naqd toʻlovli yetkazilgan/qisman bekatlardan olinishi kerak (qisman — qaytgan qism ayirilgan). */
+export function cashDue(trip: TripDetail): bigint {
+  return trip.stops
+    .filter((s) => s.paymentType === "CASH" && (s.outcome === "DELIVERED" || s.outcome === "PARTIAL"))
+    .reduce((sum, s) => sum + toTiyin(s.total) - (s.outcome === "PARTIAL" ? toTiyin(s.returnTotal) : 0n), 0n);
+}
+
+export function outcomeCounts(trip: TripDetail): { delivered: number; partial: number; undelivered: number } {
+  const c = { delivered: 0, partial: 0, undelivered: 0 };
+  for (const s of trip.stops) {
+    if (s.outcome === "DELIVERED") c.delivered++;
+    if (s.outcome === "PARTIAL") c.partial++;
+    if (s.outcome === "UNDELIVERED") c.undelivered++;
+  }
+  return c;
+}

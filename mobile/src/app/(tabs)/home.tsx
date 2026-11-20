@@ -6,12 +6,14 @@ import { MapPin, Navigation, Phone, Truck, WifiOff, X } from "lucide-react-nativ
 import { useT, type MessageKey } from "../../i18n";
 import { formatDate, formatTiyin, weekday } from "../../lib/format";
 import { getMe, type Me } from "../../lib/session";
-import { myHistory } from "../../lib/trips";
+import { ApiError } from "../../lib/api";
+import { finishTrip, myHistory } from "../../lib/trips";
+import { TripSummary } from "../../ui/trip-summary";
 import { isOffline, loadTrip } from "../../lib/trip-source";
 import { useQueueInfo } from "../../lib/use-queue";
 import { cashInHand, cashToCollect, mapUri, markedCount, nextStop, stopToCollect, stops, telUri, type TripDetail, type TripStop } from "../../lib/trip-view";
 import { useAsync } from "../../lib/use-async";
-import { Card, Chip, ErrorState, Loading, SectionLabel, StatusIcons, mono } from "../../ui/blocks";
+import { Card, Chip, ErrorState, Loading, Notice, SectionLabel, StatusIcons, mono } from "../../ui/blocks";
 import { Button } from "../../ui/parts";
 import { firstName, Progress, TripList } from "../../ui/trip-parts";
 import { color, font, radius, space, text } from "../../ui/theme";
@@ -20,6 +22,9 @@ import { color, font, radius, space, text } from "../../ui/theme";
 export default function TripTab() {
   const { t } = useT();
   const trip = useAsync(loadTrip);
+  // Yakunlangan reys xulosasi: DONE boʻlsa server uni «faol» deb qaytarmaydi — mahalliy nusxa
+  const [summary, setSummary] = useState<TripDetail | null>(null);
+  const [dismissed, setDismissed] = useState<number | null>(null);
   const [me, setMe] = useState<Me | null>(null);
   useEffect(() => {
     void getMe().then(setMe);
@@ -39,9 +44,21 @@ export default function TripTab() {
       </View>
     );
   const active = trip.data ?? null;
+  if (summary && dismissed !== summary.id) return <TripSummary trip={summary} onHome={() => setDismissed(summary.id)} />;
   if (active?.status === "PLANNED") return <Redirect href="/load" />;
-  if (active?.status === "IN_TRANSIT" || active?.status === "RETURN_WAIT")
-    return <RouteView trip={active} refreshing={trip.loading} onRefresh={() => void trip.reload()} />;
+  if (active?.status === "RETURN_WAIT" && dismissed !== active.id) return <TripSummary trip={active} onHome={() => setDismissed(active.id)} />;
+  if (active?.status === "IN_TRANSIT")
+    return (
+      <RouteView
+        trip={active}
+        refreshing={trip.loading}
+        onRefresh={() => void trip.reload()}
+        onFinished={(status) => {
+          setSummary({ ...active, status });
+          void trip.reload();
+        }}
+      />
+    );
   return <NoTrip me={me} refreshing={trip.loading} onRefresh={() => void trip.reload()} />;
 }
 
@@ -78,7 +95,17 @@ function NoTrip({ me, refreshing, onRefresh }: { me: Me | null; refreshing: bool
   );
 }
 
-function RouteView({ trip, refreshing, onRefresh }: { trip: TripDetail; refreshing: boolean; onRefresh: () => void }) {
+function RouteView({
+  trip,
+  refreshing,
+  onRefresh,
+  onFinished,
+}: {
+  trip: TripDetail;
+  refreshing: boolean;
+  onRefresh: () => void;
+  onFinished: (status: TripDetail["status"]) => void;
+}) {
   const { t } = useT();
   const insets = useSafeAreaInsets();
   const all = stops(trip);
@@ -128,13 +155,7 @@ function RouteView({ trip, refreshing, onRefresh }: { trip: TripDetail; refreshi
             <NextStopCard trip={trip} stop={next} />
           </>
         ) : (
-          <Card style={{ alignItems: "center", paddingVertical: 24, gap: 8 }}>
-            <StatusIcons.done size={26} strokeWidth={1.5} color={color.success} />
-            <Text style={[text.bodyStrong, { fontSize: 17 }]}>{t(trip.status === "RETURN_WAIT" ? "route.returnWait" : "route.allMarked")}</Text>
-            <Text style={[text.body, { color: color.textSecondary, textAlign: "center", fontSize: 14 }]}>
-              {t(trip.status === "RETURN_WAIT" ? "route.returnWaitHint" : "route.allMarkedHint")}
-            </Text>
-          </Card>
+          <FinishCard trip={trip} queued={queueInfo.count} onFinished={onFinished} />
         )}
         {rest.length > 0 ? (
           <>
@@ -148,6 +169,32 @@ function RouteView({ trip, refreshing, onRefresh }: { trip: TripDetail; refreshi
         ) : null}
       </ScrollView>
     </View>
+  );
+}
+
+function FinishCard({ trip, queued, onFinished }: { trip: TripDetail; queued: number; onFinished: (status: TripDetail["status"]) => void }) {
+  const { t } = useT();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  async function finish() {
+    setBusy(true);
+    setError(null);
+    try {
+      const r = await finishTrip(trip.id);
+      onFinished(r.status);
+    } catch (e) {
+      setError(e instanceof ApiError && e.problem.status > 0 && e.problem.detail ? e.problem.detail : t("common.saveError"));
+      setBusy(false);
+    }
+  }
+  return (
+    <Card style={{ alignItems: "center", paddingVertical: 24, gap: 8 }}>
+      <StatusIcons.done size={26} strokeWidth={1.5} color={color.success} />
+      <Text style={[text.bodyStrong, { fontSize: 17 }]}>{t("route.allMarked")}</Text>
+      <Text style={[text.body, { color: color.textSecondary, textAlign: "center", fontSize: 14 }]}>{t(queued > 0 ? "finish.waitQueue" : "finish.ctaHint")}</Text>
+      {error ? <Notice>{error}</Notice> : null}
+      <Button label={t("finish.cta")} loading={busy} disabled={queued > 0 || busy} onPress={() => void finish()} style={{ alignSelf: "stretch", marginTop: 6 }} />
+    </Card>
   );
 }
 

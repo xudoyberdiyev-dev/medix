@@ -115,10 +115,7 @@
     "undelivered": "Yetkazilmadi",
     "restRow": "{boxes} quti · {payment}",
     "allMarked": "Barcha manzillar belgilandi",
-    "allMarkedHint": "Omborga qayting: qaytgan tovar va naqd pulni topshirasiz.",
     "noAddress": "Manzil koʻrsatilmagan",
-    "returnWait": "Reys topshirilishi kutilmoqda",
-    "returnWaitHint": "Qaytgan tovar va naqd pulni Ombor mudiri va Kassirga topshiring.",
     "offline": "Oflayn",
     "offlineQueue": "Oflayn · {count} navbatda",
     "queueFailed": "{count} ta amal server tomonidan qabul qilinmadi: {detail} Ombor mudiriga ayting. (Yopish uchun bosing)"
@@ -182,5 +179,35 @@
     "otherPlaceholder": "Sababni yozing",
     "markUndelivered": "Yetkazilmadi deb belgilash",
     "close": "Yopish"
+  },
+  "finish": {
+    "cta": "Reysni yakunlash",
+    "ctaHint": "Barcha manzillar belgilandi. Yakunlang va omborga qayting.",
+    "waitQueue": "Avval oflayn navbatdagi amallar yuborilsin — internetga ulaning.",
+    "title": "Reys yakunlandi",
+    "delivered": "{count} yetkazildi",
+    "partial": "{count} qisman",
+    "undelivered": "{count} yetkazilmadi",
+    "cashTitle": "Kassirga topshiring",
+    "due": "Olinishi kerak",
+    "taken": "Olindi",
+    "debt": "Mijozlar qarziga",
+    "handover": "Topshiriladi",
+    "returnTitle": "Omborga qaytadi",
+    "returnPartial": "{customer} · qisman · {number}",
+    "returnWhole": "{customer} · butun buyurtma · {places} quti",
+    "noReturn": "Qaytadigan tovar yoʻq",
+    "waiting": "Kutilmoqda",
+    "waitingText": "Ombor mudiri tovarni, Kassir naqdni qabul qilishi",
+    "accepted": "Qabul qilindi",
+    "acceptedText": "Reys topshirildi",
+    "home": "Bosh sahifaga"
+  },
+  "profile2": {
+    "pin": "PIN kodni oʻzgartirish",
+    "lang": "Til",
+    "vehicle": "Mashina",
+    "queue": "Oflayn navbat",
+    "queueCount": "{count} ta kutmoqda"
   }
 }
