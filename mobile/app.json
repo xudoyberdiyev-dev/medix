@@ -43,6 +43,14 @@
           "backgroundColor": "#123C3A"
         }
       ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": false,
+          "cameraPermission": "100+ Haydovchi yetkazilgan tovarni suratga olish uchun kameradan foydalanadi.",
+          "microphonePermission": false
+        }
+      ],
       "./plugins/with-release-signing"
     ],
     "experiments": {

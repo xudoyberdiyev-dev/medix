@@ -31,7 +31,8 @@ export async function api<T>(path: string, init: { method?: string; body?: unkno
     "Accept-Language": locale === "ru" ? "ru" : "uz",
     Cookie: `YUZPLUS_LOCALE=${locale}`,
   };
-  if (init.body !== undefined) headers["Content-Type"] = "application/json";
+  const form = typeof FormData !== "undefined" && init.body instanceof FormData;
+  if (init.body !== undefined && !form) headers["Content-Type"] = "application/json";
   if (init.auth !== false) {
     const token = await getToken();
     if (token) headers.Authorization = `Bearer ${token}`;
@@ -41,7 +42,7 @@ export async function api<T>(path: string, init: { method?: string; body?: unkno
     res = await fetch(apiUrl(API_BASE, path), {
       method: init.method ?? "GET",
       headers,
-      body: init.body === undefined ? undefined : JSON.stringify(init.body),
+      body: init.body === undefined ? undefined : form ? (init.body as FormData) : JSON.stringify(init.body),
     });
   } catch {
     throw new ApiError({ status: 0 });

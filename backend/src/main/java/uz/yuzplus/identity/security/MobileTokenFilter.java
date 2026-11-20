@@ -45,6 +45,11 @@ class MobileTokenFilter extends OncePerRequestFilter {
             chain.doFilter(request, response);
         } finally {
             SecurityContextHolder.clearContext();
+            // Bearer soʻrovida sessiya kerak emas — tasodifan yaratilgan boʻlsa, saqlanmasin
+            var session = request.getSession(false);
+            if (session != null && session.isNew()) {
+                session.invalidate();
+            }
         }
     }
 }

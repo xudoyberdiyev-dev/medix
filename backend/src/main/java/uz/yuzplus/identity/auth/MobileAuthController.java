@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -47,10 +48,19 @@ class MobileAuthController {
 
     @PostMapping("/login")
     @Operation(summary = "Mobil ilovaga kirish (faqat haydovchi)")
-    MobileLoginResponse login(@Valid @RequestBody MobileLoginRequest body) {
+    MobileLoginResponse login(@Valid @RequestBody MobileLoginRequest body, HttpServletRequest request) {
         var issued = tokens.login(body.login(), body.password(), body.device());
         var p = (YuzplusPrincipal) issued.authentication().getPrincipal();
+        noSession(request);
         return new MobileLoginResponse(issued.token(), MeResponse.of(p, roles.home(p.roleCode())));
+    }
+
+    /** Mobil ilova cookie ishlatmaydi — tasodifan yaratilgan sessiya saqlanmasin. */
+    static void noSession(HttpServletRequest request) {
+        var session = request.getSession(false);
+        if (session != null && session.isNew()) {
+            session.invalidate();
+        }
     }
 
     @PostMapping("/logout")

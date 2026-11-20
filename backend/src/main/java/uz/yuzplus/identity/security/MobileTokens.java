@@ -72,8 +72,10 @@ public class MobileTokens {
         return new Issued(token, authentication);
     }
 
-    /** Token haqiqiy, bekor qilinmagan, eskirmagan, xodim bloklanmagan va hamon haydovchi boʻlsa — autentifikatsiya. */
-    @Transactional
+    /**
+     * Token haqiqiy, bekor qilinmagan, eskirmagan, xodim bloklanmagan va hamon haydovchi boʻlsa — autentifikatsiya.
+     * Tranzaksiyasiz: {@link AuthService#reload} xatosi (bloklangan) umumiy tranzaksiyani «rollback-only» qilmasin.
+     */
     public Optional<UsernamePasswordAuthenticationToken> authenticate(String token) {
         if (token == null || token.isBlank() || token.length() > 128) {
             return Optional.empty();
