@@ -1,0 +1,43 @@
+{
+  "app": {
+    "name": "100+",
+    "role": "Haydovchi",
+    "version": "Faqat haydovchilar uchun · v{version}"
+  },
+  "login": {
+    "title": "Xush kelibsiz",
+    "intro": "Login va parolni bir marta kiritasiz — keyin PIN kod bilan kirasiz.",
+    "login": "Login",
+    "password": "Parol",
+    "showPassword": "Parolni koʻrsatish",
+    "hidePassword": "Parolni yashirish",
+    "submit": "Kirish",
+    "forgot": "Parolni unutdingizmi? Ombor mudiri yoki Filial rahbariga murojaat qiling — ular yangi parol beradi.",
+    "required": "Login va parolni kiriting.",
+    "failed": "Login yoki parol notoʻgʻri. Qayta kiriting yoki Ombor mudiriga murojaat qiling.",
+    "network": "Serverga ulanib boʻlmadi. Internetni tekshirib, qayta urinib koʻring.",
+    "notDriver": "Bu ilova faqat haydovchilar uchun. Boshqa rollar 100+ ning brauzer versiyasidan foydalanadi.",
+    "language": "Til"
+  },
+  "pin": {
+    "setStep": "1 / 2 · Yangi PIN",
+    "confirmStep": "2 / 2 · Tasdiqlash",
+    "setTitle": "PIN kod oʻrnating",
+    "setIntro": "Keyingi safar ilovaga shu 4 raqam bilan kirasiz. PIN faqat shu telefonda saqlanadi.",
+    "confirmTitle": "PIN kodni qayta kiriting",
+    "confirmIntro": "Adashmaslik uchun yana bir marta kiriting.",
+    "mismatch": "PIN kodlar mos kelmadi. Boshidan kiriting.",
+    "enter": "PIN kodni kiriting",
+    "wrong": "PIN notoʻgʻri. Yana {left} ta urinish qoldi.",
+    "limit": "5 marta xato kiritilsa — login va parol soʻraladi",
+    "locked": "PIN 5 marta xato kiritildi. Login va parol bilan qayta kiring.",
+    "forgot": "PIN kodni unutdim",
+    "delete": "Oʻchirish",
+    "progress": "PIN: {count} ta raqam kiritildi"
+  },
+  "lang": {
+    "uz-Latn": "Oʻzbekcha",
+    "uz-Cyrl": "Ўзбекча",
+    "ru": "Русский"
+  }
+}
