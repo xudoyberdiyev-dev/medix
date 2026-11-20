@@ -42,7 +42,8 @@
           "imageWidth": 160,
           "backgroundColor": "#123C3A"
         }
-      ]
+      ],
+      "./plugins/with-release-signing"
     ],
     "experiments": {
       "typedRoutes": true

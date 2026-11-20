@@ -1,0 +1,81 @@
+name: mobile-apk
+# Haydovchi ilovasi APK: expo prebuild + Gradle assembleRelease → GitHub Releases.
+# develop → «haydovchi-dev» (prerelease, har safar yangilanadi); main → «haydovchi-v<versiya>-<N>».
+# Imzolash: Secrets'da ANDROID_KEYSTORE_BASE64 bo'lsa — egasining kaliti, aks holda vaqtinchalik debug kalit
+# (yo'riqnoma: docs/mobil-apk.md).
+on:
+  push:
+    branches: [develop, main]
+    paths: ["mobile/**", ".github/workflows/mobile-apk.yml"]
+  workflow_dispatch:
+concurrency:
+  group: mobile-apk-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: write
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: mobile
+    env:
+      HAS_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+      - run: npm ci
+      - name: Versiya kodi = ishga tushirish raqami
+        run: node -e "const f='app.json',j=require('./'+f);j.expo.android.versionCode=Number(process.env.GITHUB_RUN_NUMBER);require('fs').writeFileSync(f,JSON.stringify(j,null,2))"
+      - run: CI=1 npx expo prebuild --platform android --no-install
+      - name: Imzolash kaliti (Secrets)
+        if: env.HAS_KEYSTORE == 'true'
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > "$RUNNER_TEMP/upload.keystore"
+          echo "YUZPLUS_KEYSTORE=$RUNNER_TEMP/upload.keystore" >> "$GITHUB_ENV"
+      - name: assembleRelease
+        working-directory: mobile/android
+        env:
+          YUZPLUS_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          YUZPLUS_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          YUZPLUS_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: ./gradlew assembleRelease --no-daemon -PreactNativeArchitectures=arm64-v8a,armeabi-v7a
+      - name: APK nomi
+        id: apk
+        run: |
+          VER=$(node -p "require('./app.json').expo.version")
+          SIGN=$([ "$HAS_KEYSTORE" = true ] && echo release || echo debugkey)
+          NAME="100plus-haydovchi-$VER-$GITHUB_RUN_NUMBER-$SIGN.apk"
+          cp android/app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/$NAME"
+          echo "path=$RUNNER_TEMP/$NAME" >> "$GITHUB_OUTPUT"
+          echo "ver=$VER" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: haydovchi-apk
+          path: ${{ steps.apk.outputs.path }}
+          retention-days: 14
+      - name: GitHub Releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          NOTE="100+ Haydovchi — ${GITHUB_SHA::7}. Imzo: $([ "$HAS_KEYSTORE" = true ] && echo 'egasining kaliti' || echo 'vaqtinchalik debug kalit (docs/mobil-apk.md)')."
+          if [ "$GITHUB_REF_NAME" = main ]; then
+            TAG="haydovchi-v${{ steps.apk.outputs.ver }}-$GITHUB_RUN_NUMBER"
+            gh release create "$TAG" "${{ steps.apk.outputs.path }}" --target "$GITHUB_SHA" \
+              --title "100+ Haydovchi ${{ steps.apk.outputs.ver }} (#$GITHUB_RUN_NUMBER)" --notes "$NOTE"
+          else
+            gh release delete haydovchi-dev --yes --cleanup-tag 2>/dev/null || true
+            gh release create haydovchi-dev "${{ steps.apk.outputs.path }}" --target "$GITHUB_SHA" --prerelease \
+              --title "100+ Haydovchi — sinov (develop)" --notes "$NOTE"
+          fi
