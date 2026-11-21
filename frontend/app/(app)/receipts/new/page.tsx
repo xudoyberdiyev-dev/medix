@@ -1,5 +1,6 @@
 import { TopBar } from "@/components/shell/topbar";
 import { ReceiptDocumentPage } from "@/features/receipts/receipt-drawer";
+import { FreshOnPush } from "@/components/shell/fresh-on-push";
 
 /**
  * Yangi kirim — toʻliq sahifa (prototip `Receipts` hujjat koʻrinishi); `?copy=<id>` — hujjatdan nusxa;
@@ -19,12 +20,14 @@ export default async function Page({
     <>
       <TopBar titleKey="receipts" />
       <main className="flex-1 overflow-y-auto p-6">
-        <ReceiptDocumentPage
-          key={copyFrom ?? (bonusFor ? `bonus-${bonusFor.supplierId}` : "new")}
-          id={null}
-          copyFrom={copyFrom}
-          bonusFor={bonusFor}
-        />
+        <FreshOnPush>
+          <ReceiptDocumentPage
+            key={copyFrom ?? (bonusFor ? `bonus-${bonusFor.supplierId}` : "new")}
+            id={null}
+            copyFrom={copyFrom}
+            bonusFor={bonusFor}
+          />
+        </FreshOnPush>
       </main>
     </>
   );

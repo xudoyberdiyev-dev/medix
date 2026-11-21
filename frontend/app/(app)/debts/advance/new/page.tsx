@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { TopBar } from "@/components/shell/topbar";
 import { AdvanceNewPage } from "@/features/debts/advance-doc-page";
+import { FreshOnPush } from "@/components/shell/fresh-on-push";
 
 /** Yangi «Avansni hisobga olish» (prototip `AdvanceDoc`): `?side=CUSTOMER|SUPPLIER&party=…&branch=…`. */
 export default async function Page(props: { searchParams: Promise<{ side?: string; party?: string; branch?: string }> }) {
@@ -13,7 +14,9 @@ export default async function Page(props: { searchParams: Promise<{ side?: strin
     <>
       <TopBar titleKey={side === "CUSTOMER" ? "debtsCustomers" : "debtsSuppliers"} />
       <main className="flex-1 overflow-y-auto p-4 md:p-6">
-        <AdvanceNewPage key={`${side}-${party}-${branch}`} side={side} party={party} branch={branch} />
+        <FreshOnPush>
+          <AdvanceNewPage key={`${side}-${party}-${branch}`} side={side} party={party} branch={branch} />
+        </FreshOnPush>
       </main>
     </>
   );

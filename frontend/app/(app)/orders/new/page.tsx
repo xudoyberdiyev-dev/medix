@@ -1,5 +1,6 @@
 import { TopBar } from "@/components/shell/topbar";
 import { OrderDocumentPage } from "@/features/orders/order-drawer";
+import { FreshOnPush } from "@/components/shell/fresh-on-push";
 
 /** Yangi buyurtma — toʻliq sahifa (prototip `OrderEntry`); `?customer=<id>&customerName=…` — mijoz oldindan tanlanadi. */
 export default async function Page({ searchParams }: { searchParams: Promise<{ customer?: string; customerName?: string }> }) {
@@ -10,7 +11,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ c
     <>
       <TopBar titleKey="orders" />
       <main className="flex-1 overflow-y-auto p-6">
-        <OrderDocumentPage id={null} preset={preset} />
+        <FreshOnPush>
+          <OrderDocumentPage id={null} preset={preset} />
+        </FreshOnPush>
       </main>
     </>
   );

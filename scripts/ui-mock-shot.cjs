@@ -3,7 +3,7 @@
 // Ishlatish: NODE_PATH=$(npm root -g) node scripts/ui-mock-shot.cjs /orders/123 /tmp/x.png [1440x900] [MOCK_JSON]
 //   MOCK_JSON — {"/api/yo'l": javob, ...} fayli (aniq yo'l yoki yo'l boshi); berilmasa — quyidagi standart javoblar.
 // Muhit: SCHEME=dark (qorongʻi mavzu), BASE (standart http://localhost:3100), PERMS (vergul bilan ruxsatlar; standart — Operator), STEPS (`|` bilan:
-//   `click:<matn>`, `btn:<nom>`, `key:<tugma>`, `type:<matn>`, `wait:<ms>`, `fill:<yorliq>=<qiymat>`).
+//   `click:<matn>`, `btn:<nom>`, `file:<yorliq>`, `key:<tugma>`, `type:<matn>`, `wait:<ms>`, `fill:<yorliq>=<qiymat>`).
 const { chromium } = require("playwright");
 const fs = require("fs");
 
@@ -86,6 +86,9 @@ const defaults = {
     else if (kind === "key") await p.keyboard.press(arg);
     else if (kind === "type") await p.keyboard.type(arg, { delay: 20 });
     else if (kind === "wait") await p.waitForTimeout(Number(arg));
+    else if (kind === "file")
+      // `file:<yorliq>` — fayl tanlash maydoniga soxta fayl (mock javob fayl mazmuniga qaramaydi)
+      await p.getByLabel(arg, { exact: true }).first().setInputFiles({ name: "smartup.xlsx", mimeType: "application/octet-stream", buffer: Buffer.from("x") });
     else if (kind === "fill") {
       const [label, value] = arg.split("=");
       await p.getByLabel(label, { exact: true }).first().fill(value);

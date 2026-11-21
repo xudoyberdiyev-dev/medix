@@ -7,6 +7,7 @@ import {
   CircleCheck,
   CircleDashed,
   Database,
+  FileInput,
   FilePen,
   Package,
   Plus,
@@ -35,6 +36,7 @@ import { formatDate, formatMoney, formatQuantity } from "@/lib/format";
 import { useBranchStore } from "@/lib/stores/branch";
 import { OPENING_CREATE, OPENING_GOODS, useAllOpenings, type OpeningStatus } from "./api";
 import { FinanceDrawer } from "./finance-drawer";
+import { SmartUpImport } from "./smartup-import";
 import { useFinOpenings, type FinKind } from "./finance-api";
 import { BQ_TYPES, buildMatrix, legendOf, type BqDoc, type BqType, type CellState, type MatrixItem } from "./matrix";
 
@@ -84,7 +86,7 @@ function NewMenu({ types, onPick }: { types: BqType[]; onPick: (t: BqType) => vo
   }, [open]);
   return (
     <div ref={ref} className="relative">
-      <Button icon={Plus} aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((v) => !v)}>
+      <Button variant="secondary" icon={Plus} aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((v) => !v)}>
         {t("newDoc")}
       </Button>
       {open ? (
@@ -135,6 +137,7 @@ export function OpeningPage() {
   const [view, setView] = useState<(typeof VIEWS)[number]>("ALL");
   const [q, setQ] = useState("");
   const [editor, setEditor] = useState<Editor | null>(null);
+  const [smartup, setSmartup] = useState(false);
   const router = useRouter();
 
   if (me.data && !allowed) return <ForbiddenState description={t("forbidden")} />;
@@ -255,7 +258,14 @@ export function OpeningPage() {
           </h1>
           <p className="mt-1 text-body text-text-secondary">{t("subtitle")}</p>
         </div>
-        {canList && creatable.length ? <NewMenu types={creatable} onPick={(k) => openNew(k, scopeBranch)} /> : null}
+        {canList && creatable.length ? (
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <NewMenu types={creatable} onPick={(k) => openNew(k, scopeBranch)} />
+            <Button icon={FileInput} onClick={() => setSmartup(true)}>
+              {t("smartup.open")}
+            </Button>
+          </div>
+        ) : null}
       </div>
       {error ? (
         <ErrorState onRetry={() => (goods.refetch(), fin.refetch(), branches.refetch(), warehouses.refetch())} />
@@ -420,6 +430,7 @@ export function OpeningPage() {
           onCreated={(id) => setEditor({ ...editor, id })}
         />
       ) : null}
+      {smartup ? <SmartUpImport canPost={can(me.data, "opening.approve")} onClose={() => setSmartup(false)} /> : null}
     </>
   );
 }
