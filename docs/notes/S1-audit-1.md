@@ -13,3 +13,8 @@
 Koʻpchiligi maʼlumotnoma jadvallariga (xodim, filial, ombor, zona, narx turi) — ular deyarli oʻchirilmaydi, shuning uchun hozircha xavfsiz. Toʻliq roʻyxat va hisobot soʻrovlari (`product_id` boʻyicha mahsulot tarixi va h.k.) — S1 ning keyingi qismida sintetik 4 yillik hajm bilan `EXPLAIN (ANALYZE, BUFFERS)` orqali tekshiriladi; indeks faqat oʻlchov koʻrsatsa qoʻshiladi (har indeks yozishni sekinlashtiradi).
 
 Tekshirish soʻrovi: barcha `FOREIGN KEY` lar uchun birinchi ustunlari mos keladigan indeks bormi (`pg_constraint` × `pg_index`).
+
+## Keyingi qism uchun nomzodlar (oʻlchanmagan)
+
+- `ILIKE '%…%'` qidiruvi trigram indeksisiz: `sales_order.number`, `receipt.number/invoice_number/factura_number`, hujjat raqamlari, `audit_log.action/reason` — katta jadvallarda filial/sana filtri bilan birga boʻlsa yetarli boʻlishi mumkin; sintetik hajmda tekshiriladi.
+- Hisobotlardagi ixtiyoriy `product_id` filtri (`sales_order_line`, `sale_line`, `receipt_line`, `sales_return_line`) — `product_id` indeksi yoʻq.
