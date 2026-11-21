@@ -449,8 +449,10 @@ class Orders {
         }
         String from = " FROM sales_order o JOIN counterparty c ON c.id = o.customer_id JOIN warehouse w ON w.id = o.warehouse_id"
                 + " JOIN employee e ON e.id = o.created_by";
+        // S1: yigʻindi soʻrovlarida faqat kerakli JOIN (mijoz — hudud filtri yoki qidiruvda); jadvalni oʻqimasdan (index-only) hisoblanadi
+        String countFrom = " FROM sales_order o" + (filter.regionIds().isEmpty() && nq.isEmpty() ? "" : " JOIN counterparty c ON c.id = o.customer_id");
         // Holat yorliqlari — holat filtrisiz (SPEC 5.2: «raqamlar filtrga bog'liq»)
-        List<StatusCount> statuses = jdbc.sql("SELECT o.status, count(*) AS cnt, coalesce(sum(o.total), 0) AS total" + from + where
+        List<StatusCount> statuses = jdbc.sql("SELECT o.status, count(*) AS cnt, coalesce(sum(o.total), 0) AS total" + countFrom + where
                         + " GROUP BY o.status")
                 .params(params)
                 .query((rs, n) -> new StatusCount(OrderStatus.valueOf(rs.getString("status")), rs.getLong("cnt"),
@@ -460,7 +462,8 @@ class Orders {
             where.append(" AND o.status = :s");
             params.put("s", status.name());
         }
-        long total = jdbc.sql("SELECT count(*)" + from + where).params(params).query(Long.class).single();
+        // S1: jami soni holat yorliqlaridan (alohida count(*) soʻrovi butun tarixni qayta oʻqirdi)
+        long total = statuses.stream().filter(sc -> status == null || sc.status() == status).mapToLong(StatusCount::count).sum();
         List<OrderSummary> items = jdbc.sql("""
                 SELECT o.id, o.number, o.branch_id, w.name AS warehouse, o.customer_id, c.name AS customer, o.order_date, o.delivery_type,
                        o.delivery_date, o.payment_type, o.status, o.approval_level, (SELECT count(*) FROM sales_order_line l WHERE l.order_id = o.id) AS lines,
@@ -487,14 +490,16 @@ class Orders {
                         instant(rs.getTimestamp("pick_finished_at")), null))
                 .list();
         items = items.stream().map(this::withCreditFlag).toList();
-        String fromScope = from + scope;
+        String fromScope = " FROM sales_order o JOIN counterparty c ON c.id = o.customer_id" + scope;
         List<FilterOption> customers = jdbc.sql("SELECT c.id, c.name, count(*) AS cnt" + fromScope
                         + " GROUP BY c.id, c.name ORDER BY c.name LIMIT 300")
                 .params(scopeParams).query((rs, n) -> new FilterOption(rs.getLong("id"), rs.getString("name"), rs.getLong("cnt"))).list();
-        List<FilterOption> operators = jdbc.sql("SELECT e.id, e.full_name AS name, count(*) AS cnt" + fromScope
+        List<FilterOption> operators = jdbc.sql("SELECT e.id, e.full_name AS name, count(*) AS cnt FROM sales_order o JOIN employee e ON e.id = o.created_by"
+                        + scope
                         + " GROUP BY e.id, e.full_name ORDER BY e.full_name LIMIT 300")
                 .params(scopeParams).query((rs, n) -> new FilterOption(rs.getLong("id"), rs.getString("name"), rs.getLong("cnt"))).list();
-        List<FilterOption> regions = jdbc.sql("SELECT r.id, r.name, count(*) AS cnt" + from + " JOIN region r ON r.id = c.region_id" + scope
+        List<FilterOption> regions = jdbc.sql("SELECT r.id, r.name, count(*) AS cnt FROM sales_order o JOIN counterparty c ON c.id = o.customer_id"
+                        + " JOIN region r ON r.id = c.region_id" + scope
                         + " GROUP BY r.id, r.name ORDER BY r.name LIMIT 300")
                 .params(scopeParams).query((rs, n) -> new FilterOption(rs.getLong("id"), rs.getString("name"), rs.getLong("cnt"))).list();
         return new OrderPage(items, total, page, size, statusTabs(statuses), new OrderFacets(customers, operators, regions));

@@ -22,8 +22,7 @@ ORDER_PAGE = """SELECT o.id, o.number, w.name, c.name, o.total, e.full_name,
 SALES_REPORT = """WITH x AS (
   SELECT s.branch_id, s.customer_id, o.created_by, s.sale_date AS d, s.order_id, s.total AS sales, 0 AS returns,
          s.vat_total AS svat, 0 AS rvat, s.cost_total AS cost, o.payment_type, cp.region_id, zt.sales_zone_id AS zone_id,
-         (SELECT coalesce(sum(sl.qty * greatest(coalesce(ol.list_price, sl.price) - sl.price, 0)), 0)
-          FROM sale_line sl JOIN sales_order_line ol ON ol.id = sl.order_line_id WHERE sl.sale_id = s.id) AS discount
+         s.discount_total AS discount
   FROM sale s JOIN sales_order o ON o.id = s.order_id JOIN counterparty cp ON cp.id = s.customer_id
        LEFT JOIN counterparty_branch_terms zt ON zt.counterparty_id = s.customer_id AND zt.branch_id = s.branch_id
   WHERE s.status = 'POSTED' AND s.sale_date BETWEEN {f} AND current_date {b}
@@ -58,16 +57,15 @@ WHERE a.total > 0 ORDER BY p.name, p.id LIMIT 50"""
 
 Q = {
     # Buyurtmalar roʻyxati (Orders.list): bitta sahifa ochilishida 6 ta soʻrov
-    "orders.status_tabs.branch": "SELECT o.status, count(*), coalesce(sum(o.total), 0)" + ORDER_FROM + " WHERE o.branch_id = 1 GROUP BY o.status",
-    "orders.count.branch": "SELECT count(*)" + ORDER_FROM + " WHERE o.branch_id = 1",
+    "orders.status_tabs.branch": "SELECT o.status, count(*), coalesce(sum(o.total), 0) FROM sales_order o WHERE o.branch_id = 1 GROUP BY o.status",
     "orders.page.branch": ORDER_PAGE + " WHERE o.branch_id = 1 ORDER BY o.created_at DESC, o.id DESC LIMIT 50",
     "orders.page.all": ORDER_PAGE + " WHERE true ORDER BY o.created_at DESC, o.id DESC LIMIT 50",
-    "orders.facet_customers.branch": "SELECT c.id, c.name, count(*)" + ORDER_FROM + " WHERE o.branch_id = 1 GROUP BY c.id, c.name ORDER BY c.name LIMIT 300",
-    "orders.facet_operators.branch": "SELECT e.id, e.full_name, count(*)" + ORDER_FROM + " WHERE o.branch_id = 1 GROUP BY e.id, e.full_name ORDER BY e.full_name LIMIT 300",
-    "orders.facet_regions.branch": "SELECT r.id, r.name, count(*)" + ORDER_FROM + " JOIN region r ON r.id = c.region_id WHERE o.branch_id = 1 GROUP BY r.id, r.name ORDER BY r.name LIMIT 300",
-    "orders.status_tabs.all": "SELECT o.status, count(*), coalesce(sum(o.total), 0)" + ORDER_FROM + " WHERE true GROUP BY o.status",
+    "orders.facet_customers.branch": "SELECT c.id, c.name, count(*) FROM sales_order o JOIN counterparty c ON c.id = o.customer_id WHERE o.branch_id = 1 GROUP BY c.id, c.name ORDER BY c.name LIMIT 300",
+    "orders.facet_operators.branch": "SELECT e.id, e.full_name, count(*) FROM sales_order o JOIN employee e ON e.id = o.created_by WHERE o.branch_id = 1 GROUP BY e.id, e.full_name ORDER BY e.full_name LIMIT 300",
+    "orders.facet_regions.branch": "SELECT r.id, r.name, count(*) FROM sales_order o JOIN counterparty c ON c.id = o.customer_id JOIN region r ON r.id = c.region_id WHERE o.branch_id = 1 GROUP BY r.id, r.name ORDER BY r.name LIMIT 300",
+    "orders.status_tabs.all": "SELECT o.status, count(*), coalesce(sum(o.total), 0) FROM sales_order o WHERE true GROUP BY o.status",
     "orders.search_number": ORDER_PAGE + " WHERE o.branch_id = 1 AND (o.number ILIKE '%0123457%' OR c.tin = '0123457' OR c.search_text LIKE '%0123457%') ORDER BY o.created_at DESC LIMIT 50",
-    "orders.today_filter": "SELECT o.status, count(*), coalesce(sum(o.total), 0)" + ORDER_FROM + " WHERE o.branch_id = 1 AND o.order_date >= current_date AND o.order_date <= current_date GROUP BY o.status",
+    "orders.today_filter": "SELECT o.status, count(*), coalesce(sum(o.total), 0) FROM sales_order o WHERE o.branch_id = 1 AND o.order_date >= current_date AND o.order_date <= current_date GROUP BY o.status",
     # Savdo hisoboti (SalesReport): standart — joriy oy; maksimal — 366 kun
     "report.sales.month.all": SALES_REPORT.format(f="date_trunc('month', current_date)::date", b=""),
     "report.sales.year.all": SALES_REPORT.format(f="current_date - 366", b=""),
@@ -78,10 +76,12 @@ Q = {
     "stock.overview.branch": STOCK.format(b="AND s.branch_id = 1"),
     # Ctrl+K (GlobalSearch): buyurtma raqami
     "search.ctrlk.order": """SELECT o.id, o.number, c.name FROM sales_order o JOIN counterparty c ON c.id = o.customer_id LEFT JOIN sale s ON s.order_id = o.id
-        WHERE (lower(o.number) LIKE '%0123457%' OR lower(s.number) LIKE '%0123457%' OR lower(s.invoice_number) LIKE '%0123457%')
+        WHERE o.id = ANY(ARRAY(SELECT id FROM sales_order WHERE lower(number) LIKE '%0123457%'
+          UNION SELECT order_id FROM sale WHERE lower(number) LIKE '%0123457%' OR lower(invoice_number) LIKE '%0123457%'))
         ORDER BY o.id DESC LIMIT 5""",
     "search.ctrlk.order_nohit": """SELECT o.id, o.number, c.name FROM sales_order o JOIN counterparty c ON c.id = o.customer_id LEFT JOIN sale s ON s.order_id = o.id
-        WHERE (lower(o.number) LIKE '%zzz9%' OR lower(s.number) LIKE '%zzz9%' OR lower(s.invoice_number) LIKE '%zzz9%')
+        WHERE o.id = ANY(ARRAY(SELECT id FROM sales_order WHERE lower(number) LIKE '%zzz9%'
+          UNION SELECT order_id FROM sale WHERE lower(number) LIKE '%zzz9%' OR lower(invoice_number) LIKE '%zzz9%'))
         ORDER BY o.id DESC LIMIT 5""",
     # Markirovka: takror kod tekshiruvi (har skanerda)
     "mark.duplicate_check": """SELECT o.number FROM sales_order_mark m JOIN sales_order o ON o.id = m.order_id
@@ -96,7 +96,7 @@ Q = {
 
 
 def run(sql):
-    out = subprocess.run(PSQL + ["-c", "EXPLAIN (ANALYZE, BUFFERS) " + sql], capture_output=True, text=True)
+    out = subprocess.run(PSQL + ["-c", "SET jit = off", "-c", "EXPLAIN (ANALYZE, BUFFERS) " + sql], capture_output=True, text=True)
     if out.returncode != 0:
         return None, out.stderr.strip().splitlines()[0]
     ms = float(re.search(r"Execution Time: ([0-9.]+)", out.stdout).group(1))

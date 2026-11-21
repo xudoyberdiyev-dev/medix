@@ -162,8 +162,7 @@ class SalesReport {
                 WITH x AS (
                     SELECT s.branch_id, s.customer_id, o.created_by, s.sale_date AS d, s.order_id, s.total AS sales, 0 AS returns,
                            s.vat_total AS svat, 0 AS rvat, s.cost_total AS cost, o.payment_type, cp.region_id, zt.sales_zone_id AS zone_id,
-                           (SELECT coalesce(sum(sl.qty * greatest(coalesce(ol.list_price, sl.price) - sl.price, 0)), 0)
-                            FROM sale_line sl JOIN sales_order_line ol ON ol.id = sl.order_line_id WHERE sl.sale_id = s.id) AS discount
+                           s.discount_total AS discount
                     FROM sale s JOIN sales_order o ON o.id = s.order_id JOIN counterparty cp ON cp.id = s.customer_id
                          LEFT JOIN counterparty_branch_terms zt ON zt.counterparty_id = s.customer_id AND zt.branch_id = s.branch_id
                     WHERE s.status = 'POSTED' AND s.sale_date BETWEEN :f AND :t

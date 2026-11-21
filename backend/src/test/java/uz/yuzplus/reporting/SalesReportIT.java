@@ -309,6 +309,8 @@ class SalesReportIT {
                 .param("c", c).param("d", java.sql.Date.valueOf(today())).param("e", op.id()).query(Long.class).single();
         saleLine(s, l1, p, batch, 3, "92.50", "277.50");
         saleLine(s, l2, p2, batch2, 2, "40.00", "80.00");
+        // S1: chegirma sotuv oʻtkazilganda yoziladi (OrderSales) — bu yerda sotuv toʻgʻridan-toʻgʻri yaratilgani uchun qoʻlda
+        jdbc.sql("UPDATE sale SET discount_total = 22.50 WHERE id = :s").param("s", s).update();
         String t = today().toString();
         mvc.perform(get("/api/reports/sales").param("branchId", "" + b).param("from", t).param("to", t).cookie(director))
                 .andExpect(status().isOk())

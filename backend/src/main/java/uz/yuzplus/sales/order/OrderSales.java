@@ -162,6 +162,14 @@ class OrderSales {
                     .update();
             moves.add(StockLedger.Move.out(p.zoneId(), p.batchId(), p.qty()));
         }
+        // S1: berilgan chegirma (E7) — savdo hisoboti uchun bir marta yoziladi (har hisobotda qatorlardan qayta hisoblanmaydi)
+        jdbc.sql("""
+                UPDATE sale SET discount_total = (
+                    SELECT coalesce(sum(sl.qty * greatest(coalesce(ol.list_price, sl.price) - sl.price, 0)), 0)
+                    FROM sale_line sl JOIN sales_order_line ol ON ol.id = sl.order_line_id WHERE sl.sale_id = :s)
+                WHERE id = :s""")
+                .param("s", saleId)
+                .update();
         stock.post(new StockLedger.DocRef(DOC_TYPE, saleId, number), moves);
         parties.record(new PartyLedger.DocRef(DOC_TYPE, saleId, number), h.branchId(), h.customerId(), PartyLedger.Side.CUSTOMER, total, due,
                 "HF " + invoice);

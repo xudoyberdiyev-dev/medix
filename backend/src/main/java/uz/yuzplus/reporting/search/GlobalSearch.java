@@ -53,8 +53,10 @@ public class GlobalSearch {
             hits.addAll(documents(actor, Kind.ORDER, """
                     SELECT o.id, o.number, c.name || COALESCE(' · ' || s.number || ' · ' || s.invoice_number, '') AS sub
                     FROM sales_order o JOIN counterparty c ON c.id = o.customer_id LEFT JOIN sale s ON s.order_id = o.id
-                    WHERE (lower(o.number) LIKE :q ESCAPE '\\' OR lower(s.number) LIKE :q ESCAPE '\\'
-                           OR lower(s.invoice_number) LIKE :q ESCAPE '\\')""", "o", raw, id -> "/orders?open=" + id));
+                    WHERE o.id = ANY(ARRAY(
+                        SELECT id FROM sales_order WHERE lower(number) LIKE :q ESCAPE '\\'
+                        UNION SELECT order_id FROM sale WHERE lower(number) LIKE :q ESCAPE '\\' OR lower(invoice_number) LIKE :q ESCAPE '\\'))""",
+                    "o", raw, id -> "/orders?open=" + id));
         }
         if (permissions.contains("receipt.view")) {
             hits.addAll(documents(actor, Kind.RECEIPT, """

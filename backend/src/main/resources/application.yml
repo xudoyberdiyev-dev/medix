@@ -5,6 +5,9 @@ spring:
     url: ${YUZPLUS_DB_URL:${MEDIX_DB_URL:jdbc:postgresql://localhost:5432/yuzplus}}
     username: ${YUZPLUS_DB_USER:${MEDIX_DB_USER:yuzplus}}
     password: ${YUZPLUS_DB_PASSWORD:${MEDIX_DB_PASSWORD:yuzplus}}
+    hikari:
+      # S1 (22.11.2026): JIT oʻchiq — hisobot soʻrovlarida 0,5–1,5 s kompilyatsiya qoʻshardi (savdo hisoboti: 2,0 s → 1,2 s)
+      connection-init-sql: SET jit = off
   jpa:
     open-in-view: false
     hibernate:
