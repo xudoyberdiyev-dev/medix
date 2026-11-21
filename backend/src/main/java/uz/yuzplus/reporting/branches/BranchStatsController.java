@@ -49,8 +49,10 @@ class BranchStatsController {
                         WHERE e.branch_id = b.id AND r.code = 'BRANCH_MANAGER' AND e.status = 'ACTIVE' ORDER BY e.id LIMIT 1) AS head,
                        (SELECT count(*) FROM warehouse w WHERE w.branch_id = b.id AND w.active) AS whs,
                        (SELECT count(*) FROM employee e WHERE e.branch_id = b.id AND e.status = 'ACTIVE') AS emps,
-                       (SELECT coalesce(sum(t.bal), 0) FROM (SELECT sum(p.amount) AS bal FROM party_ledger p
-                         WHERE p.branch_id = b.id AND p.side = 'CUSTOMER' GROUP BY p.counterparty_id HAVING sum(p.amount) > 0) t) AS debt
+                       -- S1: kontragent saldosi = Σ hujjatlar ochiq qoldigʻi (hosila jadval party_doc_balance, V107) — jurnalni guruhlamasdan
+                       (SELECT coalesce(sum(t.bal), 0) FROM (SELECT sum(d.open_amount) AS bal FROM party_doc_balance d
+                         WHERE d.branch_id = b.id AND d.side = 'CUSTOMER' AND d.open_amount <> 0
+                         GROUP BY d.counterparty_id HAVING sum(d.open_amount) > 0) t) AS debt
                 FROM branch b
                 WHERE :all OR b.id = :own
                 ORDER BY b.id""")
