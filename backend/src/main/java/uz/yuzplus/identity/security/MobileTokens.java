@@ -34,8 +34,10 @@ public class MobileTokens {
     private final AuthService auth;
     private final JdbcClient jdbc;
     private final AuditLog audit;
+    private final PasswordPolicy passwords;
 
-    MobileTokens(AuthService auth, JdbcClient jdbc, AuditLog audit) {
+    MobileTokens(AuthService auth, JdbcClient jdbc, AuditLog audit, PasswordPolicy passwords) {
+        this.passwords = passwords;
         this.auth = auth;
         this.jdbc = jdbc;
         this.audit = audit;
@@ -71,6 +73,11 @@ public class MobileTokens {
             audit.record(AuditEntry.of("mobile.loginDenied", "employee", p.id()).change(null, Map.of("role", p.roleCode())), p.toActor());
             throw YuzplusException.forbidden("mobile.driverOnly");
         }
+        // Yangi parol xatolari shu yerda — {@link AuthService#changePassword} ichidagi xato umumiy tranzaksiyani «rollback-only» qilmasin
+        if (currentPassword.equals(newPassword)) {
+            throw YuzplusException.badRequest("auth.passwordSame");
+        }
+        passwords.check(newPassword);
         auth.changePassword(p.id(), currentPassword, newPassword);
         return issue(auth.reload(p.id()), device);
     }
