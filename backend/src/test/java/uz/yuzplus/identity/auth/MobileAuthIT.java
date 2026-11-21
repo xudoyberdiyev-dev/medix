@@ -116,6 +116,52 @@ class MobileAuthIT {
         assertThat(tokens(login) + tokens(temp)).isZero();
     }
 
+    private static String passwordBody(String login, String current, String next) {
+        return "{\"login\":\"" + login + "\",\"currentPassword\":\"" + current + "\",\"newPassword\":\"" + next
+                + "\",\"device\":\"Sinov telefon\"}";
+    }
+
+    @Test
+    void temporaryPasswordIsChangedInTheAppAndTokenIssued() throws Exception {
+        String temp = newEmployee("DRIVER", true);
+        // Yangi parol qoidalari va joriy parol tekshiruvi — token ham, almashish ham yoʻq
+        mvc.perform(post("/api/mobile/auth/password").contentType(MediaType.APPLICATION_JSON).content(passwordBody(temp, PASSWORD, "qisqa1")))
+                .andExpect(status().isBadRequest());
+        mvc.perform(post("/api/mobile/auth/password").contentType(MediaType.APPLICATION_JSON)
+                        .content(passwordBody(temp, "Notogri-parol-1", "Yangi-parol-2026")))
+                .andExpect(status().is4xxClientError());
+        mvc.perform(post("/api/mobile/auth/password").contentType(MediaType.APPLICATION_JSON).content(passwordBody(temp, PASSWORD, PASSWORD)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("auth.passwordSame"));
+        assertThat(tokens(temp)).isZero();
+
+        var result = mvc.perform(post("/api/mobile/auth/password").contentType(MediaType.APPLICATION_JSON)
+                        .content(passwordBody(temp, PASSWORD, "Yangi-parol-2026")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.me.login").value(temp))
+                .andExpect(jsonPath("$.me.mustChangePassword").value(false))
+                .andReturn();
+        assertThat(result.getResponse().getHeaders("Set-Cookie")).noneMatch(h -> h.startsWith("YUZPLUS_SESSION=") && !h.startsWith("YUZPLUS_SESSION=;"));
+        String token = JsonPath.read(result.getResponse().getContentAsString(), "$.token");
+        mvc.perform(get("/api/auth/me").header("Authorization", "Bearer " + token)).andExpect(status().isOk());
+        assertThat(jdbc.sql("SELECT must_change_password FROM employee WHERE login = :l").param("l", temp).query(Boolean.class).single()).isFalse();
+        assertThat(jdbc.sql("SELECT count(*) FROM audit_log WHERE action = 'auth.passwordChanged' AND entity_type = 'employee' AND entity_id = (SELECT CAST(id AS varchar) FROM employee WHERE login = :l)")
+                .param("l", temp).query(Long.class).single()).isEqualTo(1);
+        // Eski (vaqtinchalik) parol endi ishlamaydi, yangisi bilan oddiy kirish — token
+        mvc.perform(post("/api/mobile/auth/login").contentType(MediaType.APPLICATION_JSON).content(body(temp, PASSWORD)))
+                .andExpect(status().is4xxClientError());
+        mvc.perform(post("/api/mobile/auth/login").contentType(MediaType.APPLICATION_JSON).content(body(temp, "Yangi-parol-2026")))
+                .andExpect(status().isOk());
+
+        // Haydovchi boʻlmasa — parol ham oʻzgarmaydi
+        String operator = newEmployee("OPERATOR", true);
+        mvc.perform(post("/api/mobile/auth/password").contentType(MediaType.APPLICATION_JSON)
+                        .content(passwordBody(operator, PASSWORD, "Yangi-parol-2026")))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("mobile.driverOnly"));
+        assertThat(jdbc.sql("SELECT must_change_password FROM employee WHERE login = :l").param("l", operator).query(Boolean.class).single()).isTrue();
+    }
+
     @Test
     void invalidTokenIsUnauthorized() throws Exception {
         mvc.perform(get("/api/auth/me").header("Authorization", "Bearer yoq-token"))

@@ -56,6 +56,27 @@ public class MobileTokens {
         if (p.mustChangePassword()) {
             throw YuzplusException.forbidden("mobile.passwordChangeRequired");
         }
+        return issue(authentication, device);
+    }
+
+    /**
+     * Vaqtinchalik (yoki joriy) parol bilan kirib, shu yerning oʻzida yangi parol oʻrnatish → token. Parol qoidalari va audit —
+     * {@link AuthService#changePassword}; haydovchi boʻlmasa — token ham, parol almashishi ham yoʻq.
+     */
+    @Transactional(noRollbackFor = YuzplusException.class, propagation = Propagation.REQUIRED)
+    public Issued loginWithNewPassword(String login, String currentPassword, String newPassword, String device) {
+        var authentication = auth.login(login, currentPassword);
+        var p = (YuzplusPrincipal) authentication.getPrincipal();
+        if (!DRIVER_ROLE.equals(p.roleCode())) {
+            audit.record(AuditEntry.of("mobile.loginDenied", "employee", p.id()).change(null, Map.of("role", p.roleCode())), p.toActor());
+            throw YuzplusException.forbidden("mobile.driverOnly");
+        }
+        auth.changePassword(p.id(), currentPassword, newPassword);
+        return issue(auth.reload(p.id()), device);
+    }
+
+    private Issued issue(UsernamePasswordAuthenticationToken authentication, String device) {
+        var p = (YuzplusPrincipal) authentication.getPrincipal();
         String token = newToken();
         String dev = device == null || device.isBlank() ? null : truncate(device.strip());
         long id = jdbc.sql("""
