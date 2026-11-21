@@ -333,7 +333,7 @@ export interface paths {
             cookie?: never;
         };
         /** Solishtirish oynasi: sanadagi 100+ qoldigʻi, oxirgi solishtirish, hali belgilanmagan harakatlar */
-        get: operations["preview_1"];
+        get: operations["preview_2"];
         put?: never;
         post?: never;
         delete?: never;
@@ -789,7 +789,7 @@ export interface paths {
             cookie?: never;
         };
         /** Kunni yopish oldidan: kutilgan qoldiq, kun aylanmasi, tasdiq kutayotganlar */
-        get: operations["preview"];
+        get: operations["preview_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3742,7 +3742,7 @@ export interface paths {
             cookie?: never;
         };
         /** Import shabloni (.xlsx) */
-        get: operations["template"];
+        get: operations["template_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3922,6 +3922,63 @@ export interface paths {
          * @description Qarz jurnali yoki kassa/bank jurnaliga yoziladi; filial va tur bo'yicha bitta.
          */
         post: operations["post_2"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/opening-import/apply": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Qoralamalarni yaratish (va o'tkazish)
+         * @description Xato bo'lmasa — bitta tranzaksiyada: har ombor uchun tovar BQ, har filial×tur uchun pul BQ qoralamasi (mavjud qoralama almashtiriladi). post=true — hammasi o'tkaziladi (opening.approve).
+         */
+        post: operations["apply"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/opening-import/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Faylni tekshirish
+         * @description Hech narsa yozilmaydi: bo'limlar jami, filial/ombor guruhlari, xato va ogohlantirishlar.
+         */
+        post: operations["preview"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/opening-import/template": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Shablon (.xlsx, 4 varaq) */
+        get: operations["template"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -12651,6 +12708,76 @@ export interface components {
             /** Format: int64 */
             warehouseId: number;
         };
+        OpeningFileDoc: {
+            branch: string;
+            /** Format: int64 */
+            branchId: number;
+            /** Format: int64 */
+            id: number;
+            number: string;
+            posted: boolean;
+            /** Format: int32 */
+            rows: number;
+            /** @enum {string} */
+            section: "GOODS" | "CUSTOMER_DEBT" | "SUPPLIER_DEBT" | "MONEY";
+            warehouse?: string;
+        };
+        OpeningFileGroup: {
+            amount?: string;
+            branch: string;
+            /** Format: int64 */
+            branchId: number;
+            /** @enum {string} */
+            existing: "NONE" | "DRAFT" | "POSTED";
+            /** Format: int64 */
+            qty: number;
+            /** Format: int32 */
+            rows: number;
+            /** @enum {string} */
+            section: "GOODS" | "CUSTOMER_DEBT" | "SUPPLIER_DEBT" | "MONEY";
+            warehouse?: string;
+            /** Format: int64 */
+            warehouseId?: number;
+        };
+        OpeningFileIssue: {
+            message: string;
+            /**
+             * Format: int32
+             * @description Excel qator raqami; null — varaq yoki guruh xatosi
+             */
+            row?: number;
+            sheet: string;
+        };
+        OpeningFilePreview: {
+            canApply: boolean;
+            /** Format: date */
+            cutoffDate: string;
+            errors: components["schemas"]["OpeningFileIssue"][];
+            /** @description Xatolar ro'yxati chegarada kesilgan */
+            errorsTruncated: boolean;
+            fileName: string;
+            groups: components["schemas"]["OpeningFileGroup"][];
+            sections: components["schemas"]["OpeningFileSection"][];
+            /** @description Ogohlantirishlar (muddati o'tgan partiya, o'tkazib yuborilgan varaq) — yaratishga to'sqinlik qilmaydi */
+            warnings: components["schemas"]["OpeningFileIssue"][];
+        };
+        OpeningFileResult: {
+            documents: components["schemas"]["OpeningFileDoc"][];
+            posted: boolean;
+        };
+        OpeningFileSection: {
+            /** @description Tovar — tannarx jami (faqat special.cost bilan); boshqalar — summa jami */
+            amount?: string;
+            /**
+             * Format: int64
+             * @description Tovar — dona; boshqalar — 0
+             */
+            qty: number;
+            /** Format: int32 */
+            rows: number;
+            /** @enum {string} */
+            section: "GOODS" | "CUSTOMER_DEBT" | "SUPPLIER_DEBT" | "MONEY";
+        };
         OpeningFinanceCancelRequest: {
             reason: string;
         };
@@ -17605,7 +17732,7 @@ export interface operations {
             };
         };
     };
-    preview_1: {
+    preview_2: {
         parameters: {
             query: {
                 accountId: number;
@@ -18253,7 +18380,7 @@ export interface operations {
             };
         };
     };
-    preview: {
+    preview_1: {
         parameters: {
             query: {
                 accountId: number;
@@ -22427,7 +22554,7 @@ export interface operations {
             };
         };
     };
-    template: {
+    template_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -22733,6 +22860,83 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["OpeningFinanceDetail"];
                 };
+            };
+        };
+    };
+    apply: {
+        parameters: {
+            query: {
+                cutoffDate: string;
+                post?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OpeningFileResult"];
+                };
+            };
+        };
+    };
+    preview: {
+        parameters: {
+            query: {
+                cutoffDate: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OpeningFilePreview"];
+                };
+            };
+        };
+    };
+    template: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

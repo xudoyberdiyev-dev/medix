@@ -102,6 +102,9 @@
     "description" : "Boshlang'ich qoldiq",
     "name" : "opening"
   }, {
+    "description" : "Boshlang'ich qoldiq — bitta fayl bilan ko'chirish",
+    "name" : "opening-import"
+  }, {
     "description" : "Xarajat va kirim moddalari",
     "name" : "expense-items"
   }, {
@@ -913,7 +916,7 @@
     },
     "/api/bank-reconciliations/preview" : {
       "get" : {
-        "operationId" : "preview_1",
+        "operationId" : "preview_2",
         "parameters" : [ {
           "in" : "query",
           "name" : "accountId",
@@ -1822,7 +1825,7 @@
     },
     "/api/cash-close/preview" : {
       "get" : {
-        "operationId" : "preview",
+        "operationId" : "preview_1",
         "parameters" : [ {
           "in" : "query",
           "name" : "accountId",
@@ -8161,7 +8164,7 @@
     },
     "/api/opening-balances/import-template" : {
       "get" : {
-        "operationId" : "template",
+        "operationId" : "template_1",
         "responses" : {
           "200" : {
             "description" : "OK"
@@ -8577,6 +8580,116 @@
         },
         "summary" : "O'tkazish",
         "tags" : [ "opening-finance" ]
+      }
+    },
+    "/api/opening-import/apply" : {
+      "post" : {
+        "description" : "Xato bo'lmasa — bitta tranzaksiyada: har ombor uchun tovar BQ, har filial×tur uchun pul BQ qoralamasi (mavjud qoralama almashtiriladi). post=true — hammasi o'tkaziladi (opening.approve).",
+        "operationId" : "apply",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "cutoffDate",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "in" : "query",
+          "name" : "post",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "multipart/form-data" : {
+              "schema" : {
+                "type" : "object",
+                "properties" : {
+                  "file" : {
+                    "type" : "string",
+                    "format" : "binary"
+                  }
+                },
+                "required" : [ "file" ]
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OpeningFileResult"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Qoralamalarni yaratish (va o'tkazish)",
+        "tags" : [ "opening-import" ]
+      }
+    },
+    "/api/opening-import/preview" : {
+      "post" : {
+        "description" : "Hech narsa yozilmaydi: bo'limlar jami, filial/ombor guruhlari, xato va ogohlantirishlar.",
+        "operationId" : "preview",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "cutoffDate",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "multipart/form-data" : {
+              "schema" : {
+                "type" : "object",
+                "properties" : {
+                  "file" : {
+                    "type" : "string",
+                    "format" : "binary"
+                  }
+                },
+                "required" : [ "file" ]
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OpeningFilePreview"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Faylni tekshirish",
+        "tags" : [ "opening-import" ]
+      }
+    },
+    "/api/opening-import/template" : {
+      "get" : {
+        "operationId" : "template",
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        },
+        "summary" : "Shablon (.xlsx, 4 varaq)",
+        "tags" : [ "opening-import" ]
       }
     },
     "/api/orders" : {
@@ -29843,6 +29956,179 @@
           }
         },
         "required" : [ "branchId", "createdAt", "createdBy", "cutoffDate", "expiredLines", "id", "lines", "number", "source", "status", "totalQty", "warehouse", "warehouseId" ]
+      },
+      "OpeningFileDoc" : {
+        "type" : "object",
+        "properties" : {
+          "branch" : {
+            "type" : "string"
+          },
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "number" : {
+            "type" : "string"
+          },
+          "posted" : {
+            "type" : "boolean"
+          },
+          "rows" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "section" : {
+            "type" : "string",
+            "enum" : [ "GOODS", "CUSTOMER_DEBT", "SUPPLIER_DEBT", "MONEY" ]
+          },
+          "warehouse" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "branch", "branchId", "id", "number", "posted", "rows", "section" ]
+      },
+      "OpeningFileGroup" : {
+        "type" : "object",
+        "properties" : {
+          "amount" : {
+            "type" : "string"
+          },
+          "branch" : {
+            "type" : "string"
+          },
+          "branchId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "existing" : {
+            "type" : "string",
+            "enum" : [ "NONE", "DRAFT", "POSTED" ]
+          },
+          "qty" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "rows" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "section" : {
+            "type" : "string",
+            "enum" : [ "GOODS", "CUSTOMER_DEBT", "SUPPLIER_DEBT", "MONEY" ]
+          },
+          "warehouse" : {
+            "type" : "string"
+          },
+          "warehouseId" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "branch", "branchId", "existing", "qty", "rows", "section" ]
+      },
+      "OpeningFileIssue" : {
+        "type" : "object",
+        "properties" : {
+          "message" : {
+            "type" : "string"
+          },
+          "row" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Excel qator raqami; null — varaq yoki guruh xatosi"
+          },
+          "sheet" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "message", "sheet" ]
+      },
+      "OpeningFilePreview" : {
+        "type" : "object",
+        "properties" : {
+          "canApply" : {
+            "type" : "boolean"
+          },
+          "cutoffDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "errors" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/OpeningFileIssue"
+            }
+          },
+          "errorsTruncated" : {
+            "type" : "boolean",
+            "description" : "Xatolar ro'yxati chegarada kesilgan"
+          },
+          "fileName" : {
+            "type" : "string"
+          },
+          "groups" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/OpeningFileGroup"
+            }
+          },
+          "sections" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/OpeningFileSection"
+            }
+          },
+          "warnings" : {
+            "type" : "array",
+            "description" : "Ogohlantirishlar (muddati o'tgan partiya, o'tkazib yuborilgan varaq) — yaratishga to'sqinlik qilmaydi",
+            "items" : {
+              "$ref" : "#/components/schemas/OpeningFileIssue"
+            }
+          }
+        },
+        "required" : [ "canApply", "cutoffDate", "errors", "errorsTruncated", "fileName", "groups", "sections", "warnings" ]
+      },
+      "OpeningFileResult" : {
+        "type" : "object",
+        "properties" : {
+          "documents" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/OpeningFileDoc"
+            }
+          },
+          "posted" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "documents", "posted" ]
+      },
+      "OpeningFileSection" : {
+        "type" : "object",
+        "properties" : {
+          "amount" : {
+            "type" : "string",
+            "description" : "Tovar — tannarx jami (faqat special.cost bilan); boshqalar — summa jami"
+          },
+          "qty" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Tovar — dona; boshqalar — 0"
+          },
+          "rows" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "section" : {
+            "type" : "string",
+            "enum" : [ "GOODS", "CUSTOMER_DEBT", "SUPPLIER_DEBT", "MONEY" ]
+          }
+        },
+        "required" : [ "qty", "rows", "section" ]
       },
       "OpeningFinanceCancelRequest" : {
         "type" : "object",
