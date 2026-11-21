@@ -237,7 +237,7 @@ final class OpeningImportSheets {
                     }
                 }
             }
-            if (!values.isEmpty() && !isTotalRow(values)) {
+            if (!values.isEmpty() && !isTotalRow(values) && !isNoteRow(values)) {
                 rows.add(new SheetRow(i + 1, values));
             }
         }
@@ -250,6 +250,11 @@ final class OpeningImportSheets {
                 .filter(v -> v instanceof String)
                 .map(v -> key((String) v))
                 .anyMatch(k -> k.equals("итого") || k.equals("jami") || k.equals("жами") || k.equals("всего") || k.equals("итого по складу"));
+    }
+
+    /** Shablondagi izoh qatori: hamma qiymat «(…)» ko'rinishidagi matn. */
+    private static boolean isNoteRow(Map<Field, Object> values) {
+        return values.size() >= 2 && values.values().stream().allMatch(v -> v instanceof String t && t.startsWith("(") && t.endsWith(")"));
     }
 
     private static Object cellValue(Cell c, DataFormatter fmt) {
