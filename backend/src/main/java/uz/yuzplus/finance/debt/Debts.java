@@ -77,28 +77,35 @@ class Debts {
         this.clock = clock;
     }
 
-    private LocalDate today() {
+    LocalDate today() {
         return LocalDate.now(clock.withZone(TASHKENT));
     }
 
     private record Open(long branchId, long counterpartyId, LocalDate due, Money open) {}
 
+    /**
+     * Kontragent boʻyicha qarz yoshi (ochiq hujjatlar, avans FIFO bilan) — hisobot va bosh sahifa xulosalari uchun; kontragent
+     * maʼlumotlarisiz (S1: bosh sahifalar faqat jami va top-N uchun toʻliq hisobotni — kontragent maʼlumoti soʻrovi bilan — chaqirardi).
+     */
     @Transactional(readOnly = true)
-    DebtReport report(Actor actor, Side side, Long branchId) {
+    Map<Long, Aging.Result> aging(Actor actor, Side side, Long branchId, LocalDate today) {
         if (branchId == null ? !actor.allBranches() : !actor.canAccessBranch(branchId)) {
             throw YuzplusException.notFound("error.notFound");
         }
-        LocalDate today = today();
         // PartyLedger.openDocs bilan bir xil qoida, lekin filialdagi barcha kontragentlar uchun bitta so'rovda.
         // S1: jurnalni guruhlash oʻrniga hosila jadval party_doc_balance (V107: jurnal bilan bitta tranzaksiyada, trigger)
-        List<Open> open = jdbc.sql("""
+        // Filial sharti alohida matn: «(:b IS NULL OR branch_id = :b)» umumiy (generic) rejada indekssiz boʻlib qolardi (S1 yuklama)
+        var q = jdbc.sql("""
                 SELECT branch_id, counterparty_id, due_date AS due, open_amount AS open
                 FROM party_doc_balance
-                WHERE side = :s AND own_rows > 0 AND open_amount <> 0 AND (CAST(:b AS BIGINT) IS NULL OR branch_id = :b)
-                ORDER BY branch_id, counterparty_id, coalesce(due_date, (first_at AT TIME ZONE 'Asia/Tashkent')::date), first_at, doc_id""")
-                .param("s", side.name())
-                .param("b", branchId)
-                .query((rs, n) -> new Open(rs.getLong("branch_id"), rs.getLong("counterparty_id"),
+                WHERE side = :s AND own_rows > 0 AND open_amount <> 0%s
+                ORDER BY branch_id, counterparty_id, coalesce(due_date, (first_at AT TIME ZONE 'Asia/Tashkent')::date), first_at, doc_id"""
+                        .formatted(branchId == null ? "" : " AND branch_id = :b"))
+                .param("s", side.name());
+        if (branchId != null) {
+            q = q.param("b", branchId);
+        }
+        List<Open> open = q.query((rs, n) -> new Open(rs.getLong("branch_id"), rs.getLong("counterparty_id"),
                         rs.getDate("due") == null ? null : rs.getDate("due").toLocalDate(), new Money(rs.getBigDecimal("open"))))
                 .list();
         // (filial, kontragent) bo'yicha guruh — hisob har filialda alohida, keyin kontragent bo'yicha qo'shiladi
@@ -113,6 +120,13 @@ class Debts {
             }
             byParty.merge(first.counterpartyId(), Aging.of(docs, today), Aging.Result::plus);
         }
+        return byParty;
+    }
+
+    @Transactional(readOnly = true)
+    DebtReport report(Actor actor, Side side, Long branchId) {
+        LocalDate today = today();
+        Map<Long, Aging.Result> byParty = aging(actor, side, branchId, today);
         if (byParty.isEmpty()) {
             List<GroupDebtRow> group = groupRows(side, branchId);
             return new DebtReport(branchId, today, Buckets.of(Aging.Result.EMPTY), List.of(), groupSum(group), group);

@@ -32,13 +32,28 @@ class DebtSummariesService implements DebtSummaries {
     @Override
     @Transactional(readOnly = true)
     public Summary summary(Actor actor, Side side, Long branchId, int top) {
-        Debts.DebtReport r = debts.report(actor, side, branchId);
-        Debts.Buckets t = r.totals();
-        List<Top> rows = r.rows().stream()
-                .filter(x -> Money.of(x.buckets().debt()).isPositive())
-                .sorted(Comparator.comparing((Debts.DebtRow x) -> Money.of(x.buckets().debt())).reversed())
+        // S1: toʻliq hisobot (kontragent maʼlumoti soʻrovi bilan) oʻrniga faqat qarz yoshi; nom — faqat top-N uchun
+        Map<Long, Aging.Result> by = debts.aging(actor, side, branchId, debts.today());
+        Aging.Result total = by.values().stream().reduce(Aging.Result.EMPTY, Aging.Result::plus);
+        Debts.Buckets t = Debts.Buckets.of(total);
+        record P(long id, Debts.Buckets b, int maxOverdueDays) {}
+        List<P> best = by.entrySet().stream()
+                .map(e -> new P(e.getKey(), Debts.Buckets.of(e.getValue()), e.getValue().maxOverdueDays()))
+                .filter(x -> Money.of(x.b().debt()).isPositive())
+                // Debts.report tartibi (muddati oʻtgan, keyin qarz) ustidan barqaror saralash — avvalgi natija bilan bir xil
+                .sorted(Comparator.comparing((P x) -> Money.of(x.b().debt())).reversed()
+                        .thenComparing((P x) -> Money.of(x.b().overdue()), Comparator.reverseOrder()))
                 .limit(Math.max(0, top))
-                .map(x -> new Top(x.counterpartyId(), x.name(), x.buckets().debt(), x.buckets().overdue(), x.maxOverdueDays()))
+                .toList();
+        Map<Long, String> names = new LinkedHashMap<>();
+        if (!best.isEmpty()) {
+            jdbc.sql("SELECT id, name FROM counterparty WHERE id IN (:ids)")
+                    .param("ids", best.stream().map(P::id).toList())
+                    .query((rs, n) -> names.put(rs.getLong("id"), rs.getString("name")))
+                    .list();
+        }
+        List<Top> rows = best.stream()
+                .map(x -> new Top(x.id(), names.get(x.id()), x.b().debt(), x.b().overdue(), x.maxOverdueDays()))
                 .toList();
         return new Summary(t.debt(), t.advance(), t.overdue(), t.d1to30(), t.d31to60(), t.d61to90(), t.d90plus(), rows);
     }
@@ -47,9 +62,10 @@ class DebtSummariesService implements DebtSummaries {
     @Transactional(readOnly = true)
     public Map<Long, PartyDebt> byParty(Actor actor, Side side, Long branchId) {
         Map<Long, PartyDebt> out = new LinkedHashMap<>();
-        for (Debts.DebtRow x : debts.report(actor, side, branchId).rows()) {
-            Debts.Buckets b = x.buckets();
-            out.put(x.counterpartyId(), new PartyDebt(b.debt(), b.advance(), b.overdue(), b.d1to30(), b.d31to60(), b.d61to90(), b.d90plus(), x.maxOverdueDays()));
+        for (Map.Entry<Long, Aging.Result> e : debts.aging(actor, side, branchId, debts.today()).entrySet()) {
+            Debts.Buckets b = Debts.Buckets.of(e.getValue());
+            out.put(e.getKey(), new PartyDebt(b.debt(), b.advance(), b.overdue(), b.d1to30(), b.d31to60(), b.d61to90(), b.d90plus(),
+                    e.getValue().maxOverdueDays()));
         }
         return out;
     }
