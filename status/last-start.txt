@@ -1,1 +1,1 @@
-▶️ 100+: 06:06 sessiya boshlandi — reja: regressiya + CI nazorati, ochiq issue/egasi javoblarini tekshirish (ochiq V1 vazifasi yoʻq)
+▶️ 100+: 14:08 sessiya boshlandi — reja: F1 filial tanlagichi (backend branchId + frontend effectiveBranchId)
