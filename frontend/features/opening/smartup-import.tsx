@@ -337,7 +337,7 @@ function IssueList({ issues }: { issues: OpeningFilePreview["errors"] }) {
     <ul className="max-h-56 overflow-y-auto rounded-card border border-border">
       {issues.map((e, i) => (
         <li key={i} className="flex gap-3 border-b border-border px-3 py-2 last:border-b-0">
-          <span className="w-40 shrink-0 text-text-secondary">
+          <span className="w-52 shrink-0 text-text-secondary">
             {e.sheet}
             {e.row != null ? ` · ${t("row", { row: String(e.row) })}` : ""}
           </span>
