@@ -23,7 +23,7 @@ jobs:
     env:
       HAS_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
       # 100+ veb-sayt domeni (u /api/* ni backendga uzatadi) — Settings → Variables → MOBILE_API_URL
-      EXPO_PUBLIC_API_URL: ${{ vars.MOBILE_API_URL }}
+      EXPO_PUBLIC_API_URL: ${{ vars.MOBILE_API_URL || 'https://medix-sage-delta.vercel.app' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
