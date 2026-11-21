@@ -9333,6 +9333,15 @@
             "type" : "boolean",
             "default" : true
           }
+        }, {
+          "description" : "F1: faqat shu filial",
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
         } ],
         "responses" : {
           "200" : {
@@ -9534,6 +9543,16 @@
       "get" : {
         "description" : "Yetkazilmagan buyurtmalar tovari — Ombor mudiri sanab qabul qiladi.",
         "operationId" : "pendingReturns",
+        "parameters" : [ {
+          "description" : "F1: faqat shu filial",
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
         "responses" : {
           "200" : {
             "content" : {

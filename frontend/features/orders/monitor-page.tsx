@@ -152,8 +152,8 @@ export function MonitorPage() {
   const branches = useBranches();
   const branchName = branches.data?.find((b) => b.id === (branchId ?? me.data?.branchId))?.name;
   const openIssues = useQuery({
-    queryKey: ["orders", "issues"],
-    queryFn: () => unwrap(api.GET("/api/orders/issues", { params: { query: { open: true } } })),
+    queryKey: ["orders", "issues", branchId ?? "all"],
+    queryFn: () => unwrap(api.GET("/api/orders/issues", { params: { query: { open: true, branchId: branchId ?? undefined } } })),
     enabled: allowed,
     refetchInterval: 15_000,
   });

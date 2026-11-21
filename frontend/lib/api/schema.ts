@@ -22992,6 +22992,8 @@ export interface operations {
             query?: {
                 orderId?: number;
                 open?: boolean;
+                /** @description F1: faqat shu filial */
+                branchId?: number;
             };
             header?: never;
             path?: never;
@@ -23144,7 +23146,10 @@ export interface operations {
     };
     pendingReturns: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description F1: faqat shu filial */
+                branchId?: number;
+            };
             header?: never;
             path?: never;
             cookie?: never;
