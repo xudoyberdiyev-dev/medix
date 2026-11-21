@@ -61,7 +61,7 @@ test("Direktor: markirovkali mahsulotda «Qadoqdagi soni» = 2 (quti hajmi)", as
 test("Buyurtma 3 dona → yigʻish", async ({ page }) => {
   await login(page, "operator.1", OPERATOR_PASSWORD);
   await page.goto("/orders");
-  await page.getByRole("button", { name: "Yangi buyurtma" }).click();
+  await page.getByRole("button", { name: "Yangi buyurtma" }).first().click();
   await choose(page, "Mijoz", new RegExp(CUSTOMER), "Shifo");
   await choose(page, "Joʻnatiladigan ombor", /Markaziy ombor/);
   await choose(page, "Mahsulot", /Amoksitsillin E2E/, "Amoksitsillin");

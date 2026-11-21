@@ -56,7 +56,7 @@ test("Direktor: mahsulot shaklida ombordagi joy → roʻyxat ustuni va qidiruv",
 test("Yigʻuvchi panelida qator joyi koʻrinadi", async ({ page }) => {
   await login(page, "operator.1", OPERATOR_PASSWORD);
   await page.goto("/orders");
-  await page.getByRole("button", { name: "Yangi buyurtma" }).click();
+  await page.getByRole("button", { name: "Yangi buyurtma" }).first().click();
   await choose(page, "Mijoz", new RegExp(CUSTOMER), "Shifo");
   await choose(page, "Joʻnatiladigan ombor", /Markaziy ombor/);
   await choose(page, "Mahsulot", /Paracetamol E2E/, "Paracetamol");

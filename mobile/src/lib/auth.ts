@@ -41,6 +41,21 @@ export async function login(user: string, password: string): Promise<void> {
   }
 }
 
+/** Vaqtinchalik parol bilan kirib, shu yerda yangi parol oʻrnatish → token (POST /api/mobile/auth/password). */
+export async function loginWithNewPassword(user: string, currentPassword: string, newPassword: string): Promise<void> {
+  try {
+    const body: components["schemas"]["MobilePasswordRequest"] = { login: user, currentPassword, newPassword, device: deviceName() };
+    const r = await api<components["schemas"]["MobileLoginResponse"]>("/api/mobile/auth/password", { method: "POST", auth: false, body });
+    await saveSession(r.token, r.me);
+  } catch (e) {
+    if (e instanceof ApiError) {
+      const kind = e.problem.status === 0 ? "network" : loginErrorKind(e.problem.status, e.problem.code);
+      throw new LoginError(kind, kind === "credentials" || kind === "locked" ? e.problem.detail : undefined);
+    }
+    throw new LoginError("network");
+  }
+}
+
 export async function hasSession(): Promise<boolean> {
   return (await getToken()) !== null;
 }

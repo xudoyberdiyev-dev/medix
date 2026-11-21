@@ -23,6 +23,7 @@ import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -276,6 +277,81 @@ class OpeningImportIT {
                 .andExpect(jsonPath("$.errors[*].sheet", hasItem("Kassa va bank")));
         upload("apply", admin, second, true).andExpect(status().isBadRequest());
         assertThat(stock(p.main(), a.id())).isEqualTo(110);
+    }
+
+    /** SmartUp hisobotlari «qanday bo'lsa shunday»: ikki qatorli sarlavha, «Склад: …» / «Филиал: …» guruhlari, Дебет/Кредит. */
+    @Test
+    void smartUpReportsAsExportedAreImportedAndPosted() throws Exception {
+        Place p = place();
+        Product a = product();
+        Party customer = party(false);
+        Party supplier = party(true);
+        Cookie admin = loginAs("ADMIN", null);
+        byte[] file;
+        try (XSSFWorkbook wb = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            Sheet g = wb.createSheet("Остатки ТМЦ");
+            cells(g, 0, "Остатки ТМЦ на " + today());
+            cells(g, 2, "Код", "Наименование ТМЦ", "Серия", "Срок годности", "Остаток на начало", "", "Остаток на конец", "");
+            cells(g, 3, "", "", "", "", "Кол-во", "Сумма", "Кол-во", "Сумма");
+            for (int col = 0; col < 4; col++) {
+                g.addMergedRegion(new CellRangeAddress(2, 3, col, col));
+            }
+            g.addMergedRegion(new CellRangeAddress(2, 2, 4, 5));
+            g.addMergedRegion(new CellRangeAddress(2, 2, 6, 7));
+            cells(g, 4, "Склад: " + p.warehouse());
+            cells(g, 5, "", "Лекарственные средства");
+            nums(cells(g, 6, a.code(), a.name(), "SU-1", "30.09.2028"), 99, 999, 10, 125000);
+            cells(g, 7, "Итого", "", "", "", "", "", "10", "125000");
+            saldo(wb.createSheet("Дебиторская задолженность"), "Клиент", p.code(), customer.tin(), 300000);
+            saldo(wb.createSheet("Кредиторская задолженность"), "Поставщик", p.code(), supplier.tin(), 700000);
+            wb.write(out);
+            file = out.toByteArray();
+        }
+        upload("preview", admin, file, false)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.errors", hasSize(0)))
+                .andExpect(jsonPath("$.warnings", hasSize(0)))
+                .andExpect(jsonPath("$.canApply").value(true))
+                .andExpect(jsonPath("$.sections[0].section").value("GOODS"))
+                .andExpect(jsonPath("$.sections[0].rows").value(1))
+                .andExpect(jsonPath("$.sections[0].qty").value(10))
+                .andExpect(jsonPath("$.sections[0].amount").value("125000.00"));
+        upload("apply", admin, file, true).andExpect(status().isOk()).andExpect(jsonPath("$.posted").value(true));
+        assertThat(stock(p.main(), a.id())).isEqualTo(10);
+        assertThat(jdbc.sql("SELECT coalesce(sum(amount), 0) FROM party_ledger WHERE counterparty_id = :c AND doc_type = 'BQ'")
+                .param("c", customer.id()).query(BigDecimal.class).single()).isEqualByComparingTo("300000");
+        assertThat(jdbc.sql("SELECT coalesce(sum(amount), 0) FROM party_ledger WHERE counterparty_id = :c AND doc_type = 'BQ'")
+                .param("c", supplier.id()).query(BigDecimal.class).single()).isEqualByComparingTo("700000");
+    }
+
+    /** Oborot-saldo: boshlang'ich saldo va oborotlar (boshqa sonlar) e'tiborga olinmaydi; mijoz — Дт, YB — Кт. */
+    private static void saldo(Sheet s, String party, String branch, String tin, double amount) {
+        cells(s, 0, party, "ИНН", "Сальдо на начало периода", "", "Обороты за период", "", "Сальдо на конец периода", "");
+        cells(s, 1, "", "", "Дебет", "Кредит", "Дебет", "Кредит", "Дебет", "Кредит");
+        s.addMergedRegion(new CellRangeAddress(0, 1, 0, 0));
+        s.addMergedRegion(new CellRangeAddress(0, 1, 1, 1));
+        s.addMergedRegion(new CellRangeAddress(0, 0, 2, 3));
+        s.addMergedRegion(new CellRangeAddress(0, 0, 4, 5));
+        s.addMergedRegion(new CellRangeAddress(0, 0, 6, 7));
+        cells(s, 2, "Филиал: " + branch);
+        boolean customer = party.equals("Клиент");
+        nums(cells(s, 3, "Smartup nomi", tin), 111, 222, 333, 444, customer ? amount : 0, customer ? 0 : amount);
+    }
+
+    private static Row cells(Sheet s, int index, String... values) {
+        Row r = s.createRow(index);
+        for (int i = 0; i < values.length; i++) {
+            r.createCell(i).setCellValue(values[i]);
+        }
+        return r;
+    }
+
+    private static Row nums(Row r, double... values) {
+        int start = r.getLastCellNum();
+        for (int i = 0; i < values.length; i++) {
+            r.createCell(start + i).setCellValue(values[i]);
+        }
+        return r;
     }
 
     @Test

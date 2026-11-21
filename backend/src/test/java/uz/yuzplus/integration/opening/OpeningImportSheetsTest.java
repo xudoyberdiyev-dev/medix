@@ -7,9 +7,11 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
 import uz.yuzplus.integration.opening.OpeningImportModels.Section;
@@ -146,6 +148,116 @@ class OpeningImportSheetsTest {
         assertThat(parsed.sheets()).extracting(ParsedSheet::section)
                 .containsExactly(Section.GOODS, Section.CUSTOMER_DEBT, Section.SUPPLIER_DEBT, Section.MONEY);
         assertThat(parsed.sheets()).extracting(s -> s.rows().size()).containsExactly(2, 2, 1, 2);
+    }
+
+    @Test
+    void moreSmartUpReportHeaders() {
+        assertThat(OpeningImportSheets.field("Код ТМЦ")).contains(Field.PRODUCT_CODE);
+        assertThat(OpeningImportSheets.field("Наименование ТМЦ")).contains(Field.PRODUCT_NAME);
+        assertThat(OpeningImportSheets.field("Остаток на конец периода")).contains(Field.QTY);
+        assertThat(OpeningImportSheets.field("Сальдо на конец периода")).contains(Field.AMOUNT);
+        assertThat(OpeningImportSheets.field("Сальдо на конец (Дебет)")).contains(Field.DEBIT);
+        assertThat(OpeningImportSheets.field("Кредит")).contains(Field.CREDIT);
+        assertThat(OpeningImportSheets.field("Наименование клиента")).contains(Field.PARTY_NAME);
+        assertThat(OpeningImportSheets.field("Себестоимость за ед.")).contains(Field.COST);
+    }
+
+    /** Oborot-saldo vedomosti: ikki qatorli sarlavha, boshlang'ich saldo va oborotlar tashlanadi, oxirgi saldo Дт − Кт / Кт − Дт. */
+    @Test
+    void turnoverReportWithTwoRowHeaderAndDebitCredit() throws Exception {
+        byte[] file;
+        try (XSSFWorkbook wb = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            Sheet customers = wb.createSheet("Дебиторская задолженность");
+            saldoHeader(customers, "Клиент");
+            numbers(row(customers, 2, "Shifo Plus", "301234567"), 100, 0, 50, 20, 130, 0);
+            numbers(row(customers, 3, "Avans Farm", "301234568"), 0, 0, 0, 500, 0, 500);
+            row(customers, 4, "Итого", "", "", "", "", "", "130", "500");
+            Sheet suppliers = wb.createSheet("Кредиторка");
+            saldoHeader(suppliers, "Поставщик");
+            numbers(row(suppliers, 2, "Farm Group", "201234567"), 0, 400, 0, 600, 0, 1000);
+            wb.write(out);
+            file = out.toByteArray();
+        }
+        Parsed parsed = OpeningImportSheets.read(new ByteArrayInputStream(file));
+        assertThat(parsed.skipped()).isEmpty();
+        assertThat(parsed.sheets()).extracting(ParsedSheet::section).containsExactly(Section.CUSTOMER_DEBT, Section.SUPPLIER_DEBT);
+        ParsedSheet c = parsed.sheets().getFirst();
+        assertThat(c.rows()).hasSize(2);
+        assertThat(c.rows().getFirst().rowNo()).isEqualTo(3);
+        assertThat(c.rows().getFirst().text(Field.PARTY_NAME)).isEqualTo("Shifo Plus");
+        assertThat(c.rows().getFirst().text(Field.PARTY_TIN)).isEqualTo("301234567");
+        assertThat(c.rows().getFirst().raw(Field.AMOUNT)).isEqualTo(new BigDecimal("130.00"));
+        assertThat(c.rows().get(1).raw(Field.AMOUNT)).isEqualTo(new BigDecimal("-500.00"));
+        assertThat(parsed.sheets().get(1).rows().getFirst().raw(Field.AMOUNT)).isEqualTo(new BigDecimal("1000.00"));
+    }
+
+    /** Qoldiq hisoboti: «Склад: …» guruh qatori, tovar guruhi sarlavhasi, oxirgi qoldiq ustuni, tannarx = summa / soni. */
+    @Test
+    void stockReportWithWarehouseGroupsAndTotalSum() throws Exception {
+        byte[] file;
+        try (XSSFWorkbook wb = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            Sheet goods = wb.createSheet("Остатки");
+            row(goods, 0, "Код", "Наименование", "Серия", "Срок годности", "Остаток на начало", "", "Остаток на конец", "");
+            row(goods, 1, "", "", "", "", "Кол-во", "Сумма", "Кол-во", "Сумма");
+            for (int col : new int[] {0, 1, 2, 3}) {
+                goods.addMergedRegion(new CellRangeAddress(0, 1, col, col));
+            }
+            goods.addMergedRegion(new CellRangeAddress(0, 0, 4, 5));
+            goods.addMergedRegion(new CellRangeAddress(0, 0, 6, 7));
+            row(goods, 2, "Склад: Asosiy ombor");
+            row(goods, 3, "", "Анальгетики");
+            Row p = row(goods, 4, "12345678", "Paracetamol", "PR-1", "30.09.2028");
+            numbers(p, 4, 9, 3, 50000);
+            row(goods, 5, "Склад: Filial ombori");
+            numbers(row(goods, 6, "87654321", "Ibuprofen", "IB-2", "09.2028"), 0, 0, 7, 7000);
+            wb.write(out);
+            file = out.toByteArray();
+        }
+        Parsed parsed = OpeningImportSheets.read(new ByteArrayInputStream(file));
+        assertThat(parsed.sheets()).extracting(ParsedSheet::section).containsExactly(Section.GOODS);
+        ParsedSheet g = parsed.sheets().getFirst();
+        assertThat(g.rows()).extracting(OpeningImportSheets.SheetRow::rowNo).containsExactly(5, 7);
+        OpeningImportSheets.SheetRow first = g.rows().getFirst();
+        assertThat(first.text(Field.WAREHOUSE)).isEqualTo("Asosiy ombor");
+        assertThat(first.text(Field.QTY)).isEqualTo("3");
+        assertThat(first.raw(Field.COST)).isEqualTo(new BigDecimal("16666.67"));
+        assertThat(g.rows().get(1).text(Field.WAREHOUSE)).isEqualTo("Filial ombori");
+        assertThat(g.rows().get(1).raw(Field.COST)).isEqualTo(new BigDecimal("1000.00"));
+    }
+
+    /** SmartUp eski formatda (.xls, Excel 97–2003) ham eksport qiladi — shu fayl ham oʻqiladi. */
+    @Test
+    void legacyXlsIsReadToo() throws Exception {
+        byte[] file;
+        try (HSSFWorkbook wb = new HSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            Sheet customers = wb.createSheet("Дебиторка");
+            saldoHeader(customers, "Клиент");
+            numbers(row(customers, 2, "Shifo Plus", "301234567"), 0, 0, 0, 0, 2500.5, 0);
+            wb.write(out);
+            file = out.toByteArray();
+        }
+        Parsed parsed = OpeningImportSheets.read(new ByteArrayInputStream(file));
+        assertThat(parsed.sheets()).extracting(ParsedSheet::section).containsExactly(Section.CUSTOMER_DEBT);
+        assertThat(parsed.sheets().getFirst().rows().getFirst().raw(Field.AMOUNT)).isEqualTo(new BigDecimal("2500.50"));
+    }
+
+    private static void saldoHeader(Sheet sheet, String party) {
+        row(sheet, 0, party, "ИНН", "Сальдо на начало периода", "", "Обороты за период", "", "Сальдо на конец периода", "");
+        row(sheet, 1, "", "", "Дебет", "Кредит", "Дебет", "Кредит", "Дебет", "Кредит");
+        sheet.addMergedRegion(new CellRangeAddress(0, 1, 0, 0));
+        sheet.addMergedRegion(new CellRangeAddress(0, 1, 1, 1));
+        sheet.addMergedRegion(new CellRangeAddress(0, 0, 2, 3));
+        sheet.addMergedRegion(new CellRangeAddress(0, 0, 4, 5));
+        sheet.addMergedRegion(new CellRangeAddress(0, 0, 6, 7));
+    }
+
+    /** Qatorga mavjud matn kataklaridan keyin sonli kataklar qo'shadi. */
+    private static Row numbers(Row r, double... values) {
+        int start = Math.max(r.getLastCellNum(), 0);
+        for (int i = 0; i < values.length; i++) {
+            r.createCell(start + i).setCellValue(values[i]);
+        }
+        return r;
     }
 
     private static Row row(Sheet sheet, int index, String... values) {

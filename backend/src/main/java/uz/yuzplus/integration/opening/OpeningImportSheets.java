@@ -8,11 +8,13 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.poi.ss.usermodel.Cell;
@@ -23,6 +25,7 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.apache.poi.ss.util.CellRangeAddress;
 import uz.yuzplus.integration.opening.OpeningImportModels.Section;
 import uz.yuzplus.shared.error.YuzplusException;
 
@@ -38,7 +41,9 @@ final class OpeningImportSheets {
     /** Ustun maydonlari. */
     enum Field {
         BRANCH, WAREHOUSE, PRODUCT_CODE, BARCODE, PRODUCT_NAME, ZONE, BATCH, PRODUCED, EXPIRY, COST, QTY, BONUS,
-        PARTY_TIN, PARTY_NAME, AMOUNT, DUE, DOC_REF, ACCOUNT
+        PARTY_TIN, PARTY_NAME, AMOUNT, DUE, DOC_REF, ACCOUNT,
+        /** Oborot-saldo vedomosti: «Дебет» / «Кредит» (oxirgi davr) — {@link Field#AMOUNT} shulardan hisoblanadi. */
+        DEBIT, CREDIT
     }
 
     /** Sarlavha sinonimlari — {@link #key(String)} ko'rinishida (kichik harf, tutuq belgilarsiz, bo'shliq bilan). */
@@ -48,32 +53,55 @@ final class OpeningImportSheets {
         SYNONYMS.put(Field.BRANCH, List.of("filial", "filial nomi", "filial kodi", "филиал", "наименование филиала"));
         SYNONYMS.put(Field.WAREHOUSE, List.of("ombor", "ombor nomi", "омбор", "омбор номи", "склад", "наименование склада", "склад хранения"));
         SYNONYMS.put(Field.PRODUCT_CODE, List.of("mahsulot kodi", "маҳсулот коди", "kod", "код", "код товара", "код продукта", "артикул",
-                "код номенклатуры"));
+                "код номенклатуры", "код тмц", "код ткм", "внутренний код"));
         SYNONYMS.put(Field.BARCODE, List.of("shtrix kod", "shtrixkod", "штрих код", "штрихкод", "barcode", "ean"));
         SYNONYMS.put(Field.PRODUCT_NAME, List.of("mahsulot nomi", "mahsulot", "маҳсулот номи", "маҳсулот", "nomi", "номи", "наименование",
-                "наименование товара", "товар", "продукт", "номенклатура", "наименование продукта"));
+                "наименование товара", "товар", "продукт", "номенклатура", "наименование продукта", "тмц", "наименование тмц", "товары",
+                "лекарственное средство", "препарат"));
         SYNONYMS.put(Field.ZONE, List.of("zona", "зона", "зона хранения", "ячейка"));
         SYNONYMS.put(Field.BATCH, List.of("partiya", "партия", "seriya", "серия", "номер серии", "серия партии", "номер партии", "партия серия"));
         SYNONYMS.put(Field.PRODUCED, List.of("ishlab chiqarilgan", "ishlab chiqarilgan sana", "ишлаб чиқарилган", "дата производства",
                 "дата изготовления", "дата выпуска"));
         SYNONYMS.put(Field.EXPIRY, List.of("yaroqlilik", "yaroqlilik muddati", "яроқлилик", "яроқлилик муддати", "срок годности", "годен до",
-                "дата истечения срока годности", "срок годности до"));
+                "дата истечения срока годности", "срок годности до", "срок годн", "годность", "срок"));
         SYNONYMS.put(Field.COST, List.of("tannarx", "tannarxi", "таннарх", "себестоимость", "цена закупки", "закупочная цена", "цена прихода",
-                "цена поступления", "себестоимость единицы"));
+                "цена поступления", "себестоимость единицы", "себестоимость за единицу", "себестоимость за ед", "средняя себестоимость",
+                "цена себестоимости", "закуп цена", "цена закуп", "приходная цена"));
         SYNONYMS.put(Field.QTY, List.of("soni", "сони", "miqdor", "миқдор", "количество", "кол во", "остаток", "остаток количество",
-                "количество остаток"));
+                "количество остаток", "остаток на конец", "остаток на конец периода", "конечный остаток", "количество на конец",
+                "кол во на конец", "остаток кол во", "в наличии"));
         SYNONYMS.put(Field.BONUS, List.of("bonus", "бонус"));
         SYNONYMS.put(Field.PARTY_TIN, List.of("stir", "стир", "инн", "inn", "stir jshshir", "инн пинфл", "пинфл", "jshshir"));
         SYNONYMS.put(Field.PARTY_NAME, List.of("mijoz", "mijoz nomi", "мижоз", "мижоз номи", "yetkazib beruvchi", "етказиб берувчи", "kontragent",
-                "контрагент", "наименование контрагента", "клиент", "покупатель", "поставщик", "yb"));
+                "контрагент", "наименование контрагента", "клиент", "покупатель", "поставщик", "yb", "наименование клиента",
+                "наименование поставщика", "клиент наименование", "поставщик наименование", "организация контрагент"));
         SYNONYMS.put(Field.AMOUNT, List.of("summa", "сумма", "qarz", "қарз", "qarz summasi", "долг", "сумма долга", "сальдо", "конечное сальдо",
-                "сальдо на конец", "qoldiq summasi", "остаток сумма", "сумма остатка", "balans", "баланс"));
+                "сальдо на конец", "qoldiq summasi", "остаток сумма", "сумма остатка", "balans", "баланс", "сальдо на конец периода",
+                "конечное сальдо сумма", "задолженность", "сумма задолженности", "итоговая сумма", "сумма себестоимости",
+                "сумма по себестоимости"));
         SYNONYMS.put(Field.DUE, List.of("tolov muddati", "тўлов муддати", "muddat", "срок оплаты", "дата оплаты", "срок погашения"));
         SYNONYMS.put(Field.DOC_REF, List.of("asos", "asos №", "асос", "hujjat", "hujjat raqami", "ҳужжат", "основание", "документ",
                 "номер документа", "документ основание"));
         SYNONYMS.put(Field.ACCOUNT, List.of("hisob", "hisob nomi", "ҳисоб", "kassa", "kassa bank", "kassa va bank", "касса", "касса банк",
                 "счет", "расчетный счет", "банк", "bank"));
+        SYNONYMS.put(Field.DEBIT, List.of("дебет", "debet", "дт", "сальдо на конец дебет", "конечное сальдо дебет", "дебет на конец",
+                "сальдо конец дебет", "сальдо на конец периода дебет"));
+        SYNONYMS.put(Field.CREDIT, List.of("кредит", "kredit", "кт", "сальдо на конец кредит", "конечное сальдо кредит", "кредит на конец",
+                "сальдо конец кредит", "сальдо на конец периода кредит"));
     }
+
+    /** Takrorlanadigan ustunda OXIRGISI olinadi (oborot-saldo: boshlang'ich → oborot → oxirgi saldo). */
+    private static final Set<Field> LAST_WINS = EnumSet.of(Field.DEBIT, Field.CREDIT);
+
+    /** Ikki qatorli sarlavhada (davrlar ketma-ket: boshi → oxiri) bu maydonlarda ham oxirgisi olinadi. */
+    private static final Set<Field> LAST_WINS_COMBINED = EnumSet.of(Field.DEBIT, Field.CREDIT, Field.QTY, Field.AMOUNT);
+
+    /** Ikki qatorli sarlavhada shu ota-sarlavha ostidagi ustunlar olinmaydi (boshlang'ich saldo, oborotlar). */
+    private static final List<String> IGNORED_PARENTS = List.of("начал", "оборот", "приход", "расход", "поступлен", "списан", "boshlang",
+            "бошланг", "aylanma", "айланма", "kirim", "chiqim");
+
+    private static final Pattern GROUP_WAREHOUSE = Pattern.compile("(?iu)^\\s*(склад|ombor|омбор)\\s*[:：]\\s*(.+)$");
+    private static final Pattern GROUP_BRANCH = Pattern.compile("(?iu)^\\s*(филиал|filial)\\s*[:：]\\s*(.+)$");
 
     /** Bitta ma'lumot qatori: Excel qator raqami (1 dan) va maydon qiymatlari ({@link LocalDate}, {@link BigDecimal} yoki matn). */
     record SheetRow(int rowNo, Map<Field, Object> values) {
@@ -118,7 +146,7 @@ final class OpeningImportSheets {
                     skipped.add(new SkippedSheet(sheet.getSheetName(), "openingImport.sheetAmbiguous"));
                     continue;
                 }
-                sheets.add(new ParsedSheet(sheet.getSheetName(), section.get(), rows(sheet, h, fmt)));
+                sheets.add(new ParsedSheet(sheet.getSheetName(), section.get(), rows(sheet, h, section.get(), fmt)));
             }
             return new Parsed(sheets, skipped);
         } catch (IOException | RuntimeException e) {
@@ -132,11 +160,20 @@ final class OpeningImportSheets {
     /** Sarlavha: qator raqami (0 dan), ustun → maydon, va asl sarlavha matnlari (mijoz/YB ni ajratish uchun). */
     record Header(int rowIndex, Map<Integer, Field> columns, List<String> titles) {
 
+        /** Ma'lumot boshlanadigan qator (0 dan). */
+        int dataStart() {
+            return rowIndex + 1;
+        }
+
         boolean has(Field f) {
             return columns.containsValue(f);
         }
     }
 
+    /**
+     * Sarlavha qatori. Ikki qatorli sarlavha ham tushuniladi («Сальдо на конец» → «Дебет» / «Кредит», «Остаток на конец» →
+     * «Кол-во» / «Сумма»): ikkinchi qatorda faqat matn bo'lsa va u ko'proq ustun aniqlasa — header indeksi ikkinchi qator.
+     */
     static Optional<Header> findHeader(Sheet sheet, DataFormatter fmt) {
         int first = Math.max(sheet.getFirstRowNum(), 0);
         for (int i = first; i <= Math.min(sheet.getLastRowNum(), first + 20); i++) {
@@ -144,22 +181,112 @@ final class OpeningImportSheets {
             if (row == null) {
                 continue;
             }
-            Map<Integer, Field> columns = new LinkedHashMap<>();
-            List<String> titles = new ArrayList<>();
-            for (Cell c : row) {
-                String title = fmt.formatCellValue(c).strip();
-                if (title.isEmpty()) {
-                    continue;
-                }
-                titles.add(key(title));
-                field(title).filter(f -> !columns.containsValue(f)).ifPresent(f -> columns.put(c.getColumnIndex(), f));
+            Header single = singleHeader(row, i, fmt);
+            Header combined = combinedHeader(sheet, row, sheet.getRow(i + 1), fmt);
+            boolean singleOk = valid(single);
+            if (combined != null && valid(combined) && (!singleOk || combined.columns().size() > single.columns().size())) {
+                return Optional.of(combined);
             }
-            Header h = new Header(i, columns, titles);
-            if (goods(h) || debt(h) || money(h)) {
-                return Optional.of(h);
+            if (singleOk) {
+                return Optional.of(single);
             }
         }
         return Optional.empty();
+    }
+
+    private static boolean valid(Header h) {
+        return goods(h) || debt(h) || money(h);
+    }
+
+    private static Header singleHeader(Row row, int index, DataFormatter fmt) {
+        Map<Integer, Field> columns = new LinkedHashMap<>();
+        List<String> titles = new ArrayList<>();
+        for (Cell c : row) {
+            String title = fmt.formatCellValue(c).strip();
+            if (title.isEmpty()) {
+                continue;
+            }
+            titles.add(key(title));
+            field(title).ifPresent(f -> put(columns, c.getColumnIndex(), f, LAST_WINS));
+        }
+        return new Header(index, columns, titles);
+    }
+
+    /** Ota + bola sarlavha; bola qatorida son bo'lsa (ya'ni bu ma'lumot qatori) — {@code null}. */
+    private static Header combinedHeader(Sheet sheet, Row parentRow, Row childRow, DataFormatter fmt) {
+        if (childRow == null) {
+            return null;
+        }
+        boolean anyChild = false;
+        int last = Math.max(parentRow.getLastCellNum(), childRow.getLastCellNum());
+        Map<Integer, Field> columns = new LinkedHashMap<>();
+        List<String> titles = new ArrayList<>();
+        String lastParent = "";
+        for (int c = 0; c < last; c++) {
+            Cell childCell = childRow.getCell(c);
+            if (childCell != null && (childCell.getCellType() == CellType.NUMERIC
+                    || (childCell.getCellType() == CellType.FORMULA && childCell.getCachedFormulaResultType() == CellType.NUMERIC))) {
+                return null;
+            }
+            String child = childCell == null ? "" : fmt.formatCellValue(childCell).strip();
+            String parent = parentTitle(sheet, parentRow, c, fmt);
+            if (!parent.isEmpty()) {
+                lastParent = parent;
+            } else if (!child.isEmpty()) {
+                // birlashtirilmagan guruh sarlavhasi: chapdagi eng yaqin ota-sarlavha
+                parent = lastParent;
+            }
+            if (child.isEmpty() && parent.isEmpty()) {
+                continue;
+            }
+            if (!child.isEmpty()) {
+                anyChild = true;
+                titles.add(key(child));
+            }
+            if (!parent.isEmpty()) {
+                titles.add(key(parent));
+            }
+            Optional<Field> f;
+            if (child.isEmpty()) {
+                f = field(parent);
+            } else {
+                String pk = key(parent);
+                if (IGNORED_PARENTS.stream().anyMatch(pk::contains)) {
+                    continue;
+                }
+                f = parent.isEmpty() ? field(child) : field(parent + " " + child).or(() -> field(child));
+            }
+            int col = c;
+            f.ifPresent(x -> put(columns, col, x, LAST_WINS_COMBINED));
+        }
+        return anyChild ? new Header(childRow.getRowNum(), columns, titles) : null;
+    }
+
+    /** Ota-sarlavha: katakning o'zi yoki u kirgan birlashtirilgan (merged) hududning birinchi katagi. */
+    private static String parentTitle(Sheet sheet, Row parentRow, int col, DataFormatter fmt) {
+        Cell c = parentRow.getCell(col);
+        String v = c == null ? "" : fmt.formatCellValue(c).strip();
+        if (!v.isEmpty()) {
+            return v;
+        }
+        for (CellRangeAddress r : sheet.getMergedRegions()) {
+            if (r.isInRange(parentRow.getRowNum(), col)) {
+                Row top = sheet.getRow(r.getFirstRow());
+                Cell tc = top == null ? null : top.getCell(r.getFirstColumn());
+                return tc == null ? "" : fmt.formatCellValue(tc).strip();
+            }
+        }
+        return "";
+    }
+
+    private static void put(Map<Integer, Field> columns, int col, Field f, Set<Field> lastWins) {
+        if (columns.containsValue(f)) {
+            if (!lastWins.contains(f)) {
+                return;
+            }
+            columns.values().remove(f);
+        }
+        columns.put(col, f);
     }
 
     /** Sarlavha matni → maydon (aniq sinonim; bo'lmasa — «… (сум)», «Количество, шт» kabi qo'shimchalarsiz). */
@@ -187,11 +314,15 @@ final class OpeningImportSheets {
 
     /** Qarz: kontragent STIR yoki nomi (eksportda nomi ko'pincha «Наименование») + summa. */
     private static boolean debt(Header h) {
-        return (h.has(Field.PARTY_TIN) || h.has(Field.PARTY_NAME) || h.has(Field.PRODUCT_NAME)) && h.has(Field.AMOUNT);
+        return (h.has(Field.PARTY_TIN) || h.has(Field.PARTY_NAME) || h.has(Field.PRODUCT_NAME)) && hasAmount(h);
     }
 
     private static boolean money(Header h) {
-        return h.has(Field.ACCOUNT) && h.has(Field.AMOUNT) && !h.has(Field.PARTY_TIN) && !h.has(Field.PARTY_NAME);
+        return h.has(Field.ACCOUNT) && hasAmount(h) && !h.has(Field.PARTY_TIN) && !h.has(Field.PARTY_NAME);
+    }
+
+    private static boolean hasAmount(Header h) {
+        return h.has(Field.AMOUNT) || h.has(Field.DEBIT) || h.has(Field.CREDIT);
     }
 
     private static final List<String> MONEY_HINTS = List.of("kassa", "касса", "bank", "банк", "pul", "пул", "денеж");
@@ -223,12 +354,27 @@ final class OpeningImportSheets {
         return Optional.of(customer ? Section.CUSTOMER_DEBT : Section.SUPPLIER_DEBT);
     }
 
-    private static List<SheetRow> rows(Sheet sheet, Header h, DataFormatter fmt) {
+    /**
+     * Ma'lumot qatorlari. SmartUp guruhlashi: «Склад: …» / «Филиал: …» qatori keyingi qatorlarga ombor / filial beradi (ustuni bo'lmasa
+     * yoki bo'sh bo'lsa); tovar varag'ida faqat nomi (va jami summa) bor qator — guruh sarlavhasi, tashlanadi.
+     */
+    private static List<SheetRow> rows(Sheet sheet, Header h, Section section, DataFormatter fmt) {
         List<SheetRow> rows = new ArrayList<>();
-        for (int i = h.rowIndex() + 1; i <= sheet.getLastRowNum(); i++) {
+        String groupWarehouse = null;
+        String groupBranch = null;
+        for (int i = h.dataStart(); i <= sheet.getLastRowNum(); i++) {
             Row row = sheet.getRow(i);
             Map<Field, Object> values = new EnumMap<>(Field.class);
             if (row != null) {
+                Optional<String[]> group = groupLabel(row, fmt);
+                if (group.isPresent()) {
+                    if (group.get()[0].equals("w")) {
+                        groupWarehouse = group.get()[1];
+                    } else {
+                        groupBranch = group.get()[1];
+                    }
+                    continue;
+                }
                 for (Map.Entry<Integer, Field> col : h.columns().entrySet()) {
                     Cell c = row.getCell(col.getKey());
                     Object v = c == null ? null : cellValue(c, fmt);
@@ -237,11 +383,84 @@ final class OpeningImportSheets {
                     }
                 }
             }
-            if (!values.isEmpty() && !isTotalRow(values) && !isNoteRow(values)) {
-                rows.add(new SheetRow(i + 1, values));
+            if (values.isEmpty() || isTotalRow(values) || isNoteRow(values)) {
+                continue;
             }
+            if (section == Section.GOODS && isGroupHeading(values)) {
+                continue;
+            }
+            if (groupWarehouse != null) {
+                values.putIfAbsent(Field.WAREHOUSE, groupWarehouse);
+            }
+            if (groupBranch != null) {
+                values.putIfAbsent(Field.BRANCH, groupBranch);
+            }
+            derive(section, values);
+            rows.add(new SheetRow(i + 1, values));
         }
         return rows;
+    }
+
+    /** «Склад: Asosiy ombor» → {"w", "Asosiy ombor"}; «Филиал: TSH» → {"b", "TSH"} (qatordagi yagona to'ldirilgan katak). */
+    private static Optional<String[]> groupLabel(Row row, DataFormatter fmt) {
+        String only = null;
+        for (Cell c : row) {
+            String t = fmt.formatCellValue(c).strip();
+            if (t.isEmpty()) {
+                continue;
+            }
+            if (only != null) {
+                return Optional.empty();
+            }
+            only = t;
+        }
+        if (only == null) {
+            return Optional.empty();
+        }
+        Matcher w = GROUP_WAREHOUSE.matcher(only);
+        if (w.matches()) {
+            return Optional.of(new String[] {"w", w.group(2).strip()});
+        }
+        Matcher b = GROUP_BRANCH.matcher(only);
+        if (b.matches()) {
+            return Optional.of(new String[] {"b", b.group(2).strip()});
+        }
+        return Optional.empty();
+    }
+
+    /** Tovar guruhi sarlavhasi: faqat nomi (va ehtimol guruh jami summasi / soni) — kodi, partiyasi, muddati yo'q. */
+    private static boolean isGroupHeading(Map<Field, Object> values) {
+        return values.containsKey(Field.PRODUCT_NAME)
+                && !values.containsKey(Field.PRODUCT_CODE) && !values.containsKey(Field.BARCODE) && !values.containsKey(Field.BATCH)
+                && !values.containsKey(Field.EXPIRY) && !values.containsKey(Field.COST) && !values.containsKey(Field.QTY);
+    }
+
+    /**
+     * Hosila qiymatlar: «Дебет»/«Кредит» → summa (mijoz va kassa: Дт − Кт, YB: Кт − Дт; manfiy — avans); tovarda tannarx yo'q, lekin
+     * jami summa va soni bor — tannarx = summa / soni (HALF_UP, 2 xona). Noto'g'ri qiymat o'zgarishsiz qoldiriladi (xato keyin chiqadi).
+     */
+    static void derive(Section section, Map<Field, Object> values) {
+        if (!values.containsKey(Field.AMOUNT) && (values.containsKey(Field.DEBIT) || values.containsKey(Field.CREDIT))) {
+            try {
+                BigDecimal d = Optional.ofNullable(amount(values.get(Field.DEBIT))).orElse(BigDecimal.ZERO);
+                BigDecimal k = Optional.ofNullable(amount(values.get(Field.CREDIT))).orElse(BigDecimal.ZERO);
+                values.put(Field.AMOUNT, (section == Section.SUPPLIER_DEBT ? k.subtract(d) : d.subtract(k)).setScale(2, RoundingMode.HALF_UP));
+            } catch (ValueError e) {
+                Object bad = values.containsKey(Field.DEBIT) ? values.get(Field.DEBIT) : values.get(Field.CREDIT);
+                values.put(Field.AMOUNT, bad);
+            }
+        }
+        if (section == Section.GOODS && !values.containsKey(Field.COST) && values.containsKey(Field.AMOUNT) && values.containsKey(Field.QTY)) {
+            try {
+                BigDecimal total = amount(values.get(Field.AMOUNT));
+                Integer q = qty(values.get(Field.QTY));
+                if (total != null && q != null) {
+                    values.put(Field.COST, total.divide(BigDecimal.valueOf(q), 2, RoundingMode.HALF_UP));
+                }
+            } catch (ValueError e) {
+                // soni / summa xatosi tovar qatorini tekshirishda chiqadi
+            }
+        }
     }
 
     /** «Итого» / «Jami» qatori (eksport oxirida) — ma'lumot emas. */

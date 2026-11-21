@@ -21,7 +21,7 @@ test("Operator: saqlanmagan buyurtma boshqa sahifadan qaytganda tiklanadi", asyn
   await expect(page).toHaveURL(/\/$/);
 
   await page.goto("/orders");
-  await page.getByRole("button", { name: "Yangi buyurtma" }).click();
+  await page.getByRole("button", { name: "Yangi buyurtma" }).first().click();
   await page.getByRole("combobox", { name: "Mijoz", exact: true }).click();
   await page.getByPlaceholder("Qidirish").fill("Baraka");
   await page.getByRole("option", { name: /Baraka Dorixona E2E/ }).click();

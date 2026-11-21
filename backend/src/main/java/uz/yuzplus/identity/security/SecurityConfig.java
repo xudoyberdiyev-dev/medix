@@ -37,6 +37,7 @@ class SecurityConfig {
 
     static final String SESSION_COOKIE = "YUZPLUS_SESSION";
     static final String MOBILE_LOGIN = "/api/mobile/auth/login";
+    static final String MOBILE_PASSWORD = "/api/mobile/auth/password";
 
     @Bean
     SecurityFilterChain api(
@@ -51,7 +52,7 @@ class SecurityConfig {
                         .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                         // Mobil ilova: cookie yoʻq, token sarlavhada — CSRF xavfi yoʻq (brauzer bu sarlavhani oʻzi qoʻshmaydi)
                         .ignoringRequestMatchers(req -> MobileTokens.bearer(req.getHeader("Authorization")) != null)
-                        .ignoringRequestMatchers(MOBILE_LOGIN))
+                        .ignoringRequestMatchers(MOBILE_LOGIN, MOBILE_PASSWORD))
                 // P3: standart sarlavhalar (nosniff, X-Frame-Options DENY, HSTS, Cache-Control) + Referrer-Policy
                 .headers(h -> h.referrerPolicy(r -> r.policy(ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN)))
                 .httpBasic(b -> b.disable())
@@ -59,7 +60,7 @@ class SecurityConfig {
                 .logout(l -> l.logoutUrl("/api/auth/logout")
                         .logoutSuccessHandler((req, res, auth) -> res.setStatus(204))
                         .deleteCookies(SESSION_COOKIE))
-                .authorizeHttpRequests(a -> a.requestMatchers("/api/auth/login", "/api/auth/csrf", "/api/auth/login-info", MOBILE_LOGIN)
+                .authorizeHttpRequests(a -> a.requestMatchers("/api/auth/login", "/api/auth/csrf", "/api/auth/login-info", MOBILE_LOGIN, MOBILE_PASSWORD)
                         .permitAll()
                         .requestMatchers("/actuator/health/**", "/actuator/info")
                         .permitAll()
