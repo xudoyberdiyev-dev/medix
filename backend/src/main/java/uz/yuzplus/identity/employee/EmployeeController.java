@@ -82,9 +82,9 @@ class EmployeeController {
     }
 
     @GetMapping
-    @Operation(summary = "Xodimlar ro'yxati")
-    List<Employees.Employee> list() {
-        return employees.list(actor());
+    @Operation(summary = "Xodimlar ro'yxati", description = "branchId — faqat shu filial xodimlari (F1).")
+    List<Employees.Employee> list(@RequestParam(required = false) Long branchId) {
+        return employees.list(actor(), branchId);
     }
 
     @PostMapping

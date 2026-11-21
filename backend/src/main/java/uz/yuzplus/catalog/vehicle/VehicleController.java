@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import uz.yuzplus.shared.audit.AuditEntry;
@@ -71,17 +72,22 @@ class VehicleController {
     @GetMapping
     @PreAuthorize("hasAnyAuthority('lookups.view', 'lookups.fleet', 'shipments.view', 'shipments.trip')")
     @Transactional(readOnly = true)
-    @Operation(summary = "Mashinalar (filial doirasida)")
-    List<Vehicle> list() {
+    @Operation(summary = "Mashinalar (filial doirasida)", description = "branchId — faqat shu filial mashinalari (F1).")
+    List<Vehicle> list(@RequestParam(required = false) Long branchId) {
         Actor a = actor();
+        if (branchId != null && !a.canAccessBranch(branchId)) {
+            return List.of();
+        }
         if (!a.allBranches() && a.branchId() == null) {
             return List.of();
         }
+        boolean all = a.allBranches() && branchId == null;
+        long b = branchId != null ? branchId : a.branchId() == null ? -1L : a.branchId();
         return jdbc.sql("""
                 SELECT id, branch_id, plate_number, model, has_refrigerator, active FROM vehicle
                 WHERE (:all OR branch_id = :b) ORDER BY active DESC, plate_number""")
-                .param("all", a.allBranches())
-                .param("b", a.branchId() == null ? -1L : a.branchId())
+                .param("all", all)
+                .param("b", b)
                 .query(Vehicle.class)
                 .list();
     }

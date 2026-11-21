@@ -115,11 +115,20 @@ public class Employees {
     /** Filial doirasi bilan (SPEC 13): barcha filiallar huquqi bo'lmasa — faqat o'z filiali xodimlari. */
     @Transactional(readOnly = true)
     public List<Employee> list(Actor actor) {
-        if (actor.allBranches()) {
+        return list(actor, null);
+    }
+
+    /** F1: {@code branchId} berilsa — faqat shu filial xodimlari (ruxsat bo'lmasa bo'sh ro'yxat). */
+    public List<Employee> list(Actor actor, Long branchId) {
+        if (branchId != null && !actor.canAccessBranch(branchId)) {
+            return List.of();
+        }
+        if (branchId == null && actor.allBranches()) {
             return list();
         }
+        long b = branchId != null ? branchId : actor.branchId() == null ? -1L : actor.branchId();
         return jdbc.sql(SELECT + " WHERE e.branch_id = :b ORDER BY e.full_name")
-                .param("b", actor.branchId() == null ? -1L : actor.branchId())
+                .param("b", b)
                 .query(Employees::map)
                 .list();
     }
