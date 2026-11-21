@@ -35,6 +35,8 @@ function applySigning(gradle) {
 }
 
 module.exports = function withReleaseSigning(config) {
+  // EAS Build oʻz kaliti bilan imzolaydi (Expo hisobidagi credentials) — bu plagin faqat GitHub Actions uchun
+  if (process.env.EAS_BUILD) return config;
   return withAppBuildGradle(config, (c) => {
     c.modResults.contents = applySigning(c.modResults.contents);
     return c;

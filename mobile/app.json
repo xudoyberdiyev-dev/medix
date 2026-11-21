@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "100+ Haydovchi",
-    "slug": "yuzplus-haydovchi",
+    "slug": "diriver-app",
     "scheme": "yuzplus",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -56,6 +56,11 @@
     "experiments": {
       "typedRoutes": true
     },
-    "extra": {}
+    "extra": {
+      "eas": {
+        "projectId": "31da4e3b-16d6-481a-9097-58b15265f5be"
+      }
+    },
+    "owner": "azizbekxudoyberdiyev"
   }
 }
