@@ -209,7 +209,7 @@
   "smartup": {
     "open": "SmartUp dan koʻchirish",
     "title": "SmartUp dan koʻchirish — bitta fayl",
-    "help": "Bitta Excel faylga toʻrt varaq: Tovar (ombor, mahsulot, partiya, yaroqlilik, tannarx, soni), Mijozlar qarzi, YB qarzi, Kassa va bank. SmartUp eksportining ruscha ustunlari ham tanilinadi. Shablondagi namuna qatorlarni oʻchirib, oʻzingiznikini yozing.",
+    "help": "Bitta Excel faylga toʻrt varaq: Tovar (ombor, mahsulot, partiya, yaroqlilik, tannarx, soni), Mijozlar qarzi, YB qarzi, Kassa va bank. SmartUp eksportining ruscha ustunlari ham tanilinadi. SmartUp ning qoldiq va oborot-saldo hisobotlari ham toʻgʻridan-toʻgʻri oʻqiladi: ikki qatorli sarlavha (faqat davr oxiri olinadi), «Склад: …» guruh qatorlari, Дебет/Кредит ustunlari; tannarx boʻlmasa — summa ÷ soni. Shablondagi namuna qatorlarni oʻchirib, oʻzingiznikini yozing.",
     "choose": "Faylni tanlash",
     "chooseOther": "Boshqa fayl tanlash",
     "noFile": "Fayl tanlanmagan",
