@@ -490,18 +490,25 @@ class Orders {
                         instant(rs.getTimestamp("pick_finished_at")), null))
                 .list();
         items = items.stream().map(this::withCreditFlag).toList();
-        String fromScope = " FROM sales_order o JOIN counterparty c ON c.id = o.customer_id" + scope;
-        List<FilterOption> customers = jdbc.sql("SELECT c.id, c.name, count(*) AS cnt" + fromScope
-                        + " GROUP BY c.id, c.name ORDER BY c.name LIMIT 300")
-                .params(scopeParams).query((rs, n) -> new FilterOption(rs.getLong("id"), rs.getString("name"), rs.getLong("cnt"))).list();
-        List<FilterOption> operators = jdbc.sql("SELECT e.id, e.full_name AS name, count(*) AS cnt FROM sales_order o JOIN employee e ON e.id = o.created_by"
-                        + scope
-                        + " GROUP BY e.id, e.full_name ORDER BY e.full_name LIMIT 300")
-                .params(scopeParams).query((rs, n) -> new FilterOption(rs.getLong("id"), rs.getString("name"), rs.getLong("cnt"))).list();
-        List<FilterOption> regions = jdbc.sql("SELECT r.id, r.name, count(*) AS cnt FROM sales_order o JOIN counterparty c ON c.id = o.customer_id"
-                        + " JOIN region r ON r.id = c.region_id" + scope
-                        + " GROUP BY r.id, r.name ORDER BY r.name LIMIT 300")
-                .params(scopeParams).query((rs, n) -> new FilterOption(rs.getLong("id"), rs.getString("name"), rs.getLong("cnt"))).list();
+        // S1: filtr variantlari bitta oʻqishda (mijoz × operator boʻyicha guruh, keyin uchta roʻyxat) — avval uchta toʻliq skan edi
+        record Facet(String kind, FilterOption option) {}
+        List<Facet> facets = jdbc.sql("""
+                WITH cc AS MATERIALIZED (SELECT o.customer_id, o.created_by, count(*) AS n FROM sales_order o""" + scope + """
+                 GROUP BY 1, 2)
+                (SELECT 'C' AS kind, c.id, c.name, sum(cc.n) AS cnt FROM cc JOIN counterparty c ON c.id = cc.customer_id
+                 GROUP BY c.id, c.name ORDER BY c.name LIMIT 300)
+                UNION ALL
+                (SELECT 'O', e.id, e.full_name, sum(cc.n) FROM cc JOIN employee e ON e.id = cc.created_by
+                 GROUP BY e.id, e.full_name ORDER BY e.full_name LIMIT 300)
+                UNION ALL
+                (SELECT 'R', r.id, r.name, sum(cc.n) FROM cc JOIN counterparty c ON c.id = cc.customer_id JOIN region r ON r.id = c.region_id
+                 GROUP BY r.id, r.name ORDER BY r.name LIMIT 300)""")
+                .params(scopeParams)
+                .query((rs, n) -> new Facet(rs.getString("kind"), new FilterOption(rs.getLong("id"), rs.getString("name"), rs.getLong("cnt"))))
+                .list();
+        List<FilterOption> customers = facets.stream().filter(x -> "C".equals(x.kind())).map(Facet::option).toList();
+        List<FilterOption> operators = facets.stream().filter(x -> "O".equals(x.kind())).map(Facet::option).toList();
+        List<FilterOption> regions = facets.stream().filter(x -> "R".equals(x.kind())).map(Facet::option).toList();
         return new OrderPage(items, total, page, size, statusTabs(statuses), new OrderFacets(customers, operators, regions));
     }
 
