@@ -108,18 +108,11 @@ class PurchaserHome {
         // Ochiq kirimlar soni to'lov kuni bo'yicha (Debts.due bilan bir qoida)
         record Counts(int o, int t, int s3) {}
         Counts cnt = jdbc.sql("""
-                WITH own AS (SELECT branch_id, counterparty_id, doc_type, doc_id, min(due_date) AS due, sum(amount) AS amt
-                             FROM party_ledger WHERE side = 'SUPPLIER' AND applies_doc_type IS NULL AND (CAST(:b AS BIGINT) IS NULL OR branch_id = :b)
-                             GROUP BY branch_id, counterparty_id, doc_type, doc_id),
-                     app AS (SELECT branch_id, counterparty_id, applies_doc_type AS t, applies_doc_id AS i, sum(amount) AS amt
-                             FROM party_ledger WHERE side = 'SUPPLIER' AND applies_doc_type IS NOT NULL AND (CAST(:b AS BIGINT) IS NULL OR branch_id = :b)
-                             GROUP BY branch_id, counterparty_id, applies_doc_type, applies_doc_id),
-                     open AS (SELECT own.due, own.amt + coalesce(app.amt, 0) AS open
-                              FROM own LEFT JOIN app ON app.branch_id = own.branch_id AND app.counterparty_id = own.counterparty_id
-                                                    AND app.t = own.doc_type AND app.i = own.doc_id)
-                SELECT count(*) FILTER (WHERE due < :d) AS o, count(*) FILTER (WHERE due = :d) AS t,
-                       count(*) FILTER (WHERE due > :d AND due <= :d3) AS s3
-                FROM open WHERE open > 0 AND due IS NOT NULL""")
+                SELECT count(*) FILTER (WHERE due_date < :d) AS o, count(*) FILTER (WHERE due_date = :d) AS t,
+                       count(*) FILTER (WHERE due_date > :d AND due_date <= :d3) AS s3
+                FROM party_doc_balance
+                WHERE side = 'SUPPLIER' AND own_rows > 0 AND open_amount <> 0 AND open_amount > 0 AND due_date IS NOT NULL
+                  AND (CAST(:b AS BIGINT) IS NULL OR branch_id = :b)""")
                 .param("b", branchId).param("d", Date.valueOf(today)).param("d3", Date.valueOf(today.plusDays(3)))
                 .query((rs, n) -> new Counts(rs.getInt("o"), rs.getInt("t"), rs.getInt("s3"))).single();
 

@@ -61,18 +61,11 @@ class DebtSummariesService implements DebtSummaries {
             throw YuzplusException.notFound("error.notFound");
         }
         // Ochiq hujjatlar (qarz > 0: kirim — YB, sotuv — mijoz) to'lov kuni bo'yicha; Debts.report dagi own/app qoidasi bilan bir xil
+        // (S1: hosila jadval party_doc_balance, V107)
         record Row(BigDecimal overdue, BigDecimal today, BigDecimal soon) {}
         Row row = jdbc.sql("""
-                WITH own AS (SELECT branch_id, counterparty_id, doc_type, doc_id, min(due_date) AS due, sum(amount) AS amt
-                             FROM party_ledger WHERE side = :side AND applies_doc_type IS NULL AND (CAST(:b AS BIGINT) IS NULL OR branch_id = :b)
-                             GROUP BY branch_id, counterparty_id, doc_type, doc_id),
-                     app AS (SELECT branch_id, counterparty_id, applies_doc_type AS t, applies_doc_id AS i, sum(amount) AS amt
-                             FROM party_ledger WHERE side = :side AND applies_doc_type IS NOT NULL
-                                                 AND (CAST(:b AS BIGINT) IS NULL OR branch_id = :b)
-                             GROUP BY branch_id, counterparty_id, applies_doc_type, applies_doc_id),
-                     open AS (SELECT own.due, own.amt + coalesce(app.amt, 0) AS open
-                              FROM own LEFT JOIN app ON app.branch_id = own.branch_id AND app.counterparty_id = own.counterparty_id
-                                                    AND app.t = own.doc_type AND app.i = own.doc_id)
+                WITH open AS (SELECT due_date AS due, open_amount AS open FROM party_doc_balance
+                              WHERE side = :side AND own_rows > 0 AND open_amount <> 0 AND (CAST(:b AS BIGINT) IS NULL OR branch_id = :b))
                 SELECT sum(open) FILTER (WHERE due < :d) AS overdue,
                        sum(open) FILTER (WHERE due = :d) AS today,
                        sum(open) FILTER (WHERE due > :d AND due <= :d3) AS soon

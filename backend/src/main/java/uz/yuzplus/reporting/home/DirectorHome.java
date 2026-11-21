@@ -446,15 +446,8 @@ class DirectorHome {
      */
     private List<Amount> openByPayment(String side, Long branchId) {
         return jdbc.sql("""
-                WITH own AS (SELECT branch_id, counterparty_id, doc_type, doc_id, sum(amount) AS amt
-                             FROM party_ledger WHERE side = :side AND applies_doc_type IS NULL AND (CAST(:b AS BIGINT) IS NULL OR branch_id = :b)
-                             GROUP BY branch_id, counterparty_id, doc_type, doc_id),
-                     app AS (SELECT branch_id, counterparty_id, applies_doc_type AS t, applies_doc_id AS i, sum(amount) AS amt
-                             FROM party_ledger WHERE side = :side AND applies_doc_type IS NOT NULL AND (CAST(:b AS BIGINT) IS NULL OR branch_id = :b)
-                             GROUP BY branch_id, counterparty_id, applies_doc_type, applies_doc_id),
-                     open AS (SELECT own.branch_id, own.doc_type, own.doc_id, own.amt + coalesce(app.amt, 0) AS open
-                              FROM own LEFT JOIN app ON app.branch_id = own.branch_id AND app.counterparty_id = own.counterparty_id
-                                                    AND app.t = own.doc_type AND app.i = own.doc_id)
+                WITH open AS (SELECT branch_id, doc_type, doc_id, open_amount AS open FROM party_doc_balance
+                              WHERE side = :side AND own_rows > 0 AND open_amount <> 0 AND (CAST(:b AS BIGINT) IS NULL OR branch_id = :b))
                 SELECT o.branch_id, coalesce(so.payment_type, r.payment_type, 'TRANSFER') AS kind, sum(o.open) AS amount
                 FROM open o
                 LEFT JOIN sale s ON o.doc_type = 'SV' AND s.id = o.doc_id

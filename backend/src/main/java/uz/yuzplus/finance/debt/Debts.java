@@ -89,19 +89,13 @@ class Debts {
             throw YuzplusException.notFound("error.notFound");
         }
         LocalDate today = today();
-        // PartyLedger.openDocs bilan bir xil qoida, lekin filialdagi barcha kontragentlar uchun bitta so'rovda
+        // PartyLedger.openDocs bilan bir xil qoida, lekin filialdagi barcha kontragentlar uchun bitta so'rovda.
+        // S1: jurnalni guruhlash oʻrniga hosila jadval party_doc_balance (V107: jurnal bilan bitta tranzaksiyada, trigger)
         List<Open> open = jdbc.sql("""
-                WITH own AS (SELECT branch_id, counterparty_id, doc_type, doc_id, min(due_date) AS due, min(occurred_at) AS at, sum(amount) AS amt
-                             FROM party_ledger WHERE side = :s AND applies_doc_type IS NULL AND (CAST(:b AS BIGINT) IS NULL OR branch_id = :b)
-                             GROUP BY branch_id, counterparty_id, doc_type, doc_id),
-                     app AS (SELECT branch_id, counterparty_id, applies_doc_type AS t, applies_doc_id AS i, sum(amount) AS amt
-                             FROM party_ledger WHERE side = :s AND applies_doc_type IS NOT NULL AND (CAST(:b AS BIGINT) IS NULL OR branch_id = :b)
-                             GROUP BY branch_id, counterparty_id, applies_doc_type, applies_doc_id)
-                SELECT own.branch_id, own.counterparty_id, own.due, own.amt + coalesce(app.amt, 0) AS open
-                FROM own LEFT JOIN app ON app.branch_id = own.branch_id AND app.counterparty_id = own.counterparty_id AND app.t = own.doc_type
-                                      AND app.i = own.doc_id
-                WHERE own.amt + coalesce(app.amt, 0) <> 0
-                ORDER BY own.branch_id, own.counterparty_id, coalesce(own.due, (own.at AT TIME ZONE 'Asia/Tashkent')::date), own.at, own.doc_id""")
+                SELECT branch_id, counterparty_id, due_date AS due, open_amount AS open
+                FROM party_doc_balance
+                WHERE side = :s AND own_rows > 0 AND open_amount <> 0 AND (CAST(:b AS BIGINT) IS NULL OR branch_id = :b)
+                ORDER BY branch_id, counterparty_id, coalesce(due_date, (first_at AT TIME ZONE 'Asia/Tashkent')::date), first_at, doc_id""")
                 .param("s", side.name())
                 .param("b", branchId)
                 .query((rs, n) -> new Open(rs.getLong("branch_id"), rs.getLong("counterparty_id"),
@@ -201,18 +195,15 @@ class Debts {
         }
         LocalDate today = today();
         List<SupplierInvoice> rows = jdbc.sql("""
-                WITH own AS (SELECT doc_id, sum(amount) AS amt FROM party_ledger
-                             WHERE side = 'SUPPLIER' AND doc_type = 'KR' AND applies_doc_type IS NULL AND (CAST(:b AS BIGINT) IS NULL OR branch_id = :b)
-                             GROUP BY doc_id),
-                     app AS (SELECT applies_doc_id AS i, sum(amount) AS amt FROM party_ledger
-                             WHERE side = 'SUPPLIER' AND applies_doc_type = 'KR' AND (CAST(:b AS BIGINT) IS NULL OR branch_id = :b)
-                             GROUP BY applies_doc_id)
+                WITH d AS (SELECT doc_id, sum(own_amount) AS own_amt, sum(applied_amount) AS app_amt FROM party_doc_balance
+                           WHERE side = 'SUPPLIER' AND doc_type = 'KR' AND own_rows > 0 AND (CAST(:b AS BIGINT) IS NULL OR branch_id = :b)
+                           GROUP BY doc_id)
                 SELECT r.id, r.number, r.branch_id, b.name AS bname, c.id AS cid, c.name AS cname,
                        coalesce(r.invoice_date, r.receipt_date) AS doc_date, r.payment_type, e.full_name,
-                       r.due_date, r.prepaid, own.amt AS total, -coalesce(app.amt, 0) AS paid, own.amt + coalesce(app.amt, 0) AS left_amt
-                FROM own JOIN receipt r ON r.id = own.doc_id JOIN branch b ON b.id = r.branch_id JOIN counterparty c ON c.id = r.supplier_id
-                     LEFT JOIN employee e ON e.id = r.owner_id LEFT JOIN app ON app.i = own.doc_id
-                WHERE own.amt + coalesce(app.amt, 0) > 0 OR (r.prepaid AND r.receipt_date >= :since)
+                       r.due_date, r.prepaid, d.own_amt AS total, -d.app_amt AS paid, d.own_amt + d.app_amt AS left_amt
+                FROM d JOIN receipt r ON r.id = d.doc_id JOIN branch b ON b.id = r.branch_id JOIN counterparty c ON c.id = r.supplier_id
+                     LEFT JOIN employee e ON e.id = r.owner_id
+                WHERE d.own_amt + d.app_amt > 0 OR (r.prepaid AND r.receipt_date >= :since)
                 ORDER BY r.due_date NULLS LAST, r.receipt_date, r.id
                 LIMIT 2000""")
                 .param("b", branchId)

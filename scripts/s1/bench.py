@@ -35,15 +35,9 @@ SALES_REPORT = """WITH x AS (
 SELECT x.customer_id, count(DISTINCT x.order_id), sum(x.sales), sum(x.discount), sum(x.returns), sum(x.cost)
 FROM x GROUP BY 1 ORDER BY 3 DESC LIMIT 501"""
 
-DEBTS = """WITH own AS (SELECT branch_id, counterparty_id, doc_type, doc_id, min(due_date) AS due, min(occurred_at) AS at, sum(amount) AS amt
-             FROM party_ledger WHERE side = 'CUSTOMER' AND applies_doc_type IS NULL {b} GROUP BY branch_id, counterparty_id, doc_type, doc_id),
-     app AS (SELECT branch_id, counterparty_id, applies_doc_type AS t, applies_doc_id AS i, sum(amount) AS amt
-             FROM party_ledger WHERE side = 'CUSTOMER' AND applies_doc_type IS NOT NULL {b}
-             GROUP BY branch_id, counterparty_id, applies_doc_type, applies_doc_id)
-SELECT own.branch_id, own.counterparty_id, own.due, own.amt + coalesce(app.amt, 0) AS open
-FROM own LEFT JOIN app ON app.branch_id = own.branch_id AND app.counterparty_id = own.counterparty_id AND app.t = own.doc_type AND app.i = own.doc_id
-WHERE own.amt + coalesce(app.amt, 0) <> 0
-ORDER BY own.branch_id, own.counterparty_id, coalesce(own.due, (own.at AT TIME ZONE 'Asia/Tashkent')::date), own.at, own.doc_id"""
+DEBTS = """SELECT branch_id, counterparty_id, due_date AS due, open_amount AS open FROM party_doc_balance
+WHERE side = 'CUSTOMER' AND own_rows > 0 AND open_amount <> 0 {b}
+ORDER BY branch_id, counterparty_id, coalesce(due_date, (first_at AT TIME ZONE 'Asia/Tashkent')::date), first_at, doc_id"""
 
 STOCK = """WITH bal AS (
   SELECT s.product_id, s.batch_id, s.zone_id, s.qty, z.type AS zone_type, z.sellable, b.expiry_date, b.expiry_date < current_date AS expired, b.cost,

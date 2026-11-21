@@ -61,17 +61,10 @@ class AccountantHome {
         // Ochiq hujjatlar (qoldig'i > 0) to'lov kuni bo'yicha — Debts.due bilan bir qoida
         record Due(String side, LocalDate due, BigDecimal amount) {}
         List<Due> due = jdbc.sql("""
-                WITH own AS (SELECT branch_id, counterparty_id, side, doc_type, doc_id, min(due_date) AS due, sum(amount) AS amt
-                             FROM party_ledger WHERE applies_doc_type IS NULL AND (CAST(:b AS BIGINT) IS NULL OR branch_id = :b)
-                             GROUP BY branch_id, counterparty_id, side, doc_type, doc_id),
-                     app AS (SELECT branch_id, counterparty_id, side, applies_doc_type AS t, applies_doc_id AS i, sum(amount) AS amt
-                             FROM party_ledger WHERE applies_doc_type IS NOT NULL AND (CAST(:b AS BIGINT) IS NULL OR branch_id = :b)
-                             GROUP BY branch_id, counterparty_id, side, applies_doc_type, applies_doc_id),
-                     open AS (SELECT own.side, own.due, own.amt + coalesce(app.amt, 0) AS open
-                              FROM own LEFT JOIN app ON app.branch_id = own.branch_id AND app.counterparty_id = own.counterparty_id
-                                                    AND app.side = own.side AND app.t = own.doc_type AND app.i = own.doc_id)
-                SELECT side, due, sum(open) AS amount FROM open
-                WHERE open > 0 AND due BETWEEN :d AND :last GROUP BY side, due""")
+                SELECT side, due_date AS due, sum(open_amount) AS amount FROM party_doc_balance
+                WHERE side IN ('CUSTOMER', 'SUPPLIER') AND own_rows > 0 AND open_amount <> 0 AND open_amount > 0
+                  AND due_date BETWEEN :d AND :last AND (CAST(:b AS BIGINT) IS NULL OR branch_id = :b)
+                GROUP BY side, due_date""")
                 .param("b", branchId).param("d", Date.valueOf(today)).param("last", Date.valueOf(last))
                 .query((rs, n) -> new Due(rs.getString("side"), rs.getDate("due").toLocalDate(), rs.getBigDecimal("amount")))
                 .list();
