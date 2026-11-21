@@ -285,6 +285,27 @@ class OrderIT {
         mvc.perform(get("/api/orders/catalog").param("warehouseId", String.valueOf(p.warehouseId())).param("q", "by aspirin")
                         .param("inStockOnly", "false").param("manufacturerIds", "-1").cookie(operator))
                 .andExpect(jsonPath("$.total").value(0));
+        // S1: variantlar bitta GROUPING SETS soʻrovida — ishlab chiqaruvchi soni, «hammasi» jami, filtr bilan jami
+        long mf = jdbc.sql("INSERT INTO manufacturer (name) VALUES ('BY Bayer ' || gen_random_uuid()) RETURNING id").query(Long.class).single();
+        jdbc.sql("UPDATE product SET manufacturer_id = :m WHERE id = :p").param("m", mf).param("p", a).update();
+        mvc.perform(get("/api/orders/catalog").param("warehouseId", String.valueOf(p.warehouseId())).param("q", "by aspirin")
+                        .param("inStockOnly", "false").cookie(operator))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(2))
+                .andExpect(jsonPath("$.facets.manufacturers.length()").value(1))
+                .andExpect(jsonPath("$.facets.manufacturers[0].id").value((int) mf))
+                .andExpect(jsonPath("$.facets.manufacturers[0].count").value(1))
+                .andExpect(jsonPath("$.facets.flags.controlled").value(0));
+        mvc.perform(get("/api/orders/catalog").param("warehouseId", String.valueOf(p.warehouseId())).param("q", "by aspirin")
+                        .param("inStockOnly", "false").param("manufacturerIds", String.valueOf(mf)).cookie(operator))
+                .andExpect(jsonPath("$.total").value(1))
+                .andExpect(jsonPath("$.items[0].productId").value((int) a))
+                .andExpect(jsonPath("$.facets.manufacturers[0].count").value(1));
+        mvc.perform(get("/api/orders/catalog").param("warehouseId", String.valueOf(p.warehouseId())).param("q", "yoʻq-mahsulot-xyz")
+                        .cookie(operator))
+                .andExpect(jsonPath("$.total").value(0))
+                .andExpect(jsonPath("$.facets.manufacturers.length()").value(0))
+                .andExpect(jsonPath("$.facets.flags.marked").value(0));
         // U11: tanlangan mahsulotlar boʻyicha (qidiruvsiz) — qoldiq va muddat qatorlar uchun
         mvc.perform(get("/api/orders/catalog").param("warehouseId", String.valueOf(p.warehouseId())).param("inStockOnly", "false")
                         .param("productIds", String.valueOf(a), String.valueOf(empty)).cookie(operator))
