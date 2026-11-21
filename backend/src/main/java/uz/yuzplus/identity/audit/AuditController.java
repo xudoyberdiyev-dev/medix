@@ -100,18 +100,10 @@ class AuditController {
             END""";
 
     /**
-     * S1: id taqqoslash indeks bilan — {@code CAST(id AS text) = entity_id} har audit yozuvi uchun jadvalni toʻliq oʻqirdi
-     * (sintetik hajmda «oxirgi 7 kun»: 37 s). entity_id raqam boʻlmasa (CASE) — NULL, xato bermaydi.
+     * «Nazoratdagi» belgisi — yozuv paytida audit_log.controlled ga yoziladi (V109, trigger). S1: avval har soʻrovda har yozuv uchun
+     * mahsulot / buyurtma qatorlari tekshirilardi (sintetik hajmda «oxirgi 7 kun»: 37 s).
      */
-    private static final String ENTITY_ID = "CASE WHEN a.entity_id ~ '^[0-9]{1,18}$' THEN CAST(a.entity_id AS bigint) END";
-
-    private static final String CONTROLLED = """
-            ((a.entity_type = 'product' AND EXISTS (SELECT 1 FROM product p WHERE p.id = %1$s AND p.controlled))
-             OR (a.entity_type = 'zone' AND EXISTS (SELECT 1 FROM zone z WHERE z.id = %1$s AND z.controlled))
-             OR (a.entity_type = 'sales_order' AND EXISTS (SELECT 1 FROM sales_order_line l JOIN product p ON p.id = l.product_id
-                    WHERE l.order_id = %1$s AND p.controlled))
-             OR (a.entity_type = 'receipt' AND EXISTS (SELECT 1 FROM receipt_line l JOIN product p ON p.id = l.product_id
-                    WHERE l.receipt_id = %1$s AND p.controlled)))""".formatted(ENTITY_ID);
+    private static final String CONTROLLED = "a.controlled";
 
     /** Filial doirasidagi audit, harakat turi va nazoratdagi belgisi bilan. */
     private static final String BASE = "(SELECT a.*, " + CATEGORY + " AS category, " + CONTROLLED
