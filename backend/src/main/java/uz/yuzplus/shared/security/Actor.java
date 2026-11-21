@@ -12,4 +12,15 @@ public record Actor(long employeeId, Long branchId, boolean allBranches) {
     public boolean canAccessBranch(long branch) {
         return allBranches || (branchId != null && branchId == branch);
     }
+
+    /**
+     * F1: tepada tanlangan filial bilan toraytirilgan doira (faqat o'qish so'rovlari uchun).
+     * {@code branch == null} — o'zi; ruxsat bo'lmasa — hech bir filialni ko'rmaydigan doira (bo'sh natija).
+     */
+    public Actor scopedTo(Long branch) {
+        if (branch == null) {
+            return this;
+        }
+        return canAccessBranch(branch) ? new Actor(employeeId, branch, false) : new Actor(employeeId, -1L, false);
+    }
 }
