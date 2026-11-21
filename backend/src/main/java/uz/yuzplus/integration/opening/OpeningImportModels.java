@@ -17,29 +17,29 @@ final class OpeningImportModels {
     /** Guruhning (ombor yoki filial×tur) hozirgi BQ holati: qoralama almashtiriladi, o'tkazilgani bo'lsa — xato. */
     enum Existing { NONE, DRAFT, POSTED }
 
-    record ImportIssue(String sheet, @Schema(nullable = true, description = "Excel qator raqami; null — varaq yoki guruh xatosi") Integer row,
+    record OpeningFileIssue(String sheet, @Schema(nullable = true, description = "Excel qator raqami; null — varaq yoki guruh xatosi") Integer row,
             String message) {}
 
-    record SectionTotal(Section section, int rows,
+    record OpeningFileSection(Section section, int rows,
             @Schema(description = "Tovar — dona; boshqalar — 0") long qty,
             @Schema(nullable = true, description = "Tovar — tannarx jami (faqat special.cost bilan); boshqalar — summa jami") String amount) {}
 
-    record ImportGroup(Section section, long branchId, String branch, @Schema(nullable = true) Long warehouseId,
+    record OpeningFileGroup(Section section, long branchId, String branch, @Schema(nullable = true) Long warehouseId,
             @Schema(nullable = true) String warehouse, int rows, long qty, @Schema(nullable = true) String amount, Existing existing) {}
 
-    record OpeningImportPreview(
+    record OpeningFilePreview(
             String fileName,
             LocalDate cutoffDate,
-            List<SectionTotal> sections,
-            List<ImportGroup> groups,
-            List<ImportIssue> errors,
+            List<OpeningFileSection> sections,
+            List<OpeningFileGroup> groups,
+            List<OpeningFileIssue> errors,
             @Schema(description = "Ogohlantirishlar (muddati o'tgan partiya, o'tkazib yuborilgan varaq) — yaratishga to'sqinlik qilmaydi")
-                    List<ImportIssue> warnings,
+                    List<OpeningFileIssue> warnings,
             @Schema(description = "Xatolar ro'yxati chegarada kesilgan") boolean errorsTruncated,
             boolean canApply) {}
 
-    record CreatedDoc(Section section, long id, String number, long branchId, String branch, @Schema(nullable = true) String warehouse,
+    record OpeningFileDoc(Section section, long id, String number, long branchId, String branch, @Schema(nullable = true) String warehouse,
             int rows, boolean posted) {}
 
-    record OpeningImportResult(List<CreatedDoc> documents, boolean posted) {}
+    record OpeningFileResult(List<OpeningFileDoc> documents, boolean posted) {}
 }

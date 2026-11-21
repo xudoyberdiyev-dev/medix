@@ -17,8 +17,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-import uz.yuzplus.integration.opening.OpeningImportModels.OpeningImportPreview;
-import uz.yuzplus.integration.opening.OpeningImportModels.OpeningImportResult;
+import uz.yuzplus.integration.opening.OpeningImportModels.OpeningFilePreview;
+import uz.yuzplus.integration.opening.OpeningImportModels.OpeningFileResult;
 import uz.yuzplus.shared.error.YuzplusException;
 import uz.yuzplus.shared.security.Actor;
 import uz.yuzplus.shared.security.CurrentActor;
@@ -73,7 +73,7 @@ class OpeningImportController {
     @PostMapping(path = "/preview", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAuthority('opening.create')")
     @Operation(summary = "Faylni tekshirish", description = "Hech narsa yozilmaydi: bo'limlar jami, filial/ombor guruhlari, xato va ogohlantirishlar.")
-    OpeningImportPreview preview(@RequestPart("file") MultipartFile file,
+    OpeningFilePreview preview(@RequestPart("file") MultipartFile file,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate cutoffDate, Authentication auth) throws IOException {
         checkSize(file);
         try (InputStream in = file.getInputStream()) {
@@ -86,7 +86,7 @@ class OpeningImportController {
     @Operation(summary = "Qoralamalarni yaratish (va o'tkazish)",
             description = "Xato bo'lmasa — bitta tranzaksiyada: har ombor uchun tovar BQ, har filial×tur uchun pul BQ qoralamasi (mavjud qoralama "
                     + "almashtiriladi). post=true — hammasi o'tkaziladi (opening.approve).")
-    OpeningImportResult apply(@RequestPart("file") MultipartFile file,
+    OpeningFileResult apply(@RequestPart("file") MultipartFile file,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate cutoffDate,
             @RequestParam(defaultValue = "false") boolean post, Authentication auth) throws IOException {
         checkSize(file);

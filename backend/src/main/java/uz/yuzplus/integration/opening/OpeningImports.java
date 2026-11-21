@@ -16,14 +16,14 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import uz.yuzplus.finance.opening.OpeningFinanceImport;
-import uz.yuzplus.integration.opening.OpeningImportModels.CreatedDoc;
+import uz.yuzplus.integration.opening.OpeningImportModels.OpeningFileDoc;
 import uz.yuzplus.integration.opening.OpeningImportModels.Existing;
-import uz.yuzplus.integration.opening.OpeningImportModels.ImportGroup;
-import uz.yuzplus.integration.opening.OpeningImportModels.ImportIssue;
-import uz.yuzplus.integration.opening.OpeningImportModels.OpeningImportPreview;
-import uz.yuzplus.integration.opening.OpeningImportModels.OpeningImportResult;
+import uz.yuzplus.integration.opening.OpeningImportModels.OpeningFileGroup;
+import uz.yuzplus.integration.opening.OpeningImportModels.OpeningFileIssue;
+import uz.yuzplus.integration.opening.OpeningImportModels.OpeningFilePreview;
+import uz.yuzplus.integration.opening.OpeningImportModels.OpeningFileResult;
 import uz.yuzplus.integration.opening.OpeningImportModels.Section;
-import uz.yuzplus.integration.opening.OpeningImportModels.SectionTotal;
+import uz.yuzplus.integration.opening.OpeningImportModels.OpeningFileSection;
 import uz.yuzplus.integration.opening.OpeningImportSheets.Field;
 import uz.yuzplus.integration.opening.OpeningImportSheets.ParsedSheet;
 import uz.yuzplus.integration.opening.OpeningImportSheets.SheetRow;
@@ -106,8 +106,8 @@ class OpeningImports {
         final Actor actor;
         final Rights rights;
         final LocalDate cutoff;
-        final List<ImportIssue> errors = new ArrayList<>();
-        final List<ImportIssue> warnings = new ArrayList<>();
+        final List<OpeningFileIssue> errors = new ArrayList<>();
+        final List<OpeningFileIssue> warnings = new ArrayList<>();
         boolean truncated;
         final Map<Long, GoodsGroup> goodsGroups = new LinkedHashMap<>();
         final Map<String, FinanceGroup> financeGroups = new LinkedHashMap<>();
@@ -136,12 +136,12 @@ class OpeningImports {
                 truncated = true;
                 return;
             }
-            errors.add(new ImportIssue(sheet, row, texts.getIn(Texts.requestLocale(), key, args)));
+            errors.add(new OpeningFileIssue(sheet, row, texts.getIn(Texts.requestLocale(), key, args)));
         }
 
         void warn(String sheet, Integer row, String key, Object... args) {
             if (warnings.size() < OpeningImportModels.MAX_ISSUES) {
-                warnings.add(new ImportIssue(sheet, row, texts.getIn(Texts.requestLocale(), key, args)));
+                warnings.add(new OpeningFileIssue(sheet, row, texts.getIn(Texts.requestLocale(), key, args)));
             }
         }
     }
@@ -149,13 +149,13 @@ class OpeningImports {
     // ===== Ochiq amallar =====
 
     @Transactional(readOnly = true)
-    OpeningImportPreview preview(Actor actor, Rights rights, InputStream in, String fileName, LocalDate cutoff) {
+    OpeningFilePreview preview(Actor actor, Rights rights, InputStream in, String fileName, LocalDate cutoff) {
         Plan p = plan(actor, rights, in, cutoff);
         return toPreview(p, fileName);
     }
 
     @Transactional
-    OpeningImportResult apply(Actor actor, Rights rights, InputStream in, String fileName, LocalDate cutoff, boolean post) {
+    OpeningFileResult apply(Actor actor, Rights rights, InputStream in, String fileName, LocalDate cutoff, boolean post) {
         if (post && !rights.approve()) {
             throw YuzplusException.forbidden("openingImport.postForbidden");
         }
@@ -167,18 +167,18 @@ class OpeningImports {
             throw YuzplusException.badRequest("import.empty");
         }
         String note = texts.getIn(Texts.UZ, "openingImport.note", fileName == null ? "" : fileName);
-        List<CreatedDoc> docs = new ArrayList<>();
+        List<OpeningFileDoc> docs = new ArrayList<>();
         for (GoodsGroup g : p.goodsGroups.values()) {
             long id = goods.replaceDraft(actor, g.branch.id(), g.warehouse.id(), cutoff, g.lines, fileName, note);
-            docs.add(new CreatedDoc(Section.GOODS, id, goods.number(id), g.branch.id(), g.branch.name(), g.warehouse.name(), g.lines.size(), post));
+            docs.add(new OpeningFileDoc(Section.GOODS, id, goods.number(id), g.branch.id(), g.branch.name(), g.warehouse.name(), g.lines.size(), post));
         }
         for (FinanceGroup g : p.financeGroups.values()) {
             OpeningFinanceImport.Section s = OpeningFinanceImport.Section.valueOf(g.section.name());
             long id = finance.replaceDraft(actor, s, g.branch.id(), cutoff, g.lines, note);
-            docs.add(new CreatedDoc(g.section, id, finance.number(id), g.branch.id(), g.branch.name(), null, g.lines.size(), post));
+            docs.add(new OpeningFileDoc(g.section, id, finance.number(id), g.branch.id(), g.branch.name(), null, g.lines.size(), post));
         }
         if (post) {
-            for (CreatedDoc d : docs) {
+            for (OpeningFileDoc d : docs) {
                 if (d.section() == Section.GOODS) {
                     goods.post(actor, d.id());
                 } else {
@@ -186,7 +186,7 @@ class OpeningImports {
                 }
             }
         }
-        return new OpeningImportResult(docs, post);
+        return new OpeningFileResult(docs, post);
     }
 
     // ===== Rejani tuzish =====
@@ -490,35 +490,35 @@ class OpeningImports {
 
     // ===== Natija =====
 
-    private OpeningImportPreview toPreview(Plan p, String fileName) {
+    private OpeningFilePreview toPreview(Plan p, String fileName) {
         Map<Section, long[]> counts = new EnumMap<>(Section.class);
         Map<Section, BigDecimal> sums = new EnumMap<>(Section.class);
-        List<ImportGroup> groups = new ArrayList<>();
+        List<OpeningFileGroup> groups = new ArrayList<>();
         for (GoodsGroup g : p.goodsGroups.values()) {
             counts.computeIfAbsent(Section.GOODS, s -> new long[2])[0] += g.lines.size();
             counts.get(Section.GOODS)[1] += g.qty;
             sums.merge(Section.GOODS, g.cost, BigDecimal::add);
-            groups.add(new ImportGroup(Section.GOODS, g.branch.id(), g.branch.name(), g.warehouse.id(), g.warehouse.name(), g.lines.size(), g.qty,
+            groups.add(new OpeningFileGroup(Section.GOODS, g.branch.id(), g.branch.name(), g.warehouse.id(), g.warehouse.name(), g.lines.size(), g.qty,
                     p.rights.cost() ? new Money(g.cost).toString() : null, p.goodsExisting.getOrDefault(g.warehouse.id(), Existing.NONE)));
         }
         for (Map.Entry<String, FinanceGroup> e : p.financeGroups.entrySet()) {
             FinanceGroup g = e.getValue();
             counts.computeIfAbsent(g.section, s -> new long[2])[0] += g.lines.size();
             sums.merge(g.section, g.total, BigDecimal::add);
-            groups.add(new ImportGroup(g.section, g.branch.id(), g.branch.name(), null, null, g.lines.size(), 0, new Money(g.total).toString(),
+            groups.add(new OpeningFileGroup(g.section, g.branch.id(), g.branch.name(), null, null, g.lines.size(), 0, new Money(g.total).toString(),
                     p.financeExisting.getOrDefault(e.getKey(), Existing.NONE)));
         }
-        List<SectionTotal> sections = new ArrayList<>();
+        List<OpeningFileSection> sections = new ArrayList<>();
         for (Section s : Section.values()) {
             long[] c = counts.get(s);
             if (c == null) {
                 continue;
             }
             String amount = s == Section.GOODS && !p.rights.cost() ? null : new Money(sums.getOrDefault(s, BigDecimal.ZERO)).toString();
-            sections.add(new SectionTotal(s, (int) c[0], s == Section.GOODS ? c[1] : 0, amount));
+            sections.add(new OpeningFileSection(s, (int) c[0], s == Section.GOODS ? c[1] : 0, amount));
         }
         boolean canApply = p.errors.isEmpty() && !groups.isEmpty();
-        return new OpeningImportPreview(fileName == null ? "" : fileName, p.cutoff, sections, groups, p.errors, p.warnings, p.truncated, canApply);
+        return new OpeningFilePreview(fileName == null ? "" : fileName, p.cutoff, sections, groups, p.errors, p.warnings, p.truncated, canApply);
     }
 
     private static String firstNonEmpty(String... values) {
