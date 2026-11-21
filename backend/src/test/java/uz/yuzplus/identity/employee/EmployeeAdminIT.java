@@ -139,6 +139,21 @@ class EmployeeAdminIT {
                 .andExpect(jsonPath("$.total", greaterThanOrEqualTo(1)));
         mvc.perform(get("/api/audit").param("q", "Ishdan ketdi").param("to", "2000-01-01").cookie(admin))
                 .andExpect(jsonPath("$.total").value(0));
+        // S1: «Nazoratdagi» koʻrinishi — id indeks bilan taqqoslanadi; raqam boʻlmagan entity_id xato bermaydi
+        long ctrlProduct = jdbc.sql("""
+                INSERT INTO product (unit_id, code, name, controlled) SELECT id, :c, 'Nazorat S1', true FROM unit ORDER BY id LIMIT 1 RETURNING id""")
+                .param("c", String.valueOf(10_000_000 + java.util.concurrent.ThreadLocalRandom.current().nextInt(89_999_999)))
+                .query(Long.class).single();
+        jdbc.sql("""
+                INSERT INTO audit_log (action, entity_type, entity_id, branch_id)
+                SELECT x.a, x.t, x.i, (SELECT branch_id FROM employee WHERE id = :e)
+                FROM (VALUES ('product.update', 'product', :id), ('setting.update', 'app_setting', 'abc')) AS x(a, t, i)""")
+                .param("id", String.valueOf(ctrlProduct)).param("e", adminId).update();
+        mvc.perform(get("/api/audit").param("view", "CTRL").param("entityType", "product").param("size", "100").cookie(admin))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[?(@.entityId == '" + ctrlProduct + "')]").exists());
+        mvc.perform(get("/api/audit").param("entityType", "app_setting").param("size", "100").cookie(admin))
+                .andExpect(status().isOk());
         mvc.perform(get("/api/audit/facets").cookie(admin))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.categories[?(@.value == 'BLOCK')]").exists())
