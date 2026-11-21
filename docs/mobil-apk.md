@@ -60,3 +60,9 @@ Secrets qoʻyilgach keyingi yigʻishdan boshlab APK egasining kaliti bilan chiqa
 - Imzolash `mobile/plugins/with-release-signing.js` config plugin orqali: `YUZPLUS_KEYSTORE` env boʻlsa release kalit, aks holda debug.
 - `versionCode` = Actions ishga tushirish raqami (har yigʻish oldingisidan katta → yangilash ishlaydi).
 - Arxitekturalar: `arm64-v8a`, `armeabi-v7a` (haqiqiy telefonlar; emulyator x86 kirmaydi — hajm kichikroq).
+
+## Haydovchini ilovaga ulash (21.11)
+
+1. Sozlamalar → Xodimlar: haydovchiga login va **vaqtinchalik parol** bering (rol — Haydovchi).
+2. Haydovchi APK ni oʻrnatib, shu login va vaqtinchalik parol bilan kiradi → ilova oʻsha ekranning oʻzida **yangi parol** soʻraydi (kamida 8 belgi, harf va raqam) → keyin 4 raqamli PIN oʻrnatadi.
+3. Brauzerga kirish shart emas. Yangi parol keyin brauzerda ham ishlaydi.
