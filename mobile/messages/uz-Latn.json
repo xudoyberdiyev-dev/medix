@@ -19,8 +19,17 @@
     "notDriver": "Bu ilova faqat haydovchilar uchun. Boshqa rollar 100+ ning brauzer versiyasidan foydalanadi.",
     "language": "Til",
     "locked": "Juda koʻp notoʻgʻri urinish. Birozdan keyin qayta urining yoki Ombor mudiriga murojaat qiling.",
-    "passwordChange": "Vaqtinchalik parol bilan kirdingiz. Avval brauzerda 100+ ga kirib parolni almashtiring, keyin shu yerda yangi parol bilan kiring.",
-    "blocked": "Hisobingiz bloklangan. Ombor mudiri yoki Filial rahbariga murojaat qiling."
+    "passwordChange": "Vaqtinchalik parol bilan kirdingiz. Yangi parol oʻrnating — keyingi safar shu parol bilan kirasiz.",
+    "blocked": "Hisobingiz bloklangan. Ombor mudiri yoki Filial rahbariga murojaat qiling.",
+    "newPassword": "Yangi parol",
+    "repeatPassword": "Yangi parolni takrorlang",
+    "passwordRules": "Kamida 8 belgi, kamida bitta harf va bitta raqam.",
+    "saveAndEnter": "Parolni saqlab kirish",
+    "back": "Orqaga",
+    "pwShort": "Parol kamida 8 belgidan iborat boʻlsin.",
+    "pwChars": "Parolda kamida bitta harf va bitta raqam boʻlsin.",
+    "pwSame": "Yangi parol vaqtinchalik paroldan farq qilsin.",
+    "pwMismatch": "Parollar mos kelmadi. Qayta kiriting."
   },
   "pin": {
     "setStep": "1 / 2 · Yangi PIN",

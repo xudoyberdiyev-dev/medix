@@ -3495,6 +3495,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/mobile/auth/password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Vaqtinchalik parol bilan kirib, yangi parol oʻrnatish va token olish (faqat haydovchi) */
+        post: operations["password"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/money-accounts": {
         parameters: {
             query?: never;
@@ -12444,6 +12461,13 @@ export interface components {
             me: components["schemas"]["MeResponse"];
             /** @description Qurilma tokeni — faqat bir marta qaytariladi */
             token: string;
+        };
+        MobilePasswordRequest: {
+            currentPassword: string;
+            /** @description Qurilma nomi */
+            device?: string;
+            login: string;
+            newPassword: string;
         };
         MonitorBoard: {
             cards: components["schemas"]["MonitorCard"][];
@@ -22191,6 +22215,30 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    password: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MobilePasswordRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MobileLoginResponse"];
+                };
             };
         };
     };
