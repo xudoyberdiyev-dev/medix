@@ -14,7 +14,7 @@ import { EmptyState, ErrorState, ForbiddenState, NoResultsState } from "@/compon
 import { Table, type TableColumn } from "@/components/ui/table";
 import { TextField } from "@/components/ui/text-field";
 import { canAny } from "@/features/auth/can";
-import { useMe } from "@/features/auth/session";
+import { useMe, useScopeBranchId } from "@/features/auth/session";
 import { useWarehouses, useWarehouseOptions } from "@/features/organization/api";
 import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
@@ -88,6 +88,7 @@ export function StockPage({
   const t = useTranslations("stock");
   const me = useMe();
   const warehouses = useWarehouses();
+  const scopeBranch = useScopeBranchId();
   const warehouseOptions = useWarehouseOptions(warehouses.data ?? []);
   const router = useRouter();
   const pathname = usePathname();
@@ -105,13 +106,14 @@ export function StockPage({
   const allowed = canAny(me.data, mode === "stock" ? ["stock.view"] : ["expiry.view", "stock.view"]);
 
   const stock = useQuery({
-    queryKey: ["stock", mode, q, warehouseId, sellableOnly, days, sort, desc, page, size],
+    queryKey: ["stock", mode, q, warehouseId, sellableOnly, days, sort, desc, page, size, scopeBranch],
     queryFn: () =>
       unwrap(
         api.GET("/api/stock", {
           params: {
             query: {
               q: q || undefined,
+              branchId: scopeBranch ?? undefined,
               warehouseId: warehouseId ? Number(warehouseId) : undefined,
               sellableOnly,
               expiringWithinDays: mode === "expiry" ? Number(days) : undefined,
