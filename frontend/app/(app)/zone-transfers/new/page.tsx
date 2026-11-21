@@ -1,5 +1,6 @@
 import { TopBar } from "@/components/shell/topbar";
 import { NewZoneTransferPage } from "@/features/zone-transfers/zk-new-page";
+import { FreshOnPush } from "@/components/shell/fresh-on-push";
 
 /** ZK — yangi zona koʻchirishi (prototip `TransferDoc`). */
 export default function Page() {
@@ -7,7 +8,9 @@ export default function Page() {
     <>
       <TopBar titleKey="transfers" />
       <main className="flex-1 overflow-y-auto p-6">
-        <NewZoneTransferPage />
+        <FreshOnPush>
+          <NewZoneTransferPage />
+        </FreshOnPush>
       </main>
     </>
   );
