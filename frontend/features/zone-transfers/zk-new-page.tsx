@@ -16,7 +16,7 @@ import { TextField } from "@/components/ui/text-field";
 import { toast } from "@/components/ui/toast";
 import { can } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
-import { useBranchList, useWarehouses, ZONE_LABELS, zoneLabel } from "@/features/organization/api";
+import { useBranchList, useWarehouses, ZONE_LABELS, zoneLabel, useWarehouseOptions } from "@/features/organization/api";
 import { Steps } from "@/features/payments/payment-doc-page";
 import { describeError } from "@/features/setup/form-error";
 import { KIND_PAGE } from "@/features/transfers/model";
@@ -92,6 +92,7 @@ export function NewZoneTransferPage({ doc = null }: { doc?: ZoneTransferDetail |
   const stock = useZoneStock(fromId ? Number(fromId) : null);
 
   const active = (warehouses.data ?? []).filter((w) => w.active);
+  const warehouseOptions = useWarehouseOptions(active);
   const warehouse = active.find((w) => String(w.id) === warehouseId);
   const zones = warehouse?.zones ?? [];
   const from = zones.find((z) => String(z.id) === fromId);
@@ -282,7 +283,7 @@ export function NewZoneTransferPage({ doc = null }: { doc?: ZoneTransferDetail |
                 label={t("form.warehouse")}
                 value={warehouseId}
                 onChange={(v) => (setWarehouseId(v), setFromId(null), setToId(null), setQty({}))}
-                options={active.map((w) => ({ value: String(w.id), label: w.name }))}
+                options={warehouseOptions}
                 required
               />
               <div className="hidden md:block" aria-hidden />

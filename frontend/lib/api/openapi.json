@@ -4254,7 +4254,17 @@
     },
     "/api/dictionaries-overview" : {
       "get" : {
+        "description" : "branchId — mashina/haydovchi soni shu filial bo'yicha (F1).",
         "operationId" : "overview_5",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
         "responses" : {
           "200" : {
             "content" : {
@@ -4484,7 +4494,17 @@
     },
     "/api/employees" : {
       "get" : {
+        "description" : "branchId — faqat shu filial xodimlari (F1).",
         "operationId" : "list_21",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
         "responses" : {
           "200" : {
             "content" : {
@@ -9313,6 +9333,15 @@
             "type" : "boolean",
             "default" : true
           }
+        }, {
+          "description" : "F1: faqat shu filial",
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
         } ],
         "responses" : {
           "200" : {
@@ -9514,6 +9543,16 @@
       "get" : {
         "description" : "Yetkazilmagan buyurtmalar tovari — Ombor mudiri sanab qabul qiladi.",
         "operationId" : "pendingReturns",
+        "parameters" : [ {
+          "description" : "F1: faqat shu filial",
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
         "responses" : {
           "200" : {
             "content" : {
@@ -18537,7 +18576,17 @@
     },
     "/api/vehicles" : {
       "get" : {
+        "description" : "branchId — faqat shu filial mashinalari (F1).",
         "operationId" : "list_4",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
         "responses" : {
           "200" : {
             "content" : {
@@ -19033,7 +19082,17 @@
     },
     "/api/warehouses" : {
       "get" : {
+        "description" : "branchId — faqat shu filial omborlari (ruxsat bo'lmasa bo'sh ro'yxat).",
         "operationId" : "list_2",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
         "responses" : {
           "200" : {
             "content" : {
@@ -19113,6 +19172,15 @@
     "/api/warehouses/overview" : {
       "get" : {
         "operationId" : "overview",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "branchId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
         "responses" : {
           "200" : {
             "content" : {

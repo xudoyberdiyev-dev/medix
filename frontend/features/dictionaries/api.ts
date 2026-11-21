@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ensureCsrf } from "@/features/auth/session";
+import { ensureCsrf, useScopeBranchId } from "@/features/auth/session";
 import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
 
@@ -96,8 +96,13 @@ export const useToggleEntry = (kind: DictionaryKind) =>
 
 const VEHICLES = ["vehicles"] as const;
 
+/** Mashinalar (F1): tepada tanlangan filial boʻyicha. */
 export function useVehicles() {
-  return useQuery({ queryKey: VEHICLES, queryFn: () => unwrap(api.GET("/api/vehicles")) });
+  const branchId = useScopeBranchId();
+  return useQuery({
+    queryKey: [...VEHICLES, "list", branchId ?? "all"],
+    queryFn: () => unwrap(api.GET("/api/vehicles", { params: { query: branchId === null ? {} : { branchId } } })),
+  });
 }
 
 export const useSaveVehicle = () =>

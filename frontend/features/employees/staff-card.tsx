@@ -109,11 +109,11 @@ export function StaffCardPage({ id }: { id: number }) {
   const ta = useTranslations("audit");
   const tx = tr as unknown as { (key: string): string; has: (key: string) => boolean };
   const me = useMe();
-  const list = useEmployees();
+  const list = useEmployees("all");
   const journal = useEmployeeJournal(id);
   const matrix = useRoleMatrix();
   const branchesQ = useBranches();
-  const warehousesQ = useWarehouses();
+  const warehousesQ = useWarehouses("all");
   const seatsQ = useSeats();
   const update = useUpdateEmployee();
   const block = useBlockEmployee();

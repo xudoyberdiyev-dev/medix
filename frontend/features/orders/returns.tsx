@@ -10,7 +10,7 @@ import { Card } from "@/components/ui/card";
 import { EmptyState, ErrorState, Skeleton } from "@/components/ui/system-states";
 import { TextField } from "@/components/ui/text-field";
 import { toast } from "@/components/ui/toast";
-import { ensureCsrf } from "@/features/auth/session";
+import { ensureCsrf, useScopeBranchId } from "@/features/auth/session";
 import { describeError } from "@/features/setup/form-error";
 import { api, unwrap } from "@/lib/api/client";
 import { formatDateTime, formatQuantity } from "@/lib/format";
@@ -19,9 +19,10 @@ import { formatDateTime, formatQuantity } from "@/lib/format";
 export function ReturnsList() {
   const t = useTranslations("orders");
   const qc = useQueryClient();
+  const branchId = useScopeBranchId();
   const list = useQuery({
-    queryKey: ["orders", "returns"],
-    queryFn: () => unwrap(api.GET("/api/orders/returns")),
+    queryKey: ["orders", "returns", branchId ?? "all"],
+    queryFn: () => unwrap(api.GET("/api/orders/returns", { params: { query: { branchId: branchId ?? undefined } } })),
     refetchInterval: 30_000,
   });
   const [counts, setCounts] = useState<Record<number, string>>({});

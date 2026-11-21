@@ -1,5 +1,6 @@
 package uz.yuzplus.sales.order;
 
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -348,8 +349,9 @@ class OrderController {
     @GetMapping("/issues")
     @PreAuthorize("hasAuthority('orders.queue')")
     @Operation(summary = "Muammolar", description = "Ombor mudiri paneli: ochiq (standart) yoki barchasi; buyurtma bo'yicha.")
-    List<OrderIssues.OrderIssueItem> listIssues(@RequestParam(required = false) Long orderId, @RequestParam(defaultValue = "true") boolean open) {
-        return issues.list(actor(), orderId, open);
+    List<OrderIssues.OrderIssueItem> listIssues(@RequestParam(required = false) Long orderId, @RequestParam(defaultValue = "true") boolean open,
+            @Parameter(description = "F1: faqat shu filial") @RequestParam(required = false) Long branchId) {
+        return issues.list(actor().scopedTo(branchId), orderId, open);
     }
 
     @PostMapping("/issues/{issueId}/resolve")
@@ -362,8 +364,9 @@ class OrderController {
     @GetMapping("/returns")
     @PreAuthorize("hasAuthority('orders.check')")
     @Operation(summary = "Qaytayotgan tovar", description = "Yetkazilmagan buyurtmalar tovari — Ombor mudiri sanab qabul qiladi.")
-    List<OrderSales.PendingReturn> pendingReturns() {
-        return sales.pendingReturns(actor());
+    List<OrderSales.PendingReturn> pendingReturns(
+            @Parameter(description = "F1: faqat shu filial") @RequestParam(required = false) Long branchId) {
+        return sales.pendingReturns(actor().scopedTo(branchId));
     }
 
     @PostMapping("/returns/{returnId}/accept")

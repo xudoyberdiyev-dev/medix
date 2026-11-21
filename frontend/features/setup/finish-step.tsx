@@ -55,7 +55,7 @@ export function FinishStep({
   const t = useTranslations("setup.finish");
   const router = useRouter();
   const complete = useCompleteSetup();
-  const emps = useEmployees();
+  const emps = useEmployees("all");
   const seats = useSeats();
   const matrix = useRoleMatrix();
   const cashes = useQueries({

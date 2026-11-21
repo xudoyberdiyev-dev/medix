@@ -17,7 +17,7 @@ const day = (iso: string) => formatDate(new Date(`${iso}T00:00:00+05:00`));
 /** Sanoqda topilgan partiyani qoʻshish (hisobda 0, sanaldi — kiritilgan). */
 export function AddFound({ doc, onClose }: { doc: InventoryCountDetail; onClose: () => void }) {
   const t = useTranslations("inventoryCounts");
-  const warehouses = useWarehouses();
+  const warehouses = useWarehouses("all");
   const save = useSaveCounts();
   const [q, setQ] = useState("");
   const [batchId, setBatchId] = useState<string | null>(null);

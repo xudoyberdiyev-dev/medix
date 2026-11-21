@@ -15,7 +15,7 @@ import { EmptyState, ErrorState, ForbiddenState } from "@/components/ui/system-s
 import { TextField } from "@/components/ui/text-field";
 import { toast } from "@/components/ui/toast";
 import { can } from "@/features/auth/can";
-import { useMe } from "@/features/auth/session";
+import { useMe, useScopeBranchId } from "@/features/auth/session";
 import { useEmployees } from "@/features/employees/api";
 import { describeError } from "@/features/setup/form-error";
 import { WarehousePanel, ZONE_LOOK, useZoneNames } from "@/features/setup/warehouse-panel";
@@ -466,17 +466,22 @@ function CardPanel({
 }) {
   const t = useTranslations("organization.warehouses");
   const branches = useBranchList();
-  const warehouses = useWarehouses();
-  const employees = useEmployees();
+  const warehouses = useWarehouses("all");
+  const employees = useEmployees("all");
   const create = useCreateWarehouseCard();
   const update = useUpdateWarehouseCard();
+  const scopeBranch = useScopeBranchId();
+  const me = useMe();
   const warehouse = id == null ? null : (warehouses.data?.find((w) => w.id === id) ?? null);
   if (!branches.data || !warehouses.data || (id != null && !warehouse)) return null;
+  // Ro'yxat hali yuklanmagan bo'lsa ham filial oldindan tanlanadi: tepadagi filial → o'z filiali → yagona faol filial.
+  const activeBranches = branches.data.filter((b) => b.active);
+  const preset = branchId ?? scopeBranch ?? me.data?.branchId ?? (activeBranches.length === 1 ? activeBranches[0].id : null);
   return (
     <WarehousePanel
       open
       warehouse={warehouse}
-      presetBranchId={branchId}
+      presetBranchId={preset}
       branches={branches.data}
       employees={employees.data ?? []}
       onClose={onClose}

@@ -40,7 +40,7 @@ import { can } from "@/features/auth/can";
 import { ensureCsrf, useMe } from "@/features/auth/session";
 import { formatIsoDate, parseUzDate } from "@/features/counterparties/api";
 import { DeactivateDialog } from "@/features/organization/deactivate-dialog";
-import { useWarehouses } from "@/features/organization/api";
+import { useWarehouses, useWarehouseOptions } from "@/features/organization/api";
 import { searchProducts } from "@/features/prices/api";
 import { describeError } from "@/features/setup/form-error";
 import { api, unwrap } from "@/lib/api/client";
@@ -230,6 +230,7 @@ function Editor({
   const err = describeError(save.error ?? submit.error ?? approve.error ?? back.error);
 
   const activeWarehouses = (warehouses.data ?? []).filter((w) => w.active || String(w.id) === warehouseId);
+  const warehouseOptions = useWarehouseOptions(activeWarehouses);
   // Yagona faol ombor — yangi buyurtmada avtomatik tanlanadi (prototip)
   const onlyWarehouse = editable && !doc && activeWarehouses.length === 1 ? String(activeWarehouses[0].id) : null;
   useEffect(() => {
@@ -668,7 +669,7 @@ function Editor({
             label={t("entry.warehouse")}
             value={warehouseId}
             onChange={setWarehouseId}
-            options={activeWarehouses.map((w) => ({ value: String(w.id), label: w.name }))}
+            options={warehouseOptions}
             disabled={!editable}
             required
           />

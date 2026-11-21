@@ -699,7 +699,7 @@ function errText(t: T, e: StartError): string {
 function WorkDoc({ doc }: { doc: InventoryCountDetail }) {
   const t = useTranslations("inventoryCounts");
   const me = useMe();
-  const warehouses = useWarehouses();
+  const warehouses = useWarehouses("all");
   const branches = useBranchList();
   const recount = useRecountInventoryCount();
   const approve = useApproveInventoryCount();

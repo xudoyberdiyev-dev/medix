@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import uz.yuzplus.shared.error.YuzplusException;
@@ -86,9 +87,13 @@ class WarehouseController {
 
     @GetMapping
     @PreAuthorize("isAuthenticated()")
-    @Operation(summary = "Ko'rish mumkin bo'lgan omborlar va ularning zonalari")
-    List<Warehouses.Warehouse> list() {
+    @Operation(summary = "Ko'rish mumkin bo'lgan omborlar va ularning zonalari",
+            description = "branchId — faqat shu filial omborlari (ruxsat bo'lmasa bo'sh ro'yxat).")
+    List<Warehouses.Warehouse> list(@RequestParam(required = false) Long branchId) {
         Actor a = actor();
+        if (branchId != null) {
+            return a.canAccessBranch(branchId) ? warehouses.listByBranches(List.of(branchId)) : List.of();
+        }
         if (a.allBranches()) {
             return warehouses.listAll();
         }
@@ -98,8 +103,11 @@ class WarehouseController {
     @GetMapping("/overview")
     @PreAuthorize("hasAnyAuthority('warehouses.view', 'stock.view')")
     @Operation(summary = "Omborlar va zonalar sahifasi: filial → ombor, omborchi, zonalar qoldig'i bilan")
-    List<WarehouseOverview.WarehouseOverviewItem> overview() {
+    List<WarehouseOverview.WarehouseOverviewItem> overview(@RequestParam(required = false) Long branchId) {
         Actor a = actor();
+        if (branchId != null) {
+            return a.canAccessBranch(branchId) ? overview.list(branchId) : List.of();
+        }
         if (a.allBranches()) {
             return overview.list(null);
         }

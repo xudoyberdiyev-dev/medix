@@ -13,7 +13,7 @@ import { Radio } from "@/components/ui/selection-controls";
 import { EmptyState, ErrorState, Skeleton } from "@/components/ui/system-states";
 import { TextField } from "@/components/ui/text-field";
 import { toast } from "@/components/ui/toast";
-import { ensureCsrf } from "@/features/auth/session";
+import { ensureCsrf, useScopeBranchId } from "@/features/auth/session";
 import { describeError } from "@/features/setup/form-error";
 import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
@@ -99,9 +99,10 @@ export function IssueButton({ orderId }: { orderId: number }) {
 export function IssuesList({ onOpenOrder }: { onOpenOrder: (id: number) => void }) {
   const t = useTranslations("orders");
   const qc = useQueryClient();
+  const branchId = useScopeBranchId();
   const issues = useQuery({
-    queryKey: ["orders", "issues"],
-    queryFn: () => unwrap(api.GET("/api/orders/issues", { params: { query: { open: true } } })),
+    queryKey: ["orders", "issues", branchId ?? "all"],
+    queryFn: () => unwrap(api.GET("/api/orders/issues", { params: { query: { open: true, branchId: branchId ?? undefined } } })),
     refetchInterval: 15_000,
   });
   const [resolving, setResolving] = useState<OrderIssueItem | null>(null);

@@ -1789,7 +1789,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Boshqa ma'lumotnomalar: soni va oxirgi o'zgarish */
+        /**
+         * Boshqa ma'lumotnomalar: soni va oxirgi o'zgarish
+         * @description branchId — mashina/haydovchi soni shu filial bo'yicha (F1).
+         */
         get: operations["overview_5"];
         put?: never;
         post?: never;
@@ -1895,7 +1898,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Xodimlar ro'yxati */
+        /**
+         * Xodimlar ro'yxati
+         * @description branchId — faqat shu filial xodimlari (F1).
+         */
         get: operations["list_21"];
         put?: never;
         /** Xodim qo'shish */
@@ -8075,7 +8081,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Mashinalar (filial doirasida) */
+        /**
+         * Mashinalar (filial doirasida)
+         * @description branchId — faqat shu filial mashinalari (F1).
+         */
         get: operations["list_4"];
         put?: never;
         /** Mashina qo'shish */
@@ -8309,7 +8318,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Ko'rish mumkin bo'lgan omborlar va ularning zonalari */
+        /**
+         * Ko'rish mumkin bo'lgan omborlar va ularning zonalari
+         * @description branchId — faqat shu filial omborlari (ruxsat bo'lmasa bo'sh ro'yxat).
+         */
         get: operations["list_2"];
         put?: never;
         /**
@@ -19716,7 +19728,9 @@ export interface operations {
     };
     overview_5: {
         parameters: {
-            query?: never;
+            query?: {
+                branchId?: number;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -19877,7 +19891,9 @@ export interface operations {
     };
     list_21: {
         parameters: {
-            query?: never;
+            query?: {
+                branchId?: number;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -22976,6 +22992,8 @@ export interface operations {
             query?: {
                 orderId?: number;
                 open?: boolean;
+                /** @description F1: faqat shu filial */
+                branchId?: number;
             };
             header?: never;
             path?: never;
@@ -23128,7 +23146,10 @@ export interface operations {
     };
     pendingReturns: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description F1: faqat shu filial */
+                branchId?: number;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -28624,7 +28645,9 @@ export interface operations {
     };
     list_4: {
         parameters: {
-            query?: never;
+            query?: {
+                branchId?: number;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -28976,7 +28999,9 @@ export interface operations {
     };
     list_2: {
         parameters: {
-            query?: never;
+            query?: {
+                branchId?: number;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -29044,7 +29069,9 @@ export interface operations {
     };
     overview: {
         parameters: {
-            query?: never;
+            query?: {
+                branchId?: number;
+            };
             header?: never;
             path?: never;
             cookie?: never;

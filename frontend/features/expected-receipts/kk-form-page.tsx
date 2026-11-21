@@ -15,7 +15,7 @@ import { toast } from "@/components/ui/toast";
 import { can } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
 import { formatIsoDate, parseUzDate } from "@/features/counterparties/api";
-import { useWarehouses } from "@/features/organization/api";
+import { useWarehouses, useWarehouseOptions } from "@/features/organization/api";
 import { searchProducts } from "@/features/prices/api";
 import { searchSuppliers } from "@/features/receipts/api";
 import { describeError } from "@/features/setup/form-error";
@@ -119,9 +119,9 @@ function Form({ doc }: { doc: KkDetail | null }) {
     ]);
   };
 
-  const options = (warehouses.data ?? [])
-    .filter((w) => w.active && (me.data?.allBranches || w.branchId === me.data?.branchId))
-    .map((w) => ({ value: String(w.id), label: w.name }));
+  const options = useWarehouseOptions(
+    (warehouses.data ?? []).filter((w) => w.active && (me.data?.allBranches || w.branchId === me.data?.branchId)),
+  );
   const total = kkTotal(lines.map((l) => ({ qty: l.qty, price: l.price.replace(",", ".") })));
 
   const addLine = () => {

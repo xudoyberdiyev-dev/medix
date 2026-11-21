@@ -9,6 +9,7 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import uz.yuzplus.shared.error.YuzplusException;
 import uz.yuzplus.shared.security.Actor;
@@ -51,11 +52,14 @@ class DictionaryOverviewController {
     @GetMapping("/api/dictionaries-overview")
     @PreAuthorize("hasAuthority('lookups.view')")
     @Transactional(readOnly = true)
-    @Operation(summary = "Boshqa ma'lumotnomalar: soni va oxirgi o'zgarish")
-    List<OverviewCard> overview() {
+    @Operation(summary = "Boshqa ma'lumotnomalar: soni va oxirgi o'zgarish", description = "branchId — mashina/haydovchi soni shu filial bo'yicha (F1).")
+    List<OverviewCard> overview(@RequestParam(required = false) Long branchId) {
         Actor a = currentActor.current().orElseThrow(() -> YuzplusException.unauthorized("auth.unauthorized"));
-        boolean all = a.allBranches();
-        long branch = a.branchId() == null ? -1L : a.branchId();
+        if (branchId != null && !a.canAccessBranch(branchId)) {
+            throw YuzplusException.forbidden("auth.forbidden");
+        }
+        boolean all = a.allBranches() && branchId == null;
+        long branch = branchId != null ? branchId : a.branchId() == null ? -1L : a.branchId();
         Stat vehicles = stat("SELECT count(*) AS c, count(*) FILTER (WHERE active) AS a, max(updated_at) AS l FROM vehicle WHERE (:all OR branch_id = :b)",
                 all, branch);
         Stat drivers = stat("""

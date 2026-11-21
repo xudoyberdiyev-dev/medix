@@ -43,7 +43,7 @@ import {
   useCounterparty,
 } from "@/features/counterparties/api";
 import { DeactivateDialog } from "@/features/organization/deactivate-dialog";
-import { useBranchList, useWarehouses, zoneLabel, type Zone } from "@/features/organization/api";
+import { useBranchList, useWarehouses, zoneLabel, type Zone, useWarehouseOptions } from "@/features/organization/api";
 import { useBranchStore } from "@/lib/stores/branch";
 import { Steps } from "@/features/payments/payment-doc-page";
 import { searchProducts } from "@/features/prices/api";
@@ -338,6 +338,7 @@ function Editor({
   }, [source, t]);
 
   const activeWarehouses = (warehouses.data ?? []).filter((w) => w.active || String(w.id) === warehouseId);
+  const warehouseOptions = useWarehouseOptions(activeWarehouses);
   const warehouse = activeWarehouses.find((w) => String(w.id) === warehouseId) ?? null;
   const branches = useBranchList();
   const selectedBranch = useBranchStore((st) => st.branchId);
@@ -575,7 +576,7 @@ function Editor({
           value={warehouseId}
           onChange={(v) => (setWarehouseId(v), setLines([]), setAdding(emptyAdd))}
           disabled={!editable || lines.length > 0}
-          options={activeWarehouses.map((w) => ({ value: String(w.id), label: w.name }))}
+          options={warehouseOptions}
           hint={editable && lines.length > 0 ? t("field.warehouseHint") : undefined}
           required
         />
@@ -1176,7 +1177,7 @@ function AcceptDialog({ id, onClose }: { id: number; onClose: () => void }) {
   const t = useTranslations("receipts.accept");
   const tr = useTranslations("receipts");
   const doc = useReceipt(id);
-  const warehouses = useWarehouses();
+  const warehouses = useWarehouses("all");
   const accept = useAcceptReceipt();
   const [rows, setRows] = useState<Record<number, CountRow>>({});
   const [local, setLocal] = useState<string | null>(null);

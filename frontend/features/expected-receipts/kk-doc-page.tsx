@@ -71,7 +71,7 @@ function View({ doc }: { doc: KkDetail }) {
   const close = useCloseExpectedReceipt();
   const receive = useReceiveExpectedReceipt();
   const upload = useUploadKkFile();
-  const warehouses = useWarehouses();
+  const warehouses = useWarehouses("all");
   const fileRef = useRef<HTMLInputElement>(null);
   const [dlg, setDlg] = useState<"approve" | "cancel" | "close" | "receive" | null>(null);
   const [reason, setReason] = useState("");

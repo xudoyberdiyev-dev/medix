@@ -49,7 +49,7 @@ function Receive({ doc }: { doc: WarehouseTransferDetail }) {
   const tr = useTranslations("warehouseTransfers.rcv");
   const router = useRouter();
   const branches = useBranchList();
-  const warehouses = useWarehouses();
+  const warehouses = useWarehouses("all");
   const receive = useReceiveWarehouseTransfer();
   const zones = (warehouses.data?.find((w) => w.id === doc.toWarehouse.id)?.zones ?? []).filter((z) => z.active);
   const defZone = zones.find((z) => z.type === "MAIN") ?? zones.find((z) => z.type === "RECEIVING") ?? null;

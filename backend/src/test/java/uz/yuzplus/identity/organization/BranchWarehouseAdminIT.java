@@ -363,4 +363,51 @@ class BranchWarehouseAdminIT {
                 .andExpect(jsonPath("$.active").value(true));
         mvc.perform(json(put("/api/warehouses/" + wid), manager, "{\"name\":\"X\"}")).andExpect(status().isForbidden());
     }
+
+    /** F1: «Barcha filiallar» huquqli Direktor tepada filial tanlasa — boshqa filial ombori, xodimi, mashinasi ko'rinmaydi. */
+    @Test
+    void selectedBranchHidesOtherBranchData() throws Exception {
+        Cookie director = loginAs("DIRECTOR", null);
+        long b1 = branch(director);
+        long b2 = branch(director);
+        mvc.perform(json(post("/api/warehouses"), director, "{\"branchId\":" + b1 + ",\"name\":\"F1 bir\"}")).andExpect(status().isCreated());
+        mvc.perform(json(post("/api/warehouses"), director, "{\"branchId\":" + b2 + ",\"name\":\"F1 ikki\"}")).andExpect(status().isCreated());
+        Cookie manager1 = loginAs("BRANCH_MANAGER", b1);
+        loginAs("BRANCH_MANAGER", b2);
+        String suffix = String.valueOf(System.nanoTime() % 100_000);
+        for (long b : new long[] {b1, b2}) {
+            jdbc.sql("INSERT INTO vehicle (branch_id, plate_number, model) VALUES (:b, :p, 'Labo')")
+                    .param("b", b).param("p", "01F" + (b == b1 ? "1" : "2") + suffix).update();
+        }
+
+        mvc.perform(get("/api/warehouses").param("branchId", String.valueOf(b2)).cookie(director))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.branchId == " + b1 + ")]", hasSize(0)))
+                .andExpect(jsonPath("$[?(@.branchId == " + b2 + ")]", hasSize(1)));
+        mvc.perform(get("/api/warehouses").cookie(director))
+                .andExpect(jsonPath("$[?(@.branchId == " + b1 + ")]", hasSize(1)))
+                .andExpect(jsonPath("$[?(@.branchId == " + b2 + ")]", hasSize(1)));
+        mvc.perform(get("/api/warehouses/overview").param("branchId", String.valueOf(b2)).cookie(director))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.branchId == " + b1 + ")]", hasSize(0)));
+        mvc.perform(get("/api/employees").param("branchId", String.valueOf(b2)).cookie(director))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.branchId == " + b1 + ")]", hasSize(0)))
+                .andExpect(jsonPath("$[?(@.branchId == " + b2 + ")]", hasSize(1)))
+                .andExpect(jsonPath("$[?(@.branchId == null)]", hasSize(0)));
+        mvc.perform(get("/api/vehicles").param("branchId", String.valueOf(b2)).cookie(director))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.branchId == " + b1 + ")]", hasSize(0)))
+                .andExpect(jsonPath("$[?(@.branchId == " + b2 + ")]", hasSize(1)));
+        mvc.perform(get("/api/dictionaries-overview").param("branchId", String.valueOf(b2)).cookie(director))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.kind == 'FLEET')].count").value(1));
+
+        // Bir filiallik xodim boshqa filialni so'rasa — bo'sh (ma'lumot sizib chiqmaydi).
+        mvc.perform(get("/api/warehouses").param("branchId", String.valueOf(b2)).cookie(manager1))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(0)));
+        mvc.perform(get("/api/employees").param("branchId", String.valueOf(b2)).cookie(manager1))
+                .andExpect(jsonPath("$", hasSize(0)));
+    }
 }
