@@ -23,7 +23,7 @@ import { can, canAny } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
 import { formatIsoDate, parseMoneyInput, parseUzDate, todayTashkent } from "@/features/counterparties/api";
 import { DeactivateDialog } from "@/features/organization/deactivate-dialog";
-import { useBranchList, useWarehouses, zoneLabel } from "@/features/organization/api";
+import { useBranchList, useWarehouses, zoneLabel, useWarehouseOptions } from "@/features/organization/api";
 import { Steps } from "@/features/payments/payment-doc-page";
 import { InfoRow } from "@/features/warehouse-transfers/transfer-doc-page";
 import { searchProducts } from "@/features/prices/api";
@@ -161,6 +161,7 @@ function Editor({
   const err = describeError(save.error ?? post.error);
 
   const activeWarehouses = (warehouses.data ?? []).filter((w) => w.active || String(w.id) === warehouseId);
+  const warehouseOptions = useWarehouseOptions(activeWarehouses);
   const warehouse = activeWarehouses.find((w) => String(w.id) === warehouseId) ?? null;
   const zones = warehouse?.zones ?? [];
   const zoneName = (id: number) => warehouse?.zones.find((z) => z.id === id)?.name ?? doc?.lines.find((l) => l.zoneId === id)?.zone ?? "";
@@ -334,7 +335,7 @@ function Editor({
             value={warehouseId}
             onChange={(v) => (setWarehouseId(v), setLines([]), setAdding(emptyAdd))}
             disabled={!editable || (doc !== null && lines.length > 0)}
-            options={activeWarehouses.map((w) => ({ value: String(w.id), label: w.name }))}
+            options={warehouseOptions}
             hint={editable && doc && lines.length > 0 ? t("drawer.warehouseLocked") : undefined}
             required
           />

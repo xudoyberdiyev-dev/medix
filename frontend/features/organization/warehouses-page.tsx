@@ -466,8 +466,8 @@ function CardPanel({
 }) {
   const t = useTranslations("organization.warehouses");
   const branches = useBranchList();
-  const warehouses = useWarehouses();
-  const employees = useEmployees();
+  const warehouses = useWarehouses("all");
+  const employees = useEmployees("all");
   const create = useCreateWarehouseCard();
   const update = useUpdateWarehouseCard();
   const warehouse = id == null ? null : (warehouses.data?.find((w) => w.id === id) ?? null);

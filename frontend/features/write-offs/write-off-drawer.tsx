@@ -16,7 +16,7 @@ import { TextField } from "@/components/ui/text-field";
 import { toast } from "@/components/ui/toast";
 import { can } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
-import { useWarehouses, ZONE_LABELS, zoneLabel } from "@/features/organization/api";
+import { useWarehouses, ZONE_LABELS, zoneLabel, useWarehouseOptions } from "@/features/organization/api";
 import { describeError } from "@/features/setup/form-error";
 import { useLineErrorText } from "@/features/zone-transfers/line-error";
 import { formatDate, formatDateTime, formatMoney, formatQuantity } from "@/lib/format";
@@ -240,6 +240,7 @@ export function CreateForm({
   const stock = useWriteOffStock(zoneId ? Number(zoneId) : null);
 
   const active = (warehouses.data ?? []).filter((w) => w.active);
+  const warehouseOptions = useWarehouseOptions(active);
   const warehouse = active.find((w) => String(w.id) === warehouseId);
   const zones = warehouse?.zones ?? [];
   const zone = zones.find((z) => String(z.id) === zoneId);
@@ -343,7 +344,7 @@ export function CreateForm({
           label={t("form.warehouse")}
           value={warehouseId}
           onChange={(v) => (setWarehouseId(v), setZoneId(null), setQty({}))}
-          options={active.map((w) => ({ value: String(w.id), label: w.name }))}
+          options={warehouseOptions}
           required
         />
         <Select

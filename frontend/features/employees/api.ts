@@ -1,7 +1,7 @@
 "use client";
 
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ensureCsrf } from "@/features/auth/session";
+import { ensureCsrf, useScopeBranchId } from "@/features/auth/session";
 import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
 
@@ -11,8 +11,14 @@ export type UpdateEmployeeRequest = components["schemas"]["UpdateEmployeeRequest
 
 const KEY = ["employees"] as const;
 
-export function useEmployees() {
-  return useQuery({ queryKey: KEY, queryFn: () => unwrap(api.GET("/api/employees")) });
+/** Xodimlar (F1): standart — tepada tanlangan filial xodimlari; `all` — koʻrish mumkin boʻlgan barchasi. */
+export function useEmployees(scope: "selected" | "all" = "selected") {
+  const selected = useScopeBranchId();
+  const branchId = scope === "all" ? null : selected;
+  return useQuery({
+    queryKey: [...KEY, "list", branchId ?? "all"],
+    queryFn: () => unwrap(api.GET("/api/employees", { params: { query: branchId === null ? {} : { branchId } } })),
+  });
 }
 
 function useEmployeeMutation<T, R = Employee>(fn: (v: T) => Promise<R>) {

@@ -10,6 +10,7 @@ import {
   type Branch,
   type Warehouse,
   type WarehouseOverviewItem,
+  warehouseOptions,
 } from "./api";
 
 const branch = (id: number, over: Partial<Branch> = {}): Branch => ({
@@ -107,5 +108,44 @@ describe("nextZoneName (E12 — bir turdagi bir nechta zona)", () => {
     expect(nextZoneName("Sovuq", ["Qabul"])).toBe("Sovuq");
     expect(nextZoneName("Asosiy saqlash", ["Asosiy saqlash", "Qabul"])).toBe("Asosiy saqlash 2");
     expect(nextZoneName("Asosiy saqlash", ["asosiy saqlash", "Asosiy saqlash 2"])).toBe("Asosiy saqlash 3");
+  });
+});
+
+describe("warehouseOptions (F1)", () => {
+  const branches = [
+    { id: 1, name: "Toshkent" },
+    { id: 2, name: "Andijon" },
+  ];
+
+  it("bitta filial — filial nomisiz, tartib oʻzgarmaydi", () => {
+    expect(
+      warehouseOptions(
+        [
+          { id: 5, name: "B ombor", branchId: 1 },
+          { id: 4, name: "A ombor", branchId: 1 },
+        ],
+        branches,
+      ),
+    ).toEqual([
+      { value: "5", label: "B ombor" },
+      { value: "4", label: "A ombor" },
+    ]);
+  });
+
+  it("barcha filiallar — filial boʻyicha guruhlanadi, ostida filial nomi", () => {
+    expect(
+      warehouseOptions(
+        [
+          { id: 1, name: "Markaziy", branchId: 1 },
+          { id: 2, name: "Sovuq", branchId: 2 },
+          { id: 3, name: "Asosiy", branchId: 2 },
+        ],
+        branches,
+      ),
+    ).toEqual([
+      { value: "3", label: "Asosiy", sub: "Andijon" },
+      { value: "2", label: "Sovuq", sub: "Andijon" },
+      { value: "1", label: "Markaziy", sub: "Toshkent" },
+    ]);
   });
 });

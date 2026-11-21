@@ -5,6 +5,7 @@ import { ChevronRight, Factory, FolderTree, Globe, type LucideIcon, MapPin, Rule
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { ErrorState, Skeleton } from "@/components/ui/system-states";
+import { useScopeBranchId } from "@/features/auth/session";
 import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
 import { formatDateTime } from "@/lib/format";
@@ -30,7 +31,11 @@ export function overviewHref(kind: OverviewKind): string {
 /** «Boshqa maʼlumotnomalar» — kartalar toʻri: soni va oxirgi oʻzgarish; karta → roʻyxat. */
 export function DictionariesOverview() {
   const t = useTranslations("dictionaries.overview");
-  const q = useQuery({ queryKey: ["dictionaries", "overview"], queryFn: () => unwrap(api.GET("/api/dictionaries-overview")) });
+  const branchId = useScopeBranchId();
+  const q = useQuery({
+    queryKey: ["dictionaries", "overview", branchId ?? "all"],
+    queryFn: () => unwrap(api.GET("/api/dictionaries-overview", { params: { query: branchId === null ? {} : { branchId } } })),
+  });
   return (
     <div className="flex flex-col gap-4">
       <div>

@@ -15,7 +15,7 @@ import { Table, type TableColumn } from "@/components/ui/table";
 import { TextField } from "@/components/ui/text-field";
 import { canAny } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
-import { useWarehouses } from "@/features/organization/api";
+import { useWarehouses, useWarehouseOptions } from "@/features/organization/api";
 import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
 import { formatDate, formatMoney, formatQuantity } from "@/lib/format";
@@ -88,6 +88,7 @@ export function StockPage({
   const t = useTranslations("stock");
   const me = useMe();
   const warehouses = useWarehouses();
+  const warehouseOptions = useWarehouseOptions(warehouses.data ?? []);
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
@@ -239,7 +240,7 @@ export function StockPage({
                   onChange={(v) => apply({ warehouseId: v })}
                   placeholder={t("allWarehouses")}
                   className="[&>span:first-child]:sr-only"
-                  options={(warehouses.data ?? []).map((w) => ({ value: String(w.id), label: w.name }))}
+                  options={warehouseOptions}
                 />
               </div>
               {mode === "expiry" ? (

@@ -14,7 +14,7 @@ import { TextField } from "@/components/ui/text-field";
 import { toast } from "@/components/ui/toast";
 import { can } from "@/features/auth/can";
 import { useMe } from "@/features/auth/session";
-import { useWarehouses, zoneLabel } from "@/features/organization/api";
+import { useWarehouses, zoneLabel, useWarehouseOptions } from "@/features/organization/api";
 import { describeError } from "@/features/setup/form-error";
 import { linesFrom, type ZoneStockRow } from "@/features/zone-transfers/api";
 import { useLineErrorText } from "@/features/zone-transfers/line-error";
@@ -247,7 +247,7 @@ function View({ doc, onClose }: { doc: BranchSaleDetail; onClose: () => void }) 
 export function BranchSaleReceiveModal({ doc, onClose }: { doc: BranchSaleDetail; onClose: () => void }) {
   const t = useTranslations("warehouseTransfers");
   const receiveError = useReceiveErrorText();
-  const warehouses = useWarehouses();
+  const warehouses = useWarehouses("all");
   const receive = useReceiveBranchSale();
   const zones = warehouses.data?.find((w) => w.id === doc.toWarehouse.id)?.zones ?? [];
   const defaultZone = zones.find((z) => z.type === "RECEIVING");
@@ -346,6 +346,7 @@ function CreateForm({ onClose, onCreated }: { onClose: () => void; onCreated: (i
   const stock = useSellerZoneStock(fromId ? Number(fromId) : null);
 
   const active = (warehouses.data ?? []).filter((w) => w.active);
+  const warehouseOptions = useWarehouseOptions(active);
   const warehouse = active.find((w) => String(w.id) === warehouseId);
   const buyers = useBuyerWarehouses(warehouse ? warehouse.branchId : null);
   const targets = buyers.data ?? [];
@@ -420,7 +421,7 @@ function CreateForm({ onClose, onCreated }: { onClose: () => void; onCreated: (i
             label={tw("form.fromWarehouse")}
             value={warehouseId}
             onChange={(v) => (setWarehouseId(v), setFromId(null), setToId(null), setQty({}))}
-            options={active.map((w) => ({ value: String(w.id), label: w.name }))}
+            options={warehouseOptions}
             required
           />
           <Select

@@ -109,7 +109,7 @@ function MatrixEditor({ data, mode, onSaved }: { data: Matrix; mode: "wizard" | 
   const me = useMe();
   // Rol doirasini faqat Direktor oʻzgartiradi (E14); server ham tekshiradi
   const scopeLocked = me.data?.role.code !== DIRECTOR;
-  const employees = useEmployees();
+  const employees = useEmployees("all");
   const branches = useBranches();
   const perms: MatrixPermission[] = data.permissions;
   const [base] = useState(() => toState(data));

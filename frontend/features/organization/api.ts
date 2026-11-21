@@ -2,7 +2,7 @@
 
 import { toCyrillic } from "@/i18n/translit";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ensureCsrf } from "@/features/auth/session";
+import { ensureCsrf, useScopeBranchId } from "@/features/auth/session";
 import { api, unwrap } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
 
@@ -74,13 +74,46 @@ export function useBranchStats() {
   return useQuery({ queryKey: [...BRANCHES, "stats"], queryFn: () => unwrap(api.GET("/api/branches/stats")) });
 }
 
-export function useWarehouses() {
-  return useQuery({ queryKey: WAREHOUSES, queryFn: () => unwrap(api.GET("/api/warehouses")) });
+/**
+ * Omborlar (F1): standart — tepada tanlangan filial omborlari; `all` — koʻrish mumkin boʻlgan barcha omborlar
+ * (mavjud hujjat omborini id boʻyicha topish, xodimga ombor biriktirish).
+ */
+export function useWarehouses(scope: "selected" | "all" = "selected") {
+  const selected = useScopeBranchId();
+  const branchId = scope === "all" ? null : selected;
+  return useQuery({
+    queryKey: [...WAREHOUSES, "list", branchId ?? "all"],
+    queryFn: () => unwrap(api.GET("/api/warehouses", { params: { query: branchId === null ? {} : { branchId } } })),
+  });
 }
 
-/** Omborlar va zonalar sahifasi: filial → ombor, omborchi, zonalar qoldigʻi bilan. */
+/**
+ * F1: ombor tanlovi variantlari. Roʻyxatda bir nechta filial boʻlsa («Barcha filiallar») — filial boʻyicha
+ * guruhlanadi (filial nomi tartibida, har variant ostida filial nomi).
+ */
+export function useWarehouseOptions(list: readonly Pick<Warehouse, "id" | "name" | "branchId">[]) {
+  const branches = useBranchList();
+  return warehouseOptions(list, branches.data ?? []);
+}
+
+export function warehouseOptions(
+  list: readonly Pick<Warehouse, "id" | "name" | "branchId">[],
+  branches: readonly Pick<Branch, "id" | "name">[],
+): { value: string; label: string; sub?: string }[] {
+  const name = (id: number) => branches.find((b) => b.id === id)?.name ?? "";
+  if (new Set(list.map((w) => w.branchId)).size < 2) return list.map((w) => ({ value: String(w.id), label: w.name }));
+  return [...list]
+    .sort((a, b) => name(a.branchId).localeCompare(name(b.branchId), "uz") || a.name.localeCompare(b.name, "uz"))
+    .map((w) => ({ value: String(w.id), label: w.name, sub: name(w.branchId) }));
+}
+
+/** Omborlar va zonalar sahifasi: filial → ombor, omborchi, zonalar qoldigʻi bilan (tanlangan filial). */
 export function useWarehouseOverview() {
-  return useQuery({ queryKey: [...WAREHOUSES, "overview"], queryFn: () => unwrap(api.GET("/api/warehouses/overview")) });
+  const branchId = useScopeBranchId();
+  return useQuery({
+    queryKey: [...WAREHOUSES, "overview", branchId ?? "all"],
+    queryFn: () => unwrap(api.GET("/api/warehouses/overview", { params: { query: branchId === null ? {} : { branchId } } })),
+  });
 }
 
 function useMutationWith<T, R>(key: readonly string[], fn: (v: T) => Promise<R>) {

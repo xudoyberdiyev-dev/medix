@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, unwrap } from "@/lib/api/client";
+import { useBranchStore } from "@/lib/stores/branch";
 import { CSRF_COOKIE, CSRF_HEADER, readCookie } from "@/lib/api/csrf";
 import type { components } from "@/lib/api/schema";
 
@@ -16,6 +17,16 @@ export async function ensureCsrf(): Promise<void> {
 }
 
 /** Logout Spring Security filtri — OpenAPI'da yo'q, shuning uchun oddiy fetch. */
+
+/**
+ * F1: maʼlumot doirasi uchun filial — «Barcha filiallar» huquqli foydalanuvchi tepada tanlagan filial
+ * (`null` — barcha filiallar). Bir filiallik xodim uchun `null`: server baribir oʻz filiali bilan cheklaydi.
+ */
+export function useScopeBranchId(): number | null {
+  const me = useMe();
+  const selected = useBranchStore((s) => s.branchId);
+  return me.data?.allBranches ? selected : null;
+}
 
 /** Joriy foydalanuvchi. 401 — sessiya yo'q (xato sifatida qaytadi, qayta urinilmaydi). */
 export function useMe() {
