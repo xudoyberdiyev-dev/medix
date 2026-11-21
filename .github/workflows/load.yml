@@ -1,0 +1,109 @@
+# S1 yuklama sinovi: sintetik hajm (scripts/s1/gen.sql) + backend + k6 (50 → 150 → 300 bir vaqtdagi foydalanuvchi).
+# Faqat sinov bazasi (CI ichida), production'ga tegmaydi. Natija log oxirida S1-LOAD-BEGIN/END va S1-DB-BEGIN/END orasida.
+name: S1 yuklama sinovi
+
+on:
+  workflow_dispatch:
+    inputs:
+      days:
+        description: "Sintetik tarix (kun)"
+        default: "180"
+      opd:
+        description: "Kunlik buyurtma"
+        default: "1500"
+      stage_seconds:
+        description: "Har bosqich davomiyligi (s)"
+        default: "120"
+  push:
+    branches: [s1-load]
+
+jobs:
+  load:
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    env:
+      DAYS: ${{ inputs.days || '180' }}
+      OPD: ${{ inputs.opd || '1500' }}
+      STAGE_SECONDS: ${{ inputs.stage_seconds || '120' }}
+      PGHOST: localhost
+      PGPORT: "5432"
+      PGPASSWORD: yuzplus
+      PGADMIN: yuzplus
+      YUZPLUS_COOKIE_SECURE: "false"
+    steps:
+      - uses: actions/checkout@v5
+      - name: Runner resurslari
+        run: nproc; free -m; df -h / | tail -1
+      - name: PostgreSQL 18 (pg_stat_statements bilan)
+        run: |
+          docker run -d --name pg -p 5432:5432 --shm-size=1g \
+            -e POSTGRES_USER=yuzplus -e POSTGRES_PASSWORD=yuzplus -e POSTGRES_DB=postgres \
+            postgres:18-alpine -c shared_buffers=1GB -c max_connections=200 -c work_mem=16MB \
+            -c shared_preload_libraries=pg_stat_statements -c synchronous_commit=on -c log_lock_waits=on -c deadlock_timeout=200ms
+          for i in $(seq 1 30); do pg_isready -h localhost -U yuzplus && break; sleep 2; done
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "25"
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Backend jar
+        working-directory: backend
+        run: ./gradlew --no-daemon bootJar -x test > /tmp/gradle.log 2>&1 || (tail -40 /tmp/gradle.log; exit 1)
+      - name: Sintetik hajm (migratsiyalar + gen.sql + load-fixup.sql)
+        run: |
+          start=$(date +%s)
+          scripts/s1/run.sh "$DAYS" "$OPD" 15 20 > /tmp/gen.log 2>&1 || (tail -40 /tmp/gen.log; exit 1)
+          psql -U yuzplus -d yuzplus -q -v ON_ERROR_STOP=1 -f scripts/s1/load-fixup.sql
+          psql -U yuzplus -d yuzplus -qc "CREATE EXTENSION IF NOT EXISTS pg_stat_statements"
+          psql -U yuzplus -d yuzplus -Atc "SELECT 'baza: ' || pg_size_pretty(pg_database_size('yuzplus')) || ', buyurtma: ' || (SELECT count(*) FROM sales_order) || ', qator: ' || (SELECT count(*) FROM sales_order_line)"
+          echo "generatsiya: $(( $(date +%s) - start )) s"
+          df -h / | tail -1
+      - name: Backendni ishga tushirish
+        working-directory: backend
+        run: |
+          V=$(ls src/main/resources/db/migration | sed -E 's/^V([0-9]+)__.*/\1/' | sort -n | tail -1)
+          SPRING_FLYWAY_BASELINE_ON_MIGRATE=true SPRING_FLYWAY_BASELINE_VERSION=$V \
+            nohup java -Xmx1536m -jar $(ls build/libs/*.jar | grep -v plain | head -1) > ../backend.log 2>&1 &
+          for i in $(seq 1 90); do
+            curl -sf http://localhost:8080/actuator/health > /dev/null && exit 0
+            sleep 2
+          done
+          tail -80 ../backend.log
+          exit 1
+      - name: k6
+        run: |
+          curl -sSL https://github.com/grafana/k6/releases/download/v0.54.0/k6-v0.54.0-linux-amd64.tar.gz | tar xz
+          sudo mv k6-v0.54.0-linux-amd64/k6 /usr/local/bin/k6
+          k6 version
+      - name: Kuzatuvchi (har 5 s — Hikari, JVM, PostgreSQL ulanishlar va qulflar)
+        run: |
+          psql -U yuzplus -d yuzplus -qc "SELECT pg_stat_statements_reset(); SELECT pg_stat_reset();" > /dev/null
+          nohup scripts/s1/sampler.sh > /tmp/sampler.log 2>&1 &
+      - name: Yuklama (50 → 150 → 300)
+        run: k6 run --quiet scripts/s1/load.js 2>&1 | tail -150
+      - name: Natija (baza va backend)
+        if: always()
+        run: |
+          echo "S1-DB-BEGIN"
+          echo "--- kuzatuvchi (har 30 s) ---"; awk 'NR % 6 == 1' /tmp/sampler.log | cut -c1-400
+          echo "--- maksimum ---"
+          python3 - <<'PY'
+          import re
+          mx = {}
+          for line in open('/tmp/sampler.log'):
+              for k, v in re.findall(r'([A-Za-z_]+(?:\{[^}]*\})?)=([0-9.]+)', line):
+                  key = re.sub(r'\{.*\}', '', k)
+                  mx[key] = max(mx.get(key, 0.0), float(v))
+          for k in sorted(mx): print(f"{k}: {mx[k]:g}")
+          PY
+          echo "--- pg_stat_statements: umumiy vaqt boʻyicha top 15 ---"
+          psql -U yuzplus -d yuzplus -Atc "SELECT round(total_exec_time)::text || ' ms | n=' || calls || ' | mean=' || round(mean_exec_time::numeric, 1) || ' | max=' || round(max_exec_time::numeric) || ' | ' || left(regexp_replace(query, '\s+', ' ', 'g'), 160) FROM pg_stat_statements WHERE dbid = (SELECT oid FROM pg_database WHERE datname = 'yuzplus') ORDER BY total_exec_time DESC LIMIT 15"
+          echo "--- pg_stat_statements: oʻrtacha > 50 ms ---"
+          psql -U yuzplus -d yuzplus -Atc "SELECT round(mean_exec_time::numeric, 1) || ' ms | n=' || calls || ' | ' || left(regexp_replace(query, '\s+', ' ', 'g'), 160) FROM pg_stat_statements WHERE calls > 5 AND mean_exec_time > 50 ORDER BY mean_exec_time DESC LIMIT 15"
+          echo "--- deadlock / qulf kutish ---"
+          psql -U yuzplus -d yuzplus -Atc "SELECT 'deadlocks=' || deadlocks || ' commits=' || xact_commit || ' rollbacks=' || xact_rollback FROM pg_stat_database WHERE datname = 'yuzplus'"
+          docker logs pg 2>&1 | grep -cE "still waiting for|deadlock detected" || true
+          docker logs pg 2>&1 | grep -E "deadlock detected|still waiting for" | head -5 | cut -c1-300
+          echo "--- backend xatolari ---"
+          grep -E " ERROR | WARN " backend.log | sed -E 's/^[^ ]+ +//' | cut -c1-220 | sort | uniq -c | sort -rn | head -20
+          echo "S1-DB-END"
