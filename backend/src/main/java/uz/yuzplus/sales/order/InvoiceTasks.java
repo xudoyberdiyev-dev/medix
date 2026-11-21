@@ -85,7 +85,8 @@ class InvoiceTasks {
             """;
 
     /** Bekor qilingan buyurtmaning yuborilmagan vazifasi navbatda ko'rinmaydi. */
-    private static final String VISIBLE = " WHERE NOT (t.status = 'PENDING' AND o.status IN ('CANCELLED', 'REJECTED'))";
+    private static final String VISIBLE = " WHERE NOT (t.status = 'PENDING' AND EXISTS (SELECT 1 FROM sales_order vo WHERE vo.id = t.order_id"
+            + " AND vo.status IN ('CANCELLED', 'REJECTED')))";
 
     private static InvoiceTask task(ResultSet rs) throws SQLException {
         String sale = rs.getString("invoice_number") == null ? null : rs.getBigDecimal("sale_total").toPlainString();
@@ -123,18 +124,23 @@ class InvoiceTasks {
             where.append(" AND (o.number LIKE :q OR upper(c.name) LIKE :q OR c.tin LIKE :q OR s.invoice_number LIKE :q OR upper(t.efaktura_number) LIKE :q)");
             params.put("q", "%" + f.q().strip().toUpperCase(Locale.ROOT).replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%");
         }
+        // S1: yigʻindi va saralash faqat kerakli jadvallar bilan (mijoz/sotuv — faqat qidiruvda); tafsilotlar — tanlangan sahifa uchun
+        String slim = " FROM invoice_task t" + (f.q() != null && !f.q().isBlank()
+                ? " JOIN sales_order o ON o.id = t.order_id JOIN counterparty c ON c.id = o.customer_id LEFT JOIN LATERAL (SELECT s.invoice_number FROM sale s WHERE s.order_id = o.id"
+                        + " AND s.status = 'POSTED' ORDER BY s.id DESC LIMIT 1) s ON true"
+                : "");
         Map<String, Long> counts = new LinkedHashMap<>();
-        jdbc.sql("SELECT t.status, count(*) AS n" + FROM + where + " GROUP BY t.status").params(params)
+        jdbc.sql("SELECT t.status, count(*) AS n" + slim + where + " GROUP BY t.status").params(params)
                 .query((rs, n) -> Map.entry(rs.getString("status"), rs.getLong("n"))).list()
                 .forEach(e -> counts.put(e.getKey(), e.getValue()));
         if (f.status() != null) {
             where.append(" AND t.status = :status");
             params.put("status", f.status().name());
         }
-        long total = jdbc.sql("SELECT count(*)" + FROM + where).params(params).query(Long.class).single();
+        long total = f.status() == null ? counts.values().stream().mapToLong(Long::longValue).sum() : counts.getOrDefault(f.status().name(), 0L);
         // Navbat: eng uzoq kutayotgan birinchi; yuborilganlar — eng yangisi birinchi.
-        List<InvoiceTask> items = jdbc.sql(SELECT + FROM + where
-                        + " ORDER BY t.status = 'SENT', CASE WHEN t.status = 'PENDING' THEN t.opened_at END, t.sent_at DESC, t.id DESC LIMIT :lim OFFSET :off")
+        String order = " ORDER BY t.status = 'SENT', CASE WHEN t.status = 'PENDING' THEN t.opened_at END, t.sent_at DESC, t.id DESC";
+        List<InvoiceTask> items = jdbc.sql(SELECT + FROM + " WHERE t.id IN (SELECT t.id" + slim + where + order + " LIMIT :lim OFFSET :off)" + order)
                 .params(params)
                 .param("lim", size)
                 .param("off", (long) page * size)

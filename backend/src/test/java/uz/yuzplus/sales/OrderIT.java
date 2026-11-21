@@ -2226,6 +2226,11 @@ class OrderIT {
                 .andReturn();
         long task = ((Number) JsonPath.read(q.getResponse().getContentAsString(), "$.items[0].id")).longValue();
         mvc.perform(get("/api/invoice-tasks").param("q", cashNumber).cookie(accountant)).andExpect(jsonPath("$.total").value(0));
+        // S1: qidiruvsiz (yengil soʻrov) va holat filtri bilan — jami soni yorliqlardan
+        mvc.perform(get("/api/invoice-tasks").cookie(accountant)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[0].id").exists());
+        mvc.perform(get("/api/invoice-tasks").param("status", "PENDING").cookie(accountant)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[?(@.status == 'SENT')]").isEmpty());
         // Naqd buyurtma egasi «Mijoz nomiga» ga o'zgarsa — vazifa ochiladi
         send(post("/api/orders/" + cash + "/codes-owner"), keeper, "{\"owner\":\"CUSTOMER\"}").andExpect(status().isOk());
         mvc.perform(get("/api/invoice-tasks").param("q", cashNumber).cookie(accountant)).andExpect(jsonPath("$.total").value(1));
