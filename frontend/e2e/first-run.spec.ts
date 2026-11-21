@@ -468,7 +468,7 @@ test("CEO: buyurtma — mijoz, mahsulot, muammolar paneli, navbatga yuborish", a
   await page.keyboard.press("Escape");
 
   await page.goto("/orders");
-  await page.getByRole("button", { name: "Yangi buyurtma" }).click();
+  await page.getByRole("button", { name: "Yangi buyurtma" }).first().click();
   await page.getByRole("combobox", { name: "Mijoz", exact: true }).click();
   await page.getByPlaceholder("Qidirish").fill("Shifo");
   await page.getByRole("option", { name: /Shifo Dorixona E2E/ }).click();

@@ -33,7 +33,7 @@ async function choose(page: Page, label: string, option: RegExp, search?: string
 test("Operator: yigʻilmagan buyurtma fakturasi — FEFO soʻrovi Ha/Yoʻq", async ({ page }) => {
   await login(page, "operator.1", OPERATOR_PASSWORD);
   await page.goto("/orders");
-  await page.getByRole("button", { name: "Yangi buyurtma" }).click();
+  await page.getByRole("button", { name: "Yangi buyurtma" }).first().click();
   await choose(page, "Mijoz", new RegExp(CUSTOMER), "Shifo");
   await choose(page, "Joʻnatiladigan ombor", /Markaziy ombor/);
   await choose(page, "Mahsulot", /Amoksitsillin E2E/, "Amoksitsillin");
