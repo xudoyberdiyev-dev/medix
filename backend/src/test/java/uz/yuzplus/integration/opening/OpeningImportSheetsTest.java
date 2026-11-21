@@ -7,6 +7,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -222,6 +223,22 @@ class OpeningImportSheetsTest {
         assertThat(first.raw(Field.COST)).isEqualTo(new BigDecimal("16666.67"));
         assertThat(g.rows().get(1).text(Field.WAREHOUSE)).isEqualTo("Filial ombori");
         assertThat(g.rows().get(1).raw(Field.COST)).isEqualTo(new BigDecimal("1000.00"));
+    }
+
+    /** SmartUp eski formatda (.xls, Excel 97–2003) ham eksport qiladi — shu fayl ham oʻqiladi. */
+    @Test
+    void legacyXlsIsReadToo() throws Exception {
+        byte[] file;
+        try (HSSFWorkbook wb = new HSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            Sheet customers = wb.createSheet("Дебиторка");
+            saldoHeader(customers, "Клиент");
+            numbers(row(customers, 2, "Shifo Plus", "301234567"), 0, 0, 0, 0, 2500.5, 0);
+            wb.write(out);
+            file = out.toByteArray();
+        }
+        Parsed parsed = OpeningImportSheets.read(new ByteArrayInputStream(file));
+        assertThat(parsed.sheets()).extracting(ParsedSheet::section).containsExactly(Section.CUSTOMER_DEBT);
+        assertThat(parsed.sheets().getFirst().rows().getFirst().raw(Field.AMOUNT)).isEqualTo(new BigDecimal("2500.50"));
     }
 
     private static void saldoHeader(Sheet sheet, String party) {
