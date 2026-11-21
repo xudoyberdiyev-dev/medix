@@ -36,8 +36,9 @@ test("BQ1: SmartUp faylini tekshirish — shablon va xatolar", async ({ page }) 
   await dialog.getByRole("button", { name: "Faylni tekshirish" }).click();
 
   await expect(dialog.getByText(/ta xato — hech narsa yaratilmaydi/)).toBeVisible();
-  await expect(dialog.getByText(/Mahsulot topilmadi: «12345678»|Filial topilmadi/).first()).toBeVisible();
-  await expect(dialog.getByText(/Tovar · 3-qator/).first()).toBeVisible();
+  // Namuna qatorlar: ombor / mahsulot / kontragent bazada yoʻq — har biri varaq va qator bilan
+  await expect(dialog.getByRole("listitem").filter({ hasText: "Tovar · 3-qator" })).toContainText("topilmadi");
+  await expect(dialog.getByRole("listitem").filter({ hasText: "YB qarzi · 3-qator" })).toContainText("Kontragent topilmadi");
   await expect(dialog.getByRole("button", { name: "Xatolarni Excel uchun yuklab olish" })).toBeVisible();
   await expect(dialog.getByRole("button", { name: "Qoralamalarni yaratish" })).toHaveCount(0);
 });
