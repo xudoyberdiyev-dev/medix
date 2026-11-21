@@ -37,12 +37,13 @@ test("F1: tanlangan filialda boshqa filial omborlari va xodimlari koʻrinmaydi",
   // UI: tepadagi tanlagichda «E2E Samarqand»
   await page.evaluate((id) => localStorage.setItem("yuzplus-branch", JSON.stringify({ state: { branchId: id }, version: 0 })), sid);
   await page.goto("/settings/warehouses");
-  await expect(page.getByRole("heading", { name: "Samarqand ombori" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Markaziy ombor" })).toHaveCount(0);
+  const tree = page.getByRole("navigation", { name: "Filiallar va omborlar" });
+  await expect(tree.getByRole("button", { name: /Samarqand ombori/ })).toBeVisible();
+  await expect(tree.getByRole("button", { name: /Markaziy ombor/ })).toHaveCount(0);
 
   // «Barcha filiallar» — ikkalasi ham
   await page.evaluate(() => localStorage.setItem("yuzplus-branch", JSON.stringify({ state: { branchId: null }, version: 0 })));
   await page.goto("/settings/warehouses");
-  await expect(page.getByRole("heading", { name: "Samarqand ombori" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Markaziy ombor" }).first()).toBeVisible();
+  await expect(tree.getByRole("button", { name: /Samarqand ombori/ })).toBeVisible();
+  await expect(tree.getByRole("button", { name: /Markaziy ombor/ })).toBeVisible();
 });
