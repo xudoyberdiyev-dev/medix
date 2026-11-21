@@ -187,7 +187,16 @@ function director() {
 export default function () {
   if (me === null) {
     me = login() || false;
+    if (me) {
+      // k6 har iteratsiyada cookie'larni tozalaydi — sessiya (SESSION, XSRF-TOKEN) saqlab qoʻyiladi
+      const jar = http.cookieJar().cookiesForURL(BASE);
+      me.cookies = {};
+      for (const k of Object.keys(jar)) me.cookies[k] = jar[k][0];
+    }
     sleep(Math.random() * 2);
+  } else if (me) {
+    const jar = http.cookieJar();
+    for (const k of Object.keys(me.cookies)) jar.set(BASE, k, me.cookies[k]);
   }
   if (!me) {
     sleep(5);
